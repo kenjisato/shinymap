@@ -1,0 +1,9 @@
+# Local data downloads
+data/prefectures.geojson
+
+# Bytecode / caches
+__pycache__/
+*.pyc
+
+# Virtual environments
+.venv/
