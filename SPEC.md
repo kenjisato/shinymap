@@ -1,10 +1,10 @@
 # Project Specification
 
-This repository hosts a reusable React map renderer and language-specific adapters for Shiny (Python now, R later). The overarching goals:
+This repository hosts a reusable React map renderer (SVG path based) and language-specific adapters for Shiny (Python now, R later). The overarching goals:
 
-- Deliver interactive input/output maps where prefectures/regions can be clicked, hovered, and colored.
-- Publish a Shiny for Python package (`shinymapjp`) that bundles the frontend so users can `pip install` and go—no knowledge of the React internals required.
-- Keep the design generic: any tabular dataset plus a path JSON can drive the map, not just the built-in Japan geometry.
+- Deliver interactive input/output maps where arbitrary regions (defined by SVG paths) can be clicked, hovered, and styled. Geometry is intentionally generic; no hardwired Japan-specific logic lives in the core.
+- Publish a Shiny for Python package (`shinymapjp` naming is legacy) that bundles the frontend so users can `pip install` and go—no knowledge of the React internals required.
+- Keep the design generic: any tabular dataset plus a path JSON can drive the map. Richer geography (prefectures, world maps, etc.) lives in separate asset packages or extensions.
 - License everything under MIT and keep dependencies MIT-compatible.
 - Preserve a clean separation between map rendering logic and dataset-specific geometry/assets.
 
@@ -21,9 +21,19 @@ This repository hosts a reusable React map renderer and language-specific adapte
 - Geometry assets should be swappable: component APIs accept arbitrary path dictionaries keyed by region IDs. The core bundle (`shinymap`) ships only with lightweight demo shapes (e.g., circles/rectangles) so no large geography is embedded by default; richer datasets live in separate asset packages.
 - Accessibility: hover-only feedback is acceptable for the initial release. Keyboard navigation to be addressed in the next iteration.
 
+### Current Input/Output API philosophy
+- Input maps use a unified count model with `cycle` (how counts advance) and `maxSelection` (cap on non-zero regions). Mode values are conveniences: single → toggle + maxSelection 1; multiple → toggle + unlimited; count → increment + unlimited. Caps block new activations; single replaces the active region when clicked elsewhere.
+- Styling is user-defined via `defaultAesthetic` and `resolveAesthetic` (args include id/mode/isHovered/isSelected/count/base). No opinionated hover/selection defaults; `regionProps` can attach extra SVG props/effects.
+- Output maps mirror the naming: `containerStyle`, `resolveAesthetic`, `regionProps`; minimal defaults (fills/defaultFill + strokeColor/strokeWidth), optional per-region overrides.
+
+### Packages and scope
+- `packages/shinymap/js`: React components (InputMap/OutputMap) using SVG paths; geometry-agnostic.
+- `packages/shinymap/python`: Shiny for Python bindings; mirrors the JS API and ships prebuilt assets + demo geometry.
+- `packages/shinymapjp`: originally intended for Japan prefectures; broader general-geomap support is preferred (ship geometry as separate assets, keep core generic).
+
 ## Geometry & Assets
 - Maintain a lightweight demo path JSON inside the core package (`shinymap`) and document how to build additional geometry bundles (source attribution, simplification tolerance, regeneration scripts).
-- Provide guidance for separate asset packages (npm/PyPI/CRAN) such as `shinymapjp` that ship richer geometries (e.g., Japan prefectures).
+- Provide guidance for separate asset packages (npm/PyPI/CRAN) that ship richer geometries (e.g., Japan prefectures, world/regional maps). Keep the core generic.
 - Allow consumers to supply alternative geometry/path collections via the API.
 
 ## Shiny for Python (`shinymapjp`)
@@ -32,10 +42,7 @@ This repository hosts a reusable React map renderer and language-specific adapte
 - Provide helpers (`input_map`, `output_map`, `map` / `render_map`) that hide the React layer completely.
 - Input components surface their state via the declared Shiny input ID (e.g., `input['pref_in']`). Outputs should react to the same state; avoid emitting auxiliary IDs such as `{output_id}__selection`.
 - Server helpers should minimize boilerplate while staying explicit and readable.
-- Input API modes:
-  - **Single selection:** `input['pref_in']` returns a single region ID (string) and the selected region is highlighted.
-  - **Multiple selection:** `input['pref_in']` returns an array of region IDs or a `{id: boolean}` map; highlighted regions reflect the active set.
-  - **Click counter:** `input['pref_in']` returns a `{id: number}` map or array of counts; the map uses alpha/annotation to visualize click frequencies.
+- Input helpers should expose the same unified model as the JS component: values are a `{id: count}` map plus convenience presets (single/multiple/count) that set `cycle`/`maxSelection` defaults. Consider offering helper functions to emit legacy shapes (string/array) if needed, but the underlying payload is count-based.
 - Define JSON payload schema for the React output: geometry config, fills, static tooltips, optional active selection, optional colorbar metadata.
 - State flow: the input component calls `Shiny.setInputValue(id, value)` for selections. The server sends updated payloads (including the active selection) to the output component. Hover is purely visual.
 - Package requirements: MIT license, semver, Python ≥3.12, dependencies (`shiny>=…`, optional `cairosvg`). Ship wheel + sdist artifacts for PyPI.
@@ -56,7 +63,7 @@ This repository hosts a reusable React map renderer and language-specific adapte
 
 - README / docs should cover:
   - React usage (import map primitives, pass geometry + fill data).
-  - Python quickstart with full code sample.
+  - Python quickstart with full code sample (showing cycle/maxSelection + resolveAesthetic usage).
   - Schema for geometry/paths and how to regenerate them.
   - Versioning policy and changelog location.
   - Future R package expectations.
