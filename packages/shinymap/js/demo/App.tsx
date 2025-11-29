@@ -347,10 +347,8 @@ function DemoOutput({ geometry, tooltips }: DemoOutputProps) {
           geometry={geometry}
           tooltips={tooltips}
           fills={fills}
-          resolveAesthetic={({ id, baseFill }) => {
-            const override = styleForRegion({ id, baseAesthetic: { fillColor: baseFill } });
-            return { fillColor: override.fillColor, fillOpacity: override.fillOpacity };
-          }}
+          counts={values}
+          resolveAesthetic={({ id, baseAesthetic }) => styleForRegion({ id, baseAesthetic })}
         />
       </div>
     </DemoSection>

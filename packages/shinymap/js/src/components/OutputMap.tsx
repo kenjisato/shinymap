@@ -1,10 +1,14 @@
 import React from "react";
 
-import type { OutputMapProps, RegionId } from "../types";
+import type { AestheticStyle, OutputMapProps, RegionId } from "../types";
 
 const DEFAULT_VIEWBOX = "0 0 100 100";
-const DEFAULT_FILL = "#e2e8f0";
-const DEFAULT_STROKE = "#1f2937";
+const DEFAULT_AESTHETIC: AestheticStyle = {
+  fillColor: "#e2e8f0",
+  fillOpacity: 1,
+  strokeColor: "#334155",
+  strokeWidth: 1,
+};
 
 function normalizeActive(active: OutputMapProps["activeIds"]): Set<RegionId> {
   if (!active) return new Set();
@@ -19,10 +23,9 @@ export function OutputMap(props: OutputMapProps) {
     className,
     containerStyle,
     viewBox = DEFAULT_VIEWBOX,
-    defaultFill = DEFAULT_FILL,
-    strokeColor = DEFAULT_STROKE,
-    strokeWidth: strokeWidthProp = 1,
+    defaultAesthetic = DEFAULT_AESTHETIC,
     fills,
+    counts,
     activeIds,
     onRegionClick,
     resolveAesthetic,
@@ -30,6 +33,7 @@ export function OutputMap(props: OutputMapProps) {
   } = props;
 
   const activeSet = normalizeActive(activeIds);
+  const countMap = counts ?? {};
 
   return (
     <svg
@@ -41,37 +45,31 @@ export function OutputMap(props: OutputMapProps) {
       <g>
         {Object.entries(geometry).map(([id, d]) => {
           const tooltip = tooltips?.[id];
-          const baseFill = fills?.[id] ?? defaultFill;
           const isActive = activeSet.has(id);
+          const count = countMap[id] ?? 0;
 
-          let fillColor = baseFill;
-          let fillOpacity = 1;
-          let strokeColorCurrent = strokeColor;
-          let strokeWidthCurrent = strokeWidthProp;
+          let resolved: AestheticStyle = {
+            ...DEFAULT_AESTHETIC,
+            ...defaultAesthetic,
+            ...(fills?.[id] ? { fillColor: fills[id] } : {}),
+          };
 
           if (resolveAesthetic) {
             const overrides = resolveAesthetic({
               id,
               isActive,
-              baseFill,
-              baseStrokeColor: strokeColorCurrent,
-              baseStrokeWidth: strokeWidthCurrent,
+              count,
+              baseAesthetic: resolved,
               tooltip,
             });
-            if (overrides) {
-              if (overrides.fillColor !== undefined) fillColor = overrides.fillColor;
-              if (overrides.fillOpacity !== undefined) fillOpacity = overrides.fillOpacity;
-              if (overrides.strokeColor !== undefined) strokeColorCurrent = overrides.strokeColor;
-              if (overrides.strokeWidth !== undefined) strokeWidthCurrent = overrides.strokeWidth;
-            }
+            if (overrides) resolved = { ...resolved, ...overrides };
           }
 
           const regionOverrides = regionProps?.({
             id,
             isActive,
-            baseFill,
-            baseStrokeColor: strokeColorCurrent,
-            baseStrokeWidth: strokeWidthCurrent,
+            count,
+            baseAesthetic: resolved,
             tooltip,
           });
 
@@ -79,10 +77,10 @@ export function OutputMap(props: OutputMapProps) {
             <path
               key={id}
               d={d}
-              fill={fillColor}
-              fillOpacity={fillOpacity}
-              stroke={strokeColorCurrent}
-              strokeWidth={strokeWidthCurrent}
+              fill={resolved.fillColor}
+              fillOpacity={resolved.fillOpacity}
+              stroke={resolved.strokeColor}
+              strokeWidth={resolved.strokeWidth}
               onClick={onRegionClick ? () => onRegionClick(id) : undefined}
               style={onRegionClick ? { cursor: "pointer" } : undefined}
               {...regionOverrides}

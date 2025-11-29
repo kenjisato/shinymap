@@ -46,7 +46,7 @@ function PaletteDemo() {
           <OutputMap
             geometry={demoGeometry}
             fills={fills}
-            style={{ width: "100%", height: "100%" }}
+            containerStyle={{ width: "100%", height: "100%" }}
             activeIds={"circle"}
           />
         </div>

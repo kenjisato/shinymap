@@ -52,34 +52,22 @@ type BaseOutputProps = {
   viewBox?: string;
   className?: string;
   containerStyle?: React.CSSProperties;
-  defaultFill?: string;
-  strokeColor?: string;
-  strokeWidth?: number;
+  defaultAesthetic?: AestheticStyle;
+};
+
+export type ResolveOutputAestheticArgs = {
+  id: RegionId;
+  isActive: boolean;
+  count: number;
+  baseAesthetic: AestheticStyle;
+  tooltip?: string;
 };
 
 export type OutputMapProps = BaseOutputProps & {
   fills?: Record<RegionId, string>;
+  counts?: Record<RegionId, number>;
   activeIds?: RegionId | RegionId[] | null;
   onRegionClick?: (id: RegionId) => void;
-  resolveAesthetic?: (args: {
-    id: RegionId;
-    isActive: boolean;
-    baseFill: string;
-    baseStrokeColor: string;
-    baseStrokeWidth: number;
-    tooltip?: string;
-  }) => {
-    fillColor?: string;
-    fillOpacity?: number;
-    strokeColor?: string;
-    strokeWidth?: number;
-  };
-  regionProps?: (args: {
-    id: RegionId;
-    isActive: boolean;
-    baseFill: string;
-    baseStrokeColor: string;
-    baseStrokeWidth: number;
-    tooltip?: string;
-  }) => React.SVGProps<SVGPathElement>;
+  resolveAesthetic?: (args: ResolveOutputAestheticArgs) => AestheticStyle | undefined;
+  regionProps?: (args: ResolveOutputAestheticArgs) => React.SVGProps<SVGPathElement>;
 };

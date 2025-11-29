@@ -17,6 +17,7 @@ export const sequential = {
     green: ["#ecfdf3", "#bbf7d0", "#86efac", "#4ade80", "#22c55e", "#16a34a", "#15803d"],
     orange: ["#fff7ed", "#ffedd5", "#fed7aa", "#fdba74", "#fb923c", "#f97316", "#c2410c"],
 };
+// TODO: Extend palettes to cover popular schemes as needs emerge.
 export const palette = {
     neutrals,
     qualitative,
