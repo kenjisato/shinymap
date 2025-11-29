@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>shinymap demo</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: sans-serif;
+        background: #f8fafc;
+      }
+      #demo-grid {
+        max-width: 600px;
+        margin: 2rem auto;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1rem;
+        align-items: start;
+        grid-auto-rows: minmax(260px, auto);
+      }
+      .cell {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 0.75rem;
+        min-height: 220px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="demo-grid">
+      <div class="cell" id="root-single"></div>
+      <div class="cell" id="root-multiple"></div>
+      <div class="cell" id="root-counts"></div>
+      <div class="cell" id="root-output"></div>
+    </div>
+    <script type="module" src="./dist/app.js"></script>
+  </body>
+</html>

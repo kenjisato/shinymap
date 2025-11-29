@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling>=1.18"]
+build-backend = "hatchling.build"
+
+[project]
+name = "shinymap"
+version = "0.0.1"
+description = "Core Shiny for Python bindings for the shinymap React renderer."
+readme = "README.md"
+authors = [{name = "shinymap contributors"}]
+license = {text = "MIT"}
+requires-python = ">=3.12"
+dependencies = [
+  "shiny>=1.4.0"
+]
+
+[project.urls]
+Homepage = "https://github.com/kenjisato/shinymap"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/shinymap"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"src/shinymap/www" = "shinymap/www"
+
+[tool.hatch.build.targets.sdist]
+include = ["src", "README.md"]

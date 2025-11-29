@@ -7,3 +7,19 @@ __pycache__/
 
 # Virtual environments
 .venv/
+py/.venv/
+
+# Frontend workspace artifacts
+frontend/node_modules/
+packages/shinymap/js/node_modules/
+py/examples/react_demo/www/
+frontend/r/www/
+packages/shinymap/js/demo/dist/
+archive/legacy/migration/shinymapjp/node_modules/
+
+# R package scratch files
+r/shinyjpmap/.Rproj.user/
+
+
+# temporary
+archive

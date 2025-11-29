@@ -1,0 +1,40 @@
+{
+  "name": "shinymap",
+  "version": "0.0.1",
+  "description": "Core React map renderer with lightweight demo geometry.",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint 'src/**/*.{ts,tsx}'",
+    "demo": "esbuild demo/App.tsx --bundle --sourcemap --format=esm --outfile=demo/dist/app.js --watch",
+    "serve": "npm-run-all --parallel demo serve:static",
+    "serve:static": "npx --yes http-server demo --port 4173"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
+  "keywords": [
+    "react",
+    "shiny",
+    "map",
+    "geometry"
+  ],
+  "peerDependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.66",
+    "@types/react-dom": "^18.2.21",
+    "esbuild": "^0.25.12",
+    "eslint": "^9.0.0",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.4.0"
+  }
+}

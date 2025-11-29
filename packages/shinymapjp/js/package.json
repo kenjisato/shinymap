@@ -1,0 +1,21 @@
+{
+  "name": "shinymapjp",
+  "version": "0.0.1",
+  "description": "Japan-prefecture geometry assets for shinymap.",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "japan",
+    "map",
+    "geometry"
+  ]
+}
