@@ -6,6 +6,8 @@ export type GeometryMap = Record<RegionId, string>;
 
 export type TooltipMap = Record<RegionId, string>;
 
+export type FillMap = Record<RegionId, string>;
+
 export type InputMapMode = "single" | "multiple" | "count";
 
 export type AestheticStyle = {
@@ -27,6 +29,7 @@ export type ResolveAestheticArgs = {
 export type InputMapProps = {
   geometry: GeometryMap;
   tooltips?: TooltipMap;
+  fills?: FillMap;
   viewBox?: string;
   className?: string;
   containerStyle?: React.CSSProperties;

@@ -19,10 +19,11 @@ function buildSelected(value) {
 }
 export function InputMap(props) {
     var _a;
-    const { geometry, tooltips, className, containerStyle, viewBox = DEFAULT_VIEWBOX, defaultAesthetic = DEFAULT_AESTHETIC, resolveAesthetic, regionProps, value, onChange, cycle, maxSelection, } = props;
+    const { geometry, tooltips, fills, className, containerStyle, viewBox = DEFAULT_VIEWBOX, defaultAesthetic = DEFAULT_AESTHETIC, resolveAesthetic, regionProps, value, onChange, cycle, maxSelection, } = props;
     const [hovered, setHovered] = useState(null);
-    const counts = value !== null && value !== void 0 ? value : {};
-    const selected = useMemo(() => buildSelected(value), [value]);
+    // Use internal state for counts, initialized from value prop
+    const [counts, setCounts] = useState(value !== null && value !== void 0 ? value : {});
+    const selected = useMemo(() => buildSelected(counts), [counts]);
     // Determine mode: explicit prop wins; else cycle implies count; else multiple.
     const mode = (_a = props.mode) !== null && _a !== void 0 ? _a : (cycle ? "count" : "multiple");
     const effectiveCycle = cycle !== null && cycle !== void 0 ? cycle : (mode === "single" ? 2 : mode === "multiple" ? 2 : mode === "count" ? Infinity : 2);
@@ -40,12 +41,14 @@ export function InputMap(props) {
             if (maxSel === 1) {
                 // Replace the active region with the newly clicked one.
                 const next = Object.fromEntries(Object.keys(geometry).map((key) => [key, key === id ? nextCount : 0]));
+                setCounts(next);
                 onChange === null || onChange === void 0 ? void 0 : onChange(next);
             }
             // If maxSelection is >1, block new activation to avoid surprise replacements.
             return;
         }
         const next = { ...counts, [id]: nextCount };
+        setCounts(next);
         onChange === null || onChange === void 0 ? void 0 : onChange(next);
     };
     return (_jsx("svg", { role: "img", className: className, style: { width: "100%", height: "100%", ...containerStyle }, viewBox: viewBox, children: _jsx("g", { children: Object.entries(geometry).map(([id, d]) => {
@@ -55,6 +58,10 @@ export function InputMap(props) {
                 const isSelected = selected.has(id);
                 const count = (_a = counts[id]) !== null && _a !== void 0 ? _a : 0;
                 let resolved = { ...DEFAULT_AESTHETIC, ...defaultAesthetic };
+                // Apply fills if provided
+                if (fills && fills[id]) {
+                    resolved.fillColor = fills[id];
+                }
                 if (resolveAesthetic) {
                     const overrides = resolveAesthetic({
                         id,

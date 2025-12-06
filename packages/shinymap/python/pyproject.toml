@@ -4,14 +4,23 @@ build-backend = "hatchling.build"
 
 [project]
 name = "shinymap"
-version = "0.0.1"
-description = "Core Shiny for Python bindings for the shinymap React renderer."
+version = "0.1.0a1"
+description = "Interactive SVG map components for Shiny for Python"
 readme = "README.md"
 authors = [{name = "shinymap contributors"}]
 license = {text = "MIT"}
 requires-python = ">=3.12"
 dependencies = [
   "shiny>=1.4.0"
+]
+keywords = ["shiny", "visualization", "interactive", "maps", "svg"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Visualization",
 ]
 
 [project.urls]

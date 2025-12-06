@@ -1335,7 +1335,7 @@ var shinymap = (() => {
           return dispatcher;
         }
         "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ && "function" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart && __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
-        var React3 = require_react(), Internals = {
+        var React2 = require_react(), Internals = {
           d: {
             f: noop,
             r: function() {
@@ -1353,7 +1353,7 @@ var shinymap = (() => {
           },
           p: 0,
           findDOMNode: null
-        }, REACT_PORTAL_TYPE = Symbol.for("react.portal"), ReactSharedInternals = React3.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+        }, REACT_PORTAL_TYPE = Symbol.for("react.portal"), ReactSharedInternals = React2.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
         "function" === typeof Map && null != Map.prototype && "function" === typeof Map.prototype.forEach && "function" === typeof Set && null != Set.prototype && "function" === typeof Set.prototype.clear && "function" === typeof Set.prototype.forEach || console.error(
           "React depends on Map and Set built-in types. Make sure that you load a polyfill in older browsers. https://reactjs.org/link/react-polyfills"
         );
@@ -2888,7 +2888,7 @@ var shinymap = (() => {
           "number" === type && getActiveElement(node.ownerDocument) === node || node.defaultValue === "" + value || (node.defaultValue = "" + value);
         }
         function validateOptionProps(element, props) {
-          null == props.value && ("object" === typeof props.children && null !== props.children ? React3.Children.forEach(props.children, function(child) {
+          null == props.value && ("object" === typeof props.children && null !== props.children ? React2.Children.forEach(props.children, function(child) {
             null == child || "string" === typeof child || "number" === typeof child || "bigint" === typeof child || didWarnInvalidChild || (didWarnInvalidChild = true, console.error(
               "Cannot infer the option value of complex children. Pass a `value` prop or use a plain string as children to <option>."
             ));
@@ -18520,14 +18520,14 @@ var shinymap = (() => {
           ));
         }
         "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ && "function" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart && __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
-        var Scheduler = require_scheduler(), React3 = require_react(), ReactDOM = require_react_dom(), assign = Object.assign, REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy");
+        var Scheduler = require_scheduler(), React2 = require_react(), ReactDOM = require_react_dom(), assign = Object.assign, REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy");
         Symbol.for("react.scope");
         var REACT_ACTIVITY_TYPE = Symbol.for("react.activity");
         Symbol.for("react.legacy_hidden");
         Symbol.for("react.tracing_marker");
         var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
         Symbol.for("react.view_transition");
-        var MAYBE_ITERATOR_SYMBOL = Symbol.iterator, REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), isArrayImpl = Array.isArray, ReactSharedInternals = React3.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, ReactDOMSharedInternals = ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, NotPending = Object.freeze({
+        var MAYBE_ITERATOR_SYMBOL = Symbol.iterator, REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), isArrayImpl = Array.isArray, ReactSharedInternals = React2.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, ReactDOMSharedInternals = ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, NotPending = Object.freeze({
           pending: false,
           data: null,
           method: null,
@@ -21315,7 +21315,7 @@ var shinymap = (() => {
           }
         };
         (function() {
-          var isomorphicReactPackageVersion = React3.version;
+          var isomorphicReactPackageVersion = React2.version;
           if ("19.2.0" !== isomorphicReactPackageVersion)
             throw Error(
               'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' + (isomorphicReactPackageVersion + "\n  - react-dom:  19.2.0\nLearn more: https://react.dev/warnings/version-mismatch")
@@ -21669,18 +21669,18 @@ var shinymap = (() => {
         function isValidElement(object) {
           return "object" === typeof object && null !== object && object.$$typeof === REACT_ELEMENT_TYPE;
         }
-        var React3 = require_react(), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy"), REACT_ACTIVITY_TYPE = Symbol.for("react.activity"), REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), ReactSharedInternals = React3.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, hasOwnProperty = Object.prototype.hasOwnProperty, isArrayImpl = Array.isArray, createTask = console.createTask ? console.createTask : function() {
+        var React2 = require_react(), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy"), REACT_ACTIVITY_TYPE = Symbol.for("react.activity"), REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), ReactSharedInternals = React2.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, hasOwnProperty = Object.prototype.hasOwnProperty, isArrayImpl = Array.isArray, createTask = console.createTask ? console.createTask : function() {
           return null;
         };
-        React3 = {
+        React2 = {
           react_stack_bottom_frame: function(callStackForError) {
             return callStackForError();
           }
         };
         var specialPropKeyWarningShown;
         var didWarnAboutElementRef = {};
-        var unknownOwnerDebugStack = React3.react_stack_bottom_frame.bind(
-          React3,
+        var unknownOwnerDebugStack = React2.react_stack_bottom_frame.bind(
+          React2,
           UnknownOwner
         )();
         var unknownOwnerDebugTask = createTask(getTaskName(UnknownOwner));
@@ -21724,178 +21724,132 @@ var shinymap = (() => {
     }
   });
 
-  // src/index.ts
+  // src/index.tsx
   var index_exports = {};
   __export(index_exports, {
     InputMap: () => InputMap,
     OutputMap: () => OutputMap,
-    demoGeometry: () => demoGeometry,
-    getDemoGeometry: () => getDemoGeometry,
+    neutrals: () => neutrals,
+    palette: () => palette,
+    qualitative: () => qualitative,
     renderInputMap: () => renderInputMap,
-    renderOutputMap: () => renderOutputMap
+    renderOutputMap: () => renderOutputMap,
+    sequential: () => sequential
   });
   var import_client = __toESM(require_client(), 1);
 
   // src/components/InputMap.tsx
   var import_react = __toESM(require_react(), 1);
-
-  // src/utils/color.ts
-  function hexToRgb(hex) {
-    const normalized = hex.replace(/^#/, "");
-    if (!/^([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(normalized)) {
-      return null;
-    }
-    const value = normalized.length === 3 ? normalized.split("").map((char) => char + char).join("") : normalized;
-    const intVal = parseInt(value, 16);
-    return {
-      r: intVal >> 16 & 255,
-      g: intVal >> 8 & 255,
-      b: intVal & 255
-    };
-  }
-  function applyAlpha(hex, alpha, fallback) {
-    const rgb = hexToRgb(hex);
-    if (!rgb) {
-      return fallback;
-    }
-    const clamped = Math.max(0, Math.min(1, alpha));
-    return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${clamped})`;
-  }
-
-  // src/components/InputMap.tsx
   var import_jsx_runtime = __toESM(require_jsx_runtime(), 1);
   var DEFAULT_VIEWBOX = "0 0 100 100";
-  var DEFAULT_FILL = "#e2e8f0";
-  var DEFAULT_STROKE = "#334155";
-  var DEFAULT_HIGHLIGHT = "#2563eb";
-  var DEFAULT_HOVER = "#38bdf8";
-  function isMultiple(props) {
-    return props.mode === "multiple";
-  }
-  function isCount(props) {
-    return props.mode === "count";
-  }
-  function isSingle(props) {
-    return !props.mode || props.mode === "single";
-  }
-  function deriveCountInfo(value) {
-    if (!value) {
-      return { map: {}, max: 0 };
-    }
-    let max = 0;
-    for (const count of Object.values(value)) {
-      if (count > max) {
-        max = count;
-      }
-    }
-    return { map: { ...value }, max };
-  }
-  function computeCountAlpha(id, info, explicitMax) {
-    const count = info.map[id] ?? 0;
-    const max = explicitMax ?? info.max;
-    if (max <= 0) {
-      return 0;
-    }
-    return Math.max(0, Math.min(1, count / max));
+  var DEFAULT_AESTHETIC = {
+    fillColor: "#e2e8f0",
+    fillOpacity: 1,
+    strokeColor: "#334155",
+    strokeWidth: 1
+  };
+  function buildSelected(value) {
+    const set = /* @__PURE__ */ new Set();
+    if (!value) return set;
+    Object.entries(value).forEach(([id, val]) => {
+      if (val > 0) set.add(id);
+    });
+    return set;
   }
   function InputMap(props) {
     const {
       geometry,
       tooltips,
+      fills,
       className,
-      style,
+      containerStyle,
       viewBox = DEFAULT_VIEWBOX,
-      defaultFill = DEFAULT_FILL,
-      stroke = DEFAULT_STROKE,
-      highlightFill = DEFAULT_HIGHLIGHT,
-      hoverFill = DEFAULT_HOVER
+      defaultAesthetic = DEFAULT_AESTHETIC,
+      resolveAesthetic,
+      regionProps,
+      value,
+      onChange,
+      cycle,
+      maxSelection
     } = props;
     const [hovered, setHovered] = (0, import_react.useState)(null);
-    const selectedSet = (0, import_react.useMemo)(() => {
-      if (isMultiple(props)) {
-        return new Set(props.value ?? []);
-      }
-      if (isCount(props)) {
-        const counts = props.value ?? {};
-        const selected = /* @__PURE__ */ new Set();
-        Object.entries(counts).forEach(([id, val]) => {
-          if (val > 0) {
-            selected.add(id);
-          }
-        });
-        return selected;
-      }
-      const single = props.value ?? null;
-      return single ? /* @__PURE__ */ new Set([single]) : /* @__PURE__ */ new Set();
-    }, [props]);
-    const countInfo = (0, import_react.useMemo)(() => {
-      if (isCount(props)) {
-        return deriveCountInfo(props.value);
-      }
-      return { map: {}, max: 0 };
-    }, [props]);
+    const [counts, setCounts] = (0, import_react.useState)(value ?? {});
+    const selected = (0, import_react.useMemo)(() => buildSelected(counts), [counts]);
+    const mode = props.mode ?? (cycle ? "count" : "multiple");
+    const effectiveCycle = cycle ?? (mode === "single" ? 2 : mode === "multiple" ? 2 : mode === "count" ? Infinity : 2);
+    const effectiveMax = maxSelection ?? (mode === "single" ? 1 : mode === "multiple" ? Infinity : mode === "count" ? Infinity : Infinity);
     const handleClick = (id) => {
-      if (isMultiple(props)) {
-        const next = new Set(props.value ?? []);
-        if (next.has(id)) {
-          next.delete(id);
-        } else {
-          next.add(id);
+      const current = counts[id] ?? 0;
+      const nextCount = effectiveCycle && Number.isFinite(effectiveCycle) && effectiveCycle > 0 ? (current + 1) % effectiveCycle : current + 1;
+      const activeCount = selected.size;
+      const isActivating = current === 0 && nextCount > 0;
+      const maxSel = Number.isFinite(effectiveMax) ? effectiveMax : Infinity;
+      if (isActivating && activeCount >= maxSel) {
+        if (maxSel === 1) {
+          const next2 = Object.fromEntries(Object.keys(geometry).map((key) => [key, key === id ? nextCount : 0]));
+          setCounts(next2);
+          onChange?.(next2);
         }
-        props.onChange?.(Array.from(next));
         return;
       }
-      if (isCount(props)) {
-        const current = props.value ?? {};
-        const next = { ...current, [id]: (current[id] ?? 0) + 1 };
-        props.onChange?.(next);
-        return;
-      }
-      if (isSingle(props)) {
-        const current = props.value ?? null;
-        const next = current === id ? null : id;
-        props.onChange?.(next);
-      }
+      const next = { ...counts, [id]: nextCount };
+      setCounts(next);
+      onChange?.(next);
     };
-    const maxCount = isCount(props) ? props.maxCount ?? countInfo.max : 0;
     return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
       "svg",
       {
         role: "img",
         className,
-        style: { width: "100%", height: "100%", ...style },
+        style: { width: "100%", height: "100%", ...containerStyle },
         viewBox,
         children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("g", { children: Object.entries(geometry).map(([id, d]) => {
           const tooltip = tooltips?.[id];
           const isHovered = hovered === id;
-          const isSelected = selectedSet.has(id);
-          let fill = defaultFill;
-          if (isCount(props)) {
-            const alpha = computeCountAlpha(id, countInfo, props.maxCount);
-            if (alpha > 0) {
-              fill = applyAlpha(highlightFill, alpha, defaultFill);
+          const isSelected = selected.has(id);
+          const count = counts[id] ?? 0;
+          let resolved = { ...DEFAULT_AESTHETIC, ...defaultAesthetic };
+          if (fills && fills[id]) {
+            resolved.fillColor = fills[id];
+          }
+          if (resolveAesthetic) {
+            const overrides = resolveAesthetic({
+              id,
+              mode,
+              isHovered,
+              isSelected,
+              count,
+              baseAesthetic: resolved
+            });
+            if (overrides) {
+              resolved = { ...resolved, ...overrides };
             }
-          } else if (isSelected) {
-            fill = highlightFill;
           }
-          if (isHovered) {
-            fill = hoverFill;
-          }
+          const extraProps = regionProps?.({
+            id,
+            mode,
+            isHovered,
+            isSelected,
+            count,
+            baseAesthetic: resolved
+          });
           const handleMouseEnter = () => setHovered(id);
           const handleMouseLeave = () => setHovered((current) => current === id ? null : current);
           return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
             "path",
             {
               d,
-              fill,
-              stroke,
-              strokeWidth: isSelected ? 2 : 1,
+              fill: resolved.fillColor,
+              fillOpacity: resolved.fillOpacity,
+              stroke: resolved.strokeColor,
+              strokeWidth: resolved.strokeWidth,
               style: { cursor: "pointer" },
               onMouseEnter: handleMouseEnter,
               onMouseLeave: handleMouseLeave,
               onFocus: handleMouseEnter,
               onBlur: handleMouseLeave,
               onClick: () => handleClick(id),
+              ...extraProps,
               children: tooltip ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("title", { children: tooltip }) : null
             },
             id
@@ -21906,19 +21860,17 @@ var shinymap = (() => {
   }
 
   // src/components/OutputMap.tsx
-  var import_react2 = __toESM(require_react(), 1);
   var import_jsx_runtime2 = __toESM(require_jsx_runtime(), 1);
   var DEFAULT_VIEWBOX2 = "0 0 100 100";
-  var DEFAULT_FILL2 = "#e2e8f0";
-  var DEFAULT_STROKE2 = "#1f2937";
-  var ACTIVE_STROKE = "#0f172a";
+  var DEFAULT_AESTHETIC2 = {
+    fillColor: "#e2e8f0",
+    fillOpacity: 1,
+    strokeColor: "#334155",
+    strokeWidth: 1
+  };
   function normalizeActive(active) {
-    if (!active) {
-      return /* @__PURE__ */ new Set();
-    }
-    if (Array.isArray(active)) {
-      return new Set(active);
-    }
+    if (!active) return /* @__PURE__ */ new Set();
+    if (Array.isArray(active)) return new Set(active);
     return /* @__PURE__ */ new Set([active]);
   }
   function OutputMap(props) {
@@ -21926,53 +21878,62 @@ var shinymap = (() => {
       geometry,
       tooltips,
       className,
-      style,
+      containerStyle,
       viewBox = DEFAULT_VIEWBOX2,
-      defaultFill = DEFAULT_FILL2,
-      stroke = DEFAULT_STROKE2,
+      defaultAesthetic = DEFAULT_AESTHETIC2,
       fills,
       counts,
-      maxCount,
       activeIds,
-      onRegionClick
+      onRegionClick,
+      resolveAesthetic,
+      regionProps
     } = props;
     const activeSet = normalizeActive(activeIds);
-    const maxFromCounts = import_react2.default.useMemo(() => {
-      if (!counts) {
-        return 0;
-      }
-      return Object.values(counts).reduce((acc, curr) => curr > acc ? curr : acc, 0);
-    }, [counts]);
-    const countCeiling = maxCount ?? maxFromCounts;
+    const countMap = counts ?? {};
     return /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
       "svg",
       {
         role: "img",
         className,
-        style: { width: "100%", height: "100%", ...style },
+        style: { width: "100%", height: "100%", ...containerStyle },
         viewBox,
         children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("g", { children: Object.entries(geometry).map(([id, d]) => {
           const tooltip = tooltips?.[id];
-          const regionFill = fills?.[id] ?? defaultFill;
-          const count = counts?.[id] ?? 0;
-          let fill = regionFill;
-          let fillOpacity = 1;
-          if (countCeiling > 0 && count > 0) {
-            const alpha = Math.max(0, Math.min(1, count / countCeiling));
-            fill = applyAlpha(regionFill, 0.4 + alpha * 0.6, regionFill);
-            fillOpacity = 0.6 + alpha * 0.4;
-          }
           const isActive = activeSet.has(id);
+          const count = countMap[id] ?? 0;
+          let resolved = {
+            ...DEFAULT_AESTHETIC2,
+            ...defaultAesthetic,
+            ...fills?.[id] ? { fillColor: fills[id] } : {}
+          };
+          if (resolveAesthetic) {
+            const overrides = resolveAesthetic({
+              id,
+              isActive,
+              count,
+              baseAesthetic: resolved,
+              tooltip
+            });
+            if (overrides) resolved = { ...resolved, ...overrides };
+          }
+          const regionOverrides = regionProps?.({
+            id,
+            isActive,
+            count,
+            baseAesthetic: resolved,
+            tooltip
+          });
           return /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
             "path",
             {
               d,
-              fill,
-              fillOpacity,
-              stroke: isActive ? ACTIVE_STROKE : stroke,
-              strokeWidth: isActive ? 2 : 1,
+              fill: resolved.fillColor,
+              fillOpacity: resolved.fillOpacity,
+              stroke: resolved.strokeColor,
+              strokeWidth: resolved.strokeWidth,
               onClick: onRegionClick ? () => onRegionClick(id) : void 0,
               style: onRegionClick ? { cursor: "pointer" } : void 0,
+              ...regionOverrides,
               children: tooltip ? /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("title", { children: tooltip }) : null
             },
             id
@@ -21982,33 +21943,65 @@ var shinymap = (() => {
     );
   }
 
-  // src/index.ts
-  var import_jsx_runtime3 = __toESM(require_jsx_runtime(), 1);
-  var demoGeometry = {
-    circle: "M50,10 A40,40 0 1 1 49.999,10 Z",
-    square: "M10 10 H90 V90 H10 Z",
-    triangle: "M50 10 L90 90 H10 Z"
+  // src/palette.ts
+  var neutrals = {
+    stroke: "#1f2937",
+    // slate-800
+    strokeActive: "#0f172a",
+    // slate-900
+    fill: "#e2e8f0"
+    // slate-200
   };
-  function getDemoGeometry() {
-    return { ...demoGeometry };
+  var qualitative = [
+    "#2563eb",
+    // blue-600
+    "#16a34a",
+    // green-600
+    "#f59e0b",
+    // amber-500
+    "#ef4444",
+    // red-500
+    "#a855f7",
+    // purple-500
+    "#06b6d4"
+    // cyan-500
+  ];
+  var sequential = {
+    blue: ["#eff6ff", "#bfdbfe", "#93c5fd", "#60a5fa", "#3b82f6", "#2563eb", "#1d4ed8"],
+    green: ["#ecfdf3", "#bbf7d0", "#86efac", "#4ade80", "#22c55e", "#16a34a", "#15803d"],
+    orange: ["#fff7ed", "#ffedd5", "#fed7aa", "#fdba74", "#fb923c", "#f97316", "#c2410c"]
+  };
+  var palette = {
+    neutrals,
+    qualitative,
+    sequential
+  };
+
+  // src/index.tsx
+  var import_jsx_runtime3 = __toESM(require_jsx_runtime(), 1);
+  function createRoot(target) {
+    return (0, import_client.createRoot)(target);
   }
   function getRoot(target) {
     const existing = target.__shinymapRoot;
     if (existing) {
       return existing;
     }
-    const created = (0, import_client.createRoot)(target);
+    const created = createRoot(target);
     target.__shinymapRoot = created;
     return created;
   }
   function renderInputMap(target, props, onChange) {
     const root = getRoot(target);
-    root.render(/* @__PURE__ */ (0, import_jsx_runtime3.jsx)(InputMap, { ...props, onChange: onChange ?? props.onChange }));
+    const componentProps = { ...props, onChange: onChange ?? props.onChange };
+    const Component = InputMap;
+    root.render(/* @__PURE__ */ (0, import_jsx_runtime3.jsx)(Component, { ...componentProps }));
     return root;
   }
   function renderOutputMap(target, props) {
     const root = getRoot(target);
-    root.render(/* @__PURE__ */ (0, import_jsx_runtime3.jsx)(OutputMap, { ...props }));
+    const Component = OutputMap;
+    root.render(/* @__PURE__ */ (0, import_jsx_runtime3.jsx)(Component, { ...props }));
     return root;
   }
   return __toCommonJS(index_exports);
@@ -22070,3 +22063,6 @@ react/cjs/react-jsx-runtime.development.js:
    * LICENSE file in the root directory of this source tree.
    *)
 */
+// Explicitly assign to window for maximum compatibility
+if (typeof window !== "undefined") window.shinymap = shinymap;
+if (typeof globalThis !== "undefined") globalThis.shinymap = shinymap;

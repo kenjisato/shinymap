@@ -29,6 +29,7 @@ export function InputMap(props: InputMapProps) {
   const {
     geometry,
     tooltips,
+    fills,
     className,
     containerStyle,
     viewBox = DEFAULT_VIEWBOX,
@@ -42,8 +43,9 @@ export function InputMap(props: InputMapProps) {
   } = props;
 
   const [hovered, setHovered] = useState<RegionId | null>(null);
-  const counts = value ?? {};
-  const selected = useMemo(() => buildSelected(value), [value]);
+  // Use internal state for counts, initialized from value prop
+  const [counts, setCounts] = useState<Record<RegionId, number>>(value ?? {});
+  const selected = useMemo(() => buildSelected(counts), [counts]);
   // Determine mode: explicit prop wins; else cycle implies count; else multiple.
   const mode: InputMapMode = props.mode ?? (cycle ? "count" : "multiple");
   const effectiveCycle =
@@ -67,6 +69,7 @@ export function InputMap(props: InputMapProps) {
       if (maxSel === 1) {
         // Replace the active region with the newly clicked one.
         const next = Object.fromEntries(Object.keys(geometry).map((key) => [key, key === id ? nextCount : 0]));
+        setCounts(next);
         onChange?.(next);
       }
       // If maxSelection is >1, block new activation to avoid surprise replacements.
@@ -74,6 +77,7 @@ export function InputMap(props: InputMapProps) {
     }
 
     const next = { ...counts, [id]: nextCount };
+    setCounts(next);
     onChange?.(next);
   };
 
@@ -92,6 +96,12 @@ export function InputMap(props: InputMapProps) {
           const count = counts[id] ?? 0;
 
           let resolved: AestheticStyle = { ...DEFAULT_AESTHETIC, ...defaultAesthetic };
+
+          // Apply fills if provided
+          if (fills && fills[id]) {
+            resolved.fillColor = fills[id];
+          }
+
           if (resolveAesthetic) {
             const overrides = resolveAesthetic({
               id,
