@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping, MutableMapping
 from dataclasses import asdict, dataclass
 from functools import wraps
-from typing import Any, Mapping, MutableMapping
+from typing import Any
 
 from htmltools import HTMLDependency, Tag, TagList, css
 from shiny import render, ui
@@ -177,39 +178,39 @@ class MapBuilder:
         self._view_box = view_box
         self._default_aesthetic: Mapping[str, Any] | None = None
 
-    def with_tooltips(self, tooltips: TooltipMap) -> "MapBuilder":
+    def with_tooltips(self, tooltips: TooltipMap) -> MapBuilder:
         """Set region tooltips."""
         self._tooltips = tooltips
         return self
 
-    def with_fills(self, fills: FillMap) -> "MapBuilder":
+    def with_fills(self, fills: FillMap) -> MapBuilder:
         """Set region fill colors."""
         self._fills = fills
         return self
 
-    def with_counts(self, counts: CountMap) -> "MapBuilder":
+    def with_counts(self, counts: CountMap) -> MapBuilder:
         """Set region count badges."""
         self._counts = counts
         return self
 
-    def with_active(self, active_ids: Selection) -> "MapBuilder":
+    def with_active(self, active_ids: Selection) -> MapBuilder:
         """Set active/highlighted region IDs."""
         self._active_ids = active_ids
         return self
 
-    def with_view_box(self, view_box: str) -> "MapBuilder":
+    def with_view_box(self, view_box: str) -> MapBuilder:
         """Set the SVG viewBox."""
         self._view_box = view_box
         return self
 
-    def with_stroke_width(self, width: float) -> "MapBuilder":
+    def with_stroke_width(self, width: float) -> MapBuilder:
         """Set stroke width for all regions."""
         if self._default_aesthetic is None:
             self._default_aesthetic = {}
         self._default_aesthetic = {**self._default_aesthetic, "strokeWidth": width}
         return self
 
-    def with_aesthetic(self, **kwargs: Any) -> "MapBuilder":
+    def with_aesthetic(self, **kwargs: Any) -> MapBuilder:
         """Set default aesthetic properties (strokeWidth, fillOpacity, etc.)."""
         if self._default_aesthetic is None:
             self._default_aesthetic = {}

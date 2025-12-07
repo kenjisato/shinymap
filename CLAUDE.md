@@ -52,7 +52,7 @@ Read these for detailed context:
 - **[SPEC.md](SPEC.md)**: Technical specification, API philosophy, implementation details
 - **[PROPOSAL.md](PROPOSAL.md)**: Project proposal for JSS journal, user stories, honest prior art assessment
 - **[README.md](README.md)**: High-level repository overview
-- **[CONTRIBUTING.md](CONTRIBUTING.md)**: Contribution guidelines, code generation instructions
+- **[CONTRIBUTING.md](CONTRIBUTING.md)**: Practical development workflows, command sequences, working directory guidance (for human contributors)
 - **[SHINY-FOR-PYTHON.md](SHINY-FOR-PYTHON.md)**: Best practices for Shiny for Python development
 - **[design/](design/)**: Detailed implementation plans for features mentioned in SPEC but not yet implemented
 
@@ -131,7 +131,7 @@ def my_map():
 
 1. Check [SPEC.md](SPEC.md) for current implementation status and philosophy
 2. Check [design/](design/) for detailed implementation plans if feature is mentioned in SPEC
-3. Check [CONTRIBUTING.md](CONTRIBUTING.md) for code generation and contribution guidelines
+3. Check [CONTRIBUTING.md](CONTRIBUTING.md) for practical workflows and command sequences (especially useful for understanding working directories)
 4. Check [SHINY-FOR-PYTHON.md](SHINY-FOR-PYTHON.md) for Python-specific patterns and best practices
 5. For new features, assess whether detailed design document is needed before implementation
 6. Prefer editing existing files over creating new ones

@@ -1,6 +1,14 @@
 from shiny import App, ui
 
-from shinymap import QUALITATIVE, Map, input_map, output_map, render_map, scale_qualitative, scale_sequential
+from shinymap import (
+    QUALITATIVE,
+    Map,
+    input_map,
+    output_map,
+    render_map,
+    scale_qualitative,
+    scale_sequential,
+)
 
 DEMO_GEOMETRY = {
     "circle": "M25,50 A20,20 0 1 1 24.999,50 Z",

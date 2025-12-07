@@ -1,142 +1,333 @@
-Here’s a ready-to-commit `CONTRIBUTING.md` tailored for GenAI-assisted projects — designed to keep AI-generated code **consistent, minimal, and maintainable** as your team (and the model) scale up:
+# Contributing to shinymap
 
----
+Thank you for your interest in contributing to shinymap! This guide provides practical workflows for contributing to this monorepo.
 
-# Contributing Guide
-
-Welcome! This project uses **Generative AI to assist with development**, but all contributions are expected to follow a consistent human-reviewed workflow.
-
-The goal: **concise, idiomatic, and maintainable code**.
-GenAI is allowed to *write*, never to *design*.
-
----
-
-## 1. Repository Constitution
-
-All contributions—human or AI—must comply with the following principles:
-
-### Style & Formatting
-
-* Use **consistent naming**: lowercase_with_underscores for functions, UpperCamelCase for classes.
-* Run the formatter and linter before committing:
-
-  * **Python**: `ruff check --fix && ruff format`
-  * **JS/TS**: `eslint --fix && prettier --write`
-  * **Rust**: `cargo fmt && cargo clippy -D warnings`
-* Avoid auto-generated docstrings and redundant comments. Explain *why*, not *what*.
-
-### Architecture
-
-* Keep the **public API minimal**. Avoid unnecessary abstractions.
-* No factories, builders, or managers unless absolutely required.
-* Favor **pure functions** and small modules over class hierarchies.
-* Separate **I/O** (side effects) from **logic** (computation).
-
-### Testing
-
-* Every contribution must include tests.
-* Follow the **arrange–act–assert** pattern.
-* Minimum coverage: 80%.
-* Do not mock for the sake of mocking—mock only external boundaries.
-
-### Error Handling
-
-* Use explicit exception types or error enums.
-* Log only contextual information—never secrets or raw payloads.
-* Fail fast and clearly: prefer explicit errors over silent fallbacks.
-
-### Dependencies
-
-* Prefer standard libraries or existing dependencies.
-* Adding a new dependency requires justification in the PR description.
-* Always pin versions in `pyproject.toml`, `package.json`, or `Cargo.toml`.
-
----
-
-## 2. Using GenAI Productively
-
-### General Rules
-
-* Prompt for **small, focused slices** (≤ 200 LOC, including tests).
-* Always include the **Constitution summary** (above) in prompts.
-* Never ask the AI to “design the architecture” — that’s human work.
-* Prefer:
-
-  > “Implement this function using my repo’s error-handling and style rules.”
-
-### Prompt Template
+## Repository Structure
 
 ```
-Generate only the code and tests for the single slice below.
-Constraints: minimal, idiomatic, no patterns unless essential.
-Follow our Constitution. Output only code and tests—no explanations.
+shinymap/
+├── packages/
+│   ├── shinymap/js/          # React/TypeScript core components
+│   └── shinymap/python/      # Python Shiny adapter + bundled JS assets
+├── CLAUDE.md                  # AI assistant guide (design philosophy, project context)
+├── CONTRIBUTING.md            # This file (practical development workflows)
+└── .github/workflows/         # CI workflows
 ```
 
-### Review After Generation
+## Prerequisites
 
-1. Run all linters and formatters.
-2. Check for:
+- **Python**: 3.12 or higher
+- **Node.js**: 18 or higher
+- **uv**: Recommended for Python dependency management ([install guide](https://docs.astral.sh/uv/))
+- **npm**: Comes with Node.js
 
-   * Redundant abstraction layers.
-   * Over-commented or verbose code.
-   * Hidden dependencies.
-3. Simplify before committing.
+## Quick Start
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/your-username/shinymap.git
+   cd shinymap
+   ```
+
+2. **Set up Python development:**
+   ```bash
+   cd packages/shinymap/python
+   uv sync --dev
+   cd ../../..  # Return to repo root
+   ```
+
+3. **Set up JavaScript development:**
+   ```bash
+   cd packages/shinymap/js
+   npm install
+   cd ../../..  # Return to repo root
+   ```
 
 ---
 
-## 3. Pull Request Requirements
+## Development Workflows
 
-Each PR must:
+### Working with React/TypeScript Code
 
-* Reference an issue or task.
-* Include **what**, **why**, and **how tested**.
-* Contain ≤ 200 LOC (excluding docs/tests) unless justified.
-* Pass all CI checks (lint, format, type-check, test, license).
-* Use the PR template provided in `.github/PULL_REQUEST_TEMPLATE.md`.
+**Working directory:** `packages/shinymap/js/`
 
-Example PR summary:
+#### After modifying React components:
 
+```bash
+cd packages/shinymap/js
+
+# 1. Format and lint
+npm run format
+npm run lint
+
+# 2. Build TypeScript
+npm run build
+
+# 3. Run standalone React demo (optional - for quick testing)
+npm run serve
+# Opens demo at http://localhost:4173
+
+# 4. Build bundled JS for Python package
+node build-global.js
+
+# 5. Test with Python Shiny demo
+cd ../python
+uv run shiny run examples/demo_app.py
+# Opens at http://localhost:8000
+
+# Return to root when done
+cd ../../..
 ```
-Implements token parsing (issue #42)
-- Adds parse_auth_header(header: str) -> Token|None
-- No new dependencies
-- Unit tests for 3 edge cases
+
+**Key points:**
+- Always rebuild the global bundle (`node build-global.js`) before testing Python integration
+- The bundled JS is copied to `packages/shinymap/python/src/shinymap/www/shinymap-shiny.js`
+- Lint/format before committing: `npm run lint && npm run format:check`
+
+---
+
+### Working with Python Code
+
+**Working directory:** `packages/shinymap/python/`
+
+#### After modifying Python source:
+
+```bash
+cd packages/shinymap/python
+
+# 1. Run linter and formatter
+uv run ruff check --fix .
+uv run ruff format .
+
+# 2. Type check
+uv run mypy src/shinymap
+
+# 3. Run tests
+uv run pytest
+
+# 4. Test with example apps
+uv run shiny run examples/demo_app.py
+# Opens at http://localhost:8000
+
+# Return to root when done
+cd ../../..
+```
+
+**Running specific tests:**
+```bash
+cd packages/shinymap/python
+uv run pytest tests/test_builder.py -v
+uv run pytest --cov=shinymap  # With coverage
 ```
 
 ---
 
-## 4. CI Requirements
+### Cross-Package Workflows
 
-The CI pipeline enforces:
+#### When React changes affect Python package:
 
-* Style: format + lint
-* Static analysis: mypy, eslint, clippy
-* Tests: ≥ 80% coverage
-* Security: dependency audit (pip-audit / npm audit / cargo audit)
-* Licensing: `reuse lint`
+```bash
+# 1. Build and bundle React code
+cd packages/shinymap/js
+npm run build
+node build-global.js
 
-Any failure blocks merging.
+# 2. Test Python integration
+cd ../python
+uv run pytest  # Run all tests
+uv run shiny run examples/demo_app.py  # Manual testing
+
+# Return to root
+cd ../../..
+```
+
+#### Full pre-commit checklist:
+
+```bash
+# JavaScript checks (from packages/shinymap/js/)
+cd packages/shinymap/js
+npm run lint
+npm run format:check
+npm run build
+cd ../../..
+
+# Python checks (from packages/shinymap/python/)
+cd packages/shinymap/python
+uv run ruff check .
+uv run ruff format --check .
+uv run mypy src/shinymap
+uv run pytest
+cd ../../..
+```
 
 ---
 
-## 5. Code “Gardening” Sessions
+## Code Quality Standards
 
-Every 1–2 weeks:
+### Python
 
-* Deduplicate utilities.
-* Collapse over-abstracted layers.
-* Remove dead code.
-* Update the Constitution if new conventions emerge.
+- **Style**: PEP 8 (enforced by ruff)
+- **Type hints**: Required for all function signatures
+- **Formatting**: `ruff format` (line length: 100)
+- **Linting**: `ruff check` (configured in `pyproject.toml`)
+- **Testing**: pytest with minimum 80% coverage
+
+### JavaScript/TypeScript
+
+- **Style**: Prettier (100 char line width, 2-space indent)
+- **Linting**: ESLint with TypeScript plugin
+- **Type checking**: TypeScript strict mode
+- **Formatting**: `npm run format`
+
+### General Principles
+
+- **Minimal API surface**: Avoid unnecessary abstractions
+- **Simple over clever**: Prefer clear, straightforward code
+- **Test new functionality**: Include tests with new features
+- **No over-engineering**: Don't add features beyond what's requested
+- **Document public APIs**: Include docstrings with examples for user-facing functions
 
 ---
 
-## 6. Philosophy
+## Testing Guidelines
 
-> “AI can generate code, but humans maintain it.”
+### Python Tests
 
-We value **clarity over cleverness**, **simplicity over generality**, and **consistency over freedom**.
-If in doubt: write less, test more, and review as if you’ll maintain this in a year.
+```python
+import pytest
+from shinymap import Map
+
+@pytest.mark.unit
+def test_map_builder_basic():
+    """Test basic Map builder functionality."""
+    geometry = {"a": "M0 0 L10 0 L10 10 L0 10 Z"}
+    map_obj = Map(geometry)
+    payload = map_obj.build()
+    assert payload.geometry == geometry
+```
+
+**Test markers:**
+- `@pytest.mark.unit` - Unit tests (fast, isolated)
+- `@pytest.mark.integration` - Integration tests (may require Shiny runtime)
+
+### JavaScript Tests
+
+(Coming soon - test framework to be added)
 
 ---
 
-Would you like me to tailor this version for a specific language stack (e.g., Python-only, or multi-language repo with Python + TypeScript + Rust)? I can generate the matching `.github/workflows/ci.yml` at the same time.
+## Pull Request Process
+
+### Before creating a PR:
+
+1. **Create a feature branch:**
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+2. **Make your changes** following the workflows above
+
+3. **Run all checks:**
+   ```bash
+   # JavaScript (from packages/shinymap/js/)
+   npm run lint && npm run format:check && npm run build
+
+   # Python (from packages/shinymap/python/)
+   uv run ruff check . && uv run mypy src/shinymap && uv run pytest
+   ```
+
+4. **Commit with clear messages:**
+   ```bash
+   git add .
+   git commit -m "Add hover_highlight parameter to input_map
+
+   - Adds stroke_width, fill_opacity options for hover state
+   - Updates README with examples
+   - Adds tests for hover customization"
+   ```
+
+5. **Push and create PR:**
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+
+### PR Requirements
+
+- **Reference related issues**: "Fixes #42" or "Relates to #42"
+- **Clear description**: What, why, and how you tested
+- **Pass CI checks**: All automated checks must pass
+- **Keep focused**: One feature/fix per PR
+- **Update docs**: Include documentation changes for user-facing features
+
+---
+
+## Release Process
+
+(For maintainers)
+
+### Python Package
+
+```bash
+cd packages/shinymap/python
+
+# 1. Update version in pyproject.toml
+# 2. Update CHANGELOG.md
+# 3. Build and publish
+rm -rf dist/
+uv build
+uv publish
+
+cd ../../..
+```
+
+### JavaScript Package
+
+```bash
+cd packages/shinymap/js
+
+# 1. Update version in package.json
+# 2. Rebuild bundle
+node build-global.js
+
+# 3. Publish to npm (if applicable)
+npm publish
+
+cd ../../..
+```
+
+---
+
+## Common Issues
+
+### "Module not found" after React changes
+- **Solution**: Rebuild the bundle with `node build-global.js`
+
+### Python imports not resolving
+- **Solution**: Run `uv sync --dev` from `packages/shinymap/python/`
+
+### Linting errors on commit
+- **Solution**: Run `npm run format` (JS) or `uv run ruff format .` (Python)
+
+### Tests failing after changes
+- **Solution**: Check if you need to rebuild the JS bundle for Python tests
+
+---
+
+## Getting Help
+
+- **Issues**: Open an issue for bugs or feature requests
+- **Discussions**: Use GitHub Discussions for questions
+- **Documentation**: Check [CLAUDE.md](CLAUDE.md) for project philosophy and design decisions
+- **Examples**: See `packages/shinymap/python/examples/` for usage patterns
+
+---
+
+## Code of Conduct
+
+Please be respectful and constructive in all interactions. We aim to foster an inclusive and welcoming community.
+
+---
+
+**Thank you for contributing to shinymap!**
+
+For AI assistants: See [CLAUDE.md](CLAUDE.md) for project context, design philosophy, and architectural decisions.

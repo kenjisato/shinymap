@@ -1,6 +1,6 @@
-from shiny import reactive, render, ui, App
+from shiny import App, ui
 
-from shinymap import QUALITATIVE, Map, input_map, output_map, render_map, scale_qualitative, scale_sequential
+from shinymap import QUALITATIVE, Map, input_map, output_map, render_map, scale_qualitative
 
 DEMO_GEOMETRY = {
     "circle": "M25,50 A20,20 0 1 1 24.999,50 Z",
@@ -22,7 +22,7 @@ ui_basic = ui.page_fillable(
             input_map(
                 "region",
                 DEMO_GEOMETRY,
-                tooltips=TOOLTIPS, 
+                tooltips=TOOLTIPS,
                 mode="single",
                 value={},
                 hover_highlight={"stroke_width": 1},
@@ -48,7 +48,7 @@ def server_basic(input):
             region_ids=list(DEMO_GEOMETRY.keys()),
             palette=[SHAPE_COLORS[rid] for rid in DEMO_GEOMETRY],
         )
-        
+
     @render_map
     def single_select_output():
         selected = input.region()
@@ -63,15 +63,15 @@ def server_basic(input):
 
 
 
-## Put them together 
+## Put them together
 
 app_ui = ui.page_navbar(
-    ui.nav_panel("Basic Examples", ui_basic), 
+    ui.nav_panel("Basic Examples", ui_basic),
     title="ShinyMap"
 )
 
 def server(input, output, session):
-    
+
     server_basic(input)
 
 

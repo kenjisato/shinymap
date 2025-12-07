@@ -1,6 +1,8 @@
-__version__ = "0.0.1"
-
 """Core Shiny for Python bindings for the shinymap renderer."""
+
+from __future__ import annotations
+
+__version__ = "0.0.1"
 
 from ._colors import (
     NEUTRALS,

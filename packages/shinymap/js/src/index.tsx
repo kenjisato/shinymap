@@ -1,7 +1,7 @@
 import React from "react";
 import { createRoot as reactCreateRoot } from "react-dom/client";
 
-import type { GeometryMap, InputMapProps, OutputMapProps, RegionId } from "./types";
+import type { InputMapProps, OutputMapProps } from "./types";
 import { InputMap } from "./components/InputMap";
 import { OutputMap } from "./components/OutputMap";
 

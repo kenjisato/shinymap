@@ -1,12 +1,6 @@
 import React, { useMemo, useState } from "react";
 
-import type {
-  AestheticStyle,
-  InputMapMode,
-  InputMapProps,
-  ResolveAestheticArgs,
-  RegionId,
-} from "../types";
+import type { AestheticStyle, InputMapMode, InputMapProps, RegionId } from "../types";
 
 const DEFAULT_VIEWBOX = "0 0 100 100";
 const DEFAULT_AESTHETIC: AestheticStyle = {
@@ -49,11 +43,16 @@ export function InputMap(props: InputMapProps) {
   // Determine mode: explicit prop wins; else cycle implies count; else multiple.
   const mode: InputMapMode = props.mode ?? (cycle ? "count" : "multiple");
   const effectiveCycle =
-    cycle ??
-    (mode === "single" ? 2 : mode === "multiple" ? 2 : mode === "count" ? Infinity : 2);
+    cycle ?? (mode === "single" ? 2 : mode === "multiple" ? 2 : mode === "count" ? Infinity : 2);
   const effectiveMax =
     maxSelection ??
-    (mode === "single" ? 1 : mode === "multiple" ? Infinity : mode === "count" ? Infinity : Infinity);
+    (mode === "single"
+      ? 1
+      : mode === "multiple"
+        ? Infinity
+        : mode === "count"
+          ? Infinity
+          : Infinity);
 
   const handleClick = (id: RegionId) => {
     const current = counts[id] ?? 0;
@@ -68,7 +67,9 @@ export function InputMap(props: InputMapProps) {
     if (isActivating && activeCount >= maxSel) {
       if (maxSel === 1) {
         // Replace the active region with the newly clicked one.
-        const next = Object.fromEntries(Object.keys(geometry).map((key) => [key, key === id ? nextCount : 0]));
+        const next = Object.fromEntries(
+          Object.keys(geometry).map((key) => [key, key === id ? nextCount : 0])
+        );
         setCounts(next);
         onChange?.(next);
       }

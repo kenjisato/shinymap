@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Mapping
+from collections.abc import Mapping
 
 # Tailwind-inspired color palettes
 NEUTRALS = {
@@ -39,7 +39,7 @@ def lerp_hex(start: str, end: str, t: float) -> str:
     t = max(0.0, min(1.0, t))
     s_rgb = tuple(int(start[i : i + 2], 16) for i in (1, 3, 5))
     e_rgb = tuple(int(end[i : i + 2], 16) for i in (1, 3, 5))
-    mix = tuple(int(s + (e - s) * t) for s, e in zip(s_rgb, e_rgb))
+    mix = tuple(int(s + (e - s) * t) for s, e in zip(s_rgb, e_rgb, strict=True))
     return f"#{mix[0]:02x}{mix[1]:02x}{mix[2]:02x}"
 
 
