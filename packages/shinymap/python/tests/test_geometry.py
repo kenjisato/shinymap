@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from shinymap.geometry import convert, from_json, from_svg
+from shinymap.geometry import compute_viewbox_from_dict, convert, from_json, from_svg
 
 
 @pytest.fixture
@@ -692,3 +692,106 @@ def test_infer_relabel_no_changes(sample_intermediate_json):
         inferred = infer_relabel(intermediate_path, final)
 
         assert inferred is None  # No transformations needed
+
+
+# ============================================================================
+# compute_viewbox_from_dict() tests
+# ============================================================================
+
+
+@pytest.mark.unit
+def test_compute_viewbox_from_dict_basic():
+    """Test basic viewBox computation from geometry dict."""
+    geometry = {
+        "a": "M 0 0 L 100 0 L 100 100 L 0 100 Z",
+        "b": "M 200 0 L 300 0 L 300 100 L 200 100 Z",
+    }
+
+    viewbox = compute_viewbox_from_dict(geometry)
+
+    # Should cover from (0, 0) to (300, 100)
+    assert viewbox == "0.0 0.0 300.0 100.0"
+
+
+@pytest.mark.unit
+def test_compute_viewbox_from_dict_with_padding():
+    """Test viewBox computation with padding."""
+    geometry = {
+        "a": "M 0 0 L 100 0 L 100 100 L 0 100 Z",
+    }
+
+    # 10% padding
+    viewbox = compute_viewbox_from_dict(geometry, padding=0.1)
+
+    # Original: 0 0 100 100
+    # With 10% padding: -10 -10 120 120
+    assert viewbox == "-10.0 -10.0 120.0 120.0"
+
+
+@pytest.mark.unit
+def test_compute_viewbox_from_dict_list_format():
+    """Test viewBox computation from dict with list values (intermediate JSON format)."""
+    # Intermediate JSON format uses lists
+    intermediate = {
+        "_metadata": {"viewBox": "ignored"},
+        "path_1": ["M 10 10 L 40 10 L 40 40 L 10 40 Z"],
+        "path_2": ["M 60 10 L 90 10 L 90 40 L 60 40 Z"],
+    }
+
+    viewbox = compute_viewbox_from_dict(intermediate)
+
+    # Should cover from (10, 10) to (90, 40)
+    assert viewbox == "10.0 10.0 80.0 30.0"
+
+
+@pytest.mark.unit
+def test_compute_viewbox_from_dict_merged_paths():
+    """Test viewBox computation with merged paths (multiple path strings in list)."""
+    geometry = {
+        "hokkaido": [
+            "M 0 0 L 50 0 L 50 50 Z",  # First island
+            "M 100 0 L 150 0 L 150 50 Z",  # Second island
+        ],
+    }
+
+    viewbox = compute_viewbox_from_dict(geometry)
+
+    # Should cover both islands: from (0, 0) to (150, 50)
+    assert viewbox == "0.0 0.0 150.0 50.0"
+
+
+@pytest.mark.unit
+def test_compute_viewbox_from_dict_negative_coords():
+    """Test viewBox computation with negative coordinates."""
+    geometry = {
+        "a": "M -50 -50 L 50 -50 L 50 50 L -50 50 Z",
+    }
+
+    viewbox = compute_viewbox_from_dict(geometry)
+
+    assert viewbox == "-50.0 -50.0 100.0 100.0"
+
+
+@pytest.mark.unit
+def test_compute_viewbox_from_dict_empty():
+    """Test viewBox computation with empty dict returns default."""
+    viewbox = compute_viewbox_from_dict({})
+
+    # Default fallback
+    assert viewbox == "0.0 0.0 100.0 100.0"
+
+
+@pytest.mark.unit
+def test_compute_viewbox_from_dict_skips_metadata():
+    """Test that _metadata and other non-path entries are skipped."""
+    geometry = {
+        "_metadata": {"viewBox": "0 0 500 500"},  # Should be ignored
+        "region": "M 0 0 L 100 0 L 100 100 Z",
+        "_overlay": "M 200 0 L 300 0 L 300 100 Z",  # Should be included
+    }
+
+    viewbox = compute_viewbox_from_dict(geometry)
+
+    # Should compute from actual geometry, not use metadata viewBox
+    # Covers "region" (0-100) and "_overlay" (200-300)
+    assert viewbox == "0.0 0.0 300.0 100.0"

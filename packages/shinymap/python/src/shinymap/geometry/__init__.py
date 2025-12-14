@@ -3,6 +3,7 @@
 This subpackage provides tools for:
 - Converting SVG files to shinymap JSON format (convert, from_svg, from_json)
 - Loading geometry from JSON files (load_geometry)
+- Computing viewBox from geometry dicts (compute_viewbox_from_dict)
 - Inferring conversion code from original source (infer_relabel)
 
 ## JSON Format
@@ -103,6 +104,7 @@ convert(
 from __future__ import annotations
 
 from ._core import (
+    compute_viewbox_from_dict,
     convert,
     from_json,
     from_svg,
@@ -111,6 +113,7 @@ from ._core import (
 )
 
 __all__ = [
+    "compute_viewbox_from_dict",
     "convert",
     "from_svg",
     "from_json",

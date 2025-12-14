@@ -91,6 +91,49 @@ def _parse_svg_path_bounds(path_d: str) -> tuple[float, float, float, float]:
     return (min(x_coords), min(y_coords), max(x_coords), max(y_coords))
 
 
+def _normalize_geometry_dict(geometry: dict[str, Any]) -> dict[str, str]:
+    """Normalize geometry dict to string-valued format.
+
+    Accepts both string-valued dicts (shinymap format) and list-valued dicts
+    (intermediate JSON format). Automatically skips non-string/non-list values
+    like _metadata.
+
+    Args:
+        geometry: Dict with string or list[str] values representing SVG paths
+
+    Returns:
+        Dict with string-valued paths only (lists joined with space)
+
+    Example:
+        >>> # String format (already normalized)
+        >>> _normalize_geometry_dict({"a": "M 0 0 L 10 10"})
+        {'a': 'M 0 0 L 10 10'}
+
+        >>> # List format (intermediate JSON)
+        >>> _normalize_geometry_dict({"a": ["M 0 0", "L 10 10"]})
+        {'a': 'M 0 0 L 10 10'}
+
+        >>> # Mixed with metadata (skipped)
+        >>> _normalize_geometry_dict({
+        ...     "_metadata": {"viewBox": "0 0 100 100"},
+        ...     "region": "M 0 0 L 100 0"
+        ... })
+        {'region': 'M 0 0 L 100 0'}
+    """
+    paths: dict[str, str] = {}
+
+    for key, value in geometry.items():
+        if isinstance(value, str):
+            # Already string format (shinymap format)
+            paths[key] = value
+        elif isinstance(value, list):
+            # List format (intermediate JSON) - join with space
+            paths[key] = " ".join(value)
+        # Skip non-string/non-list values (like _metadata dict)
+
+    return paths
+
+
 def _calculate_viewbox(
     paths: dict[str, str],
     padding: float = 0.0,
@@ -575,19 +618,14 @@ def load_geometry(
         if isinstance(meta_overlays, list):
             overlay_key_set = set(meta_overlays)
 
-    # Separate geometry and overlays
-    # List values are paths - join with space for rendering
+    # Normalize all geometry (both main and overlays) using shared function
+    all_geometry = _normalize_geometry_dict(data)
+
+    # Separate geometry and overlays based on overlay_key_set
     geometry: dict[str, str] = {}
     overlay_geometry: dict[str, str] = {}
 
-    for key, value in data.items():
-        if not isinstance(value, list):
-            # Non-list values are metadata, skip
-            continue
-
-        # Join list of paths with space
-        path_str = " ".join(value)
-
+    for key, path_str in all_geometry.items():
         if key in overlay_key_set:
             overlay_geometry[key] = path_str
         else:
@@ -611,6 +649,65 @@ def load_geometry(
         viewbox = f"{vb_tuple[0]} {vb_tuple[1]} {vb_tuple[2]} {vb_tuple[3]}"
 
     return geometry, overlay_geometry, viewbox
+
+
+def compute_viewbox_from_dict(
+    geometry: dict[str, str | list[str]],
+    padding: float = 0.0,
+    bounds_fn: BoundsCalculator | None = None,
+) -> str:
+    """Compute viewBox string directly from a geometry dictionary.
+
+    This is a convenience function that computes viewBox from a geometry dict
+    without requiring file I/O. Accepts both string-valued dicts (shinymap format)
+    and list-valued dicts (intermediate JSON format).
+
+    Args:
+        geometry: Dict mapping region IDs to SVG path data (string or list of strings).
+                  Non-string/non-list values (like _metadata) are automatically skipped.
+        padding: Percentage of dimensions to add as padding (0.05 = 5%)
+        bounds_fn: Optional custom function to calculate path bounds.
+                  Takes path_d string, returns (min_x, min_y, max_x, max_y).
+                  If None, uses default _parse_svg_path_bounds (regex-based).
+
+    Returns:
+        ViewBox string in format "min_x min_y width height"
+
+    Example:
+        >>> # From shinymap format (string values)
+        >>> geometry = {"a": "M 0 0 L 100 0 L 100 100 Z"}
+        >>> compute_viewbox_from_dict(geometry)
+        '0.0 0.0 100.0 100.0'
+
+        >>> # With padding
+        >>> compute_viewbox_from_dict(geometry, padding=0.1)
+        '-10.0 -10.0 120.0 120.0'
+
+        >>> # From intermediate JSON format (list values)
+        >>> intermediate = {
+        ...     "_metadata": {"viewBox": "ignored"},
+        ...     "path_1": ["M 10 10 L 40 10 L 40 40 Z"],
+        ... }
+        >>> compute_viewbox_from_dict(intermediate)
+        '10.0 10.0 30.0 30.0'
+
+        >>> # Custom bounds calculator
+        >>> from svgpathtools import parse_path
+        >>> def accurate_bounds(path_d: str) -> tuple[float, float, float, float]:
+        ...     path = parse_path(path_d)
+        ...     xmin, xmax, ymin, ymax = path.bbox()
+        ...     return (xmin, ymin, xmax, ymax)
+        >>> compute_viewbox_from_dict(geometry, bounds_fn=accurate_bounds)
+        '0.0 0.0 100.0 100.0'
+    """
+    # Normalize geometry dict to string format
+    paths = _normalize_geometry_dict(geometry)
+
+    # Compute viewBox using existing _calculate_viewbox
+    vb_tuple = _calculate_viewbox(paths, padding=padding, bounds_fn=bounds_fn)
+
+    # Format as viewBox string
+    return f"{vb_tuple[0]} {vb_tuple[1]} {vb_tuple[2]} {vb_tuple[3]}"
 
 
 def infer_relabel(
