@@ -21937,9 +21937,9 @@ var shinymap = (() => {
             {
               d: geometry[hovered],
               fill: hoverHighlight.fillColor ?? "none",
-              fillOpacity: hoverHighlight.fillOpacity ?? 1,
-              stroke: hoverHighlight.strokeColor ?? "none",
-              strokeWidth: hoverHighlight.strokeWidth ?? 1,
+              fillOpacity: hoverHighlight.fillOpacity ?? 0,
+              stroke: hoverHighlight.strokeColor ?? "#1e40af",
+              strokeWidth: hoverHighlight.strokeWidth ?? 2,
               pointerEvents: "none"
             },
             `hover-overlay-${hovered}`
