@@ -15,16 +15,34 @@ from ._colors import (
     scale_qualitative,
     scale_sequential,
 )
-from ._ui import Map, MapBuilder, MapPayload, input_map, output_map, render_map
+from . import geometry
+from ._ui import (
+    Map,
+    MapBuilder,
+    MapCount,
+    MapCountBuilder,
+    MapPayload,
+    MapSelection,
+    MapSelectionBuilder,
+    input_map,
+    output_map,
+    render_map,
+    update_map,
+)
 
 __all__ = [
     "__version__",
     "Map",
     "MapBuilder",
+    "MapSelection",
+    "MapSelectionBuilder",
+    "MapCount",
+    "MapCountBuilder",
     "MapPayload",
     "input_map",
     "output_map",
     "render_map",
+    "update_map",
     # Color utilities
     "NEUTRALS",
     "QUALITATIVE",
@@ -35,4 +53,6 @@ __all__ = [
     "scale_sequential",
     "scale_diverging",
     "scale_qualitative",
+    # Geometry subpackage
+    "geometry",
 ]

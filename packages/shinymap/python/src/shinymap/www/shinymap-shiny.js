@@ -75,6 +75,16 @@
         }
       };
 
+      // Extract per-region aesthetics (from update_map or initial props)
+      const strokeWidths = props.strokeWidth;
+      const strokeColors = props.strokeColor;
+      const fillOpacities = props.fillOpacity;
+
+      // Clean up - these aren't valid InputMap props
+      delete props.strokeWidth;
+      delete props.strokeColor;
+      delete props.fillOpacity;
+
       // Add default resolveAesthetic if not provided
       if (!props.resolveAesthetic) {
         // Use cycle as fixed max if available, otherwise default to 10
@@ -88,52 +98,53 @@
           "#22c55e", // 3: green
         ];
 
-        props.resolveAesthetic = ({ mode, isSelected, isHovered, count, baseAesthetic }) => {
+        props.resolveAesthetic = ({ id, mode, isSelected, count, baseAesthetic }) => {
           const next = { ...baseAesthetic };
 
+          // Apply per-region aesthetics first (from update_map)
+          if (strokeWidths && typeof strokeWidths === "object" && strokeWidths[id] !== undefined) {
+            next.strokeWidth = strokeWidths[id];
+          }
+          if (strokeColors && typeof strokeColors === "object" && strokeColors[id] !== undefined) {
+            next.strokeColor = strokeColors[id];
+          }
+          if (fillOpacities && typeof fillOpacities === "object" && fillOpacities[id] !== undefined) {
+            next.fillOpacity = fillOpacities[id];
+          }
+
           // For single/multiple modes: highlight selected regions
-          if ((mode === "single" || mode === "multiple") && isSelected) {
+          // BUT: skip if selectedAesthetic is explicitly provided (it takes precedence)
+          if ((mode === "single" || mode === "multiple") && isSelected && !props.selectedAesthetic) {
             next.fillOpacity = 0.8;
             next.strokeWidth = 2;
             next.strokeColor = "#1e40af"; // blue-800
           }
 
           // For count mode with cycle=4: use hue cycling
-          if (mode === "count" && props.cycle === 4 && !props.fills) {
+          if (mode === "count" && props.cycle === 4 && !props.fillColor) {
             const colorIndex = count % hueCycleColors.length;
             next.fillColor = hueCycleColors[colorIndex];
             next.fillOpacity = 1;
           }
           // For count mode (general): use saturated color with fixed opacity calculation
-          else if (mode === "count" && count > 0 && !props.fills) {
+          else if (mode === "count" && count > 0 && !props.fillColor) {
             const alpha = countCeiling > 0 ? Math.min(1, count / countCeiling) : 0;
             next.fillColor = "#f97316"; // orange-500
             next.fillOpacity = 0.3 + alpha * 0.65;
           }
 
-          // Hover highlighting: apply user-defined hover effects
-          if (isHovered && props.hoverHighlight) {
-            const hover = props.hoverHighlight;
-
-            if (hover.stroke_width !== undefined) {
-              next.strokeWidth = (next.strokeWidth ?? 1) + hover.stroke_width;
-            }
-            if (hover.fill_opacity !== undefined) {
-              next.fillOpacity = Math.max(0, Math.min(1, (next.fillOpacity ?? 1) + hover.fill_opacity));
-            }
-            if (hover.stroke_color !== undefined) {
-              next.strokeColor = hover.stroke_color;
-            }
-            if (hover.fill_color !== undefined) {
-              next.fillColor = hover.fill_color;
-            }
-          }
-          // Default hover behavior if no hover_highlight specified
-          else if (isHovered) {
-            next.strokeWidth = (next.strokeWidth ?? 1) + 1;
-          }
+          // NOTE: Hover highlighting is now handled by hoverHighlight prop
+          // and rendered as a separate overlay layer in the React component
 
           return next;
+        };
+      }
+
+      // Add default hoverHighlight if not provided
+      if (!props.hoverHighlight) {
+        props.hoverHighlight = {
+          strokeWidth: 2,
+          strokeColor: "#1e40af", // blue-800
         };
       }
 
@@ -174,6 +185,8 @@
           ? (id) => window.Shiny.setInputValue(clickInputId, id, { priority: "event" })
           : undefined;
 
+      // Note: OutputMap.tsx now handles fillColorSelected/fillColorNotSelected directly,
+      // so we just pass the props through without creating resolveAesthetic logic
       renderOutputMap(el, { ...payload, onRegionClick });
       el.dataset.shinymapMounted = "output";
     }
@@ -258,6 +271,151 @@
     setTimeout(() => scan(), 2000);
 
     window.shinymapScan = scan;
+
+    // Register custom message handler for update_map()
+    if (window.Shiny) {
+      window.Shiny.addCustomMessageHandler("shinymap-update", function (message) {
+        try {
+          const { id, updates } = message;
+          const el = document.getElementById(id);
+          if (!el) {
+            console.warn(`[shinymap] update_map: element with id="${id}" not found`);
+            return;
+          }
+
+          const isInput = el.classList.contains("shinymap-input") || el.dataset.shinymapInput;
+          const isOutput = el.classList.contains("shinymap-output") || el.dataset.shinymapOutput;
+
+          if (isInput) {
+            // For input maps, update props
+            const currentProps = parseJson(el, "shinymapProps") || {};
+
+            // Merge updates with current props
+            const newProps = { ...currentProps, ...updates };
+
+            // Preserve current value ONLY if not explicitly provided in updates
+            // This allows update_map(id, value={}) to clear selections
+            if (updates.value === undefined && currentProps.value !== undefined) {
+              newProps.value = currentProps.value;
+            }
+
+            el.dataset.shinymapProps = JSON.stringify(newProps);
+
+            // Re-render using existing root (preserves React state)
+            if (el.__shinymapRoot && window.shinymap && window.shinymap.renderInputMap) {
+              const inputId = el.dataset.shinymapInputId || el.dataset.shinymap_input_id || el.id;
+              const mode = el.dataset.shinymapInputMode || el.dataset.shinymap_input_mode || newProps.mode;
+
+              // Extract per-region aesthetics
+              const strokeWidths = newProps.strokeWidth;
+              const strokeColors = newProps.strokeColor;
+              const fillOpacities = newProps.fillOpacity;
+
+              // Clean up - these aren't valid InputMap props
+              delete newProps.strokeWidth;
+              delete newProps.strokeColor;
+              delete newProps.fillOpacity;
+
+              // Add default resolveAesthetic if not provided (same logic as mountInput)
+              if (!newProps.resolveAesthetic) {
+                const countCeiling = newProps.cycle && Number.isFinite(newProps.cycle) ? newProps.cycle - 1 : 10;
+                const hueCycleColors = ["#e2e8f0", "#ef4444", "#eab308", "#22c55e"];
+
+                newProps.resolveAesthetic = ({ id, mode, isSelected, count, baseAesthetic }) => {
+                  const next = { ...baseAesthetic };
+
+                  // Apply per-region aesthetics first
+                  if (strokeWidths && typeof strokeWidths === "object" && strokeWidths[id] !== undefined) {
+                    next.strokeWidth = strokeWidths[id];
+                  }
+                  if (strokeColors && typeof strokeColors === "object" && strokeColors[id] !== undefined) {
+                    next.strokeColor = strokeColors[id];
+                  }
+                  if (fillOpacities && typeof fillOpacities === "object" && fillOpacities[id] !== undefined) {
+                    next.fillOpacity = fillOpacities[id];
+                  }
+
+                  // Selection styling (skip if selectedAesthetic provided)
+                  if ((mode === "single" || mode === "multiple") && isSelected && !newProps.selectedAesthetic) {
+                    next.fillOpacity = 0.8;
+                    next.strokeWidth = 2;
+                    next.strokeColor = "#1e40af";
+                  }
+
+                  // Count mode coloring (skip if fillColor provided)
+                  if (mode === "count" && newProps.cycle === 4 && !newProps.fillColor) {
+                    const colorIndex = count % hueCycleColors.length;
+                    next.fillColor = hueCycleColors[colorIndex];
+                    next.fillOpacity = 1;
+                  } else if (mode === "count" && count > 0 && !newProps.fillColor) {
+                    const alpha = countCeiling > 0 ? Math.min(1, count / countCeiling) : 0;
+                    next.fillColor = "#f97316";
+                    next.fillOpacity = 0.3 + alpha * 0.65;
+                  }
+
+                  return next;
+                };
+              }
+
+              // Add default hoverHighlight if not provided
+              if (!newProps.hoverHighlight) {
+                newProps.hoverHighlight = {
+                  strokeWidth: 2,
+                  strokeColor: "#1e40af",
+                };
+              }
+
+              // Re-create onChange handler
+              const transformValue = (countMap) => {
+                if (mode === "count") return countMap;
+                const selected = Object.entries(countMap)
+                  .filter(([_, count]) => count > 0)
+                  .map(([id, _]) => id);
+                if (mode === "single") {
+                  return selected.length > 0 ? selected[0] : null;
+                }
+                return selected;
+              };
+              const onChange = (value) => {
+                if (window.Shiny && typeof window.Shiny.setInputValue === "function" && inputId) {
+                  const transformed = transformValue(value);
+                  window.Shiny.setInputValue(inputId, transformed, { priority: "event" });
+                }
+              };
+
+              window.shinymap.renderInputMap(el, newProps, onChange);
+            } else {
+              // Fallback: unmount and remount
+              if (el.__shinymapRoot) {
+                el.__shinymapRoot.unmount();
+                delete el.__shinymapRoot;
+              }
+              delete el.dataset.shinymapMounted;
+              mountInput(el);
+            }
+          } else if (isOutput) {
+            // For output maps, update payload
+            const currentPayload = parseJson(el, "shinymapPayload") || {};
+            const newPayload = { ...currentPayload, ...updates };
+            el.dataset.shinymapPayload = JSON.stringify(newPayload);
+
+            // Unmount existing React root to force complete re-render
+            if (el.__shinymapRoot) {
+              el.__shinymapRoot.unmount();
+              delete el.__shinymapRoot;
+            }
+
+            // Remove mounted flag to force re-render
+            delete el.dataset.shinymapMounted;
+            mountOutput(el);
+          } else {
+            console.warn(`[shinymap] update_map: element id="${id}" is neither input nor output map`);
+          }
+        } catch (error) {
+          console.error("[shinymap] update_map error:", error);
+        }
+      });
+    }
   }
 
   bootstrap();
