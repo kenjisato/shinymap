@@ -119,5 +119,5 @@ export function OutputMap(props) {
                             resolved = { ...resolved, ...overrides };
                     }
                     return (_jsx("path", { d: geometry[id], fill: resolved.fillColor, fillOpacity: resolved.fillOpacity, stroke: resolved.strokeColor, strokeWidth: resolved.strokeWidth, pointerEvents: "none" }, `selection-overlay-${id}`));
-                }), hovered && hoverHighlight && geometry[hovered] && (_jsx("path", { d: geometry[hovered], fill: (_a = hoverHighlight.fillColor) !== null && _a !== void 0 ? _a : "none", fillOpacity: (_b = hoverHighlight.fillOpacity) !== null && _b !== void 0 ? _b : 1, stroke: (_c = hoverHighlight.strokeColor) !== null && _c !== void 0 ? _c : "none", strokeWidth: (_d = hoverHighlight.strokeWidth) !== null && _d !== void 0 ? _d : 1, pointerEvents: "none" }, `hover-overlay-${hovered}`))] }) }));
+                }), hovered && hoverHighlight && geometry[hovered] && (_jsx("path", { d: geometry[hovered], fill: (_a = hoverHighlight.fillColor) !== null && _a !== void 0 ? _a : "none", fillOpacity: (_b = hoverHighlight.fillOpacity) !== null && _b !== void 0 ? _b : 0, stroke: (_c = hoverHighlight.strokeColor) !== null && _c !== void 0 ? _c : "#1e40af", strokeWidth: (_d = hoverHighlight.strokeWidth) !== null && _d !== void 0 ? _d : 2, pointerEvents: "none" }, `hover-overlay-${hovered}`))] }) }));
 }
