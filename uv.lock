@@ -433,6 +433,18 @@ wheels = [
 ]
 
 [[package]]
+name = "shiny-querynav"
+version = "0.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "shiny" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e0/48/d80620089a6fc819db43040f43e54b9427798758877a5f944a9a1f73b156/shiny_querynav-0.1.0.tar.gz", hash = "sha256:939ef2762bcb6528dd9afd0b3023f2ce2bc1684dfa86a6be70ac3c96ef08a666", size = 5605, upload-time = "2025-12-08T07:05:04.225Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2f/67/a31e50089eabbe6a30aaa693e8ef3dc93e7a420177f895a75d3902685b9e/shiny_querynav-0.1.0-py3-none-any.whl", hash = "sha256:fa34779ff09a73a7b2b4505a6de7a90c1badaa3c22b0833c1499fa6621236148", size = 6713, upload-time = "2025-12-08T07:05:02.898Z" },
+]
+
+[[package]]
 name = "shinychat"
 version = "0.2.8"
 source = { registry = "https://pypi.org/simple" }
@@ -453,6 +465,11 @@ dependencies = [
     { name = "shiny" },
 ]
 
+[package.optional-dependencies]
+demo = [
+    { name = "shiny-querynav" },
+]
+
 [package.dev-dependencies]
 dev = [
     { name = "mypy" },
@@ -462,7 +479,11 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "shiny", specifier = ">=1.4.0" }]
+requires-dist = [
+    { name = "shiny", specifier = ">=1.4.0" },
+    { name = "shiny-querynav", marker = "extra == 'demo'", specifier = ">=0.1.0" },
+]
+provides-extras = ["demo"]
 
 [package.metadata.requires-dev]
 dev = [
