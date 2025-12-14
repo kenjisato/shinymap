@@ -1,0 +1,33 @@
+Japan Prefecture Geometry Data License
+=======================================
+
+Source: Wikimedia Commons - File:Japan_template_large.svg
+URL: https://commons.wikimedia.org/wiki/File:Japan_template_large.svg
+Extracted: 2025-12-10
+
+License: Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0)
+License URL: https://creativecommons.org/licenses/by-sa/3.0/
+
+Original SVG file attribution:
+- The original SVG file is available on Wikimedia Commons
+- Contributors: Multiple Wikimedia Commons contributors
+
+Modifications:
+- Extracted SVG path coordinates only (removed styling, background, etc.)
+- Converted Romaji prefecture names to JIS X 0401 prefecture codes (01-47)
+- Merged multi-path prefectures (islands) into single path strings
+- Reformatted as JSON with metadata
+
+Usage:
+This data may be used under the terms of CC BY-SA 3.0, which requires:
+1. Attribution to the original source (Wikimedia Commons contributors)
+2. ShareAlike: Derivative works must use the same or compatible license
+3. Indicate if changes were made
+
+For the shinymap examples, this attribution requirement is satisfied by:
+- This LICENSE.txt file
+- Metadata included in japan_prefectures.json
+- Documentation in example code
+
+Note: The shinymap library itself (code) is MIT licensed. Only this
+specific geometry data file is CC BY-SA 3.0 licensed.
