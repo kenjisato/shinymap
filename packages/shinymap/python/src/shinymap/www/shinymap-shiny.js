@@ -140,11 +140,18 @@
         };
       }
 
-      // Add default hoverHighlight if not provided
+      // Merge hoverHighlight with defaults (allow partial overrides)
       if (!props.hoverHighlight) {
         props.hoverHighlight = {
           strokeWidth: 2,
           strokeColor: "#1e40af", // blue-800
+        };
+      } else {
+        // Merge user-provided partial hoverHighlight with defaults
+        props.hoverHighlight = {
+          strokeWidth: 2,
+          strokeColor: "#1e40af",
+          ...props.hoverHighlight, // User values override defaults
         };
       }
 
@@ -357,11 +364,18 @@
                 };
               }
 
-              // Add default hoverHighlight if not provided
+              // Merge hoverHighlight with defaults (allow partial overrides)
               if (!newProps.hoverHighlight) {
                 newProps.hoverHighlight = {
                   strokeWidth: 2,
                   strokeColor: "#1e40af",
+                };
+              } else {
+                // Merge user-provided partial hoverHighlight with defaults
+                newProps.hoverHighlight = {
+                  strokeWidth: 2,
+                  strokeColor: "#1e40af",
+                  ...newProps.hoverHighlight, // User values override defaults
                 };
               }
 
