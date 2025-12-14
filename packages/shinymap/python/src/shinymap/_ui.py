@@ -8,14 +8,18 @@ from typing import Any
 
 from htmltools import HTMLDependency, Tag, TagList, css
 from shiny import render, ui
+from shiny.session import Session, require_active_session
 
 from . import __version__
 
-GeometryMap = Mapping[str, str]
+GeometryMap = Mapping[str, str | list[str]]
 TooltipMap = Mapping[str, str] | None
-FillMap = Mapping[str, str] | None
+FillMap = str | Mapping[str, str] | None
 CountMap = Mapping[str, int] | None
 Selection = str | list[str] | None
+
+# Module-level registry for static parameters from output_map()
+_static_map_params: MutableMapping[str, Mapping[str, Any]] = {}
 
 
 def _dependency() -> HTMLDependency:
@@ -46,20 +50,74 @@ def _drop_nones(data: MutableMapping[str, Any]) -> MutableMapping[str, Any]:
     return {k: v for k, v in data.items() if v is not None}
 
 
+def _normalize_geometry(geometry: GeometryMap) -> Mapping[str, str]:
+    """Normalize geometry to flat string format for JavaScript.
+
+    Accepts both formats:
+    - Flat strings: {"id": "M 0 0 L 10 10"}
+    - List format: {"id": ["M 0 0 L 10 10", "M 20 20 L 30 30"]}
+
+    Returns flat strings joined with spaces.
+    """
+    return {
+        region_id: " ".join(paths) if isinstance(paths, list) else paths
+        for region_id, paths in geometry.items()
+    }
+
+
+def _normalize_fills(fills: FillMap, geometry: GeometryMap) -> Mapping[str, str] | None:
+    """Normalize fills to a dict. If fills is a string, apply to all regions."""
+    if fills is None:
+        return None
+    if isinstance(fills, str):
+        return {region_id: fills for region_id in geometry.keys()}
+    return fills
+
+
+def _to_camel(snake_str: str) -> str:
+    """Convert snake_case to camelCase."""
+    components = snake_str.split("_")
+    return components[0] + "".join(x.title() for x in components[1:])
+
+
 def _camel_props(data: MutableMapping[str, Any]) -> MutableMapping[str, Any]:
-    """Convert select snake_case keys to camelCase for the JS component API."""
+    """Convert snake_case to camelCase (singular, consistent naming)."""
     mapping = {
         "max_selection": "maxSelection",
         "view_box": "viewBox",
         "default_aesthetic": "defaultAesthetic",
         "active_ids": "activeIds",
         "hover_highlight": "hoverHighlight",
+        "selected_aesthetic": "selectedAesthetic",
+        "fill_color": "fillColor",  # Singular, consistent with TS/JS
+        "stroke_width": "strokeWidth",  # Singular, works for dict or scalar
+        "stroke_color": "strokeColor",  # Singular
+        "fill_opacity": "fillOpacity",  # Singular
+        "fill_color_selected": "fillColorSelected",
+        "fill_color_not_selected": "fillColorNotSelected",
+        "count_palette": "countPalette",
+        "overlay_geometry": "overlayGeometry",
+        "overlay_aesthetic": "overlayAesthetic",
     }
+
+    # Keys whose values are aesthetic dicts that need recursive conversion
+    aesthetic_keys = {"default_aesthetic", "hover_highlight", "selected_aesthetic",
+                      "overlay_aesthetic", "fill_color_selected", "fill_color_not_selected"}
+
     out: MutableMapping[str, Any] = {}
     for key, value in data.items():
         if value is None:
             continue
-        out[mapping.get(key, key)] = value
+        camel_key = mapping.get(key)
+        if camel_key:
+            # Recursively convert aesthetic dicts
+            if key in aesthetic_keys and isinstance(value, dict):
+                out[camel_key] = {_to_camel(k): v for k, v in value.items()}
+            else:
+                out[camel_key] = value
+        else:
+            # Auto-convert any unmapped snake_case keys
+            out[_to_camel(key)] = value
     return out
 
 
@@ -68,7 +126,7 @@ def input_map(
     geometry: GeometryMap,
     *,
     tooltips: TooltipMap = None,
-    fills: FillMap = None,
+    fill_color: FillMap = None,
     mode: str | None = "multiple",
     value: CountMap = None,
     cycle: int | None = None,
@@ -76,6 +134,9 @@ def input_map(
     view_box: str | None = None,
     default_aesthetic: Mapping[str, Any] | None = None,
     hover_highlight: Mapping[str, Any] | None = None,
+    selected_aesthetic: Mapping[str, Any] | None = None,
+    overlay_geometry: GeometryMap | None = None,
+    overlay_aesthetic: Mapping[str, Any] | None = None,
     width: str | None = "100%",
     height: str | None = "320px",
     class_: str | None = None,
@@ -110,7 +171,7 @@ def input_map(
         {
             "geometry": geometry,
             "tooltips": tooltips,
-            "fills": fills,
+            "fill_color": _normalize_fills(fill_color, geometry),
             "mode": mode,
             "value": value,
             "cycle": effective_cycle,
@@ -118,6 +179,9 @@ def input_map(
             "view_box": view_box,
             "default_aesthetic": default_aesthetic,
             "hover_highlight": hover_highlight,
+            "selected_aesthetic": selected_aesthetic,
+            "overlay_geometry": overlay_geometry,
+            "overlay_aesthetic": overlay_aesthetic,
         }
     )
 
@@ -137,55 +201,125 @@ def input_map(
 
 @dataclass
 class MapPayload:
-    geometry: GeometryMap
+    geometry: GeometryMap | None = None  # Can be None if provided via output_map()
     tooltips: TooltipMap = None
-    fills: FillMap = None
+    fill_color: str | Mapping[str, str] | None = None  # RENAMED from fills
+    stroke_width: float | Mapping[str, float] | None = None  # NEW (dict support)
+    stroke_color: str | Mapping[str, str] | None = None  # NEW
+    fill_opacity: float | Mapping[str, float] | None = None  # NEW
     counts: CountMap = None
     active_ids: Selection = None
     view_box: str | None = None
     default_aesthetic: Mapping[str, Any] | None = None
+    # Selection-specific aesthetics (RENAMED for consistency)
+    fill_color_selected: Mapping[str, Any] | None = None  # RENAMED from selection_aesthetic
+    fill_color_not_selected: Mapping[str, Any] | None = None  # RENAMED from not_selection_aesthetic
+    # Overlay layer for non-interactive annotations (dividers, borders, grids)
+    overlay_geometry: GeometryMap | None = None
+    overlay_aesthetic: Mapping[str, Any] | None = None
+    # Count palette (for later hover support)
+    count_palette: list[str] | None = None
 
     def as_json(self) -> Mapping[str, Any]:
-        return _camel_props(_drop_nones(asdict(self)))
+        data = asdict(self)
+        # Normalize geometry from list format to flat strings for JavaScript
+        if self.geometry is not None:
+            data["geometry"] = _normalize_geometry(self.geometry)
+        if self.overlay_geometry is not None:
+            data["overlay_geometry"] = _normalize_geometry(self.overlay_geometry)
+        # Normalize fill_color if it's a string (only if geometry is available)
+        if isinstance(data.get("fill_color"), str) and self.geometry is not None:
+            data["fill_color"] = _normalize_fills(data["fill_color"], self.geometry)
+        return _camel_props(_drop_nones(data))
 
 
 class MapBuilder:
     """Fluent builder for constructing map payloads with method chaining.
 
-    Example:
+    Parameters can be provided here or via output_map(). When both are provided,
+    builder parameters take precedence.
+
+    Example (traditional):
         @render_map
         def my_map():
             return (
-                Map(geometry, tooltips=tooltips)
-                .with_fills(my_fills)
+                Map(geometry, tooltips=tooltips, view_box=viewbox)
+                .with_fill_color(my_fill_colors)
                 .with_counts(my_counts)
-                .with_active(selected_ids)
             )
+
+    Example (with static params in output_map()):
+        # UI layer
+        output_map("my_map", geometry=GEOMETRY, tooltips=TOOLTIPS, view_box=VIEWBOX)
+
+        # Server layer
+        @render_map
+        def my_map():
+            return Map().with_fill_color(my_fill_colors).with_counts(my_counts)
     """
 
     def __init__(
         self,
-        geometry: GeometryMap,
+        geometry: GeometryMap | None = None,
         *,
         tooltips: TooltipMap = None,
         view_box: str | None = None,
+        overlay_geometry: GeometryMap | None = None,
+        overlay_aesthetic: Mapping[str, Any] | None = None,
     ):
         self._geometry = geometry
         self._tooltips = tooltips
-        self._fills: FillMap = None
+        self._fill_color: str | Mapping[str, str] | None = None
+        self._stroke_width: float | Mapping[str, float] | None = None
+        self._stroke_color: str | Mapping[str, str] | None = None
+        self._fill_opacity: float | Mapping[str, float] | None = None
         self._counts: CountMap = None
         self._active_ids: Selection = None
         self._view_box = view_box
         self._default_aesthetic: Mapping[str, Any] | None = None
+        self._overlay_geometry = overlay_geometry
+        self._overlay_aesthetic = overlay_aesthetic
 
     def with_tooltips(self, tooltips: TooltipMap) -> MapBuilder:
         """Set region tooltips."""
         self._tooltips = tooltips
         return self
 
-    def with_fills(self, fills: FillMap) -> MapBuilder:
-        """Set region fill colors."""
-        self._fills = fills
+    def with_fill_color(
+        self,
+        fill_color: str | Mapping[str, str],
+    ) -> "MapBuilder":
+        """Set fill color (global string or per-region dict). Merges if called multiple times.
+
+        Examples:
+            .with_fill_color("red")  # All regions red
+            .with_fill_color({"a": "red", "b": "blue"})  # Per-region
+            .with_fill_color("#cccccc").with_fill_color({"selected": "yellow"})  # Base + override
+        """
+        if fill_color is None:
+            return self
+
+        # Normalize to dict (only if geometry is available)
+        if self._geometry is not None:
+            normalized = _normalize_fills(fill_color, self._geometry)
+        else:
+            # If geometry not yet available, store as-is (will normalize in _apply_static_params)
+            normalized = fill_color if isinstance(fill_color, dict) else None
+
+        # Merge with existing
+        if self._fill_color is None:
+            self._fill_color = normalized if normalized else fill_color
+        else:
+            if self._geometry is not None:
+                existing_normalized = _normalize_fills(self._fill_color, self._geometry)
+                if existing_normalized and normalized:
+                    self._fill_color = {**existing_normalized, **normalized}
+                elif normalized:
+                    self._fill_color = normalized
+            else:
+                # Without geometry, just use the new value
+                self._fill_color = fill_color
+
         return self
 
     def with_counts(self, counts: CountMap) -> MapBuilder:
@@ -203,11 +337,64 @@ class MapBuilder:
         self._view_box = view_box
         return self
 
-    def with_stroke_width(self, width: float) -> MapBuilder:
-        """Set stroke width for all regions."""
-        if self._default_aesthetic is None:
-            self._default_aesthetic = {}
-        self._default_aesthetic = {**self._default_aesthetic, "strokeWidth": width}
+    def with_stroke_width(
+        self,
+        stroke_width: float | Mapping[str, float],
+    ) -> "MapBuilder":
+        """Set stroke width (global float or per-region dict).
+
+        Examples:
+            .with_stroke_width(2.0)  # All regions
+            .with_stroke_width({"a": 3.0, "b": 1.0})  # Per-region
+        """
+        if isinstance(stroke_width, dict):
+            # Per-region dict
+            self._stroke_width = stroke_width
+        else:
+            # Global: store in default_aesthetic
+            if self._default_aesthetic is None:
+                self._default_aesthetic = {}
+            self._default_aesthetic = {**self._default_aesthetic, "strokeWidth": stroke_width}
+        return self
+
+    def with_stroke_color(
+        self,
+        stroke_color: str | Mapping[str, str],
+    ) -> "MapBuilder":
+        """Set stroke color (global string or per-region dict).
+
+        Examples:
+            .with_stroke_color("#1f2937")  # All regions
+            .with_stroke_color({"a": "red", "b": "blue"})  # Per-region
+        """
+        if isinstance(stroke_color, str):
+            # Global: store in default_aesthetic
+            if self._default_aesthetic is None:
+                self._default_aesthetic = {}
+            self._default_aesthetic = {**self._default_aesthetic, "strokeColor": stroke_color}
+        else:
+            # Per-region dict
+            self._stroke_color = stroke_color
+        return self
+
+    def with_fill_opacity(
+        self,
+        fill_opacity: float | Mapping[str, float],
+    ) -> "MapBuilder":
+        """Set fill opacity (global float or per-region dict).
+
+        Examples:
+            .with_fill_opacity(0.8)  # All regions
+            .with_fill_opacity({"a": 0.9, "b": 0.5})  # Per-region
+        """
+        if isinstance(fill_opacity, dict):
+            # Per-region dict
+            self._fill_opacity = fill_opacity
+        else:
+            # Global: store in default_aesthetic
+            if self._default_aesthetic is None:
+                self._default_aesthetic = {}
+            self._default_aesthetic = {**self._default_aesthetic, "fillOpacity": fill_opacity}
         return self
 
     def with_aesthetic(self, **kwargs: Any) -> MapBuilder:
@@ -222,11 +409,16 @@ class MapBuilder:
         return MapPayload(
             geometry=self._geometry,
             tooltips=self._tooltips,
-            fills=self._fills,
+            fill_color=self._fill_color,
+            fill_opacity=self._fill_opacity,
+            stroke_color=self._stroke_color,
+            stroke_width=self._stroke_width,
             counts=self._counts,
             active_ids=self._active_ids,
             view_box=self._view_box,
             default_aesthetic=self._default_aesthetic,
+            overlay_geometry=self._overlay_geometry,
+            overlay_aesthetic=self._overlay_aesthetic,
         )
 
     def as_json(self) -> Mapping[str, Any]:
@@ -236,6 +428,249 @@ class MapBuilder:
 
 # Alias for more concise usage
 Map = MapBuilder
+
+
+class MapSelectionBuilder(MapBuilder):
+    """Specialized builder for selection highlighting patterns.
+
+    Parameters can be provided here or via output_map(). When both are provided,
+    builder parameters take precedence.
+
+    Example (traditional):
+        MapSelection(geometry, selected="region1", tooltips=tooltips)
+            .with_fill_color("#e2e8f0")
+            .with_fill_color_selected("#fbbf24")
+
+    Example (with static params in output_map()):
+        # UI layer
+        output_map("my_map", geometry=GEOMETRY, tooltips=TOOLTIPS, view_box=VIEWBOX)
+
+        # Server layer
+        @render_map
+        def my_map():
+            return MapSelection(selected=input.selected()).with_fill_color_selected("#fbbf24")
+    """
+
+    def __init__(
+        self,
+        geometry: GeometryMap | None = None,
+        selected: Selection = None,
+        *,
+        tooltips: TooltipMap = None,
+        view_box: str | None = None,
+        overlay_geometry: GeometryMap | None = None,
+        overlay_aesthetic: Mapping[str, Any] | None = None,
+    ):
+        super().__init__(geometry, tooltips=tooltips, view_box=view_box, overlay_geometry=overlay_geometry, overlay_aesthetic=overlay_aesthetic)
+        self._selected = selected
+        self._fill_color_selected: Mapping[str, Any] | None = None
+        self._fill_color_not_selected: Mapping[str, Any] | None = None
+
+    # Type overrides for method chaining
+    def with_fill_color(self, fill_color: str | Mapping[str, str]) -> "MapSelectionBuilder":
+        super().with_fill_color(fill_color)
+        return self
+
+    def with_fill_opacity(self, fill_opacity: float | Mapping[str, float]) -> "MapSelectionBuilder":
+        super().with_fill_opacity(fill_opacity)
+        return self
+
+    def with_stroke_color(self, stroke_color: str | Mapping[str, str]) -> "MapSelectionBuilder":
+        super().with_stroke_color(stroke_color)
+        return self
+
+    def with_stroke_width(self, stroke_width: float | Mapping[str, float]) -> "MapSelectionBuilder":
+        super().with_stroke_width(stroke_width)
+        return self
+
+    def with_fill_color_selected(
+        self,
+        fill: str | Mapping[str, Any],
+    ) -> "MapSelectionBuilder":
+        """Set aesthetic for selected regions.
+
+        Can be a color string or full aesthetic dict:
+            .with_fill_color_selected("#fbbf24")
+            .with_fill_color_selected({"fillColor": "#fbbf24", "strokeWidth": 2})
+        """
+        if isinstance(fill, str):
+            self._fill_color_selected = {"fillColor": fill}
+        else:
+            self._fill_color_selected = fill
+        return self
+
+    def with_fill_color_not_selected(
+        self,
+        fill: str | Mapping[str, Any],
+    ) -> "MapSelectionBuilder":
+        """Set aesthetic for non-selected regions.
+
+        Can be a color string or full aesthetic dict:
+            .with_fill_color_not_selected("#e2e8f0")
+            .with_fill_color_not_selected({"fillColor": "#e2e8f0", "fillOpacity": 0.5})
+        """
+        if isinstance(fill, str):
+            self._fill_color_not_selected = {"fillColor": fill}
+        else:
+            self._fill_color_not_selected = fill
+        return self
+
+    def build(self) -> MapPayload:
+        """Build payload with selection-specific aesthetics."""
+        return MapPayload(
+            geometry=self._geometry,
+            tooltips=self._tooltips,
+            fill_color=self._fill_color,
+            fill_opacity=self._fill_opacity,
+            stroke_color=self._stroke_color,
+            stroke_width=self._stroke_width,
+            counts=self._counts,
+            active_ids=self._selected,  # Mark selected regions as active
+            view_box=self._view_box,
+            default_aesthetic=self._default_aesthetic,
+            fill_color_selected=self._fill_color_selected,
+            fill_color_not_selected=self._fill_color_not_selected,
+            overlay_geometry=self._overlay_geometry,
+            overlay_aesthetic=self._overlay_aesthetic,
+        )
+
+
+# Alias for shorter usage
+MapSelection = MapSelectionBuilder
+
+
+class MapCountBuilder(MapBuilder):
+    """Specialized builder for count-based coloring patterns.
+
+    Parameters can be provided here or via output_map(). When both are provided,
+    builder parameters take precedence.
+
+    Example (traditional):
+        MapCount(geometry, counts, tooltips=tooltips)
+            .with_fill_color(["blue", "red", "green"])  # Palette for 0, 1, 2
+
+    Example (with static params in output_map()):
+        # UI layer
+        output_map("my_map", geometry=GEOMETRY, tooltips=TOOLTIPS, view_box=VIEWBOX)
+
+        # Server layer
+        @render_map
+        def my_map():
+            return MapCount(counts=input.counts()).with_fill_color(palette)
+    """
+
+    def __init__(
+        self,
+        geometry: GeometryMap | None = None,
+        counts: CountMap = None,
+        *,
+        tooltips: TooltipMap = None,
+        view_box: str | None = None,
+        overlay_geometry: GeometryMap | None = None,
+        overlay_aesthetic: Mapping[str, Any] | None = None,
+    ):
+        super().__init__(geometry, tooltips=tooltips, view_box=view_box, overlay_geometry=overlay_geometry, overlay_aesthetic=overlay_aesthetic)
+        self._counts = counts
+        self._count_palette: list[str] | None = None
+
+    # Override to accept palette list
+    def with_fill_color(
+        self,
+        fill_color: str | list[str] | Mapping[str, str] | None,
+    ) -> "MapCountBuilder":
+        """Set fill colors (accepts palette list for count values).
+
+        Can be:
+        - String: Apply to all regions
+        - List: Palette for count values [0, 1, 2, ...]
+        - Dict: Explicit region → color mapping
+
+        Examples:
+            .with_fill_color(["blue", "red", "green"])  # count 0→blue, 1→red, 2→green
+            .with_fill_color("#cccccc")  # all regions gray
+            .with_fill_color({"a": "red"})  # explicit mapping
+        """
+        if fill_color is None:
+            return self
+
+        if isinstance(fill_color, list):
+            # Palette mode: map count values to colors
+            import warnings
+
+            self._count_palette = fill_color
+
+            # Only convert to fill map if geometry is available
+            if self._geometry is not None:
+                # Convert to fill map
+                count_fills = {}
+                max_count = max(self._counts.values(), default=0) if self._counts else 0
+
+                # Warn if palette is too small for count values
+                if max_count >= len(fill_color):
+                    warnings.warn(
+                        f"Palette has {len(fill_color)} colors but max count is {max_count}. "
+                        f"Colors will cycle (count {len(fill_color)} gets color[0], etc.).",
+                        UserWarning,
+                        stacklevel=2,
+                    )
+
+                for rid in self._geometry.keys():
+                    count = (self._counts or {}).get(rid, 0)
+                    color_index = count % len(fill_color)  # Cycle if needed
+                    count_fills[rid] = fill_color[color_index]
+                # Store in base _fill_color
+                if self._fill_color is None:
+                    self._fill_color = count_fills
+                else:
+                    # Merge with existing fills
+                    existing = _normalize_fills(self._fill_color, self._geometry)
+                    if existing:
+                        self._fill_color = {**existing, **count_fills}
+                    else:
+                        self._fill_color = count_fills
+            else:
+                # Geometry not available yet - will be applied in _apply_static_params
+                # Store the palette for later
+                pass
+        else:
+            # String or dict - use parent method
+            super().with_fill_color(fill_color)
+        return self
+
+    # Type overrides for other methods
+    def with_fill_opacity(self, fill_opacity: float | Mapping[str, float]) -> "MapCountBuilder":
+        super().with_fill_opacity(fill_opacity)
+        return self
+
+    def with_stroke_color(self, stroke_color: str | Mapping[str, str]) -> "MapCountBuilder":
+        super().with_stroke_color(stroke_color)
+        return self
+
+    def with_stroke_width(self, stroke_width: float | Mapping[str, float]) -> "MapCountBuilder":
+        super().with_stroke_width(stroke_width)
+        return self
+
+    def build(self) -> MapPayload:
+        """Build payload with count information."""
+        return MapPayload(
+            geometry=self._geometry,
+            tooltips=self._tooltips,
+            fill_color=self._fill_color,
+            fill_opacity=self._fill_opacity,
+            stroke_color=self._stroke_color,
+            stroke_width=self._stroke_width,
+            counts=self._counts,
+            active_ids=self._active_ids,
+            view_box=self._view_box,
+            default_aesthetic=self._default_aesthetic,
+            count_palette=self._count_palette,
+            overlay_geometry=self._overlay_geometry,
+            overlay_aesthetic=self._overlay_aesthetic,
+        )
+
+
+# Alias for shorter usage
+MapCount = MapCountBuilder
 
 
 def _render_map_ui(
@@ -271,12 +706,68 @@ def _render_map_ui(
 def output_map(
     id: str,
     *,
+    geometry: GeometryMap | None = None,
+    tooltips: TooltipMap | None = None,
+    view_box: str | None = None,
+    default_aesthetic: Mapping[str, Any] | None = None,
+    overlay_geometry: GeometryMap | None = None,
+    overlay_aesthetic: Mapping[str, Any] | None = None,
     width: str | None = "100%",
     height: str | None = "320px",
     class_: str | None = None,
     style: MutableMapping[str, str] | None = None,
 ) -> TagList:
-    """UI placeholder for a ``@render_map`` output."""
+    """UI placeholder for a ``@render_map`` output.
+
+    Args:
+        id: Output ID (must match @render_map function name)
+        geometry: Optional static geometry (region SVG paths)
+        tooltips: Optional static tooltips
+        view_box: Optional static SVG viewBox
+        default_aesthetic: Optional default styling for all regions (fillColor, strokeColor, strokeWidth, etc.)
+        overlay_geometry: Optional static overlay geometry (non-interactive paths)
+        overlay_aesthetic: Optional static overlay aesthetic styling
+        width: Container width (CSS)
+        height: Container height (CSS)
+        class_: Additional CSS classes
+        style: Additional inline styles
+
+    Static parameters (geometry, tooltips, view_box, default_aesthetic, overlay_*) are merged with
+    @render_map output. Builder parameters take precedence over static parameters.
+
+    Example:
+        # UI layer - define static structure once
+        output_map(
+            "my_map",
+            geometry=GEOMETRY,
+            tooltips=TOOLTIPS,
+            view_box=VIEWBOX,
+            default_aesthetic={"fillColor": "#e5e7eb", "strokeColor": "#9ca3af", "strokeWidth": 0.5},
+            overlay_geometry=DIVIDERS,
+            overlay_aesthetic=DIVIDER_STYLE,
+        )
+
+        # Server layer - focus on reactive data
+        @render_map
+        def my_map():
+            return MapSelection(selected=input.selected()).with_fill_color_selected("#3b82f6")
+    """
+    # Store static params for retrieval in render_map
+    static_params = {
+        "geometry": geometry,
+        "tooltips": tooltips,
+        "view_box": view_box,
+        "default_aesthetic": default_aesthetic,
+        "overlay_geometry": overlay_geometry,
+        "overlay_aesthetic": overlay_aesthetic,
+    }
+    # Filter out None values
+    static_params = {k: v for k, v in static_params.items() if v is not None}
+
+    # Store in module-level registry (keyed by output ID)
+    if static_params:
+        _static_map_params[id] = static_params
+
     return TagList(
         _dependency(),
         ui.div(
@@ -287,16 +778,64 @@ def output_map(
     )
 
 
+def _apply_static_params(payload: MapPayload, output_id: str) -> MapPayload:
+    """Apply static parameters from output_map() to payload.
+
+    Builder parameters take precedence over static parameters.
+    """
+    static_params = _static_map_params.get(output_id)
+    if not static_params:
+        return payload
+
+    # Create new payload with static params as defaults
+    # Builder values (if set) override static values
+    return MapPayload(
+        geometry=payload.geometry if payload.geometry is not None else static_params.get("geometry"),
+        tooltips=payload.tooltips if payload.tooltips is not None else static_params.get("tooltips"),
+        fill_color=payload.fill_color,  # Always from builder
+        stroke_width=payload.stroke_width,  # Always from builder
+        stroke_color=payload.stroke_color,  # Always from builder
+        fill_opacity=payload.fill_opacity,  # Always from builder
+        counts=payload.counts,  # Always from builder
+        active_ids=payload.active_ids,  # Always from builder
+        view_box=payload.view_box if payload.view_box is not None else static_params.get("view_box"),
+        default_aesthetic=payload.default_aesthetic if payload.default_aesthetic is not None else static_params.get("default_aesthetic"),
+        fill_color_selected=payload.fill_color_selected,  # Always from builder
+        fill_color_not_selected=payload.fill_color_not_selected,  # Always from builder
+        count_palette=payload.count_palette,  # Always from builder
+        overlay_geometry=payload.overlay_geometry if payload.overlay_geometry is not None else static_params.get("overlay_geometry"),
+        overlay_aesthetic=payload.overlay_aesthetic if payload.overlay_aesthetic is not None else static_params.get("overlay_aesthetic"),
+    )
+
+
 def render_map(fn=None):
-    """Shiny render decorator that emits a :class:`MapBuilder` or :class:`MapPayload`."""
+    """Shiny render decorator that emits a :class:`MapBuilder` or :class:`MapPayload`.
+
+    Merges static parameters from output_map() with builder output.
+    Builder parameters take precedence over static parameters.
+    """
 
     def decorator(func):
         @render.ui
         @wraps(func)
         def wrapper():
             val = func()
-            result = _render_map_ui(val, _include_dependency=False)
-            print(f"[shinymap] render_map {func.__name__} type={type(val)} result={type(result)}")
+
+            # If val is a builder, build it to get payload
+            if hasattr(val, "build"):
+                payload = val.build()
+            elif isinstance(val, MapPayload):
+                payload = val
+            else:
+                # Pass through non-map values (e.g., Tag, TagList)
+                return _render_map_ui(val, _include_dependency=False)
+
+            # Apply static parameters from output_map()
+            output_id = func.__name__
+            payload = _apply_static_params(payload, output_id)
+
+            result = _render_map_ui(payload, _include_dependency=False)
+            print(f"[shinymap] render_map {output_id} type={type(val)} result={type(result)}")
             return result
 
         return wrapper
@@ -305,3 +844,99 @@ def render_map(fn=None):
         return decorator
 
     return decorator(fn)
+
+
+def update_map(
+    id: str,
+    *,
+    # Aesthetics (both input_map and output_map)
+    fill_color: str | Mapping[str, str] | None = None,
+    stroke_width: float | Mapping[str, float] | None = None,
+    stroke_color: str | Mapping[str, str] | None = None,
+    fill_opacity: float | Mapping[str, float] | None = None,
+    default_aesthetic: Mapping[str, Any] | None = None,
+    hover_highlight: Mapping[str, Any] | None = None,
+    # Input-specific parameters
+    value: CountMap = None,  # Selection state (pass {} to clear all)
+    selected_aesthetic: Mapping[str, Any] | None = None,
+    cycle: int | None = None,
+    max_selection: int | None = None,
+    # Common
+    tooltips: TooltipMap = None,
+    session: Session | None = None,
+) -> None:
+    """Update an input_map or output_map without full re-render.
+
+    For input_map: Updates aesthetics, selection state, and input behavior parameters.
+    For output_map: Updates aesthetics only (use @render_map for data changes).
+
+    Args:
+        id: The map element ID
+        fill_color: Fill color (string for all regions, dict for per-region)
+        stroke_width: Stroke width (number for all, dict for per-region)
+        stroke_color: Stroke color (string for all, dict for per-region)
+        fill_opacity: Fill opacity (number for all, dict for per-region)
+        default_aesthetic: Default aesthetic for all regions
+        hover_highlight: Hover highlight aesthetic
+        value: (input_map only) Selection state; pass {} to clear all selections
+        selected_aesthetic: (input_map only) Aesthetic override for selected regions
+        cycle: (input_map only) Cycle count for click behavior
+        max_selection: (input_map only) Maximum number of selectable regions
+        tooltips: Region tooltips
+        session: A Session instance. If not provided, it is inferred via get_current_session()
+
+    Example:
+        # Update aesthetics (works for both input_map and output_map)
+        update_map("my_map", fill_color=new_colors, stroke_width=2.0)
+
+        # Clear all selections (input_map only)
+        update_map("my_map", value={})
+
+        # Set specific selections (input_map only)
+        update_map("my_map", value={"region1": 1, "region2": 1})
+
+        # Change input behavior (input_map only)
+        update_map("my_map", max_selection=3, cycle=5)
+
+    Note:
+        - Uses shallow merge semantics: new properties override existing ones
+        - Properties not specified are left unchanged
+        - For output_map data updates, use @render_map re-execution instead
+    """
+    session = require_active_session(session)
+
+    # Build update payload
+    updates: dict[str, Any] = {}
+
+    if fill_color is not None:
+        updates["fill_color"] = fill_color
+    if stroke_width is not None:
+        updates["stroke_width"] = stroke_width
+    if stroke_color is not None:
+        updates["stroke_color"] = stroke_color
+    if fill_opacity is not None:
+        updates["fill_opacity"] = fill_opacity
+    if default_aesthetic is not None:
+        updates["default_aesthetic"] = default_aesthetic
+    if selected_aesthetic is not None:
+        updates["selected_aesthetic"] = selected_aesthetic
+    if hover_highlight is not None:
+        updates["hover_highlight"] = hover_highlight
+    if value is not None:
+        updates["value"] = value
+    if cycle is not None:
+        updates["cycle"] = cycle
+    if max_selection is not None:
+        updates["max_selection"] = max_selection
+    if tooltips is not None:
+        updates["tooltips"] = tooltips
+
+    if not updates:
+        return  # Nothing to update
+
+    # Convert to camelCase for JavaScript
+    camel_updates = _camel_props(updates)
+
+    # Send custom message to JavaScript
+    msg = {"id": id, "updates": camel_updates}
+    session._send_message_sync({"custom": {"shinymap-update": msg}})

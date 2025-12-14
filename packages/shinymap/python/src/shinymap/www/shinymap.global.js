@@ -1335,7 +1335,7 @@ var shinymap = (() => {
           return dispatcher;
         }
         "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ && "function" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart && __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
-        var React2 = require_react(), Internals = {
+        var React3 = require_react(), Internals = {
           d: {
             f: noop,
             r: function() {
@@ -1353,7 +1353,7 @@ var shinymap = (() => {
           },
           p: 0,
           findDOMNode: null
-        }, REACT_PORTAL_TYPE = Symbol.for("react.portal"), ReactSharedInternals = React2.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+        }, REACT_PORTAL_TYPE = Symbol.for("react.portal"), ReactSharedInternals = React3.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
         "function" === typeof Map && null != Map.prototype && "function" === typeof Map.prototype.forEach && "function" === typeof Set && null != Set.prototype && "function" === typeof Set.prototype.clear && "function" === typeof Set.prototype.forEach || console.error(
           "React depends on Map and Set built-in types. Make sure that you load a polyfill in older browsers. https://reactjs.org/link/react-polyfills"
         );
@@ -2888,7 +2888,7 @@ var shinymap = (() => {
           "number" === type && getActiveElement(node.ownerDocument) === node || node.defaultValue === "" + value || (node.defaultValue = "" + value);
         }
         function validateOptionProps(element, props) {
-          null == props.value && ("object" === typeof props.children && null !== props.children ? React2.Children.forEach(props.children, function(child) {
+          null == props.value && ("object" === typeof props.children && null !== props.children ? React3.Children.forEach(props.children, function(child) {
             null == child || "string" === typeof child || "number" === typeof child || "bigint" === typeof child || didWarnInvalidChild || (didWarnInvalidChild = true, console.error(
               "Cannot infer the option value of complex children. Pass a `value` prop or use a plain string as children to <option>."
             ));
@@ -18520,14 +18520,14 @@ var shinymap = (() => {
           ));
         }
         "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ && "function" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart && __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
-        var Scheduler = require_scheduler(), React2 = require_react(), ReactDOM = require_react_dom(), assign = Object.assign, REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy");
+        var Scheduler = require_scheduler(), React3 = require_react(), ReactDOM = require_react_dom(), assign = Object.assign, REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy");
         Symbol.for("react.scope");
         var REACT_ACTIVITY_TYPE = Symbol.for("react.activity");
         Symbol.for("react.legacy_hidden");
         Symbol.for("react.tracing_marker");
         var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
         Symbol.for("react.view_transition");
-        var MAYBE_ITERATOR_SYMBOL = Symbol.iterator, REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), isArrayImpl = Array.isArray, ReactSharedInternals = React2.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, ReactDOMSharedInternals = ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, NotPending = Object.freeze({
+        var MAYBE_ITERATOR_SYMBOL = Symbol.iterator, REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), isArrayImpl = Array.isArray, ReactSharedInternals = React3.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, ReactDOMSharedInternals = ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, NotPending = Object.freeze({
           pending: false,
           data: null,
           method: null,
@@ -21315,7 +21315,7 @@ var shinymap = (() => {
           }
         };
         (function() {
-          var isomorphicReactPackageVersion = React2.version;
+          var isomorphicReactPackageVersion = React3.version;
           if ("19.2.0" !== isomorphicReactPackageVersion)
             throw Error(
               'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' + (isomorphicReactPackageVersion + "\n  - react-dom:  19.2.0\nLearn more: https://react.dev/warnings/version-mismatch")
@@ -21669,18 +21669,18 @@ var shinymap = (() => {
         function isValidElement(object) {
           return "object" === typeof object && null !== object && object.$$typeof === REACT_ELEMENT_TYPE;
         }
-        var React2 = require_react(), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy"), REACT_ACTIVITY_TYPE = Symbol.for("react.activity"), REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), ReactSharedInternals = React2.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, hasOwnProperty = Object.prototype.hasOwnProperty, isArrayImpl = Array.isArray, createTask = console.createTask ? console.createTask : function() {
+        var React3 = require_react(), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy"), REACT_ACTIVITY_TYPE = Symbol.for("react.activity"), REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), ReactSharedInternals = React3.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, hasOwnProperty = Object.prototype.hasOwnProperty, isArrayImpl = Array.isArray, createTask = console.createTask ? console.createTask : function() {
           return null;
         };
-        React2 = {
+        React3 = {
           react_stack_bottom_frame: function(callStackForError) {
             return callStackForError();
           }
         };
         var specialPropKeyWarningShown;
         var didWarnAboutElementRef = {};
-        var unknownOwnerDebugStack = React2.react_stack_bottom_frame.bind(
-          React2,
+        var unknownOwnerDebugStack = React3.react_stack_bottom_frame.bind(
+          React3,
           UnknownOwner
         )();
         var unknownOwnerDebugTask = createTask(getTaskName(UnknownOwner));
@@ -21756,11 +21756,18 @@ var shinymap = (() => {
     });
     return set;
   }
+  function normalizeFillColor(fillColor, geometry) {
+    if (!fillColor) return void 0;
+    if (typeof fillColor === "string") {
+      return Object.fromEntries(Object.keys(geometry).map((id) => [id, fillColor]));
+    }
+    return fillColor;
+  }
   function InputMap(props) {
     const {
       geometry,
       tooltips,
-      fills,
+      fillColor,
       className,
       containerStyle,
       viewBox = DEFAULT_VIEWBOX,
@@ -21770,11 +21777,22 @@ var shinymap = (() => {
       value,
       onChange,
       cycle,
-      maxSelection
+      maxSelection,
+      overlayGeometry,
+      overlayAesthetic,
+      hoverHighlight,
+      selectedAesthetic
     } = props;
+    const normalizedFillColor = (0, import_react.useMemo)(() => normalizeFillColor(fillColor, geometry), [fillColor, geometry]);
     const [hovered, setHovered] = (0, import_react.useState)(null);
     const [counts, setCounts] = (0, import_react.useState)(value ?? {});
     const selected = (0, import_react.useMemo)(() => buildSelected(counts), [counts]);
+    (0, import_react.useEffect)(() => {
+      if (value !== void 0) {
+        setCounts(value);
+        onChange?.(value);
+      }
+    }, [value, onChange]);
     const mode = props.mode ?? (cycle ? "count" : "multiple");
     const effectiveCycle = cycle ?? (mode === "single" ? 2 : mode === "multiple" ? 2 : mode === "count" ? Infinity : 2);
     const effectiveMax = maxSelection ?? (mode === "single" ? 1 : mode === "multiple" ? Infinity : mode === "count" ? Infinity : Infinity);
@@ -21786,7 +21804,9 @@ var shinymap = (() => {
       const maxSel = Number.isFinite(effectiveMax) ? effectiveMax : Infinity;
       if (isActivating && activeCount >= maxSel) {
         if (maxSel === 1) {
-          const next2 = Object.fromEntries(Object.keys(geometry).map((key) => [key, key === id ? nextCount : 0]));
+          const next2 = Object.fromEntries(
+            Object.keys(geometry).map((key) => [key, key === id ? nextCount : 0])
+          );
           setCounts(next2);
           onChange?.(next2);
         }
@@ -21796,70 +21816,141 @@ var shinymap = (() => {
       setCounts(next);
       onChange?.(next);
     };
-    return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
       "svg",
       {
         role: "img",
         className,
         style: { width: "100%", height: "100%", ...containerStyle },
         viewBox,
-        children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("g", { children: Object.entries(geometry).map(([id, d]) => {
-          const tooltip = tooltips?.[id];
-          const isHovered = hovered === id;
-          const isSelected = selected.has(id);
-          const count = counts[id] ?? 0;
-          let resolved = { ...DEFAULT_AESTHETIC, ...defaultAesthetic };
-          if (fills && fills[id]) {
-            resolved.fillColor = fills[id];
-          }
-          if (resolveAesthetic) {
-            const overrides = resolveAesthetic({
-              id,
-              mode,
-              isHovered,
-              isSelected,
-              count,
-              baseAesthetic: resolved
-            });
-            if (overrides) {
-              resolved = { ...resolved, ...overrides };
+        children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("g", { children: [
+            Object.entries(geometry).map(([id, d]) => {
+              const tooltip = tooltips?.[id];
+              const isHovered = hovered === id;
+              const isSelected = selected.has(id);
+              const count = counts[id] ?? 0;
+              let resolved = { ...DEFAULT_AESTHETIC, ...defaultAesthetic };
+              if (normalizedFillColor && normalizedFillColor[id]) {
+                resolved.fillColor = normalizedFillColor[id];
+              }
+              if (resolveAesthetic) {
+                const overrides = resolveAesthetic({
+                  id,
+                  mode,
+                  isHovered: false,
+                  isSelected: false,
+                  count,
+                  baseAesthetic: resolved
+                });
+                if (overrides) {
+                  resolved = { ...resolved, ...overrides };
+                }
+              }
+              const extraProps = regionProps?.({
+                id,
+                mode,
+                isHovered,
+                isSelected,
+                count,
+                baseAesthetic: resolved
+              });
+              const handleMouseEnter = () => setHovered(id);
+              const handleMouseLeave = () => setHovered((current) => current === id ? null : current);
+              return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                "path",
+                {
+                  d,
+                  fill: resolved.fillColor,
+                  fillOpacity: resolved.fillOpacity,
+                  stroke: resolved.strokeColor,
+                  strokeWidth: resolved.strokeWidth,
+                  style: { cursor: "pointer" },
+                  onMouseEnter: handleMouseEnter,
+                  onMouseLeave: handleMouseLeave,
+                  onFocus: handleMouseEnter,
+                  onBlur: handleMouseLeave,
+                  onClick: () => handleClick(id),
+                  ...extraProps,
+                  children: tooltip ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("title", { children: tooltip }) : null
+                },
+                id
+              );
+            }),
+            overlayGeometry && Object.entries(overlayGeometry).map(([id, d]) => {
+              const overlayStyle = {
+                ...DEFAULT_AESTHETIC,
+                ...overlayAesthetic
+              };
+              return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                "path",
+                {
+                  d,
+                  fill: overlayStyle.fillColor,
+                  fillOpacity: overlayStyle.fillOpacity,
+                  stroke: overlayStyle.strokeColor,
+                  strokeWidth: overlayStyle.strokeWidth,
+                  pointerEvents: "none"
+                },
+                `overlay-${id}`
+              );
+            })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("g", { children: Array.from(selected).map((id) => {
+            if (!geometry[id]) return null;
+            const count = counts[id] ?? 0;
+            let resolved = { ...DEFAULT_AESTHETIC, ...defaultAesthetic };
+            if (normalizedFillColor && normalizedFillColor[id]) {
+              resolved.fillColor = normalizedFillColor[id];
             }
-          }
-          const extraProps = regionProps?.({
-            id,
-            mode,
-            isHovered,
-            isSelected,
-            count,
-            baseAesthetic: resolved
-          });
-          const handleMouseEnter = () => setHovered(id);
-          const handleMouseLeave = () => setHovered((current) => current === id ? null : current);
-          return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+            if (selectedAesthetic) {
+              resolved = { ...resolved, ...selectedAesthetic };
+            }
+            if (resolveAesthetic) {
+              const overrides = resolveAesthetic({
+                id,
+                mode,
+                isHovered: false,
+                isSelected: true,
+                count,
+                baseAesthetic: resolved
+              });
+              if (overrides) {
+                resolved = { ...resolved, ...overrides };
+              }
+            }
+            return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+              "path",
+              {
+                d: geometry[id],
+                fill: resolved.fillColor,
+                fillOpacity: resolved.fillOpacity,
+                stroke: resolved.strokeColor,
+                strokeWidth: resolved.strokeWidth,
+                pointerEvents: "none"
+              },
+              `selection-overlay-${id}`
+            );
+          }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("g", { children: hovered && hoverHighlight && geometry[hovered] && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
             "path",
             {
-              d,
-              fill: resolved.fillColor,
-              fillOpacity: resolved.fillOpacity,
-              stroke: resolved.strokeColor,
-              strokeWidth: resolved.strokeWidth,
-              style: { cursor: "pointer" },
-              onMouseEnter: handleMouseEnter,
-              onMouseLeave: handleMouseLeave,
-              onFocus: handleMouseEnter,
-              onBlur: handleMouseLeave,
-              onClick: () => handleClick(id),
-              ...extraProps,
-              children: tooltip ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("title", { children: tooltip }) : null
+              d: geometry[hovered],
+              fill: hoverHighlight.fillColor ?? "none",
+              fillOpacity: hoverHighlight.fillOpacity ?? 1,
+              stroke: hoverHighlight.strokeColor ?? "none",
+              strokeWidth: hoverHighlight.strokeWidth ?? 1,
+              pointerEvents: "none"
             },
-            id
-          );
-        }) })
+            `hover-overlay-${hovered}`
+          ) })
+        ]
       }
     );
   }
 
   // src/components/OutputMap.tsx
+  var import_react2 = __toESM(require_react(), 1);
   var import_jsx_runtime2 = __toESM(require_jsx_runtime(), 1);
   var DEFAULT_VIEWBOX2 = "0 0 100 100";
   var DEFAULT_AESTHETIC2 = {
@@ -21873,6 +21964,13 @@ var shinymap = (() => {
     if (Array.isArray(active)) return new Set(active);
     return /* @__PURE__ */ new Set([active]);
   }
+  function normalize(value, geometry) {
+    if (!value) return void 0;
+    if (typeof value === "object" && !Array.isArray(value)) {
+      return value;
+    }
+    return Object.fromEntries(Object.keys(geometry).map((id) => [id, value]));
+  }
   function OutputMap(props) {
     const {
       geometry,
@@ -21881,14 +21979,33 @@ var shinymap = (() => {
       containerStyle,
       viewBox = DEFAULT_VIEWBOX2,
       defaultAesthetic = DEFAULT_AESTHETIC2,
-      fills,
+      fillColor,
+      // RENAMED from fills
+      strokeWidth: strokeWidthProp,
+      // NEW
+      strokeColor: strokeColorProp,
+      // NEW
+      fillOpacity: fillOpacityProp,
+      // NEW
       counts,
       activeIds,
       onRegionClick,
       resolveAesthetic,
-      regionProps
+      regionProps,
+      fillColorSelected,
+      // RENAMED from selectionAesthetic
+      fillColorNotSelected,
+      // RENAMED from notSelectionAesthetic
+      overlayGeometry,
+      overlayAesthetic,
+      hoverHighlight
     } = props;
+    const [hovered, setHovered] = (0, import_react2.useState)(null);
     const activeSet = normalizeActive(activeIds);
+    const normalizedFillColor = normalize(fillColor, geometry);
+    const normalizedStrokeWidth = normalize(strokeWidthProp, geometry);
+    const normalizedStrokeColor = normalize(strokeColorProp, geometry);
+    const normalizedFillOpacity = normalize(fillOpacityProp, geometry);
     const countMap = counts ?? {};
     return /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
       "svg",
@@ -21897,48 +22014,131 @@ var shinymap = (() => {
         className,
         style: { width: "100%", height: "100%", ...containerStyle },
         viewBox,
-        children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("g", { children: Object.entries(geometry).map(([id, d]) => {
-          const tooltip = tooltips?.[id];
-          const isActive = activeSet.has(id);
-          const count = countMap[id] ?? 0;
-          let resolved = {
-            ...DEFAULT_AESTHETIC2,
-            ...defaultAesthetic,
-            ...fills?.[id] ? { fillColor: fills[id] } : {}
-          };
-          if (resolveAesthetic) {
-            const overrides = resolveAesthetic({
+        children: /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("g", { children: [
+          Object.entries(geometry).map(([id, d]) => {
+            const tooltip = tooltips?.[id];
+            const isActive = activeSet.has(id);
+            const count = countMap[id] ?? 0;
+            let resolved = {
+              ...DEFAULT_AESTHETIC2,
+              ...defaultAesthetic,
+              ...normalizedFillColor?.[id] ? { fillColor: normalizedFillColor[id] } : {},
+              ...normalizedStrokeWidth?.[id] !== void 0 ? { strokeWidth: normalizedStrokeWidth[id] } : {},
+              ...normalizedStrokeColor?.[id] ? { strokeColor: normalizedStrokeColor[id] } : {},
+              ...normalizedFillOpacity?.[id] !== void 0 ? { fillOpacity: normalizedFillOpacity[id] } : {}
+            };
+            if (isActive && fillColorSelected) {
+              resolved = { ...resolved, ...fillColorSelected };
+            } else if (!isActive && fillColorNotSelected) {
+              resolved = { ...resolved, ...fillColorNotSelected };
+            }
+            if (resolveAesthetic) {
+              const overrides = resolveAesthetic({
+                id,
+                isActive,
+                count,
+                baseAesthetic: resolved,
+                tooltip
+              });
+              if (overrides) resolved = { ...resolved, ...overrides };
+            }
+            const regionOverrides = regionProps?.({
               id,
               isActive,
               count,
               baseAesthetic: resolved,
               tooltip
             });
-            if (overrides) resolved = { ...resolved, ...overrides };
-          }
-          const regionOverrides = regionProps?.({
-            id,
-            isActive,
-            count,
-            baseAesthetic: resolved,
-            tooltip
-          });
-          return /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+            const handleMouseEnter = () => setHovered(id);
+            const handleMouseLeave = () => setHovered((current) => current === id ? null : current);
+            return /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+              "path",
+              {
+                d,
+                fill: resolved.fillColor,
+                fillOpacity: resolved.fillOpacity,
+                stroke: resolved.strokeColor,
+                strokeWidth: resolved.strokeWidth,
+                onClick: onRegionClick ? () => onRegionClick(id) : void 0,
+                onMouseEnter: handleMouseEnter,
+                onMouseLeave: handleMouseLeave,
+                onFocus: handleMouseEnter,
+                onBlur: handleMouseLeave,
+                style: onRegionClick ? { cursor: "pointer" } : void 0,
+                ...regionOverrides,
+                children: tooltip ? /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("title", { children: tooltip }) : null
+              },
+              id
+            );
+          }),
+          overlayGeometry && Object.entries(overlayGeometry).map(([id, d]) => {
+            const overlayStyle = {
+              ...DEFAULT_AESTHETIC2,
+              ...overlayAesthetic
+            };
+            return /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+              "path",
+              {
+                d,
+                fill: overlayStyle.fillColor,
+                fillOpacity: overlayStyle.fillOpacity,
+                stroke: overlayStyle.strokeColor,
+                strokeWidth: overlayStyle.strokeWidth,
+                pointerEvents: "none"
+              },
+              `overlay-${id}`
+            );
+          }),
+          Array.from(activeSet).map((id) => {
+            if (!geometry[id]) return null;
+            const count = countMap[id] ?? 0;
+            let resolved = {
+              ...DEFAULT_AESTHETIC2,
+              ...defaultAesthetic,
+              ...normalizedFillColor?.[id] ? { fillColor: normalizedFillColor[id] } : {},
+              ...normalizedStrokeWidth?.[id] !== void 0 ? { strokeWidth: normalizedStrokeWidth[id] } : {},
+              ...normalizedStrokeColor?.[id] ? { strokeColor: normalizedStrokeColor[id] } : {},
+              ...normalizedFillOpacity?.[id] !== void 0 ? { fillOpacity: normalizedFillOpacity[id] } : {}
+            };
+            if (fillColorSelected) {
+              resolved = { ...resolved, ...fillColorSelected };
+            }
+            if (resolveAesthetic) {
+              const overrides = resolveAesthetic({
+                id,
+                isActive: true,
+                count,
+                baseAesthetic: resolved,
+                tooltip: tooltips?.[id]
+              });
+              if (overrides) resolved = { ...resolved, ...overrides };
+            }
+            return /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+              "path",
+              {
+                d: geometry[id],
+                fill: resolved.fillColor,
+                fillOpacity: resolved.fillOpacity,
+                stroke: resolved.strokeColor,
+                strokeWidth: resolved.strokeWidth,
+                pointerEvents: "none"
+              },
+              `selection-overlay-${id}`
+            );
+          }),
+          hovered && hoverHighlight && geometry[hovered] && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
             "path",
             {
-              d,
-              fill: resolved.fillColor,
-              fillOpacity: resolved.fillOpacity,
-              stroke: resolved.strokeColor,
-              strokeWidth: resolved.strokeWidth,
-              onClick: onRegionClick ? () => onRegionClick(id) : void 0,
-              style: onRegionClick ? { cursor: "pointer" } : void 0,
-              ...regionOverrides,
-              children: tooltip ? /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("title", { children: tooltip }) : null
+              d: geometry[hovered],
+              fill: hoverHighlight.fillColor ?? "none",
+              fillOpacity: hoverHighlight.fillOpacity ?? 1,
+              stroke: hoverHighlight.strokeColor ?? "none",
+              strokeWidth: hoverHighlight.strokeWidth ?? 1,
+              pointerEvents: "none"
             },
-            id
-          );
-        }) })
+            `hover-overlay-${hovered}`
+          )
+        ] })
       }
     );
   }

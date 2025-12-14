@@ -6,7 +6,7 @@ export type GeometryMap = Record<RegionId, string>;
 
 export type TooltipMap = Record<RegionId, string>;
 
-export type FillMap = Record<RegionId, string>;
+export type FillMap = string | Record<RegionId, string>;
 
 export type InputMapMode = "single" | "multiple" | "count";
 
@@ -29,7 +29,7 @@ export type ResolveAestheticArgs = {
 export type InputMapProps = {
   geometry: GeometryMap;
   tooltips?: TooltipMap;
-  fills?: FillMap;
+  fillColor?: FillMap;  // Renamed from fills for consistency
   viewBox?: string;
   className?: string;
   containerStyle?: React.CSSProperties;
@@ -47,6 +47,22 @@ export type InputMapProps = {
    * Maximum number of regions allowed to be non-zero. Default is unlimited.
    */
   maxSelection?: number;
+  /**
+   * Non-interactive overlay geometry (dividers, borders, grids).
+   */
+  overlayGeometry?: GeometryMap;
+  /**
+   * Default aesthetic for overlay regions.
+   */
+  overlayAesthetic?: AestheticStyle;
+  /**
+   * Hover highlight aesthetic (rendered as overlay layer on top).
+   */
+  hoverHighlight?: AestheticStyle;
+  /**
+   * Aesthetic override for selected regions (isSelected=true).
+   */
+  selectedAesthetic?: AestheticStyle;
 };
 
 type BaseOutputProps = {
@@ -56,6 +72,8 @@ type BaseOutputProps = {
   className?: string;
   containerStyle?: React.CSSProperties;
   defaultAesthetic?: AestheticStyle;
+  overlayGeometry?: GeometryMap;
+  overlayAesthetic?: AestheticStyle;
 };
 
 export type ResolveOutputAestheticArgs = {
@@ -67,10 +85,21 @@ export type ResolveOutputAestheticArgs = {
 };
 
 export type OutputMapProps = BaseOutputProps & {
-  fills?: Record<RegionId, string>;
+  fillColor?: string | Record<RegionId, string>;  // RENAMED from fills (singular, consistent)
+  strokeWidth?: number | Record<RegionId, number>;  // NEW (per-region support)
+  strokeColor?: string | Record<RegionId, string>;  // NEW (per-region support)
+  fillOpacity?: number | Record<RegionId, number>;  // NEW (per-region support)
   counts?: Record<RegionId, number>;
   activeIds?: RegionId | RegionId[] | null;
   onRegionClick?: (id: RegionId) => void;
   resolveAesthetic?: (args: ResolveOutputAestheticArgs) => AestheticStyle | undefined;
   regionProps?: (args: ResolveOutputAestheticArgs) => React.SVGProps<SVGPathElement>;
+  // Selection-specific aesthetics (RENAMED for consistency)
+  fillColorSelected?: AestheticStyle;  // RENAMED from selectionAesthetic
+  fillColorNotSelected?: AestheticStyle;  // RENAMED from notSelectionAesthetic
+  countPalette?: string[];
+  /**
+   * Hover highlight aesthetic (rendered as overlay layer on top).
+   */
+  hoverHighlight?: AestheticStyle;
 };
