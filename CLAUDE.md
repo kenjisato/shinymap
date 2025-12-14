@@ -103,11 +103,38 @@ from shinymap import Map, render_map
 def my_map():
     return (
         Map(geometry, tooltips=tooltips)
-        .with_fills(fills)
+        .with_fill_color(fills)
         .with_counts(counts)
         .with_active(active_ids)
     )
 ```
+
+### Hover Customization
+
+Customize hover effects using the `hover_highlight` parameter:
+
+```python
+# Input map with custom hover border
+input_map(
+    "region",
+    geometry,
+    hover_highlight={"stroke_color": "#374151", "stroke_width": 2}
+)
+
+# Custom hover with fill overlay
+input_map(
+    "region",
+    geometry,
+    hover_highlight={
+        "stroke_color": "#1e40af",
+        "stroke_width": 2,
+        "fill_color": "#3b82f6",
+        "fill_opacity": 0.2
+    }
+)
+```
+
+Note: `hover_highlight` uses snake_case keys in Python (`stroke_color`, `stroke_width`, `fill_color`, `fill_opacity`) which are automatically converted to camelCase for JavaScript.
 
 ## Honest Positioning
 
@@ -137,6 +164,36 @@ def my_map():
 6. Prefer editing existing files over creating new ones
 7. Use TodoWrite tool for multi-step tasks to track progress
 8. After implementing changes, update relevant documentation (SPEC, PROPOSAL, README as appropriate)
+
+## SVG Rendering and Overlay Architecture
+
+**Challenge**: SVG elements render in DOM order (painter's algorithm), where later elements appear on top. This creates border visibility issues:
+- SVG strokes are centered on paths (50% inside, 50% outside)
+- Adjacent regions' fills can hide neighboring regions' strokes
+- Transparent strokes are invisible (adjacent fills show through)
+- Selected/hovered regions' borders get partially hidden by non-selected neighbors
+
+**Solution**: Layered overlay rendering ensures important elements (selected, hovered) are always visible.
+
+**Rendering order** (bottom to top):
+1. **Base regions**: All regions with normal aesthetics and click handlers
+2. **Overlay geometry**: Non-interactive annotations (dividers, borders, grids) with `pointer-events: none`
+3. **Selection overlay**: Duplicates of selected/active regions with selection aesthetics and `pointer-events: none`
+4. **Hover overlay**: Duplicate of hovered region with hover aesthetics and `pointer-events: none`
+
+This multi-layer approach guarantees:
+- Selected regions' borders are fully visible on top of non-selected regions
+- Hovered regions' borders are fully visible on top of everything
+- All overlays use `pointer-events: none` so clicks pass through to base regions
+- No z-index conflicts or CSS hacks needed
+
+**Implementation details**:
+- InputMap and OutputMap both implement this layered rendering
+- Hover state tracked via React `useState` with mouse/focus event handlers
+- Python aesthetic dicts (`hover_highlight`, `default_aesthetic`) are recursively converted from snake_case to camelCase
+- Overlays render duplicate `<path>` elements with the same geometry but different aesthetics
+
+See [SPEC.md](SPEC.md) for detailed technical documentation.
 
 ## Deferred/Future Items
 

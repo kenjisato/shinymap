@@ -49,9 +49,20 @@ Additionally, `output_map` provides simplified statistical visualizations (choro
 - React: JavaScript objects/arrays following standard patterns
 
 **Styling**:
-- User-defined via `defaultAesthetic` and `resolveAesthetic` (args include id/mode/isHovered/isSelected/count/base)
-- No opinionated hover/selection defaults; `regionProps` can attach extra SVG props/effects
-- Output maps mirror the naming: `containerStyle`, `resolveAesthetic`, `regionProps`; minimal defaults (fills/defaultFill + strokeColor/strokeWidth)
+- Base aesthetics via `defaultAesthetic` (fillColor, strokeColor, strokeWidth, fillOpacity)
+- Dynamic styling via `resolveAesthetic` callback (args: id/mode/isHovered/isSelected/count/baseAesthetic)
+- Hover highlighting via `hoverHighlight` prop (renders as top-layer overlay for full border visibility)
+- Selection highlighting for input maps via `resolveAesthetic` (isSelected=true)
+- Selection highlighting for output maps via `fillColorSelected`/`fillColorNotSelected` props
+- Extra SVG props via `regionProps` callback
+- Output maps support the same aesthetic system with `resolveAesthetic` and `regionProps`
+
+**Hover implementation**:
+- `hoverHighlight` prop defines hover aesthetic (default: darker stroke, width 2)
+- Rendered as separate overlay layer on top of all regions (solves SVG z-index border visibility)
+- `pointer-events: none` ensures clicks pass through to base regions
+- When `hoverHighlight` is provided, `resolveAesthetic` receives `isHovered: false` (hover handled by overlay)
+- Snake_case keys in Python (`hover_highlight={"stroke_color": "...", "stroke_width": ...}`) automatically converted to camelCase for React
 
 ### Packages and scope
 
@@ -73,6 +84,114 @@ This separation keeps the core library lightweight while allowing advanced GIS f
 - Maintain a lightweight demo path JSON inside the core package (`shinymap`) and document how to build additional geometry bundles (source attribution, simplification tolerance, regeneration scripts).
 - Provide guidance for separate asset packages (npm/PyPI/CRAN) that ship richer geometries (e.g., Japan prefectures, world/regional maps). Keep the core generic.
 - Allow consumers to supply alternative geometry/path collections via the API.
+
+### Geometry Utilities (`shinymap.geometry`)
+
+The `shinymap.geometry` subpackage provides tools for converting SVG files to shinymap's JSON format and loading geometry for use in applications.
+
+**JSON Format**:
+Shinymap uses a **list-based path format** where each region maps to a list of SVG path strings:
+
+```json
+{
+  "_metadata": {
+    "viewBox": "0 0 100 100",
+    "source": "Custom SVG",
+    "license": "MIT"
+  },
+  "region_01": ["M 10 10 L 40 10 L 40 40 L 10 40 Z"],
+  "hokkaido": [
+    "M 0 0 L 100 0 L 100 100 Z",
+    "M 200 0 L 300 0 L 300 100 Z"
+  ]
+}
+```
+
+**Key points**:
+- Each region ID maps to a **list** of SVG path strings (not a single string)
+- Single-element list: single path (e.g., `"region_01": ["M 10 10..."]`)
+- Multi-element list: merged paths (e.g., `"hokkaido": ["M 0 0...", "M 200 0..."]`)
+- Paths are joined with spaces when rendered: `" ".join(path_list)`
+- Python dicts passed to UI functions use this same list format
+
+**Core Functions**:
+
+- **`load_geometry(json_path, overlay_keys=None)`**: Load geometry from shinymap JSON files. Returns `(geometry, overlay_geometry, viewbox)` tuple. Automatically handles path joining, overlay separation, and viewBox computation.
+
+- **`from_svg(svg_path, output_path=None)`**: Extract intermediate JSON from SVG file (Step 1 of interactive workflow). Auto-generates IDs for paths without them.
+
+- **`from_json(intermediate_json, output_path=None, relabel=None, overlay_ids=None, metadata=None)`**: Transform intermediate JSON to final JSON (Step 2 of interactive workflow). Supports renaming and merging paths via `relabel` parameter.
+
+- **`convert(input_path, output_path=None, relabel=None, overlay_ids=None, metadata=None)`**: One-shot conversion from SVG or intermediate JSON to final JSON. Combines `from_svg()` and `from_json()` for scripting and reproducibility.
+
+- **`infer_relabel(initial_file, final_json)`**: Infer relabel mapping by comparing initial file (SVG or JSON) with final JSON. Automatically detects renames and merges for reproducibility.
+
+**Workflows**:
+
+*Interactive workflow* (two-step for manual inspection):
+```python
+from shinymap.geometry import from_svg, from_json
+
+# Step 1: Extract intermediate JSON with auto-generated IDs
+intermediate = from_svg("map.svg", "intermediate.json")
+
+# Step 2: Apply transformations
+final = from_json(
+    intermediate,
+    "final.json",
+    relabel={
+        "region_01": "path_1",              # Rename: path_1 → region_01
+        "hokkaido": ["path_2", "path_3"],   # Merge: combine into hokkaido
+    },
+    overlay_ids=["_border"],
+    metadata={"source": "Custom", "license": "MIT"}
+)
+```
+
+*One-shot conversion* (scripting/reproducibility):
+```python
+from shinymap.geometry import convert
+
+result = convert(
+    "map.svg",
+    "map.json",
+    relabel={
+        "region_01": "path_1",
+        "hokkaido": ["path_2", "path_3"],
+    },
+    overlay_ids=["_border"],
+    metadata={"source": "Custom", "license": "MIT"}
+)
+```
+
+*Infer conversion code* (reproducibility from manual work):
+```python
+from shinymap.geometry import infer_relabel
+
+# After manually creating final.json, infer the transformations
+relabel = infer_relabel("original.svg", "final.json")
+# Returns: {"region_01": "path_1", "hokkaido": ["path_2", "path_3"]}
+```
+
+**Interactive Converter App**:
+
+An interactive Shiny app for SVG conversion is available:
+
+```bash
+# Run converter with browser
+uv run python -m shinymap.geometry.converter -b
+
+# Pre-load a file
+uv run python -m shinymap.geometry.converter -f map.svg -b
+```
+
+The app provides:
+- Visual preview of paths found in SVG
+- Interactive relabel/merge configuration
+- Overlay ID specification
+- Metadata editing
+- Download both JSON output and reproducible Python code
+- "Infer from Original" tab to generate code from existing transformations
 
 ## Shiny for Python (`shinymap`)
 
@@ -115,6 +234,220 @@ def _():
 ```
 
 This complements rather than replaces `@render_map` for performance-critical scenarios. Tooltip updates are very cheap (lightweight SVG `<title>` elements); React reconciliation handles DOM updates efficiently.
+
+### SVG Rendering and Layered Overlays
+
+**Challenge**: SVG elements render in DOM order (painter's algorithm). Later elements appear on top, causing border visibility issues:
+- SVG strokes are centered on paths (50% inside, 50% outside)
+- Adjacent regions' fills can hide neighboring regions' strokes
+- Transparent strokes are invisible (adjacent fills show through)
+- Selected/hovered regions' borders get partially hidden by non-selected neighbors
+
+**Solution**: Layered overlay rendering ensures important elements (selected, hovered) are always visible.
+
+**Rendering order** (bottom to top):
+1. **Base regions**: All regions with normal aesthetics and click handlers
+2. **Overlay geometry**: Non-interactive annotations (dividers, borders, grids) with `pointer-events: none`
+3. **Selection overlay**: Duplicates of selected/active regions with selection aesthetics and `pointer-events: none`
+4. **Hover overlay**: Duplicate of hovered region with hover aesthetics and `pointer-events: none`
+
+This multi-layer approach guarantees:
+- Selected regions' borders are fully visible on top of non-selected regions
+- Hovered regions' borders are fully visible on top of everything
+- All overlays use `pointer-events: none` so clicks pass through to base regions
+- No z-index conflicts or CSS hacks needed
+
+**Example with hover highlighting**:
+
+```python
+# Input map with custom hover highlight
+input_map(
+    "prefecture_selector",
+    GEOMETRY,
+    tooltips=TOOLTIPS,
+    mode="single",
+    view_box=VIEWBOX,
+    default_aesthetic={
+        "fillColor": "#e5e7eb",    # Light gray fill
+        "strokeColor": "#d1d5db",  # Light gray border
+        "strokeWidth": 1
+    },
+    hover_highlight={
+        "stroke_color": "#374151",  # Darker border on hover
+        "stroke_width": 2           # Thicker border on hover
+    },
+    overlay_geometry=DIVIDERS,      # Dividing lines rendered above base regions
+    overlay_aesthetic=DIVIDER_STYLE, # but below selection/hover overlays
+)
+```
+
+The hover overlay is automatically rendered on top of everything, ensuring the darker, thicker border is always fully visible even when adjacent regions would normally hide parts of it.
+
+**Non-Interactive Annotation Layers**
+
+**Purpose**: Display static annotation layers via `overlay_geometry` parameter.
+
+**Use cases**:
+- Dividing lines (e.g., separating repositioned insets from mainland)
+- Administrative boundaries that aren't clickable regions
+- Grid lines or reference markers
+- Annotations that should appear above base regions but below selection/hover highlights
+
+**Current implementation** (single overlay layer):
+
+```python
+# Single overlay layer (rendered AFTER regions)
+input_map(
+    "map_id",
+    geometry,
+    overlay_geometry=DIVIDERS,  # Dict[str, str] of SVG paths
+    overlay_aesthetic={         # Styling for overlay
+        "fillColor": "none",
+        "strokeColor": "#999999",
+        "strokeWidth": 2.0,
+    },
+)
+
+@render_map
+def my_map():
+    return (
+        Map(
+            geometry,
+            tooltips=tooltips,
+            view_box=viewbox,
+            overlay_geometry=dividers,
+            overlay_aesthetic=divider_style,
+        )
+        .with_fill_color(fills)
+    )
+```
+
+**Implementation details** (current):
+- Single overlay layer rendered AFTER interactive regions
+- `pointerEvents="none"` prevents click interference
+- Available in all builders: `Map`, `MapSelection`, `MapCount`
+- Serialized in `MapPayload` and passed through to React components
+
+**Future enhancement** (multiple layers with render order):
+
+To support both underlays and overlays with multiple layers:
+
+```python
+# Proposed API (not yet implemented)
+input_map(
+    "map_id",
+    geometry,
+    underlays=[
+        {"geometry": GRID_LINES, "aesthetic": GRID_STYLE},
+        {"geometry": REFERENCE_MARKERS, "aesthetic": MARKER_STYLE},
+    ],
+    overlays=[
+        {"geometry": DIVIDERS, "aesthetic": DIVIDER_STYLE},
+        {"geometry": LABELS, "aesthetic": LABEL_STYLE},
+    ],
+)
+```
+
+**Render order** (proposed):
+1. Underlays (bottom to top)
+2. Interactive regions (with hover/click handling)
+3. Overlays (bottom to top)
+
+**Example** (Japan prefecture map with dividing lines overlay):
+
+```python
+# Current implementation - overlay only
+DIVIDERS = get_japan_dividers()  # {"_divider_lines": "M 0 615 H 615 V 0"}
+DIVIDER_STYLE = {"fillColor": "none", "strokeColor": "#999999", "strokeWidth": 2.0}
+
+@render_map
+def prefecture_map():
+    return (
+        MapSelection(
+            GEOMETRY,
+            selected=input.selected_prefectures(),
+            tooltips=TOOLTIPS,
+            view_box="0.0 0.0 1270.0 1524.0",
+            overlay_geometry=DIVIDERS,      # Rendered AFTER regions
+            overlay_aesthetic=DIVIDER_STYLE,
+        )
+        .with_fill_color("#e5e7eb")
+        .with_fill_color_selected("#3b82f6")
+    )
+```
+
+**Current limitations**:
+- Only single overlay layer supported (no underlay support)
+- No control over rendering order for multiple annotation layers
+- Single aesthetic dict applies to all paths in overlay_geometry
+
+**Planned improvements**:
+- Add `underlay_geometry`/`underlay_aesthetic` for layers below interactive regions
+- Support multiple layers with explicit rendering order
+- Per-path aesthetics within layers (if needed)
+
+### Static vs Dynamic Parameters (Planned)
+
+**Vision**: Separate structural configuration (static) from reactive data (dynamic) to keep server code clean and focused.
+
+**Current API** (all parameters in builders):
+
+```python
+@render_map
+def my_map():
+    return (
+        Map(
+            geometry,           # Static - rarely changes
+            tooltips=tooltips,  # Static - usually constant
+            view_box=viewbox,   # Static - constant for given geometry
+            overlay_geometry=dividers,      # Static - constant
+            overlay_aesthetic=divider_style, # Static - constant
+        )
+        .with_fill_color(fills)  # Dynamic - from reactive data
+        .with_counts(counts)     # Dynamic - from reactive data
+    )
+```
+
+**Problem**: Static parameters (geometry, tooltips, viewBox, overlay) are repeated in every `@render_map` function, cluttering server code with structural details that don't change.
+
+**Planned API** (static params in output_map()):
+
+```python
+# UI layer - define static structure once
+app_ui = ui.page_fluid(
+    output_map(
+        "my_map",
+        geometry=GEOMETRY,           # Static - defined once
+        tooltips=TOOLTIPS,           # Static - defined once
+        view_box=VIEWBOX,            # Static - defined once
+        overlay_geometry=DIVIDERS,   # Static - defined once
+        overlay_aesthetic=DIVIDER_STYLE,  # Static - defined once
+    ),
+)
+
+# Server layer - focus only on reactive data transformations
+@render_map
+def my_map():
+    selected = input.selected_regions()
+    fills = scale_qualitative(categories, region_ids)
+
+    # Clean, focused on data only
+    return MapSelection(selected=selected).with_fill_color(fills)
+```
+
+**Benefits**:
+1. **Cleaner server code**: No repeated geometry/tooltips/viewBox in every render function
+2. **Better separation of concerns**: UI layer = structure, server layer = data transformations
+3. **Easier maintenance**: Static configuration in one place, visible in UI definition
+4. **Consistent with Shiny patterns**: Similar to how `output_plot(width=, height=)` defines figure size in UI, not in render function
+
+**Implementation plan**:
+- Add optional static parameters to `output_map()` registration
+- Merge static params from `output_map()` with dynamic params from `Map*()` builders
+- Maintain backward compatibility: if param provided to both, builder value takes precedence
+- Static params available to all builders when omitted
+
+**Implementation status**: Not yet implemented. Static parameters currently must be passed to `Map*()` builders.
 
 ## Shiny for R (Future Work)
 
@@ -177,6 +510,81 @@ This complements rather than replaces `@render_map` for performance-critical sce
 - Screen reader verbosity with many regions
 
 Accessibility is planned with specific limitations acknowledged. Not all features from standard form controls will translate cleanly to spatial visual interfaces.
+
+## Interactive Output Maps (Future)
+
+**Vision**: Extend `output_map()` to support optional interactivity while maintaining current simplicity for non-interactive use cases.
+
+**Current workaround**: Users can achieve interactive visualizations using `@render.ui` with `input_map`:
+
+```python
+# UI
+ui.output_ui("color_ring_ui")
+
+# Server
+@render.ui
+def color_ring_ui():
+    tone = input.tone_selector()
+    colors = get_pccs_colors(tone)
+    color_data = get_color_conversions(colors)
+
+    # Dynamically recreate input_map with updated tooltips
+    tooltips = {color_id: format_color_data(color_data[color_id]) for color_id in colors}
+
+    return input_map(
+        "selected_color",
+        PCCS_GEOMETRY,
+        tooltips=tooltips,
+        fills=colors,
+        mode="single",
+    )
+```
+
+**Why this workaround is suboptimal**:
+
+1. **Performance**: Re-rendering entire input component on every reactive change is expensive compared to React reconciliation updating only changed properties
+2. **Lost transient state**: Re-creating the component resets hover position and other UI state
+3. **Semantic confusion**: Using "input" for pure visualization (when user interaction isn't the primary goal) obscures intent
+4. **Pattern inconsistency**: Most Shiny apps use `output_*` for server→client displays; mixing input/output semantics reduces code clarity
+
+**Proposed enhancement**: Add optional parameters to `output_map()` for common interactive patterns:
+
+```python
+output_map(
+    "my_map",
+    geometry=GEOMETRY,
+    click_input_id="clicked_region",  # Optional: emit region ID on click
+    hover_tooltip=True,               # Optional: show dynamic tooltip data
+)
+
+@render_map
+def my_map():
+    return Map(geometry).with_fill_color(fills).with_tooltip_data(data)
+```
+
+**Use case example: PCCS Color Ring Application**
+
+PCCS (Practical Color Coordinate System) is a Japanese color system that groups colors by psychological feelings (vivid, soft, light, etc.).
+
+Application workflow:
+1. User selects tone category from input (e.g., "vivid", "soft", "light")
+2. Output map displays color ring with actual colors in that tone group
+3. Hover over a color shows tooltip with conversions (Munsell, HCL, CMYK, RGB)
+4. Click (or double-click) copies color data to clipboard
+
+**Benefits over @render.ui workaround**:
+- Better performance: React reconciliation updates only changed tooltips/colors, not entire component
+- Preserves UI state: Hover position and focus maintained across updates
+- Clearer semantics: `output_map` signals server→client data flow; `input_map` signals user interaction capture
+- Maintains library philosophy: Simple, focused, good enough for 80% of interactive visualization needs without D3.js
+
+**Technical notes**:
+- Groundwork exists: `_render_map_ui()` already has `click_input_id` parameter
+- React components (InputMap/OutputMap) share rendering logic, can share interactivity
+- Tooltip data could be passed via `.with_tooltip_data(dict)` method on builders
+- Click events follow existing Shiny input pattern: `input.clicked_region()` returns region ID
+
+**Status**: Planned for future. Not yet implemented. Current `@render.ui` + `input_map` workaround is functional but has performance and semantic trade-offs.
 
 ## Open / Deferred Items
 

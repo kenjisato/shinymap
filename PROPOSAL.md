@@ -22,7 +22,7 @@ import plotly.express as px
 fig = px.choropleth(df, locations="region", color="value", ...)
 
 # shinymap approach: declarative, focused API
-Map(GEOMETRY).with_fills(scale_sequential(counts, region_ids))
+Map(GEOMETRY).with_fill_color(scale_sequential(counts, region_ids))
 ```
 
 The output component offers:
@@ -65,7 +65,7 @@ This architecture ensures:
 
 4. **Smooth Visual Feedback**: Every interaction produces a visible change. Color interpolation ensures gradual intensity changes, not discrete jumps.
 
-5. **Declarative API**: Fluent methods (`with_fills()`, `with_strokes()`, `with_counts()`) and built-in color utilities make common patterns simple and readable.
+5. **Declarative API**: Fluent methods (`with_fill_color()`, `with_stroke_width()`, `with_counts()`) and built-in color utilities make common patterns simple and readable.
 
 ### Non-Goals
 
@@ -174,8 +174,8 @@ fig = px.choropleth(df, geojson=counties_geojson, locations="fips",
 def election_map():
     return (
         Map(COUNTIES_GEOMETRY)
-        .with_fills(scale_diverging(vote_margins, county_ids,
-                                    low_color="#ef4444", high_color="#3b82f6"))
+        .with_fill_color(scale_diverging(vote_margins, county_ids,
+                                         low_color="#ef4444", high_color="#3b82f6"))
         .with_tooltips(county_names)
     )
 ```
@@ -220,7 +220,7 @@ input_map("seats", THEATER_SEATING_GEOMETRY, mode="count", value={})
 def seat_availability():
     selections = input.seats() or {}
     # Color intensity shows selection frequency
-    return Map(THEATER_SEATING_GEOMETRY).with_fills(
+    return Map(THEATER_SEATING_GEOMETRY).with_fill_color(
         scale_sequential(selections, list(THEATER_SEATING_GEOMETRY.keys()))
     )
 ```
@@ -249,7 +249,7 @@ def anatomy_feedback():
         region: "#22c55e" if region in correct else "#ef4444"
         for region in identified
     }
-    return Map(HEART_ANATOMY_GEOMETRY).with_fills(colors)
+    return Map(HEART_ANATOMY_GEOMETRY).with_fill_color(colors)
 ```
 
 Students click directly on the diagram, with immediate color-coded feedback on correctness.
@@ -332,7 +332,7 @@ def results_map():
     counts = input.region_ratings() or {}
     return (
         Map(REGIONS_GEOMETRY)
-        .with_fills(scale_sequential(counts, list(REGIONS_GEOMETRY.keys())))
+        .with_fill_color(scale_sequential(counts, list(REGIONS_GEOMETRY.keys())))
         .with_counts(counts)  # Show numeric labels
         .with_tooltips(region_names)
     )
@@ -485,7 +485,7 @@ from shinymap import input_map, render_map, Map
 input_map("regions", REGIONS_GEOMETRY, mode="single")
 
 @render_map
-def output(): return Map(REGIONS_GEOMETRY).with_fills(...)
+def output(): return Map(REGIONS_GEOMETRY).with_fill_color(...)
 ```
 
 **R (Shiny)** (planned):
@@ -495,6 +495,6 @@ library(shinymap)
 inputMap("regions", REGIONS_GEOMETRY, mode = "single")
 
 output$map <- renderMap({
-  map(REGIONS_GEOMETRY) %>% with_fills(...)
+  map(REGIONS_GEOMETRY) |> with_fill_color(...)
 })
 ```

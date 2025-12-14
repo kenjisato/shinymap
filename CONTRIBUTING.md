@@ -83,6 +83,7 @@ cd ../../..
 - Always rebuild the global bundle (`node build-global.js`) before testing Python integration
 - The bundled JS is copied to `packages/shinymap/python/src/shinymap/www/shinymap-shiny.js`
 - Lint/format before committing: `npm run lint && npm run format:check`
+- **Build sequence matters**: `npm run build` (TypeScript compilation) must complete before `node build-global.js` (bundling)
 
 ---
 
