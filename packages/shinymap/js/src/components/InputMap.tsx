@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import type { AestheticStyle, InputMapMode, InputMapProps, RegionId } from "../types";
 
@@ -19,11 +19,22 @@ function buildSelected(value: Record<RegionId, number> | undefined): Set<RegionI
   return set;
 }
 
+function normalizeFillColor(
+  fillColor: string | Record<RegionId, string> | undefined,
+  geometry: Record<RegionId, string>
+): Record<RegionId, string> | undefined {
+  if (!fillColor) return undefined;
+  if (typeof fillColor === "string") {
+    return Object.fromEntries(Object.keys(geometry).map((id) => [id, fillColor]));
+  }
+  return fillColor;
+}
+
 export function InputMap(props: InputMapProps) {
   const {
     geometry,
     tooltips,
-    fills,
+    fillColor,
     className,
     containerStyle,
     viewBox = DEFAULT_VIEWBOX,
@@ -34,12 +45,26 @@ export function InputMap(props: InputMapProps) {
     onChange,
     cycle,
     maxSelection,
+    overlayGeometry,
+    overlayAesthetic,
+    hoverHighlight,
+    selectedAesthetic,
   } = props;
 
+  const normalizedFillColor = useMemo(() => normalizeFillColor(fillColor, geometry), [fillColor, geometry]);
   const [hovered, setHovered] = useState<RegionId | null>(null);
   // Use internal state for counts, initialized from value prop
   const [counts, setCounts] = useState<Record<RegionId, number>>(value ?? {});
   const selected = useMemo(() => buildSelected(counts), [counts]);
+
+  // Sync internal state when value prop changes (for update_map)
+  useEffect(() => {
+    if (value !== undefined) {
+      setCounts(value);
+      // Notify Shiny of the new value
+      onChange?.(value);
+    }
+  }, [value, onChange]);
   // Determine mode: explicit prop wins; else cycle implies count; else multiple.
   const mode: InputMapMode = props.mode ?? (cycle ? "count" : "multiple");
   const effectiveCycle =
@@ -89,6 +114,7 @@ export function InputMap(props: InputMapProps) {
       style={{ width: "100%", height: "100%", ...containerStyle }}
       viewBox={viewBox}
     >
+      {/* Group 1: Base layer - all regions with base styling only, interactive */}
       <g>
         {Object.entries(geometry).map(([id, d]) => {
           const tooltip = tooltips?.[id];
@@ -98,17 +124,19 @@ export function InputMap(props: InputMapProps) {
 
           let resolved: AestheticStyle = { ...DEFAULT_AESTHETIC, ...defaultAesthetic };
 
-          // Apply fills if provided
-          if (fills && fills[id]) {
-            resolved.fillColor = fills[id];
+          // Apply fillColor if provided
+          if (normalizedFillColor && normalizedFillColor[id]) {
+            resolved.fillColor = normalizedFillColor[id];
           }
 
+          // For base layer: do NOT apply selectedAesthetic or selection styling from resolveAesthetic
           if (resolveAesthetic) {
+            // Always pass isHovered=false and isSelected=false for base layer
             const overrides = resolveAesthetic({
               id,
               mode,
-              isHovered,
-              isSelected,
+              isHovered: false,
+              isSelected: false,
               count,
               baseAesthetic: resolved,
             });
@@ -149,6 +177,88 @@ export function InputMap(props: InputMapProps) {
             </path>
           );
         })}
+
+        {/* Non-interactive overlay (dividers, borders, grids) */}
+        {overlayGeometry &&
+          Object.entries(overlayGeometry).map(([id, d]) => {
+            const overlayStyle = {
+              ...DEFAULT_AESTHETIC,
+              ...overlayAesthetic,
+            };
+            return (
+              <path
+                key={`overlay-${id}`}
+                d={d}
+                fill={overlayStyle.fillColor}
+                fillOpacity={overlayStyle.fillOpacity}
+                stroke={overlayStyle.strokeColor}
+                strokeWidth={overlayStyle.strokeWidth}
+                pointerEvents="none"
+              />
+            );
+          })}
+      </g>
+
+      {/* Group 2: Selection layer - selected regions only, non-interactive */}
+      <g>
+        {Array.from(selected).map((id) => {
+          if (!geometry[id]) return null;
+
+          const count = counts[id] ?? 0;
+          let resolved: AestheticStyle = { ...DEFAULT_AESTHETIC, ...defaultAesthetic };
+
+          // Apply fillColor if provided
+          if (normalizedFillColor && normalizedFillColor[id]) {
+            resolved.fillColor = normalizedFillColor[id];
+          }
+
+          // Apply selectedAesthetic if provided
+          if (selectedAesthetic) {
+            resolved = { ...resolved, ...selectedAesthetic };
+          }
+
+          // Apply resolveAesthetic with isSelected=true
+          if (resolveAesthetic) {
+            const overrides = resolveAesthetic({
+              id,
+              mode,
+              isHovered: false,
+              isSelected: true,
+              count,
+              baseAesthetic: resolved,
+            });
+            if (overrides) {
+              resolved = { ...resolved, ...overrides };
+            }
+          }
+
+          return (
+            <path
+              key={`selection-overlay-${id}`}
+              d={geometry[id]}
+              fill={resolved.fillColor}
+              fillOpacity={resolved.fillOpacity}
+              stroke={resolved.strokeColor}
+              strokeWidth={resolved.strokeWidth}
+              pointerEvents="none"
+            />
+          );
+        })}
+      </g>
+
+      {/* Group 3: Hover layer - hovered region only, non-interactive */}
+      <g>
+        {hovered && hoverHighlight && geometry[hovered] && (
+          <path
+            key={`hover-overlay-${hovered}`}
+            d={geometry[hovered]}
+            fill={hoverHighlight.fillColor ?? "none"}
+            fillOpacity={hoverHighlight.fillOpacity ?? 1}
+            stroke={hoverHighlight.strokeColor ?? "none"}
+            strokeWidth={hoverHighlight.strokeWidth ?? 1}
+            pointerEvents="none"
+          />
+        )}
       </g>
     </svg>
   );
