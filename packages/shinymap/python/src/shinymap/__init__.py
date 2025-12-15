@@ -16,6 +16,7 @@ from ._colors import (
     scale_sequential,
 )
 from . import geometry
+from ._theme import configure_theme
 from ._ui import (
     Map,
     MapBuilder,
@@ -43,6 +44,8 @@ __all__ = [
     "output_map",
     "render_map",
     "update_map",
+    # Theme configuration
+    "configure_theme",
     # Color utilities
     "NEUTRALS",
     "QUALITATIVE",

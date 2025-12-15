@@ -150,7 +150,28 @@ def input_map(
 
     The underlying value is always a count map (dict[str, int]), but Shiny
     automatically transforms it based on the mode using a value function.
+
+    Aesthetic precedence (highest to lowest):
+    1. Explicit parameters passed to this function
+    2. Configured theme from configure_theme()
+    3. System defaults from React components
     """
+    # Get configured theme and apply defaults for parameters not explicitly provided
+    from ._theme import get_theme_config
+
+    theme_config = get_theme_config()
+
+    if hover_highlight is None and "hover_highlight" in theme_config:
+        hover_highlight = theme_config["hover_highlight"]
+    if selected_aesthetic is None and "selected_aesthetic" in theme_config:
+        selected_aesthetic = theme_config["selected_aesthetic"]
+    if default_aesthetic is None and "default_aesthetic" in theme_config:
+        default_aesthetic = theme_config["default_aesthetic"]
+    if fill_color is None and "fill_color" in theme_config:
+        fill_color = theme_config["fill_color"]
+    if overlay_aesthetic is None and "overlay_aesthetic" in theme_config:
+        overlay_aesthetic = theme_config["overlay_aesthetic"]
+
     if mode not in {None, "single", "multiple", "count"}:
         raise ValueError('mode must be one of "single", "multiple", "count", or None')
 
@@ -735,6 +756,12 @@ def output_map(
     Static parameters (geometry, tooltips, view_box, default_aesthetic, overlay_*) are merged with
     @render_map output. Builder parameters take precedence over static parameters.
 
+    Aesthetic precedence (highest to lowest):
+    1. Parameters from @render_map output (builder API)
+    2. Explicit parameters passed to this function
+    3. Configured theme from configure_theme()
+    4. System defaults from React components
+
     Example:
         # UI layer - define static structure once
         output_map(
@@ -752,6 +779,16 @@ def output_map(
         def my_map():
             return MapSelection(selected=input.selected()).with_fill_color_selected("#3b82f6")
     """
+    # Get configured theme and apply defaults for parameters not explicitly provided
+    from ._theme import get_theme_config
+
+    theme_config = get_theme_config()
+
+    if default_aesthetic is None and "default_aesthetic" in theme_config:
+        default_aesthetic = theme_config["default_aesthetic"]
+    if overlay_aesthetic is None and "overlay_aesthetic" in theme_config:
+        overlay_aesthetic = theme_config["overlay_aesthetic"]
+
     # Store static params for retrieval in render_map
     static_params = {
         "geometry": geometry,
