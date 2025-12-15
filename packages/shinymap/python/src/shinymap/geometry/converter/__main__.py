@@ -37,8 +37,9 @@ from pathlib import Path
 
 from shiny import App, reactive, render, ui, req
 
-from .._core import from_json, infer_relabel
-from ..._ui import render_map, input_map
+from .._core import compute_viewbox_from_dict, from_json, infer_relabel
+from ..._ui import render_map, input_map, update_map
+from ..._theme import configure_theme
 from ... import Map
 from ._tool import generate_code, load_file
 
@@ -46,7 +47,36 @@ from ._tool import generate_code, load_file
 _cli_file_path: Path | None
 
 
+configure_theme(
+    selected_aesthetic={"fill_color": "#ffffcc"},
+    hover_highlight={"stroke_width": 8}
+)
+
 ## Upload File =====================================================================
+
+panel_upload = ui.nav_panel(
+    "Upload",
+    ui.h2("Upload File"),
+
+    ui.layout_columns(
+        ui.TagList(
+            ui.input_file(
+                "path_file", 
+                "Choose SVG or JSON file", 
+                accept=[".svg", ".json"], 
+                multiple=False, 
+            ),
+            ui.output_text("path_file_name"),
+            ui.input_text("meta_source", "Source"),
+            ui.input_text("meta_license", "License")
+        ),
+        ui.TagList(
+            ui.help_text("Path IDs"),
+            ui.output_text_verbatim("path_list", placeholder=True),
+        ),
+        col_widths=(4, 8),
+    )
+)
 
 def server_file_upload(input, file_name, intermediate_json):
 
@@ -74,59 +104,39 @@ def server_file_upload(input, file_name, intermediate_json):
             return f"File: {file_name()}"
         return "No file"
 
-panel_upload = ui.nav_panel(
-    "Upload",
-    ui.h2("Upload File"),
+## Relabeling Page =====================================================================
 
+panel_relabeling = ui.nav_panel(
+    "Relabeling",
     ui.layout_columns(
-        ui.TagList(
-            ui.input_file(
-                "path_file", 
-                "Choose SVG or JSON file", 
-                accept=[".svg", ".json"], 
-                multiple=False, 
-            ),
-            ui.output_text("path_file_name"),
-            ui.input_text("meta_source", "Source"),
-            ui.input_text("meta_license", "License")
-        ),
-        ui.TagList(
-            ui.help_text("Path IDs"),
-            ui.output_text_verbatim("path_list", placeholder=True),
-        ),
-        col_widths=(4, 8),
-    )
-)
-
-## Preview Page =====================================================================
-
-panel_preview = ui.nav_panel(
-    "Preview",
-    ui.layout_columns(
-        ui.output_ui("map_preview"),
+        ui.output_ui("map_relabeling"),
         ui.TagList(
             ui.layout_columns(
                 ui.TagList(
                     ui.help_text("New ID"),
                     ui.input_text("new_id", ""),
                 ),
-                ui.input_action_button("register_relabel", "Register", class_="btn-primary")
+                ui.TagList(
+                    ui.input_action_button("register_relabel", "Register", class_="btn-primary"),
+                    ui.input_action_button("unregister_relabel", "Unregister", class_="btn-danger"),
+                ),
+                col_widths=(6, 6),
             ),
             ui.help_text("Old ID (selected objects)"),
             ui.output_text_verbatim("selected_original_ids", placeholder=True),
+            ui.help_text("Registered objects (pending relabeling)"),
+            ui.output_text_verbatim("registered_objects_display", placeholder=True),
         )
     )
 )
 
-def server_preview(input, intermediate_json, relabel_rules):
+def server_relabeling(input, intermediate_json, relabel_rules, registered_ids):
     @render.ui
-    def map_preview():
-        """Preview the intermediate geometry (raw paths from SVG)."""
-        from shinymap.geometry import load_geometry
-
+    def map_relabeling():
+        """Preview the intermediate geometry with state-based styling."""
         data = intermediate_json.get()
         if not data or "error" in data:
-            return ui.p("Invalid data")  # Empty map if no data
+            return ui.p("Invalid data")
 
         # Get intermediate JSON (list-based path format)
         intermediate = data.get("intermediate", {})
@@ -137,59 +147,130 @@ def server_preview(input, intermediate_json, relabel_rules):
         if not geometry:
             return ui.p("Invalid data")
 
-        # Use load_geometry to get proper viewBox computation
-        # Save intermediate to temp file for load_geometry to read
-        import tempfile
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            json.dump(intermediate, f)
-            temp_path = f.name
+        # Compute viewBox directly from intermediate dict
+        # First check if metadata contains viewBox
+        metadata = intermediate.get("_metadata", {})
+        if isinstance(metadata, dict) and "viewBox" in metadata:
+            view_box = metadata["viewBox"]
+        else:
+            # Compute viewBox from geometry with 2% padding
+            view_box = compute_viewbox_from_dict(intermediate, padding=0.02)
 
-        try:
-            # Load with automatic viewBox computation
-            loaded_geometry, _, view_box = load_geometry(
-                temp_path,
-                viewbox_from_metadata=True,  # Use metadata if available
-                viewbox_padding=0.02  # 2% padding
-            )
-            # Convert back to list format for Map
-            geometry = {k: [v] for k, v in loaded_geometry.items()}
-        finally:
-            # Clean up temp file
-            Path(temp_path).unlink(missing_ok=True)
+        # Get current R (registered) state
+        current_registered = registered_ids.get()
 
-        return input_map("preview", geometry, mode="multiple", view_box=view_box)
+        # Build fill_color map based on R state
+        # Registered -> white-ish (done), Not registered -> gray-ish (needs attention)
+        fill_colors = {}
+        for region_id in geometry.keys():
+            is_registered = region_id in current_registered
+            if is_registered:
+                fill_colors[region_id] = "#f8fafc"  # slate-50 (white-ish, registered)
+            else:
+                fill_colors[region_id] = "#cbd5e1"  # slate-300 (gray-ish, not registered)
+
+        return input_map(
+            "relabeling",
+            geometry,
+            mode="multiple",
+            view_box=view_box,
+            fill_color=fill_colors,
+            default_aesthetic={"stroke_color": "#64748b", "stroke_width": 1},  # slate-500
+            selected_aesthetic={"stroke_color": "#0f172a", "stroke_width": 3},  # slate-900, thick
+            hover_highlight={"fill_color": "#fef08a", "stroke_width": 0}  # yellow-200, no stroke
+        )
 
     @render.text
     def selected_original_ids():
-        return "\n".join(input.preview())
+        return "\n".join(input.relabelling())
 
+    @render.text
+    def registered_objects_display():
+        """Display registered objects with their new IDs."""
+        current_rules = relabel_rules.get()
 
-panel_relabel = ui.nav_panel(
-    "Relabel",
-    ui.p(
-        "Rename or merge paths by entering a JSON object mapping new IDs to old ID(s)."
-    ),
-    ui.p(
-        "Use a string value to rename a single path, or a list to merge multiple paths."
-    ),
-    ui.input_text_area(
-        "relabel_json",
-        "Relabel (JSON format)",
-        value='{\n  "region_01": "path_1",\n  "hokkaido": ["path_2", "path_3"]\n}',
-        rows=8,
-    ),
-)
+        if not current_rules:
+            return "No objects registered for relabeling."
 
-panel_overlays = ui.nav_panel(
-    "Overlays",
-    ui.p("List path IDs that should be marked as overlay geometry."),
-    ui.input_text_area(
-        "overlay_ids_json",
-        "Overlay IDs (JSON array)",
-        value='["overlay_id_1", "overlay_id_2"]',
-        rows=6,
-    ),
-)
+        lines = []
+        # Format: {"new_id": ["old_id1", "old_id2"]}
+        for new_id, old_ids in sorted(current_rules.items()):
+            old_ids_str = ", ".join(sorted(old_ids))
+            lines.append(f"{new_id} ← [{old_ids_str}]")
+
+        return "\n".join(lines)
+
+    @reactive.effect
+    @reactive.event(input.register_relabel)
+    def handle_register():
+        """Handle 1/0 -> 0/1 transition: Register selected objects and clear selection."""
+        new_id = input.new_id().strip()
+        if not new_id:
+            return
+
+        # Get current selection from input map
+        current_selected = set(input.relabeling())
+        if not current_selected:
+            return
+
+        # Update relabel_rules with format: {"new_id": ["old_id1", "old_id2"]}
+        current_rules = dict(relabel_rules.get())
+
+        # Add selected IDs to the list for this new_id
+        if new_id in current_rules:
+            # Append to existing list (avoid duplicates)
+            existing = set(current_rules[new_id])
+            current_rules[new_id] = list(existing | current_selected)
+        else:
+            # Create new list for this new_id
+            current_rules[new_id] = list(current_selected)
+
+        relabel_rules.set(current_rules)
+
+        # Move from S to R: add to registered
+        current_registered = registered_ids.get()
+        registered_ids.set(current_registered | current_selected)
+
+        # Clear selection in the map
+        update_map("relabeling", value={})
+
+        # Clear the new_id input for next entry
+        ui.update_text("new_id", value="")
+
+    @reactive.effect
+    @reactive.event(input.unregister_relabel)
+    def handle_unregister():
+        """Handle 1/1 -> 0/0 transition: Unregister selected objects and clear selection."""
+        # Get current selection from input map
+        current_selected = set(input.relabeling())
+        current_registered = registered_ids.get()
+
+        # Only unregister objects that are both selected AND registered (1/1 state)
+        to_unregister = current_selected & current_registered
+
+        if not to_unregister:
+            return
+
+        # Remove from relabel_rules (format: {"new_id": ["old_id1", "old_id2"]})
+        current_rules = dict(relabel_rules.get())
+        updated_rules = {}
+
+        for new_id, old_ids in current_rules.items():
+            # Remove unregistered IDs from the list
+            remaining = [oid for oid in old_ids if oid not in to_unregister]
+            # Only keep the entry if there are still IDs mapped to this new_id
+            if remaining:
+                updated_rules[new_id] = remaining
+
+        relabel_rules.set(updated_rules)
+
+        # Remove from R
+        registered_ids.set(current_registered - to_unregister)
+
+        # Clear selection in the map
+        update_map("relabeling", value={})
+
+## Inference Page =====================================================================
 
 panel_infer = ui.nav_panel(
     "Infer from Original",
@@ -201,14 +282,14 @@ panel_infer = ui.nav_panel(
 
 panel_gen_json = ui.nav_panel(
     "Generated JSON",
-    ui.output_text_verbatim("json_preview"),
+    ui.output_text_verbatim("json_"),
     ui.input_text("output_filename", "Output JSON filename", value="output.json"),
     ui.download_button("download_json", "Download JSON"),
 )
 
 panel_gen_code = ui.nav_panel(
     "Generated Code",
-    ui.output_text_verbatim("code_preview"),
+    ui.output_text_verbatim("code_"),
     ui.download_button("download_code", "Download Python Code"),
 )
 
@@ -220,9 +301,7 @@ app_ui = ui.page_fillable(
     ),
     ui.navset_tab(
         panel_upload,
-        panel_preview,
-        panel_relabel,
-        panel_overlays,
+        panel_relabeling,
         panel_gen_json,
         panel_gen_code,
         panel_infer,
@@ -236,9 +315,10 @@ app_ui = ui.page_fillable(
 
 def server(input, output, session):
 
-    intermediate_json = reactive.value() 
+    intermediate_json = reactive.value()
     file_name = reactive.value()
-    relabel_rules = reactive.value({})
+    relabel_rules = reactive.value({})  # Format: {"new_id": ["old_id1", "old_id2"]}
+    registered_ids = reactive.value(set())  # R flag: objects marked for relabeling
     
     if _cli_file_path is not None:
         cli_json = load_file(str(_cli_file_path), _cli_file_path.name)
@@ -246,7 +326,7 @@ def server(input, output, session):
         file_name.set(_cli_file_path.name)
     
     server_file_upload(input, file_name, intermediate_json)
-    server_preview(input, intermediate_json, relabel_rules)
+    server_relabeling(input, intermediate_json, relabel_rules, registered_ids)
 
     @render.text
     def path_list():
@@ -287,7 +367,7 @@ def server(input, output, session):
             return None
 
         metadata = {"source": input.meta_source(), "license": input.meta_license()}
-        relabel = parse_json_input(input.relabel_json(), {})
+        relabel = relabel_rules()
         overlay_ids = parse_json_input(input.overlay_ids_json(), [])
 
         # Filter out empty values
