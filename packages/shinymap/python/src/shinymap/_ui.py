@@ -1054,9 +1054,7 @@ def render_map(fn=None):
             output_id = func.__name__
             payload = _apply_static_params(payload, output_id)
 
-            result = _render_map_ui(payload, _include_dependency=False)
-            print(f"[shinymap] render_map {output_id} type={type(val)} result={type(result)}")
-            return result
+            return _render_map_ui(payload, _include_dependency=False)
 
         return wrapper
 
