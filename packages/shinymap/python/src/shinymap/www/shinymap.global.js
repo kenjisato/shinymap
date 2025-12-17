@@ -21937,7 +21937,7 @@ var shinymap = (() => {
             {
               d: geometry[hovered],
               fill: hoverHighlight.fillColor ?? "none",
-              fillOpacity: hoverHighlight.fillOpacity ?? 0,
+              fillOpacity: hoverHighlight.fillOpacity ?? (hoverHighlight.fillColor ? 1 : 0),
               stroke: hoverHighlight.strokeColor ?? "#1e40af",
               strokeWidth: hoverHighlight.strokeWidth ?? 2,
               pointerEvents: "none"

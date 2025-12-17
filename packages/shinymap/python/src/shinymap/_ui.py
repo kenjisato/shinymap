@@ -155,7 +155,9 @@ def input_map(
         mode: Interaction mode ("single", "multiple", "count")
         view_box: Override viewBox tuple. If None, uses geometry.viewbox()
         fill_color: Fill colors
-        hover_highlight: Styling for hover state
+        hover_highlight: Styling for hover state. Supported keys: fill_color, stroke_color, stroke_width.
+            Note: Opacity changes (fill_opacity, stroke_opacity) have no visual effect because
+            hover creates an overlay copy on top of the original region.
         selected_aesthetic: Styling for selected regions
 
     Example:
@@ -187,6 +189,20 @@ def input_map(
 
     if mode not in {None, "single", "multiple", "count"}:
         raise ValueError('mode must be one of "single", "multiple", "count", or None')
+
+    # Validate hover_highlight - opacity changes don't work with overlay-based hover
+    if hover_highlight is not None:
+        import warnings
+        invalid_keys = {"fill_opacity", "fillOpacity", "stroke_opacity", "strokeOpacity"}
+        found_invalid = invalid_keys & set(hover_highlight.keys())
+        if found_invalid:
+            warnings.warn(
+                f"hover_highlight contains opacity keys {found_invalid} which have no visual effect. "
+                f"Hover creates an overlay copy, so opacity changes are not visible. "
+                f"Use fill_color or stroke_color instead.",
+                UserWarning,
+                stacklevel=2,
+            )
 
     # Extract viewBox
     vb_tuple = view_box if view_box else geometry.viewbox()
@@ -303,8 +319,8 @@ class MapBuilder:
 
     def __init__(
         self,
-        *,
         regions: GeometryMap | None = None,
+        *,
         tooltips: TooltipMap = None,
         view_box: tuple[float, float, float, float] | None = None,
         overlay_regions: GeometryMap | None = None,
@@ -526,7 +542,7 @@ def Map(
 
     # Create MapBuilder with extracted data
     builder = MapBuilder(
-        regions=main_regions,
+        main_regions,
         view_box=view_box or geometry.viewbox(),
         overlay_regions=overlay_regions_dict if overlay_regions_dict else None,
         tooltips=tooltips,
@@ -571,10 +587,10 @@ class MapSelectionBuilder(MapBuilder):
         *,
         tooltips: TooltipMap = None,
         view_box: str | None = None,
-        overlay_geometry: GeometryMap | None = None,
+        overlay_regions: GeometryMap | None = None,
         overlay_aesthetic: Mapping[str, Any] | None = None,
     ):
-        super().__init__(geometry, tooltips=tooltips, view_box=view_box, overlay_geometry=overlay_geometry, overlay_aesthetic=overlay_aesthetic)
+        super().__init__(geometry, tooltips=tooltips, view_box=view_box, overlay_regions=overlay_regions, overlay_aesthetic=overlay_aesthetic)
         self._selected = selected
         self._fill_color_selected: Mapping[str, Any] | None = None
         self._fill_color_not_selected: Mapping[str, Any] | None = None
@@ -631,7 +647,7 @@ class MapSelectionBuilder(MapBuilder):
     def build(self) -> MapPayload:
         """Build payload with selection-specific aesthetics."""
         return MapPayload(
-            geometry=self._geometry,
+            geometry=self._regions,
             tooltips=self._tooltips,
             fill_color=self._fill_color,
             fill_opacity=self._fill_opacity,
@@ -643,13 +659,51 @@ class MapSelectionBuilder(MapBuilder):
             default_aesthetic=self._default_aesthetic,
             fill_color_selected=self._fill_color_selected,
             fill_color_not_selected=self._fill_color_not_selected,
-            overlay_geometry=self._overlay_geometry,
+            overlay_geometry=self._overlay_regions,
             overlay_aesthetic=self._overlay_aesthetic,
         )
 
 
 # Alias for shorter usage
-MapSelection = MapSelectionBuilder
+def MapSelection(
+    geometry: "Geometry",
+    selected: Selection = None,
+    *,
+    tooltips: dict[str, str] | None = None,
+) -> MapSelectionBuilder:
+    """Create selection-highlighting map from Geometry object (OOP approach - recommended).
+
+    Args:
+        geometry: Geometry object
+        selected: Selected region ID(s)
+        tooltips: Region tooltips
+
+    Example:
+        from shinymap import MapSelection
+        from shinymap.geometry import Geometry
+
+        geo = Geometry.from_dict(data)
+        MapSelection(geo, selected="region1", tooltips=tooltips)
+            .with_fill_color("#e2e8f0")
+            .with_fill_color_selected("#fbbf24")
+
+    Returns:
+        MapSelectionBuilder instance for method chaining
+    """
+    from .geometry import Geometry as GeometryClass
+
+    # Extract regions using Geometry methods
+    main_regions = geometry.main_regions()
+    overlay_regions_dict = geometry.overlay_regions()
+
+    # Create MapSelectionBuilder with extracted data
+    return MapSelectionBuilder(
+        main_regions,
+        selected=selected,
+        tooltips=tooltips,
+        view_box=geometry.viewbox(),
+        overlay_regions=overlay_regions_dict if overlay_regions_dict else None,
+    )
 
 
 class MapCountBuilder(MapBuilder):
@@ -679,10 +733,10 @@ class MapCountBuilder(MapBuilder):
         *,
         tooltips: TooltipMap = None,
         view_box: str | None = None,
-        overlay_geometry: GeometryMap | None = None,
+        overlay_regions: GeometryMap | None = None,
         overlay_aesthetic: Mapping[str, Any] | None = None,
     ):
-        super().__init__(geometry, tooltips=tooltips, view_box=view_box, overlay_geometry=overlay_geometry, overlay_aesthetic=overlay_aesthetic)
+        super().__init__(geometry, tooltips=tooltips, view_box=view_box, overlay_regions=overlay_regions, overlay_aesthetic=overlay_aesthetic)
         self._counts = counts
         self._count_palette: list[str] | None = None
 
@@ -713,7 +767,7 @@ class MapCountBuilder(MapBuilder):
             self._count_palette = fill_color
 
             # Only convert to fill map if geometry is available
-            if self._geometry is not None:
+            if self._regions is not None:
                 # Convert to fill map
                 count_fills = {}
                 max_count = max(self._counts.values(), default=0) if self._counts else 0
@@ -727,7 +781,7 @@ class MapCountBuilder(MapBuilder):
                         stacklevel=2,
                     )
 
-                for rid in self._geometry.keys():
+                for rid in self._regions.keys():
                     count = (self._counts or {}).get(rid, 0)
                     color_index = count % len(fill_color)  # Cycle if needed
                     count_fills[rid] = fill_color[color_index]
@@ -736,7 +790,7 @@ class MapCountBuilder(MapBuilder):
                     self._fill_color = count_fills
                 else:
                     # Merge with existing fills
-                    existing = _normalize_fills(self._fill_color, self._geometry)
+                    existing = _normalize_fills(self._fill_color, self._regions)
                     if existing:
                         self._fill_color = {**existing, **count_fills}
                     else:
@@ -766,7 +820,7 @@ class MapCountBuilder(MapBuilder):
     def build(self) -> MapPayload:
         """Build payload with count information."""
         return MapPayload(
-            geometry=self._geometry,
+            geometry=self._regions,
             tooltips=self._tooltips,
             fill_color=self._fill_color,
             fill_opacity=self._fill_opacity,
@@ -777,13 +831,50 @@ class MapCountBuilder(MapBuilder):
             view_box=self._view_box,
             default_aesthetic=self._default_aesthetic,
             count_palette=self._count_palette,
-            overlay_geometry=self._overlay_geometry,
+            overlay_geometry=self._overlay_regions,
             overlay_aesthetic=self._overlay_aesthetic,
         )
 
 
 # Alias for shorter usage
-MapCount = MapCountBuilder
+def MapCount(
+    geometry: "Geometry",
+    counts: CountMap = None,
+    *,
+    tooltips: dict[str, str] | None = None,
+) -> MapCountBuilder:
+    """Create count-based coloring map from Geometry object (OOP approach - recommended).
+
+    Args:
+        geometry: Geometry object
+        counts: Count values per region
+        tooltips: Region tooltips
+
+    Example:
+        from shinymap import MapCount
+        from shinymap.geometry import Geometry
+
+        geo = Geometry.from_dict(data)
+        MapCount(geo, counts=counts, tooltips=tooltips)
+            .with_fill_color(["blue", "red", "green"])  # Palette for 0, 1, 2
+
+    Returns:
+        MapCountBuilder instance for method chaining
+    """
+    from .geometry import Geometry as GeometryClass
+
+    # Extract regions using Geometry methods
+    main_regions = geometry.main_regions()
+    overlay_regions_dict = geometry.overlay_regions()
+
+    # Create MapCountBuilder with extracted data
+    return MapCountBuilder(
+        main_regions,
+        counts=counts,
+        tooltips=tooltips,
+        view_box=geometry.viewbox(),
+        overlay_regions=overlay_regions_dict if overlay_regions_dict else None,
+    )
 
 
 def _render_map_ui(
