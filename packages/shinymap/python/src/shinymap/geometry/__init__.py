@@ -104,6 +104,7 @@ convert(
 from __future__ import annotations
 
 from ._core import (
+    Geometry,
     compute_viewbox_from_dict,
     convert,
     from_json,
@@ -113,6 +114,7 @@ from ._core import (
 )
 
 __all__ = [
+    "Geometry",
     "compute_viewbox_from_dict",
     "convert",
     "from_svg",

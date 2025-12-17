@@ -6,12 +6,13 @@ import pytest
 
 from shinymap import configure_theme, input_map
 from shinymap._theme import _theme_config, get_theme_config
+from shinymap.geometry import Geometry
 
 
 @pytest.mark.unit
 def test_configure_theme_basic():
     """Test basic theme configuration."""
-    geo = {"a": ["M 0 0 L 10 0"]}
+    geo = Geometry.from_dict({"a": ["M 0 0 L 10 0"]})
 
     # Reset theme between tests
     _theme_config.set(None)
@@ -31,7 +32,7 @@ def test_configure_theme_basic():
 @pytest.mark.unit
 def test_configure_theme_override():
     """Test explicit parameter overrides configured theme."""
-    geo = {"a": ["M 0 0 L 10 0"]}
+    geo = Geometry.from_dict({"a": ["M 0 0 L 10 0"]})
 
     _theme_config.set(None)
 
@@ -45,7 +46,7 @@ def test_configure_theme_override():
 @pytest.mark.unit
 def test_configure_theme_multiple_params():
     """Test configuring multiple aesthetic parameters."""
-    geo = {"a": ["M 0 0 L 10 0"]}
+    geo = Geometry.from_dict({"a": ["M 0 0 L 10 0"]})
 
     _theme_config.set(None)
 
@@ -65,7 +66,7 @@ def test_configure_theme_multiple_params():
 @pytest.mark.unit
 def test_no_theme_configured():
     """Test behavior without theme configuration (backward compat)."""
-    geo = {"a": ["M 0 0 L 10 0"]}
+    geo = Geometry.from_dict({"a": ["M 0 0 L 10 0"]})
 
     _theme_config.set(None)
 
@@ -95,7 +96,7 @@ def test_theme_reconfiguration():
 @pytest.mark.unit
 def test_thread_safety():
     """Test that theme configuration is thread-safe across sessions."""
-    geo = {"a": ["M 0 0 L 10 0"]}
+    geo = Geometry.from_dict({"a": ["M 0 0 L 10 0"]})
     results = {}
 
     def make_map_with_config(thread_id, stroke_width):

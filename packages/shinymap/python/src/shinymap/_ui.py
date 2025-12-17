@@ -123,7 +123,7 @@ def _camel_props(data: MutableMapping[str, Any]) -> MutableMapping[str, Any]:
 
 def input_map(
     id: str,
-    geometry: GeometryMap,
+    geometry: "Geometry",
     *,
     tooltips: TooltipMap = None,
     fill_color: FillMap = None,
@@ -131,18 +131,16 @@ def input_map(
     value: CountMap = None,
     cycle: int | None = None,
     max_selection: int | None = None,
-    view_box: str | None = None,
+    view_box: tuple[float, float, float, float] | None = None,
     default_aesthetic: Mapping[str, Any] | None = None,
     hover_highlight: Mapping[str, Any] | None = None,
     selected_aesthetic: Mapping[str, Any] | None = None,
-    overlay_geometry: GeometryMap | None = None,
-    overlay_aesthetic: Mapping[str, Any] | None = None,
     width: str | None = "100%",
     height: str | None = "320px",
     class_: str | None = None,
     style: MutableMapping[str, str] | None = None,
 ) -> TagList:
-    """Shiny input that emits region selections.
+    """Create interactive map from Geometry object (OOP approach - recommended).
 
     For mode="single": returns a string (single selected region ID) or None
     For mode="multiple": returns a list of selected region IDs
@@ -150,6 +148,23 @@ def input_map(
 
     The underlying value is always a count map (dict[str, int]), but Shiny
     automatically transforms it based on the mode using a value function.
+
+    Args:
+        id: Input ID for Shiny
+        geometry: Geometry object
+        mode: Interaction mode ("single", "multiple", "count")
+        view_box: Override viewBox tuple. If None, uses geometry.viewbox()
+        fill_color: Fill colors
+        hover_highlight: Styling for hover state
+        selected_aesthetic: Styling for selected regions
+
+    Example:
+        from shinymap import input_map
+        from shinymap.geometry import Geometry
+
+        geo = Geometry.from_dict(data)
+        input_map("my_map", geo, mode="multiple")
+        input_map("my_map", geo, view_box=(10, 10, 80, 80))  # Zoom
 
     Aesthetic precedence (highest to lowest):
     1. Explicit parameters passed to this function
@@ -169,11 +184,18 @@ def input_map(
         default_aesthetic = theme_config["default_aesthetic"]
     if fill_color is None and "fill_color" in theme_config:
         fill_color = theme_config["fill_color"]
-    if overlay_aesthetic is None and "overlay_aesthetic" in theme_config:
-        overlay_aesthetic = theme_config["overlay_aesthetic"]
 
     if mode not in {None, "single", "multiple", "count"}:
         raise ValueError('mode must be one of "single", "multiple", "count", or None')
+
+    # Extract viewBox
+    vb_tuple = view_box if view_box else geometry.viewbox()
+
+    # Extract main regions using Geometry method (exclude overlays for input maps)
+    main_regions = geometry.main_regions()
+
+    # Convert tuple viewBox to string for React (temporary)
+    vb_str = f"{vb_tuple[0]} {vb_tuple[1]} {vb_tuple[2]} {vb_tuple[3]}"
 
     # Mode presets mirror the React InputMap defaults.
     effective_cycle = cycle
@@ -190,19 +212,19 @@ def input_map(
 
     props = _camel_props(
         {
-            "geometry": geometry,
+            "geometry": main_regions,
             "tooltips": tooltips,
-            "fill_color": _normalize_fills(fill_color, geometry),
+            "fill_color": _normalize_fills(fill_color, main_regions),
             "mode": mode,
             "value": value,
             "cycle": effective_cycle,
             "max_selection": effective_max_selection,
-            "view_box": view_box,
+            "view_box": vb_str,
             "default_aesthetic": default_aesthetic,
             "hover_highlight": hover_highlight,
             "selected_aesthetic": selected_aesthetic,
-            "overlay_geometry": overlay_geometry,
-            "overlay_aesthetic": overlay_aesthetic,
+            "overlay_geometry": None,  # Overlays not supported in input maps for now
+            "overlay_aesthetic": None,
         }
     )
 
@@ -281,14 +303,23 @@ class MapBuilder:
 
     def __init__(
         self,
-        geometry: GeometryMap | None = None,
         *,
+        regions: GeometryMap | None = None,
         tooltips: TooltipMap = None,
-        view_box: str | None = None,
-        overlay_geometry: GeometryMap | None = None,
+        view_box: tuple[float, float, float, float] | None = None,
+        overlay_regions: GeometryMap | None = None,
         overlay_aesthetic: Mapping[str, Any] | None = None,
     ):
-        self._geometry = geometry
+        """Internal constructor - use Map() function instead.
+
+        Args:
+            regions: Dict of main regions {regionId: [path1, ...]}
+            tooltips: Optional region tooltips
+            view_box: ViewBox as tuple (x, y, width, height)
+            overlay_regions: Optional overlay dict
+            overlay_aesthetic: Optional overlay styling
+        """
+        self._regions = regions
         self._tooltips = tooltips
         self._fill_color: str | Mapping[str, str] | None = None
         self._stroke_width: float | Mapping[str, float] | None = None
@@ -296,9 +327,9 @@ class MapBuilder:
         self._fill_opacity: float | Mapping[str, float] | None = None
         self._counts: CountMap = None
         self._active_ids: Selection = None
-        self._view_box = view_box
+        self._view_box = view_box  # Always tuple or None
         self._default_aesthetic: Mapping[str, Any] | None = None
-        self._overlay_geometry = overlay_geometry
+        self._overlay_regions = overlay_regions
         self._overlay_aesthetic = overlay_aesthetic
 
     def with_tooltips(self, tooltips: TooltipMap) -> MapBuilder:
@@ -320,25 +351,25 @@ class MapBuilder:
         if fill_color is None:
             return self
 
-        # Normalize to dict (only if geometry is available)
-        if self._geometry is not None:
-            normalized = _normalize_fills(fill_color, self._geometry)
+        # Normalize to dict (only if regions is available)
+        if self._regions is not None:
+            normalized = _normalize_fills(fill_color, self._regions)
         else:
-            # If geometry not yet available, store as-is (will normalize in _apply_static_params)
+            # If regions not yet available, store as-is (will normalize in _apply_static_params)
             normalized = fill_color if isinstance(fill_color, dict) else None
 
         # Merge with existing
         if self._fill_color is None:
             self._fill_color = normalized if normalized else fill_color
         else:
-            if self._geometry is not None:
-                existing_normalized = _normalize_fills(self._fill_color, self._geometry)
+            if self._regions is not None:
+                existing_normalized = _normalize_fills(self._fill_color, self._regions)
                 if existing_normalized and normalized:
                     self._fill_color = {**existing_normalized, **normalized}
                 elif normalized:
                     self._fill_color = normalized
             else:
-                # Without geometry, just use the new value
+                # Without regions, just use the new value
                 self._fill_color = fill_color
 
         return self
@@ -427,8 +458,13 @@ class MapBuilder:
 
     def build(self) -> MapPayload:
         """Build and return the MapPayload."""
+        # Convert tuple viewBox to string for serialization (temporary until React updated)
+        view_box_str = None
+        if self._view_box:
+            view_box_str = f"{self._view_box[0]} {self._view_box[1]} {self._view_box[2]} {self._view_box[3]}"
+
         return MapPayload(
-            geometry=self._geometry,
+            geometry=self._regions,
             tooltips=self._tooltips,
             fill_color=self._fill_color,
             fill_opacity=self._fill_opacity,
@@ -436,9 +472,9 @@ class MapBuilder:
             stroke_width=self._stroke_width,
             counts=self._counts,
             active_ids=self._active_ids,
-            view_box=self._view_box,
+            view_box=view_box_str,
             default_aesthetic=self._default_aesthetic,
-            overlay_geometry=self._overlay_geometry,
+            overlay_geometry=self._overlay_regions,
             overlay_aesthetic=self._overlay_aesthetic,
         )
 
@@ -447,8 +483,64 @@ class MapBuilder:
         return self.build().as_json()
 
 
-# Alias for more concise usage
-Map = MapBuilder
+def Map(
+    geometry: "Geometry",
+    *,
+    view_box: tuple[float, float, float, float] | None = None,
+    tooltips: dict[str, str] | None = None,
+    fill_color: dict[str, str] | str | None = None,
+    counts: dict[str, int] | None = None,
+    active: list[str] | None = None,
+) -> MapBuilder:
+    """Create map from Geometry object (OOP approach - recommended).
+
+    This is the recommended way to create maps. It automatically extracts
+    regions, viewBox, and overlays from the Geometry object.
+
+    Args:
+        geometry: Geometry object with regions, viewBox, metadata
+        view_box: Override viewBox tuple (for zoom/pan). If None, uses geometry.viewbox()
+        tooltips: Region tooltips
+        fill_color: Fill colors (string for all, dict for per-region)
+        counts: Count badges per region
+        active: Active region IDs
+
+    Example:
+        from shinymap import Map
+        from shinymap.geometry import Geometry
+
+        geo = Geometry.from_dict(data)
+        Map(geo)
+        Map(geo, view_box=(10, 10, 80, 80))  # Zoom
+        Map(geo, fill_color=colors, counts=counts)  # Inline styling
+        Map(geo).with_fill_color(colors).with_counts(counts)  # Fluent API
+
+    Returns:
+        MapBuilder instance for method chaining
+    """
+    from .geometry import Geometry as GeometryClass
+
+    # Extract regions using Geometry methods
+    main_regions = geometry.main_regions()
+    overlay_regions_dict = geometry.overlay_regions()
+
+    # Create MapBuilder with extracted data
+    builder = MapBuilder(
+        regions=main_regions,
+        view_box=view_box or geometry.viewbox(),
+        overlay_regions=overlay_regions_dict if overlay_regions_dict else None,
+        tooltips=tooltips,
+    )
+
+    # Apply optional styling
+    if fill_color is not None:
+        builder = builder.with_fill_color(fill_color)
+    if counts is not None:
+        builder = builder.with_counts(counts)
+    if active is not None:
+        builder = builder.with_active(active)
+
+    return builder
 
 
 class MapSelectionBuilder(MapBuilder):

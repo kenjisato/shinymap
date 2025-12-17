@@ -50,11 +50,153 @@ from __future__ import annotations
 import json
 import re
 import xml.etree.ElementTree as ET
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
 # Type alias for bounds calculator functions
 BoundsCalculator = Callable[[str], tuple[float, float, float, float]]
+
+
+@dataclass
+class Geometry:
+    """Canonical geometry representation (list-based, lossless).
+
+    This class encapsulates SVG path geometry with metadata. It uses list-based
+    paths as the canonical format to preserve multi-path regions without loss.
+
+    Attributes:
+        regions: Dictionary mapping region IDs to lists of SVG path strings
+        metadata: Optional metadata dict (viewBox, overlays, source, license, etc.)
+
+    Example:
+        >>> # Load from dict
+        >>> data = {"region1": ["M 0 0 L 10 0"], "_metadata": {"viewBox": "0 0 100 100"}}
+        >>> geo = Geometry.from_dict(data)
+        >>>
+        >>> # Access properties
+        >>> geo.regions
+        {'region1': ['M 0 0 L 10 0']}
+        >>> geo.viewbox()
+        (0.0, 0.0, 100.0, 100.0)
+    """
+    regions: dict[str, list[str]]
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "Geometry":
+        """Load geometry from dict (accepts both list and string path formats).
+
+        Args:
+            data: Dictionary with regions and optional _metadata key
+
+        Returns:
+            Geometry object with normalized list-based paths
+
+        Raises:
+            ValueError: If _metadata exists but is not a dict
+
+        Example:
+            >>> # String format (gets normalized to list)
+            >>> Geometry.from_dict({"a": "M 0 0 L 10 0"})
+            Geometry(regions={'a': ['M 0 0 L 10 0']}, metadata={})
+
+            >>> # List format (already canonical)
+            >>> Geometry.from_dict({"a": ["M 0 0", "L 10 0"]})
+            Geometry(regions={'a': ['M 0 0', 'L 10 0']}, metadata={})
+        """
+        regions = {}
+        metadata = {}
+
+        for key, value in data.items():
+            if key == "_metadata":
+                if not isinstance(value, dict):
+                    raise ValueError(f"_metadata must be a dict, got {type(value).__name__}")
+                metadata = value
+            elif isinstance(value, list):
+                regions[key] = value  # Already list format
+            elif isinstance(value, str):
+                regions[key] = [value]  # Normalize string to single-element list
+
+        return cls(regions=regions, metadata=metadata)
+
+    def viewbox(self, padding: float = 0.02) -> tuple[float, float, float, float]:
+        """Get viewBox from metadata, or compute from geometry coordinates.
+
+        Args:
+            padding: Padding fraction for computed viewBox (default 2%)
+
+        Returns:
+            ViewBox tuple in format (x, y, width, height)
+
+        Example:
+            >>> geo = Geometry.from_dict({"a": ["M 0 0 L 100 100"]})
+            >>> geo.viewbox()
+            (-2.0, -2.0, 104.0, 104.0)  # With 2% padding
+        """
+        if "viewBox" in self.metadata:
+            # Parse viewBox string to tuple
+            vb_str = self.metadata["viewBox"]
+            parts = vb_str.split()
+            if len(parts) != 4:
+                raise ValueError(f"Invalid viewBox format: {vb_str}")
+            return (float(parts[0]), float(parts[1]), float(parts[2]), float(parts[3]))
+        # Compute from geometry - normalize to string format first
+        paths = _normalize_geometry_dict(self.regions)
+        return _calculate_viewbox(paths, padding=padding, bounds_fn=None)
+
+    def overlays(self) -> list[str]:
+        """Get overlay region IDs from metadata.
+
+        Returns:
+            List of region IDs marked as overlays
+
+        Example:
+            >>> geo = Geometry.from_dict({
+            ...     "region": ["M 0 0"],
+            ...     "_border": ["M 0 0 L 100 0"],
+            ...     "_metadata": {"overlays": ["_border"]}
+            ... })
+            >>> geo.overlays()
+            ['_border']
+        """
+        return self.metadata.get("overlays", [])
+
+    def main_regions(self) -> dict[str, list[str]]:
+        """Get main regions (excluding overlays).
+
+        Returns:
+            Dict of main regions {regionId: [path1, ...]}
+
+        Example:
+            >>> geo = Geometry.from_dict({
+            ...     "region": ["M 0 0"],
+            ...     "_border": ["M 0 0 L 100 0"],
+            ...     "_metadata": {"overlays": ["_border"]}
+            ... })
+            >>> geo.main_regions()
+            {'region': ['M 0 0']}
+        """
+        overlay_ids = set(self.overlays())
+        return {k: v for k, v in self.regions.items() if k not in overlay_ids}
+
+    def overlay_regions(self) -> dict[str, list[str]]:
+        """Get overlay regions only.
+
+        Returns:
+            Dict of overlay regions {regionId: [path1, ...]}
+
+        Example:
+            >>> geo = Geometry.from_dict({
+            ...     "region": ["M 0 0"],
+            ...     "_border": ["M 0 0 L 100 0"],
+            ...     "_metadata": {"overlays": ["_border"]}
+            ... })
+            >>> geo.overlay_regions()
+            {'_border': ['M 0 0 L 100 0']}
+        """
+        overlay_ids = set(self.overlays())
+        return {k: v for k, v in self.regions.items() if k in overlay_ids}
 
 
 def _parse_svg_path_bounds(path_d: str) -> tuple[float, float, float, float]:
