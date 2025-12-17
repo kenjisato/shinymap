@@ -34,32 +34,30 @@ _ui_stroke_width = ui.card(
 )
 
 
-# Opacity (Darken) ---------
+# Stroke and Fill ---------
 
-_ui_darken = ui.card(
-    ui.card_header("Fill Opacity - Darken"),
-    ui.p("Reduces fill opacity by 0.3 on hover (darkening effect)."),
+_ui_stroke_and_fill = ui.card(
+    ui.card_header("Stroke and Fill Combined"),
+    ui.p("Changes both stroke width and fill color on hover."),
     input_map(
-        "darken",
+        "stroke_and_fill",
         DEMO_GEOMETRY,
         mode="multiple",
-        default_aesthetic={"fillColor": "black", "fillOpacity": 0.2},
-        hover_highlight={"fill_opacity": 0.3},
+        hover_highlight={"stroke_width": 2, "fill_color": "#bfdbfe"},
     ),
 )
 
-# Opacity (Brighten) ---------
+# Subtle Highlight ---------
 
-_ui_brighten = ui.card(
-    ui.card_header("Fill Opacity - Brighten"),
-    ui.p("Increases fill opacity by 0.2 on hover (brightening effect)."),
+_ui_subtle = ui.card(
+    ui.card_header("Subtle Highlight"),
+    ui.p("Minimal visual feedback with thin colored border."),
     ui.div(
         input_map(
-            "brighten",
+            "subtle",
             DEMO_GEOMETRY,
             mode="multiple",
-            default_aesthetic={"fillColor": "slategray"},
-            hover_highlight={"fill_opacity": -0.2},
+            hover_highlight={"stroke_color": "#60a5fa", "stroke_width": 1},
         ),
     ),
 )
@@ -112,18 +110,19 @@ ui_hover = ui.page_fixed(
     ui.h2("Hover Highlight Demo"),
     ui.p(
         "This demo showcases different hover_highlight configurations. "
-        "Hover over the shapes to see the visual feedback."
+        "Hover over the shapes to see the visual feedback. "
+        "Note: Opacity changes don't work because hover creates an overlay copy."
     ),
     ui.layout_column_wrap(
         _ui_default,
-        _ui_stroke_width, 
-        _ui_darken,
-        _ui_brighten,
+        _ui_stroke_width,
+        _ui_stroke_and_fill,
+        _ui_subtle,
         _ui_stroke_color,
         _ui_fill_color,
         _ui_combined,
         width=1/2,
-    ), 
+    ),
 )
 
 # Put them together ------
