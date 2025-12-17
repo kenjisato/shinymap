@@ -47,12 +47,39 @@ shinymap/
 
 ## Development Workflows
 
+### Quick Start: Using Makefile (Recommended)
+
+**Working directory:** Repository root
+
+The easiest way to build is using the Makefile, which handles the correct build order:
+
+```bash
+# Full build (TypeScript + Python bundle)
+make build
+
+# Just TypeScript compilation
+make build-js
+
+# Just Python bundling (after TypeScript build)
+make build-bundle
+
+# See all commands
+make help
+```
+
 ### Working with React/TypeScript Code
 
 **Working directory:** `packages/shinymap/js/`
 
 #### After modifying React components:
 
+**Option 1: Using Makefile (recommended)**
+```bash
+# From repository root
+make build
+```
+
+**Option 2: Manual build**
 ```bash
 cd packages/shinymap/js
 
@@ -63,12 +90,12 @@ npm run lint
 # 2. Build TypeScript
 npm run build
 
-# 3. Run standalone React demo (optional - for quick testing)
+# 3. Build bundled JS for Python package (CRITICAL - don't forget!)
+node build-global.js
+
+# 4. Run standalone React demo (optional - for quick testing)
 npm run serve
 # Opens demo at http://localhost:4173
-
-# 4. Build bundled JS for Python package
-node build-global.js
 
 # 5. Test with Python Shiny demo
 cd ../python
@@ -80,8 +107,9 @@ cd ../../..
 ```
 
 **Key points:**
-- Always rebuild the global bundle (`node build-global.js`) before testing Python integration
-- The bundled JS is copied to `packages/shinymap/python/src/shinymap/www/shinymap-shiny.js`
+- **Use `make build` to avoid forgetting the bundling step**
+- Always rebuild the global bundle (`node build-global.js` or `make build-bundle`) before testing Python integration
+- The bundled JS is copied to `packages/shinymap/python/src/shinymap/www/shinymap.global.js`
 - Lint/format before committing: `npm run lint && npm run format:check`
 - **Build sequence matters**: `npm run build` (TypeScript compilation) must complete before `node build-global.js` (bundling)
 
@@ -127,6 +155,13 @@ uv run pytest --cov=shinymap  # With coverage
 
 #### When React changes affect Python package:
 
+**Option 1: Using Makefile (recommended)**
+```bash
+# From repository root
+make build
+```
+
+**Option 2: Manual build**
 ```bash
 # 1. Build and bundle React code
 cd packages/shinymap/js
@@ -144,12 +179,23 @@ cd ../../..
 
 #### Full pre-commit checklist:
 
+**Option 1: Using Makefile (recommended)**
+```bash
+# From repository root
+make lint      # Lint TypeScript
+make format    # Format TypeScript
+make build     # Build TypeScript + bundle for Python
+make test      # Run Python tests
+```
+
+**Option 2: Manual checks**
 ```bash
 # JavaScript checks (from packages/shinymap/js/)
 cd packages/shinymap/js
 npm run lint
 npm run format:check
 npm run build
+node build-global.js  # Don't forget bundling!
 cd ../../..
 
 # Python checks (from packages/shinymap/python/)

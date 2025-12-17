@@ -14,3 +14,5 @@ See `SPEC.md` for the current roadmap and design goals.
 
 - Python packages use [Hatch](https://hatch.pypa.io/) for builds. When working locally, we recommend managing environments and dependencies with [uv](https://docs.astral.sh/uv/).
 - Minimum supported Python version is 3.12.
+- **Quick build:** Use `make build` from the repository root to build TypeScript and bundle for Python. Run `make help` to see all available commands.
+- See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development workflows.
