@@ -48,12 +48,12 @@ def _server_user_selection(input, output, session):
         return "No regions selected by user"
 
 
-# Example 2: Map.with_active() - Programmatic highlighting
+# Example 2: Programmatic highlighting with computed styling
 _ui_programmatic = ui.card(
-    ui.card_header("Map.with_active(): Programmatic Highlighting"),
+    ui.card_header("Programmatic Highlighting with Computed Styling"),
     ui.p(
-        "with_active() highlights regions based on computed logic, not user selection. "
-        "Here, we highlight regions with counts above a threshold."
+        "Highlight regions based on computed logic, not user selection. "
+        "Here, we use thicker borders for regions with counts above a threshold."
     ),
     ui.layout_columns(
         input_map("region_counts", DEMO_GEOMETRY, tooltips=TOOLTIPS, mode="count", value={}),
@@ -69,18 +69,21 @@ def _server_programmatic(input, output, session):
         counts = input.region_counts() or {}
 
         # Compute which regions to highlight (count >= 3)
-        high_value_regions = [rid for rid, count in counts.items() if count >= 3]
+        high_value_regions = set(rid for rid, count in counts.items() if count >= 3)
 
-        # Use Map with with_active() to programmatically highlight
+        # Use Map to programmatically highlight by varying stroke width
         # This is NOT tracking user selection - it's highlighting based on logic
         fills = scale_sequential(counts, list(DEMO_GEOMETRY.regions.keys()), max_count=10)
+
+        # Create stroke width dict: thicker for high-value regions
+        stroke_widths = {rid: 4.0 if rid in high_value_regions else 1.0
+                        for rid in DEMO_GEOMETRY.regions.keys()}
 
         return (
             Map(DEMO_GEOMETRY, tooltips=TOOLTIPS)
             .with_fill_color(fills)
             .with_counts(counts)
-            .with_active(high_value_regions)  # Programmatic: highlight high-value regions
-            .with_stroke_width(2.0)
+            .with_stroke_width(stroke_widths)  # Programmatic: highlight with thicker borders
         )
 
     @render.text
@@ -147,20 +150,20 @@ def _server_combined(input, output, session):
 
 # Put it all together
 ui_active_vs_selected = ui.page_fluid(
-    ui.h2("with_active() vs MapSelection(selected=...)"),
+    ui.h2("User Selection vs Programmatic Highlighting"),
     ui.markdown("""
 **Key Distinction:**
 
 - **`MapSelection(selected=...)`**: Use when you want to **track and visualize user selection**
   from an input_map. The `selected` parameter reflects what the user chose.
 
-- **`Map().with_active(...)`**: Use when you want to **programmatically highlight regions**
-  based on computed logic (thresholds, relationships, algorithms, etc.) that is NOT
+- **Programmatic highlighting**: Use computed styling (e.g., `with_fill_color()`, `with_stroke_width()`)
+  to **highlight regions based on logic** (thresholds, relationships, algorithms, etc.) that is NOT
   directly tied to user selection from an input.
 
 **When to use each:**
 - User clicks → tracking their selection? → `MapSelection(selected=input.my_map())`
-- Computing which regions to highlight based on data/logic? → `Map().with_active([...])`
+- Computing which regions to highlight based on data/logic? → Use conditional styling with dicts
     """),
     _ui_user_selection,
     _ui_programmatic,
