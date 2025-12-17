@@ -49,8 +49,6 @@ _ui_single = ui.card(
             view_box=VIEWBOX,
             default_aesthetic={"fillColor": "#e5e7eb", "strokeColor": "#d1d5db", "strokeWidth": 1},
             hover_highlight={"stroke_color": "#374151", "stroke_width": 2},
-            overlay_geometry=DIVIDERS,
-            overlay_aesthetic=DIVIDER_STYLE,
         ),
         ui.div(
             ui.help_text("Selected prefecture:"),
@@ -82,8 +80,6 @@ _ui_multi = ui.card(
             view_box=VIEWBOX,
             default_aesthetic={"fillColor": "#e5e7eb", "strokeColor": "#d1d5db", "strokeWidth": 1},
             hover_highlight={"stroke_color": "#374151", "stroke_width": 2},
-            overlay_geometry=DIVIDERS,
-            overlay_aesthetic=DIVIDER_STYLE,
         ),
         output_map(
             "multi_visual",

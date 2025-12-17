@@ -82,7 +82,7 @@ _ui_count_helpers = ui.card(
             tooltips=TOOLTIPS,
             mode="count",
             value={},
-            hover_highlight={"stroke_width": 2, "fill_opacity": -0.3},
+            hover_highlight={"stroke_width": 2},
         ),
         output_map("count_output"),
     ),
