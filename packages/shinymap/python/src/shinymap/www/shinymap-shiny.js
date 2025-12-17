@@ -302,8 +302,14 @@
 
             // Preserve current value ONLY if not explicitly provided in updates
             // This allows update_map(id, value={}) to clear selections
-            if (updates.value === undefined && currentProps.value !== undefined) {
-              newProps.value = currentProps.value;
+            // Don't preserve null or empty values - let React component state take precedence
+            if (updates.value === undefined) {
+              if (currentProps.value && Object.keys(currentProps.value).length > 0) {
+                newProps.value = currentProps.value;
+              } else {
+                // Don't pass null/empty value to React - delete it to let component state persist
+                delete newProps.value;
+              }
             }
 
             el.dataset.shinymapProps = JSON.stringify(newProps);
