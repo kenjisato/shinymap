@@ -73,7 +73,7 @@ def _server_programmatic(input, output, session):
 
         # Use Map with with_active() to programmatically highlight
         # This is NOT tracking user selection - it's highlighting based on logic
-        fills = scale_sequential(counts, list(DEMO_GEOMETRY.keys()), max_count=10)
+        fills = scale_sequential(counts, list(DEMO_GEOMETRY.regions.keys()), max_count=10)
 
         return (
             Map(DEMO_GEOMETRY, tooltips=TOOLTIPS)

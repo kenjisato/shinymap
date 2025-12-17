@@ -4,7 +4,7 @@ from shiny import App, ui
 from shinymap import MapCount, MapSelection, output_map, render_map
 
 
-rids = list(DEMO_GEOMETRY.keys())
+rids = list(DEMO_GEOMETRY.regions.keys())
 
 # Single Select -------------------
 

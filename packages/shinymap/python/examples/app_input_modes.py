@@ -102,7 +102,7 @@ def _server_visual_feedback(input, output, session):
         counts = input.visual_input() or {}
         return (
             Map(DEMO_GEOMETRY, tooltips=TOOLTIPS)
-            .with_fills(scale_sequential(counts, list(DEMO_GEOMETRY.keys()), max_count=10))
+            .with_fill_color(scale_sequential(counts, list(DEMO_GEOMETRY.regions.keys()), max_count=10))
             .with_counts(counts)
         )
 

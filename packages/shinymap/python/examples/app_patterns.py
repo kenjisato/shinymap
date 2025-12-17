@@ -25,9 +25,9 @@ def fills_for_qualitative(counts: dict[str, int] | None) -> dict[str, str]:
     """Active regions get their assigned color; inactive regions are neutral gray."""
     counts = counts or {}
     return scale_qualitative(
-        categories={rid: rid if counts.get(rid, 0) > 0 else None for rid in DEMO_GEOMETRY},
-        region_ids=list(DEMO_GEOMETRY.keys()),
-        palette=[SHAPE_COLORS[rid] for rid in DEMO_GEOMETRY],
+        categories={rid: rid if counts.get(rid, 0) > 0 else None for rid in DEMO_GEOMETRY.regions},
+        region_ids=list(DEMO_GEOMETRY.regions.keys()),
+        palette=[SHAPE_COLORS[rid] for rid in DEMO_GEOMETRY.regions],
     )
 
 
@@ -95,7 +95,7 @@ def _server_count_helpers(input, output, session):
         counts = input.clicks() or {}
         return (
             Map(DEMO_GEOMETRY, tooltips=TOOLTIPS)
-            .with_fill_color(scale_sequential(counts, list(DEMO_GEOMETRY.keys()), max_count=10))
+            .with_fill_color(scale_sequential(counts, list(DEMO_GEOMETRY.regions.keys()), max_count=10))
             .with_counts(counts)
         )
 
@@ -114,9 +114,9 @@ def fills_for_qualitative(counts: dict[str, int] | None) -> dict[str, str]:
     """Active regions get their assigned color; inactive regions are neutral gray."""
     counts = counts or {}
     return scale_qualitative(
-        categories={rid: rid if counts.get(rid, 0) > 0 else None for rid in DEMO_GEOMETRY},
-        region_ids=list(DEMO_GEOMETRY.keys()),
-        palette=[SHAPE_COLORS[rid] for rid in DEMO_GEOMETRY],
+        categories={rid: rid if counts.get(rid, 0) > 0 else None for rid in DEMO_GEOMETRY.regions},
+        region_ids=list(DEMO_GEOMETRY.regions.keys()),
+        palette=[SHAPE_COLORS[rid] for rid in DEMO_GEOMETRY.regions],
     )
 
 @render_map
