@@ -967,7 +967,7 @@ def _render_map_ui(
 
 def output_map(
     id: str,
-    geometry: "Geometry",
+    geometry: Geometry | None = None,
     *,
     tooltips: TooltipMap | None = None,
     view_box: tuple[float, float, float, float] | None = None,
@@ -1028,22 +1028,30 @@ def output_map(
     if overlay_aesthetic is None and "overlay_aesthetic" in theme_config:
         overlay_aesthetic = theme_config["overlay_aesthetic"]
 
-    # Extract main regions from Geometry object
-    processed_geometry = geometry.main_regions()
-
-    # Use viewbox from Geometry if not explicitly provided
-    if view_box is None:
-        vb_tuple = geometry.viewbox()
-    else:
-        vb_tuple = view_box
-    processed_view_box = f"{vb_tuple[0]} {vb_tuple[1]} {vb_tuple[2]} {vb_tuple[3]}"
-
-    # Extract overlay regions if not explicitly provided
+    # Process geometry if provided
+    processed_geometry = None
+    processed_view_box = None
     processed_overlay_geometry = overlay_geometry
-    if overlay_geometry is None:
-        overlay_regions = geometry.overlay_regions()
-        if overlay_regions:
-            processed_overlay_geometry = overlay_regions
+
+    if geometry is not None:
+        # Extract main regions from Geometry object
+        processed_geometry = geometry.main_regions()
+
+        # Use viewbox from Geometry if not explicitly provided
+        if view_box is None:
+            vb_tuple = geometry.viewbox()
+        else:
+            vb_tuple = view_box
+        processed_view_box = f"{vb_tuple[0]} {vb_tuple[1]} {vb_tuple[2]} {vb_tuple[3]}"
+
+        # Extract overlay regions if not explicitly provided
+        if overlay_geometry is None:
+            overlay_regions = geometry.overlay_regions()
+            if overlay_regions:
+                processed_overlay_geometry = overlay_regions
+    elif view_box is not None:
+        # If geometry not provided but view_box is, process view_box
+        processed_view_box = f"{view_box[0]} {view_box[1]} {view_box[2]} {view_box[3]}"
 
     # Store static params for retrieval in render_map
     static_params = {
