@@ -432,10 +432,12 @@ export function normalizeViewBox(viewBox: ViewBox): string {
 - ✅ Add `_viewbox_to_str()` helper function for consistent tuple-to-string conversion
 - ✅ Fix type annotations: TYPE_CHECKING import for Geometry, consistent view_box types
 
-### Phase 3: React Updates ⬜ PENDING
-- ⬜ Update TypeScript types
-- ⬜ Create normalization helpers
-- ⬜ Update components
+### Phase 3: React Updates ✅ COMPLETED
+- ✅ Update TypeScript types (`GeometryMap` now accepts `string | string[]`)
+- ✅ Create normalization helpers (`normalizeGeometry()`, `normalizePath()`)
+- ✅ Update InputMap.tsx to normalize geometry before rendering
+- ✅ Update OutputMap.tsx to normalize geometry before rendering
+- ✅ TypeScript build passes with no errors
 
 ### Phase 4: Documentation ⬜ PENDING
 - ⬜ Update examples
