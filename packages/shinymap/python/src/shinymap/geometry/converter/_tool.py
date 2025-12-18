@@ -2,6 +2,7 @@ from pathlib import Path
 
 from .._core import Geometry
 
+
 def generate_code(
     input_filename: str,
     output_filename: str,

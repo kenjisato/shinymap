@@ -50,9 +50,10 @@ from __future__ import annotations
 import json
 import re
 import xml.etree.ElementTree as ET
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 # Type alias for bounds calculator functions
 BoundsCalculator = Callable[[str], tuple[float, float, float, float]]
@@ -84,7 +85,7 @@ class Geometry:
     metadata: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "Geometry":
+    def from_dict(cls, data: dict[str, Any]) -> Geometry:
         """Load geometry from dict (accepts both list and string path formats).
 
         Args:
@@ -121,7 +122,7 @@ class Geometry:
         return cls(regions=regions, metadata=metadata)
 
     @classmethod
-    def from_json(cls, json_path: str | Path) -> "Geometry":
+    def from_json(cls, json_path: str | Path) -> Geometry:
         """Load geometry from JSON file.
 
         Args:
@@ -146,7 +147,7 @@ class Geometry:
             with open(path) as f:
                 data = json.load(f)
         except json.JSONDecodeError as e:
-            raise ValueError(f"Failed to parse JSON file: {e}")
+            raise ValueError(f"Failed to parse JSON file: {e}") from e
 
         return cls.from_dict(data)
 
@@ -155,7 +156,7 @@ class Geometry:
         cls,
         svg_path: str | Path,
         extract_viewbox: bool = True,
-    ) -> "Geometry":
+    ) -> Geometry:
         """Extract geometry from SVG file.
 
         Extracts path elements from an SVG file and generates auto-IDs for paths
@@ -269,7 +270,8 @@ class Geometry:
             >>> geo.overlays()
             ['_border']
         """
-        return self.metadata.get("overlays", [])
+        overlays = self.metadata.get("overlays", [])
+        return list(overlays) if isinstance(overlays, list) else []
 
     def main_regions(self) -> dict[str, list[str]]:
         """Get main regions (excluding overlays).
@@ -307,7 +309,7 @@ class Geometry:
         overlay_ids = set(self.overlays())
         return {k: v for k, v in self.regions.items() if k in overlay_ids}
 
-    def relabel(self, mapping: dict[str, str | list[str]]) -> "Geometry":
+    def relabel(self, mapping: dict[str, str | list[str]]) -> Geometry:
         """Rename or merge regions (returns new Geometry object).
 
         This method applies relabeling transformations to create a new Geometry
@@ -365,7 +367,7 @@ class Geometry:
 
         return Geometry(regions=new_regions, metadata=dict(self.metadata))
 
-    def set_overlays(self, overlay_ids: list[str]) -> "Geometry":
+    def set_overlays(self, overlay_ids: list[str]) -> Geometry:
         """Set overlay region IDs in metadata (returns new Geometry object).
 
         Args:
@@ -387,7 +389,7 @@ class Geometry:
         new_metadata["overlays"] = overlay_ids
         return Geometry(regions=dict(self.regions), metadata=new_metadata)
 
-    def update_metadata(self, metadata: dict[str, Any]) -> "Geometry":
+    def update_metadata(self, metadata: dict[str, Any]) -> Geometry:
         """Update metadata (returns new Geometry object).
 
         Merges provided metadata with existing metadata. Existing keys are
@@ -782,6 +784,7 @@ def convert(
     # Determine file type by extension
     file_path = Path(input_path)
 
+    intermediate: dict[str, Any] | Path
     if file_path.suffix.lower() == ".json":
         # Input is already intermediate JSON - skip from_svg step
         intermediate = file_path
@@ -878,7 +881,7 @@ def load_geometry(
         raise FileNotFoundError(msg)
 
     try:
-        with open(json_path, "r", encoding="utf-8") as f:
+        with open(json_path, encoding="utf-8") as f:
             data: dict[str, Any] = json.load(f)
     except json.JSONDecodeError as e:
         msg = f"Failed to parse JSON: {e}"

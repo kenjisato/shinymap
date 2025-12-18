@@ -4,10 +4,10 @@ import json
 import tempfile
 from pathlib import Path
 
-from shiny import reactive, render, ui, App
+from shiny import App, reactive, render, ui
 
+from ..._ui import Map, input_map, output_map, render_map, update_map
 from .._core import Geometry, convert, infer_relabel
-from ..._ui import render_map, input_map, output_map, update_map, Map
 from ._tool import generate_code, load_file
 
 # Module-level variable for CLI-provided SVG/JSON file
@@ -81,7 +81,7 @@ def server_file_upload(input, file_name, extracted_data):
         if file_name():
             return f"File: {file_name()}"
         return "No file"
-    
+
 
 ## Relabeling Page =====================================================================
 
@@ -96,9 +96,13 @@ panel_relabeling = ui.nav_panel(
                     ui.help_text("New ID"),
                     ui.input_text("new_id", ""),
                 ),
-                    ui.input_radio_buttons("target_layer", "Layer",
-                                           choices=["Interactive", "Overlay"], selected="Interactive",
-                                           inline=True),
+                    ui.input_radio_buttons(
+                        "target_layer",
+                        "Layer",
+                        choices=["Interactive", "Overlay"],
+                        selected="Interactive",
+                        inline=True,
+                    ),
                     col_widths=(6, 6)
                 ),
                 ui.TagList(
@@ -149,9 +153,13 @@ def server_relabeling(input, extracted_data, relabel_rules, registered_ids, over
             geo,
             mode="multiple",
             fill_color=fill_colors,
-            default_aesthetic={"stroke_color": "#64748b", "stroke_width": 1},  # slate-500
-            selected_aesthetic={"stroke_color": "#11203b", "stroke_width": 5},  # slate-900, thick
-            hover_highlight={"fill_color": "#fef08a", "fill_opacity": 0.6, "stroke_width": 0}  # yellow-200, no stroke
+            default_aesthetic={"stroke_color": "#64748b", "stroke_width": 1},
+            selected_aesthetic={"stroke_color": "#11203b", "stroke_width": 5},
+            hover_highlight={
+                "fill_color": "#fef08a",
+                "fill_opacity": 0.6,
+                "stroke_width": 0,
+            },
         )
 
     @render.text
@@ -231,7 +239,7 @@ def server_relabeling(input, extracted_data, relabel_rules, registered_ids, over
 
         # Move from S to R: add to registered
         current_registered = registered_ids()
-        registered_ids.set(current_registered | current_selected) 
+        registered_ids.set(current_registered | current_selected)
 
         # Clear selection in the map
         update_map("relabeling", value={})
@@ -304,9 +312,17 @@ panel_gen_code = ui.nav_panel(
 
 panel_infer = ui.nav_panel(
     "Infer from Original",
-    ui.p("Upload the original source file (SVG or intermediate JSON) to generate code that reproduces the current final JSON."),
+    ui.p(
+        "Upload the original source file (SVG or intermediate JSON) "
+        "to generate code that reproduces the current final JSON."
+    ),
     ui.p("If no file is uploaded, will use the currently loaded file as the original."),
-    ui.input_file("original_file", "Choose original SVG or JSON file (optional)", accept=[".svg", ".json"], multiple=False),
+    ui.input_file(
+        "original_file",
+        "Choose original SVG or JSON file (optional)",
+        accept=[".svg", ".json"],
+        multiple=False,
+    ),
     ui.output_text_verbatim("inferred_code"),
 )
 
@@ -326,7 +342,7 @@ app_ui = ui.page_fillable(
     title="SVG to shinymap JSON Converter",
 )
 
-    
+
 
 ## Server =====================================================================
 
@@ -374,7 +390,7 @@ def server(input, output, session):
         """Parse JSON input, return default on error."""
         try:
             return json.loads(text)
-        except:
+        except (json.JSONDecodeError, ValueError):
             return default
 
     @reactive.calc
@@ -543,7 +559,7 @@ def server(input, output, session):
             params["metadata"],
         )
         return code
-    
+
 
 def app_run(initial_file, **kwargs):
     global _initial_file

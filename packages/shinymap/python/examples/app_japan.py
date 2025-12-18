@@ -25,7 +25,7 @@ from japan_prefectures import PREF_NAMES_JA, PREF_NAMES_ROMAJI
 
 # Load geometry using the Geometry class
 GEOMETRY_PATH = Path(__file__).parent / "data" / "japan_prefectures.json"
-GEOMETRY = Geometry.from_json_file(GEOMETRY_PATH)
+GEOMETRY = Geometry.from_json(GEOMETRY_PATH)
 
 TOOLTIPS = {code: f"{name} ({PREF_NAMES_ROMAJI[code]})" for code, name in PREF_NAMES_JA.items()}
 

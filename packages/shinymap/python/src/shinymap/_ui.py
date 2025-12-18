@@ -135,7 +135,7 @@ def _camel_props(data: MutableMapping[str, Any]) -> MutableMapping[str, Any]:
 
 def input_map(
     id: str,
-    geometry: "Geometry",
+    geometry: Geometry,
     *,
     tooltips: TooltipMap = None,
     fill_color: FillMap = None,
@@ -168,12 +168,12 @@ def input_map(
         mode: Interaction mode ("single", "multiple", "count")
         view_box: Override viewBox tuple. If None, uses geometry.viewbox()
         fill_color: Fill colors
-        hover_highlight: Styling for hover state. Supported keys: fill_color, stroke_color, stroke_width.
-            Note: Opacity changes (fill_opacity, stroke_opacity) have no visual effect because
-            hover creates an overlay copy on top of the original region.
+        hover_highlight: Styling for hover state. Supported keys:
+            fill_color, stroke_color, stroke_width.
+            Note: Opacity changes have no effect (overlay copy is used).
         selected_aesthetic: Styling for selected regions
-        overlay_aesthetic: Styling for overlay regions (non-interactive paths like borders, dividers).
-            Automatically extracts overlay regions from Geometry object if present.
+        overlay_aesthetic: Styling for overlay regions (non-interactive paths).
+            Auto-extracts from Geometry if present.
 
     Example:
         from shinymap import input_map
@@ -212,8 +212,8 @@ def input_map(
         found_invalid = invalid_keys & set(hover_highlight.keys())
         if found_invalid:
             warnings.warn(
-                f"hover_highlight contains opacity keys {found_invalid} which have no visual effect. "
-                f"Hover creates an overlay copy, so opacity changes are not visible. "
+                f"hover_highlight contains opacity keys {found_invalid} "
+                f"which have no visual effect (overlay copy is used). "
                 f"Use fill_color or stroke_color instead.",
                 UserWarning,
                 stacklevel=2,
@@ -372,7 +372,7 @@ class MapBuilder:
     def with_fill_color(
         self,
         fill_color: str | Mapping[str, str],
-    ) -> "MapBuilder":
+    ) -> MapBuilder:
         """Set fill color (global string or per-region dict). Merges if called multiple times.
 
         Examples:
@@ -416,15 +416,17 @@ class MapBuilder:
         self._active_ids = active_ids
         return self
 
-    def with_view_box(self, view_box: str) -> MapBuilder:
-        """Set the SVG viewBox."""
+    def with_view_box(
+        self, view_box: tuple[float, float, float, float]
+    ) -> MapBuilder:
+        """Set the SVG viewBox as tuple (x, y, width, height)."""
         self._view_box = view_box
         return self
 
     def with_stroke_width(
         self,
         stroke_width: float | Mapping[str, float],
-    ) -> "MapBuilder":
+    ) -> MapBuilder:
         """Set stroke width (global float or per-region dict).
 
         Examples:
@@ -444,7 +446,7 @@ class MapBuilder:
     def with_stroke_color(
         self,
         stroke_color: str | Mapping[str, str],
-    ) -> "MapBuilder":
+    ) -> MapBuilder:
         """Set stroke color (global string or per-region dict).
 
         Examples:
@@ -464,7 +466,7 @@ class MapBuilder:
     def with_fill_opacity(
         self,
         fill_opacity: float | Mapping[str, float],
-    ) -> "MapBuilder":
+    ) -> MapBuilder:
         """Set fill opacity (global float or per-region dict).
 
         Examples:
@@ -511,7 +513,7 @@ class MapBuilder:
 
 
 def Map(
-    geometry: "Geometry | None" = None,
+    geometry: Geometry | None = None,
     *,
     view_box: tuple[float, float, float, float] | None = None,
     tooltips: dict[str, str] | None = None,
@@ -525,8 +527,10 @@ def Map(
     without arguments. Otherwise, provide a Geometry object.
 
     Args:
-        geometry: Geometry object with regions, viewBox, metadata. Optional when used with output_map()
-        view_box: Override viewBox tuple (for zoom/pan). If None, uses geometry.viewbox()
+        geometry: Geometry object with regions, viewBox, metadata.
+            Optional when used with output_map()
+        view_box: Override viewBox tuple (for zoom/pan).
+            If None, uses geometry.viewbox()
         tooltips: Region tooltips
         fill_color: Fill colors (string for all, dict for per-region)
         counts: Count badges per region
@@ -546,7 +550,6 @@ def Map(
     Returns:
         MapBuilder instance for method chaining
     """
-    from .geometry import Geometry as GeometryClass
 
     if geometry is None:
         # No geometry provided - will be merged from output_map() static params
@@ -611,32 +614,38 @@ class MapSelectionBuilder(MapBuilder):
         overlay_regions: GeometryMap | None = None,
         overlay_aesthetic: Mapping[str, Any] | None = None,
     ):
-        super().__init__(geometry, tooltips=tooltips, view_box=view_box, overlay_regions=overlay_regions, overlay_aesthetic=overlay_aesthetic)
+        super().__init__(
+            geometry,
+            tooltips=tooltips,
+            view_box=view_box,
+            overlay_regions=overlay_regions,
+            overlay_aesthetic=overlay_aesthetic,
+        )
         self._selected = selected
         self._fill_color_selected: Mapping[str, Any] | None = None
         self._fill_color_not_selected: Mapping[str, Any] | None = None
 
     # Type overrides for method chaining
-    def with_fill_color(self, fill_color: str | Mapping[str, str]) -> "MapSelectionBuilder":
+    def with_fill_color(self, fill_color: str | Mapping[str, str]) -> MapSelectionBuilder:
         super().with_fill_color(fill_color)
         return self
 
-    def with_fill_opacity(self, fill_opacity: float | Mapping[str, float]) -> "MapSelectionBuilder":
+    def with_fill_opacity(self, fill_opacity: float | Mapping[str, float]) -> MapSelectionBuilder:
         super().with_fill_opacity(fill_opacity)
         return self
 
-    def with_stroke_color(self, stroke_color: str | Mapping[str, str]) -> "MapSelectionBuilder":
+    def with_stroke_color(self, stroke_color: str | Mapping[str, str]) -> MapSelectionBuilder:
         super().with_stroke_color(stroke_color)
         return self
 
-    def with_stroke_width(self, stroke_width: float | Mapping[str, float]) -> "MapSelectionBuilder":
+    def with_stroke_width(self, stroke_width: float | Mapping[str, float]) -> MapSelectionBuilder:
         super().with_stroke_width(stroke_width)
         return self
 
     def with_fill_color_selected(
         self,
         fill: str | Mapping[str, Any],
-    ) -> "MapSelectionBuilder":
+    ) -> MapSelectionBuilder:
         """Set aesthetic for selected regions.
 
         Can be a color string or full aesthetic dict:
@@ -652,7 +661,7 @@ class MapSelectionBuilder(MapBuilder):
     def with_fill_color_not_selected(
         self,
         fill: str | Mapping[str, Any],
-    ) -> "MapSelectionBuilder":
+    ) -> MapSelectionBuilder:
         """Set aesthetic for non-selected regions.
 
         Can be a color string or full aesthetic dict:
@@ -687,7 +696,7 @@ class MapSelectionBuilder(MapBuilder):
 
 # Alias for shorter usage
 def MapSelection(
-    geometry: "Geometry | None" = None,
+    geometry: Geometry | None = None,
     selected: Selection = None,
     *,
     tooltips: dict[str, str] | None = None,
@@ -723,7 +732,6 @@ def MapSelection(
     Returns:
         MapSelectionBuilder instance for method chaining
     """
-    from .geometry import Geometry as GeometryClass
 
     if geometry is None:
         # No geometry provided - will be merged from output_map() static params
@@ -779,7 +787,13 @@ class MapCountBuilder(MapBuilder):
         overlay_regions: GeometryMap | None = None,
         overlay_aesthetic: Mapping[str, Any] | None = None,
     ):
-        super().__init__(geometry, tooltips=tooltips, view_box=view_box, overlay_regions=overlay_regions, overlay_aesthetic=overlay_aesthetic)
+        super().__init__(
+            geometry,
+            tooltips=tooltips,
+            view_box=view_box,
+            overlay_regions=overlay_regions,
+            overlay_aesthetic=overlay_aesthetic,
+        )
         self._counts = counts
         self._count_palette: list[str] | None = None
 
@@ -787,7 +801,7 @@ class MapCountBuilder(MapBuilder):
     def with_fill_color(
         self,
         fill_color: str | list[str] | Mapping[str, str] | None,
-    ) -> "MapCountBuilder":
+    ) -> MapCountBuilder:
         """Set fill colors (accepts palette list for count values).
 
         Can be:
@@ -848,15 +862,15 @@ class MapCountBuilder(MapBuilder):
         return self
 
     # Type overrides for other methods
-    def with_fill_opacity(self, fill_opacity: float | Mapping[str, float]) -> "MapCountBuilder":
+    def with_fill_opacity(self, fill_opacity: float | Mapping[str, float]) -> MapCountBuilder:
         super().with_fill_opacity(fill_opacity)
         return self
 
-    def with_stroke_color(self, stroke_color: str | Mapping[str, str]) -> "MapCountBuilder":
+    def with_stroke_color(self, stroke_color: str | Mapping[str, str]) -> MapCountBuilder:
         super().with_stroke_color(stroke_color)
         return self
 
-    def with_stroke_width(self, stroke_width: float | Mapping[str, float]) -> "MapCountBuilder":
+    def with_stroke_width(self, stroke_width: float | Mapping[str, float]) -> MapCountBuilder:
         super().with_stroke_width(stroke_width)
         return self
 
@@ -881,7 +895,7 @@ class MapCountBuilder(MapBuilder):
 
 # Alias for shorter usage
 def MapCount(
-    geometry: "Geometry | None" = None,
+    geometry: Geometry | None = None,
     counts: CountMap = None,
     *,
     tooltips: dict[str, str] | None = None,
@@ -916,7 +930,6 @@ def MapCount(
     Returns:
         MapCountBuilder instance for method chaining
     """
-    from .geometry import Geometry as GeometryClass
 
     if geometry is None:
         # No geometry provided - will be merged from output_map() static params
@@ -992,10 +1005,12 @@ def output_map(
         id: Output ID (must match @render_map function name)
         geometry: Geometry object
         tooltips: Optional static tooltips
-        view_box: Optional viewBox tuple (x, y, width, height). If not provided, uses geometry.viewbox()
-        default_aesthetic: Optional default styling for all regions (fillColor, strokeColor, strokeWidth, etc.)
-        overlay_geometry: Optional static overlay geometry (non-interactive paths)
-        overlay_aesthetic: Optional static overlay aesthetic styling
+        view_box: Optional viewBox tuple (x, y, width, height).
+            If not provided, uses geometry.viewbox()
+        default_aesthetic: Optional default styling for all regions
+            (fillColor, strokeColor, strokeWidth, etc.)
+        overlay_geometry: Optional overlay geometry (non-interactive paths)
+        overlay_aesthetic: Optional overlay aesthetic styling
         width: Container width (CSS)
         height: Container height (CSS)
         class_: Additional CSS classes
@@ -1096,7 +1111,11 @@ def _apply_static_params(payload: MapPayload, output_id: str) -> MapPayload:
         return payload
 
     # Merge geometry from static params if not provided by builder
-    merged_geometry = payload.geometry if payload.geometry is not None else static_params.get("geometry")
+    merged_geometry = (
+        payload.geometry
+        if payload.geometry is not None
+        else static_params.get("geometry")
+    )
 
     # Convert count_palette to fill_color if needed
     # This handles the case where MapCount() was called without geometry and used a palette
@@ -1128,20 +1147,40 @@ def _apply_static_params(payload: MapPayload, output_id: str) -> MapPayload:
     # Builder values (if set) override static values
     return MapPayload(
         geometry=merged_geometry,
-        tooltips=payload.tooltips if payload.tooltips is not None else static_params.get("tooltips"),
+        tooltips=(
+            payload.tooltips
+            if payload.tooltips is not None
+            else static_params.get("tooltips")
+        ),
         fill_color=merged_fill_color,  # May be converted from palette
         stroke_width=payload.stroke_width,  # Always from builder
         stroke_color=payload.stroke_color,  # Always from builder
         fill_opacity=payload.fill_opacity,  # Always from builder
         counts=payload.counts,  # Always from builder
         active_ids=payload.active_ids,  # Always from builder
-        view_box=payload.view_box if payload.view_box is not None else static_params.get("view_box"),
-        default_aesthetic=payload.default_aesthetic if payload.default_aesthetic is not None else static_params.get("default_aesthetic"),
+        view_box=(
+            payload.view_box
+            if payload.view_box is not None
+            else static_params.get("view_box")
+        ),
+        default_aesthetic=(
+            payload.default_aesthetic
+            if payload.default_aesthetic is not None
+            else static_params.get("default_aesthetic")
+        ),
         fill_color_selected=payload.fill_color_selected,  # Always from builder
-        fill_color_not_selected=payload.fill_color_not_selected,  # Always from builder
+        fill_color_not_selected=payload.fill_color_not_selected,
         count_palette=payload.count_palette,  # Keep for reference
-        overlay_geometry=payload.overlay_geometry if payload.overlay_geometry is not None else static_params.get("overlay_geometry"),
-        overlay_aesthetic=payload.overlay_aesthetic if payload.overlay_aesthetic is not None else static_params.get("overlay_aesthetic"),
+        overlay_geometry=(
+            payload.overlay_geometry
+            if payload.overlay_geometry is not None
+            else static_params.get("overlay_geometry")
+        ),
+        overlay_aesthetic=(
+            payload.overlay_aesthetic
+            if payload.overlay_aesthetic is not None
+            else static_params.get("overlay_aesthetic")
+        ),
     )
 
 

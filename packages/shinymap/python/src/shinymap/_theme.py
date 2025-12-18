@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from contextvars import ContextVar
-from typing import Any, Mapping
+from typing import Any
 
 # Thread-safe context variable for app-level theme configuration
 _theme_config: ContextVar[Mapping[str, Any] | None] = ContextVar(

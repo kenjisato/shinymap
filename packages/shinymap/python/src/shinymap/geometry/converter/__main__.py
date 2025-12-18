@@ -29,8 +29,8 @@ Examples:
 
 import argparse
 from pathlib import Path
-from ._app import app_run
 
+from ._app import app_run
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -72,7 +72,7 @@ if __name__ == "__main__":
 
     app_run(
         initial_file=cli_file,
-        host=args.host, 
-        port=args.port, 
+        host=args.host,
+        port=args.port,
         launch_browser=args.launch_browser
     )

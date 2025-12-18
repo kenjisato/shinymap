@@ -4,6 +4,7 @@ from __future__ import annotations
 
 __version__ = "0.0.1"
 
+from . import geometry
 from ._colors import (
     NEUTRALS,
     QUALITATIVE,
@@ -15,7 +16,6 @@ from ._colors import (
     scale_qualitative,
     scale_sequential,
 )
-from . import geometry
 from ._theme import configure_theme
 from ._ui import (
     Map,
