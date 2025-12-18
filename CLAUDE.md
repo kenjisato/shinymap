@@ -50,7 +50,7 @@ Additionally, `output_map` provides simplified statistical visualizations (choro
 Read these for detailed context:
 
 - **[SPEC.md](SPEC.md)**: Technical specification, API philosophy, implementation details
-- **[PROPOSAL.md](PROPOSAL.md)**: Project proposal for JSS journal, user stories, honest prior art assessment
+- **[PROPOSAL.md](PROPOSAL.md)**: Project proposal for academic journals (e.g., JOSS), user stories, honest prior art assessment
 - **[README.md](README.md)**: High-level repository overview
 - **[CONTRIBUTING.md](CONTRIBUTING.md)**: Practical development workflows, command sequences, working directory guidance (for human contributors)
 - **[SHINY-FOR-PYTHON.md](SHINY-FOR-PYTHON.md)**: Best practices for Shiny for Python development
