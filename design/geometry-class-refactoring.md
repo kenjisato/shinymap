@@ -419,16 +419,18 @@ export function normalizeViewBox(viewBox: ViewBox): string {
 - ✅ `Geometry` class
 - ✅ Export from `geometry/__init__.py`
 
-### Phase 2: Python API ⏳ IN PROGRESS
-- ⬜ Rename `MapBuilder` fields: `_geometry` → `_regions`, `_overlay_geometry` → `_overlay_regions`
-- ⬜ Update `MapBuilder.__init__()`: rename `geometry` parameter to `regions`
-- ⬜ Update all `MapBuilder` methods to use new field names (especially `with_fills`)
-- ⬜ Remove `Map = MapBuilder` alias (line 451)
-- ⬜ Create `Map(geometry: Geometry)` function
-- ⬜ Update `input_map()` to accept `Geometry`
-- ⬜ Update `output_map()` to accept `Geometry` as positional arg
-- ⬜ Update converter app to use `Map(geo)`
-- ⬜ Update `__all__` exports in `_ui.py`
+### Phase 2: Python API ✅ COMPLETED
+- ✅ Rename `MapBuilder` fields: `_geometry` → `_regions`, `_overlay_geometry` → `_overlay_regions`
+- ✅ Update `MapBuilder.__init__()`: rename `geometry` parameter to `regions`
+- ✅ Update all `MapBuilder` methods to use new field names (especially `with_fill_color`)
+- ✅ No `Map = MapBuilder` alias exists (never created)
+- ✅ Create `Map(geometry: Geometry)` function
+- ✅ Update `input_map()` to accept `Geometry`
+- ✅ Update `output_map()` to accept `Geometry` as optional positional arg
+- ✅ Update converter app to use `Map(geo)`
+- ✅ `Map` exported in `__all__` in `__init__.py`
+- ✅ Add `_viewbox_to_str()` helper function for consistent tuple-to-string conversion
+- ✅ Fix type annotations: TYPE_CHECKING import for Geometry, consistent view_box types
 
 ### Phase 3: React Updates ⬜ PENDING
 - ⬜ Update TypeScript types
