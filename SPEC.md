@@ -90,7 +90,7 @@ This separation keeps the core library lightweight while allowing advanced GIS f
 The `shinymap.geometry` subpackage provides tools for converting SVG files to shinymap's JSON format and loading geometry for use in applications.
 
 **JSON Format**:
-Shinymap uses a **list-based path format** where each region maps to a list of SVG path strings:
+Shinymap uses a **flexible path format** where each region can map to either a single string or a list of strings:
 
 ```json
 {
@@ -100,6 +100,7 @@ Shinymap uses a **list-based path format** where each region maps to a list of S
     "license": "MIT"
   },
   "region_01": ["M 10 10 L 40 10 L 40 40 L 10 40 Z"],
+  "region_02": "M 50 10 L 80 10 L 80 40 L 50 40 Z",
   "hokkaido": [
     "M 0 0 L 100 0 L 100 100 Z",
     "M 200 0 L 300 0 L 300 100 Z"
@@ -108,11 +109,13 @@ Shinymap uses a **list-based path format** where each region maps to a list of S
 ```
 
 **Key points**:
-- Each region ID maps to a **list** of SVG path strings (not a single string)
-- Single-element list: single path (e.g., `"region_01": ["M 10 10..."]`)
-- Multi-element list: merged paths (e.g., `"hokkaido": ["M 0 0...", "M 200 0..."]`)
-- Paths are joined with spaces when rendered: `" ".join(path_list)`
-- Python dicts passed to UI functions use this same list format
+- Each region ID maps to **either a string or a list of strings**
+- String format: `"region_02": "M 50 10..."` (single path as string)
+- List format: `"region_01": ["M 10 10..."]` (single path as list)
+- Multi-element list: `"hokkaido": ["M 0 0...", "M 200 0..."]` (merged paths)
+- Both formats are supported throughout the stack (Python backend, React frontend)
+- List arrays are joined with spaces when rendering: `" ".join(path_list)`
+- The `Geometry` class prefers the list format for consistency, but UI functions accept both
 
 **Core Functions**:
 
@@ -192,6 +195,71 @@ The app provides:
 - Metadata editing
 - Download both JSON output and reproducible Python code
 - "Infer from Original" tab to generate code from existing transformations
+
+**Geometry OOP API**:
+
+The `Geometry` class provides an object-oriented interface for geometry manipulation with immutable transformations:
+
+```python
+from shinymap.geometry import Geometry
+
+# Load from various sources
+geo = Geometry.from_svg("map.svg", extract_viewbox=True)
+geo = Geometry.from_json("map.json")
+geo = Geometry.from_dict(data)
+
+# Immutable transformations (returns new Geometry instance)
+geo = geo.relabel({"new_id": "old_id"})              # Rename single region
+geo = geo.relabel({"merged": ["id1", "id2"]})        # Merge multiple regions
+geo = geo.set_overlays(["_border", "_divider"])      # Mark overlay regions
+geo = geo.update_metadata({"source": "Custom"})      # Add/update metadata
+
+# Method chaining
+final = (
+    Geometry.from_svg("map.svg")
+    .relabel({"hokkaido": ["path_1", "path_2"]})
+    .set_overlays(["_border"])
+    .update_metadata({"source": "Custom", "license": "MIT"})
+)
+
+# Export
+final.to_json("output.json")
+final_dict = final.to_dict()
+
+# Access geometry data
+regions = geo.regions           # Dict[str, List[str]]
+metadata = geo.metadata         # Dict[str, Any]
+viewbox = geo.viewbox()         # Tuple[float, float, float, float]
+overlays = geo.overlays()       # List[str]
+```
+
+**Key features**:
+- Immutable: All transformations return new instances
+- Flexible path format: Regions map to `List[str]` (single or multiple paths)
+- Method chaining: Fluent API for complex workflows
+- Type safe: Validates structure at load time
+
+**Integration with UI functions**:
+
+The `Geometry` class is the recommended way to pass geometry to UI functions:
+
+```python
+from shinymap import Map, input_map, output_map
+from shinymap.geometry import Geometry
+
+geo = Geometry.from_json("map.json")
+
+# Input maps
+input_map("my_input", geo, mode="multiple")
+
+# Output maps with static geometry
+output_map("my_output", geo, tooltips=tooltips)
+
+# Output maps with dynamic rendering
+@render_map
+def my_output():
+    return Map(geo).with_fill_color(colors).with_counts(counts)
+```
 
 ## Shiny for Python (`shinymap`)
 

@@ -439,10 +439,11 @@ export function normalizeViewBox(viewBox: ViewBox): string {
 - ✅ Update OutputMap.tsx to normalize geometry before rendering
 - ✅ TypeScript build passes with no errors
 
-### Phase 4: Documentation ⬜ PENDING
-- ⬜ Update examples
-- ⬜ Update SPEC.md
-- ⬜ Update PROPOSAL.md
+### Phase 4: Documentation ✅ COMPLETED
+- ✅ Examples already use Geometry OOP API (no updates needed)
+- ✅ Added Geometry OOP API documentation section to SPEC.md
+- ✅ Updated SPEC.md geometry format section to document both string and string[] support
+- ✅ Updated PROPOSAL.md geometry representation to reflect flexible path format
 
 ## User-Facing API (OOP Only)
 

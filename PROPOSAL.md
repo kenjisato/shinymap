@@ -395,10 +395,11 @@ The power of shinymap is that the same interaction patterns (single select, mult
 - This avoids subtle differences between languages (e.g., numeric vs. string keys in dictionaries/objects).
 
 **Geometry representation**:
-- Internal format: `{ id: string, path: string, meta?: {...} }` per region
+- JSON format: `{ region_id: path_string | path_array, "_metadata": {...} }`
+- Paths can be single strings or arrays of strings for multi-part regions
 - This serves as the target format for:
   - `shinymap-geo` conversions from `sf` (R) / `geopandas` (Python)
-  - Manual SVG integration
+  - Manual SVG integration via the `Geometry` class
   - Pre-packaged datasets
 
 **Return types across platforms**:
