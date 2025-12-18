@@ -346,7 +346,7 @@ function DemoOutput({ geometry, tooltips }: DemoOutputProps) {
         <OutputMap
           geometry={geometry}
           tooltips={tooltips}
-          fills={fills}
+          fillColor={fills}
           counts={values}
           resolveAesthetic={({ id, baseAesthetic }) => styleForRegion({ id, baseAesthetic })}
         />
