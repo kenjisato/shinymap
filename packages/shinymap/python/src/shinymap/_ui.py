@@ -135,6 +135,7 @@ def input_map(
     default_aesthetic: Mapping[str, Any] | None = None,
     hover_highlight: Mapping[str, Any] | None = None,
     selected_aesthetic: Mapping[str, Any] | None = None,
+    overlay_aesthetic: Mapping[str, Any] | None = None,
     width: str | None = "100%",
     height: str | None = "320px",
     class_: str | None = None,
@@ -159,6 +160,8 @@ def input_map(
             Note: Opacity changes (fill_opacity, stroke_opacity) have no visual effect because
             hover creates an overlay copy on top of the original region.
         selected_aesthetic: Styling for selected regions
+        overlay_aesthetic: Styling for overlay regions (non-interactive paths like borders, dividers).
+            Automatically extracts overlay regions from Geometry object if present.
 
     Example:
         from shinymap import input_map
@@ -207,8 +210,9 @@ def input_map(
     # Extract viewBox
     vb_tuple = view_box if view_box else geometry.viewbox()
 
-    # Extract main regions using Geometry method (exclude overlays for input maps)
+    # Extract main regions and overlay regions using Geometry methods
     main_regions = geometry.main_regions()
+    overlay_regions_dict = geometry.overlay_regions()
 
     # Convert tuple viewBox to string for React (temporary)
     vb_str = f"{vb_tuple[0]} {vb_tuple[1]} {vb_tuple[2]} {vb_tuple[3]}"
@@ -239,8 +243,8 @@ def input_map(
             "default_aesthetic": default_aesthetic,
             "hover_highlight": hover_highlight,
             "selected_aesthetic": selected_aesthetic,
-            "overlay_geometry": None,  # Overlays not supported in input maps for now
-            "overlay_aesthetic": None,
+            "overlay_geometry": overlay_regions_dict if overlay_regions_dict else None,
+            "overlay_aesthetic": overlay_aesthetic,
         }
     )
 
@@ -500,7 +504,7 @@ class MapBuilder:
 
 
 def Map(
-    geometry: "Geometry",
+    geometry: "Geometry | None" = None,
     *,
     view_box: tuple[float, float, float, float] | None = None,
     tooltips: dict[str, str] | None = None,
@@ -508,13 +512,13 @@ def Map(
     counts: dict[str, int] | None = None,
     active: list[str] | None = None,
 ) -> MapBuilder:
-    """Create map from Geometry object (OOP approach - recommended).
+    """Create map from Geometry object.
 
-    This is the recommended way to create maps. It automatically extracts
-    regions, viewBox, and overlays from the Geometry object.
+    When used with output_map() that provides static geometry, you can call Map()
+    without arguments. Otherwise, provide a Geometry object.
 
     Args:
-        geometry: Geometry object with regions, viewBox, metadata
+        geometry: Geometry object with regions, viewBox, metadata. Optional when used with output_map()
         view_box: Override viewBox tuple (for zoom/pan). If None, uses geometry.viewbox()
         tooltips: Region tooltips
         fill_color: Fill colors (string for all, dict for per-region)
@@ -522,31 +526,41 @@ def Map(
         active: Active region IDs
 
     Example:
-        from shinymap import Map
-        from shinymap.geometry import Geometry
-
+        # Standalone usage
         geo = Geometry.from_dict(data)
-        Map(geo)
-        Map(geo, view_box=(10, 10, 80, 80))  # Zoom
-        Map(geo, fill_color=colors, counts=counts)  # Inline styling
-        Map(geo).with_fill_color(colors).with_counts(counts)  # Fluent API
+        Map(geo, fill_color=colors, counts=counts)
+
+        # With output_map() providing static geometry
+        output_map("my_map", GEOMETRY, tooltips=TOOLTIPS)
+        @render_map
+        def my_map():
+            return Map().with_fill_color(colors)  # No geometry needed
 
     Returns:
         MapBuilder instance for method chaining
     """
     from .geometry import Geometry as GeometryClass
 
-    # Extract regions using Geometry methods
-    main_regions = geometry.main_regions()
-    overlay_regions_dict = geometry.overlay_regions()
+    if geometry is None:
+        # No geometry provided - will be merged from output_map() static params
+        builder = MapBuilder(
+            None,  # Will be filled by _apply_static_params
+            view_box=view_box,
+            overlay_regions=None,
+            tooltips=tooltips,
+        )
+    else:
+        # Extract regions using Geometry methods
+        main_regions = geometry.main_regions()
+        overlay_regions_dict = geometry.overlay_regions()
 
-    # Create MapBuilder with extracted data
-    builder = MapBuilder(
-        main_regions,
-        view_box=view_box or geometry.viewbox(),
-        overlay_regions=overlay_regions_dict if overlay_regions_dict else None,
-        tooltips=tooltips,
-    )
+        # Create MapBuilder with extracted data
+        builder = MapBuilder(
+            main_regions,
+            view_box=view_box or geometry.viewbox(),
+            overlay_regions=overlay_regions_dict if overlay_regions_dict else None,
+            tooltips=tooltips,
+        )
 
     # Apply optional styling
     if fill_color is not None:
@@ -666,19 +680,22 @@ class MapSelectionBuilder(MapBuilder):
 
 # Alias for shorter usage
 def MapSelection(
-    geometry: "Geometry",
+    geometry: "Geometry | None" = None,
     selected: Selection = None,
     *,
     tooltips: dict[str, str] | None = None,
 ) -> MapSelectionBuilder:
-    """Create selection-highlighting map from Geometry object (OOP approach - recommended).
+    """Create selection-highlighting map from Geometry object.
+
+    When used with output_map() that provides static geometry, you can call MapSelection()
+    without geometry argument. Otherwise, provide a Geometry object.
 
     Args:
-        geometry: Geometry object
+        geometry: Geometry object (optional when used with output_map())
         selected: Selected region ID(s)
         tooltips: Region tooltips
 
-    Example:
+    Example with geometry:
         from shinymap import MapSelection
         from shinymap.geometry import Geometry
 
@@ -687,23 +704,42 @@ def MapSelection(
             .with_fill_color("#e2e8f0")
             .with_fill_color_selected("#fbbf24")
 
+    Example with output_map() static params:
+        # UI layer
+        output_map("my_map", GEOMETRY, tooltips=TOOLTIPS)
+
+        # Server layer
+        @render_map
+        def my_map():
+            return MapSelection(selected=input.selected()).with_fill_color_selected("#fbbf24")
+
     Returns:
         MapSelectionBuilder instance for method chaining
     """
     from .geometry import Geometry as GeometryClass
 
-    # Extract regions using Geometry methods
-    main_regions = geometry.main_regions()
-    overlay_regions_dict = geometry.overlay_regions()
+    if geometry is None:
+        # No geometry provided - will be merged from output_map() static params
+        return MapSelectionBuilder(
+            None,  # Will be filled by _apply_static_params
+            selected=selected,
+            tooltips=tooltips,
+            view_box=None,
+            overlay_regions=None,
+        )
+    else:
+        # Extract regions using Geometry methods
+        main_regions = geometry.main_regions()
+        overlay_regions_dict = geometry.overlay_regions()
 
-    # Create MapSelectionBuilder with extracted data
-    return MapSelectionBuilder(
-        main_regions,
-        selected=selected,
-        tooltips=tooltips,
-        view_box=geometry.viewbox(),
-        overlay_regions=overlay_regions_dict if overlay_regions_dict else None,
-    )
+        # Create MapSelectionBuilder with extracted data
+        return MapSelectionBuilder(
+            main_regions,
+            selected=selected,
+            tooltips=tooltips,
+            view_box=geometry.viewbox(),
+            overlay_regions=overlay_regions_dict if overlay_regions_dict else None,
+        )
 
 
 class MapCountBuilder(MapBuilder):
@@ -838,19 +874,22 @@ class MapCountBuilder(MapBuilder):
 
 # Alias for shorter usage
 def MapCount(
-    geometry: "Geometry",
+    geometry: "Geometry | None" = None,
     counts: CountMap = None,
     *,
     tooltips: dict[str, str] | None = None,
 ) -> MapCountBuilder:
-    """Create count-based coloring map from Geometry object (OOP approach - recommended).
+    """Create count-based coloring map from Geometry object.
+
+    When used with output_map() that provides static geometry, you can call MapCount()
+    without geometry argument. Otherwise, provide a Geometry object.
 
     Args:
-        geometry: Geometry object
+        geometry: Geometry object (optional when used with output_map())
         counts: Count values per region
         tooltips: Region tooltips
 
-    Example:
+    Example with geometry:
         from shinymap import MapCount
         from shinymap.geometry import Geometry
 
@@ -858,23 +897,42 @@ def MapCount(
         MapCount(geo, counts=counts, tooltips=tooltips)
             .with_fill_color(["blue", "red", "green"])  # Palette for 0, 1, 2
 
+    Example with output_map() static params:
+        # UI layer
+        output_map("my_map", GEOMETRY, tooltips=TOOLTIPS)
+
+        # Server layer
+        @render_map
+        def my_map():
+            return MapCount(counts=input.counts()).with_fill_color(palette)
+
     Returns:
         MapCountBuilder instance for method chaining
     """
     from .geometry import Geometry as GeometryClass
 
-    # Extract regions using Geometry methods
-    main_regions = geometry.main_regions()
-    overlay_regions_dict = geometry.overlay_regions()
+    if geometry is None:
+        # No geometry provided - will be merged from output_map() static params
+        return MapCountBuilder(
+            None,  # Will be filled by _apply_static_params
+            counts=counts,
+            tooltips=tooltips,
+            view_box=None,
+            overlay_regions=None,
+        )
+    else:
+        # Extract regions using Geometry methods
+        main_regions = geometry.main_regions()
+        overlay_regions_dict = geometry.overlay_regions()
 
-    # Create MapCountBuilder with extracted data
-    return MapCountBuilder(
-        main_regions,
-        counts=counts,
-        tooltips=tooltips,
-        view_box=geometry.viewbox(),
-        overlay_regions=overlay_regions_dict if overlay_regions_dict else None,
-    )
+        # Create MapCountBuilder with extracted data
+        return MapCountBuilder(
+            main_regions,
+            counts=counts,
+            tooltips=tooltips,
+            view_box=geometry.viewbox(),
+            overlay_regions=overlay_regions_dict if overlay_regions_dict else None,
+        )
 
 
 def _render_map_ui(
@@ -909,10 +967,10 @@ def _render_map_ui(
 
 def output_map(
     id: str,
+    geometry: "Geometry",
     *,
-    geometry: GeometryMap | None = None,
     tooltips: TooltipMap | None = None,
-    view_box: str | None = None,
+    view_box: tuple[float, float, float, float] | None = None,
     default_aesthetic: Mapping[str, Any] | None = None,
     overlay_geometry: GeometryMap | None = None,
     overlay_aesthetic: Mapping[str, Any] | None = None,
@@ -925,9 +983,9 @@ def output_map(
 
     Args:
         id: Output ID (must match @render_map function name)
-        geometry: Optional static geometry (region SVG paths)
+        geometry: Geometry object
         tooltips: Optional static tooltips
-        view_box: Optional static SVG viewBox
+        view_box: Optional viewBox tuple (x, y, width, height). If not provided, uses geometry.viewbox()
         default_aesthetic: Optional default styling for all regions (fillColor, strokeColor, strokeWidth, etc.)
         overlay_geometry: Optional static overlay geometry (non-interactive paths)
         overlay_aesthetic: Optional static overlay aesthetic styling
@@ -949,11 +1007,9 @@ def output_map(
         # UI layer - define static structure once
         output_map(
             "my_map",
-            geometry=GEOMETRY,
+            GEOMETRY,
             tooltips=TOOLTIPS,
-            view_box=VIEWBOX,
-            default_aesthetic={"fillColor": "#e5e7eb", "strokeColor": "#9ca3af", "strokeWidth": 0.5},
-            overlay_geometry=DIVIDERS,
+            overlay_geometry=GEOMETRY.overlay_regions(),
             overlay_aesthetic=DIVIDER_STYLE,
         )
 
@@ -972,13 +1028,30 @@ def output_map(
     if overlay_aesthetic is None and "overlay_aesthetic" in theme_config:
         overlay_aesthetic = theme_config["overlay_aesthetic"]
 
+    # Extract main regions from Geometry object
+    processed_geometry = geometry.main_regions()
+
+    # Use viewbox from Geometry if not explicitly provided
+    if view_box is None:
+        vb_tuple = geometry.viewbox()
+    else:
+        vb_tuple = view_box
+    processed_view_box = f"{vb_tuple[0]} {vb_tuple[1]} {vb_tuple[2]} {vb_tuple[3]}"
+
+    # Extract overlay regions if not explicitly provided
+    processed_overlay_geometry = overlay_geometry
+    if overlay_geometry is None:
+        overlay_regions = geometry.overlay_regions()
+        if overlay_regions:
+            processed_overlay_geometry = overlay_regions
+
     # Store static params for retrieval in render_map
     static_params = {
-        "geometry": geometry,
+        "geometry": processed_geometry,
         "tooltips": tooltips,
-        "view_box": view_box,
+        "view_box": processed_view_box,
         "default_aesthetic": default_aesthetic,
-        "overlay_geometry": overlay_geometry,
+        "overlay_geometry": processed_overlay_geometry,
         "overlay_aesthetic": overlay_aesthetic,
     }
     # Filter out None values
@@ -1007,12 +1080,41 @@ def _apply_static_params(payload: MapPayload, output_id: str) -> MapPayload:
     if not static_params:
         return payload
 
+    # Merge geometry from static params if not provided by builder
+    merged_geometry = payload.geometry if payload.geometry is not None else static_params.get("geometry")
+
+    # Convert count_palette to fill_color if needed
+    # This handles the case where MapCount() was called without geometry and used a palette
+    merged_fill_color = payload.fill_color
+    if payload.count_palette and merged_geometry and not payload.fill_color:
+        import warnings
+        # Convert palette to fill map using the merged geometry
+        count_fills = {}
+        max_count = max(payload.counts.values(), default=0) if payload.counts else 0
+        palette = payload.count_palette
+
+        # Warn if palette is too small for count values
+        if max_count >= len(palette):
+            warnings.warn(
+                f"Palette has {len(palette)} colors but max count is {max_count}. "
+                f"Colors will cycle (count {len(palette)} gets color[0], etc.).",
+                UserWarning,
+                stacklevel=2,
+            )
+
+        for rid in merged_geometry.keys():
+            count = (payload.counts or {}).get(rid, 0)
+            color_index = count % len(palette)  # Cycle if needed
+            count_fills[rid] = palette[color_index]
+
+        merged_fill_color = count_fills
+
     # Create new payload with static params as defaults
     # Builder values (if set) override static values
     return MapPayload(
-        geometry=payload.geometry if payload.geometry is not None else static_params.get("geometry"),
+        geometry=merged_geometry,
         tooltips=payload.tooltips if payload.tooltips is not None else static_params.get("tooltips"),
-        fill_color=payload.fill_color,  # Always from builder
+        fill_color=merged_fill_color,  # May be converted from palette
         stroke_width=payload.stroke_width,  # Always from builder
         stroke_color=payload.stroke_color,  # Always from builder
         fill_opacity=payload.fill_opacity,  # Always from builder
@@ -1022,7 +1124,7 @@ def _apply_static_params(payload: MapPayload, output_id: str) -> MapPayload:
         default_aesthetic=payload.default_aesthetic if payload.default_aesthetic is not None else static_params.get("default_aesthetic"),
         fill_color_selected=payload.fill_color_selected,  # Always from builder
         fill_color_not_selected=payload.fill_color_not_selected,  # Always from builder
-        count_palette=payload.count_palette,  # Always from builder
+        count_palette=payload.count_palette,  # Keep for reference
         overlay_geometry=payload.overlay_geometry if payload.overlay_geometry is not None else static_params.get("overlay_geometry"),
         overlay_aesthetic=payload.overlay_aesthetic if payload.overlay_aesthetic is not None else static_params.get("overlay_aesthetic"),
     )

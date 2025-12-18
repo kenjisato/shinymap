@@ -91,7 +91,7 @@ _ui_visual_feedback = ui.card(
     ),
     ui.layout_columns(
         input_map("visual_input", DEMO_GEOMETRY, tooltips=TOOLTIPS, mode="count", value={}),
-        output_map("visual_output"),
+        output_map("visual_output", DEMO_GEOMETRY, tooltips=TOOLTIPS),
     ),
 )
 
@@ -101,7 +101,7 @@ def _server_visual_feedback(input, output, session):
     def visual_output():
         counts = input.visual_input() or {}
         return (
-            Map(DEMO_GEOMETRY, tooltips=TOOLTIPS)
+            Map()
             .with_fill_color(scale_sequential(counts, list(DEMO_GEOMETRY.regions.keys()), max_count=10))
             .with_counts(counts)
         )

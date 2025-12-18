@@ -21,7 +21,7 @@ _ui_user_selection = ui.card(
     ),
     ui.layout_columns(
         input_map("user_selected", DEMO_GEOMETRY, tooltips=TOOLTIPS, mode="multiple"),
-        output_map("user_selection_display"),
+        output_map("user_selection_display", DEMO_GEOMETRY, tooltips=TOOLTIPS),
     ),
     ui.output_text_verbatim("user_selection_text"),
 )
@@ -35,7 +35,7 @@ def _server_user_selection(input, output, session):
         # The 'selected' parameter comes from user interaction
         selected = input.user_selected()
         return (
-            MapSelection(DEMO_GEOMETRY, selected=selected, tooltips=TOOLTIPS)
+            MapSelection(selected=selected)
             .with_fill_color("#e2e8f0")  # Base color
             .with_fill_color_selected("#3b82f6")  # Selected regions get blue
         )
@@ -57,7 +57,7 @@ _ui_programmatic = ui.card(
     ),
     ui.layout_columns(
         input_map("region_counts", DEMO_GEOMETRY, tooltips=TOOLTIPS, mode="count", value={}),
-        output_map("programmatic_display"),
+        output_map("programmatic_display", DEMO_GEOMETRY, tooltips=TOOLTIPS),
     ),
     ui.output_text_verbatim("programmatic_text"),
 )
@@ -80,7 +80,7 @@ def _server_programmatic(input, output, session):
                         for rid in DEMO_GEOMETRY.regions.keys()}
 
         return (
-            Map(DEMO_GEOMETRY, tooltips=TOOLTIPS)
+            Map()
             .with_fill_color(fills)
             .with_counts(counts)
             .with_stroke_width(stroke_widths)  # Programmatic: highlight with thicker borders
@@ -104,7 +104,7 @@ _ui_combined = ui.card(
     ),
     ui.layout_columns(
         input_map("combined_selected", DEMO_GEOMETRY, tooltips=TOOLTIPS, mode="single"),
-        output_map("combined_display"),
+        output_map("combined_display", DEMO_GEOMETRY, tooltips=TOOLTIPS),
     ),
     ui.output_text_verbatim("combined_text"),
 )
@@ -131,7 +131,7 @@ def _server_combined(input, output, session):
         # Use MapSelection for the user's selected region
         # But we can still use with_active() to highlight neighbors
         return (
-            MapSelection(DEMO_GEOMETRY, selected=selected, tooltips=TOOLTIPS)
+            MapSelection(selected=selected)
             .with_fill_color("#e2e8f0")  # Base
             .with_fill_color_selected("#3b82f6")  # User's selection is blue
             # Note: with_active() would override the selected highlighting

@@ -19,16 +19,13 @@ from shinymap import (
     SEQUENTIAL_BLUE,
     QUALITATIVE,
 )
-from shinymap.geometry import load_geometry
+from shinymap.geometry import Geometry
 
 from japan_prefectures import PREF_NAMES_JA, PREF_NAMES_ROMAJI
 
-# Load geometry using the geometry package
+# Load geometry using the Geometry class
 GEOMETRY_PATH = Path(__file__).parent / "data" / "japan_prefectures.json"
-GEOMETRY, DIVIDERS, VIEWBOX = load_geometry(
-    GEOMETRY_PATH,
-    overlay_keys=["_divider_lines"]
-)
+GEOMETRY = Geometry.from_json_file(GEOMETRY_PATH)
 
 TOOLTIPS = {code: f"{name} ({PREF_NAMES_ROMAJI[code]})" for code, name in PREF_NAMES_JA.items()}
 
@@ -46,9 +43,9 @@ _ui_single = ui.card(
             GEOMETRY,
             tooltips=TOOLTIPS,
             mode="single",
-            view_box=VIEWBOX,
             default_aesthetic={"fillColor": "#e5e7eb", "strokeColor": "#d1d5db", "strokeWidth": 1},
             hover_highlight={"stroke_color": "#374151", "stroke_width": 2},
+            overlay_aesthetic=DIVIDER_STYLE,
         ),
         ui.div(
             ui.help_text("Selected prefecture:"),
@@ -77,16 +74,14 @@ _ui_multi = ui.card(
             GEOMETRY,
             tooltips=TOOLTIPS,
             mode="multiple",
-            view_box=VIEWBOX,
             default_aesthetic={"fillColor": "#e5e7eb", "strokeColor": "#d1d5db", "strokeWidth": 1},
             hover_highlight={"stroke_color": "#374151", "stroke_width": 2},
+            overlay_aesthetic=DIVIDER_STYLE,
         ),
         output_map(
             "multi_visual",
-            geometry=GEOMETRY,
+            GEOMETRY,
             tooltips=TOOLTIPS,
-            view_box=VIEWBOX,
-            overlay_geometry=DIVIDERS,
             overlay_aesthetic=DIVIDER_STYLE,
         ),
     ),
@@ -126,18 +121,14 @@ _ui_count = ui.card(
             tooltips=TOOLTIPS,
             mode="count",
             value={},
-            view_box=VIEWBOX,
             default_aesthetic={"fillColor": "#e5e7eb", "strokeColor": "#d1d5db", "strokeWidth": 1},
             hover_highlight={"stroke_color": "#374151", "stroke_width": 2},
-            overlay_geometry=DIVIDERS,
             overlay_aesthetic=DIVIDER_STYLE,
         ),
         output_map(
             "visit_visual",
-            geometry=GEOMETRY,
+            GEOMETRY,
             tooltips=TOOLTIPS,
-            view_box=VIEWBOX,
-            overlay_geometry=DIVIDERS,
             overlay_aesthetic=DIVIDER_STYLE,
         ),
     ),
@@ -155,7 +146,7 @@ def _server_count(input, output, session):
 
         # Use sequential color scale for prefectures (or default gray if no counts)
         if counts:
-            fills = scale_sequential(counts, list(GEOMETRY.keys()), palette=SEQUENTIAL_BLUE, max_count=10)
+            fills = scale_sequential(counts, list(GEOMETRY.regions.keys()), palette=SEQUENTIAL_BLUE, max_count=10)
         else:
             fills = "#e5e7eb"
 
@@ -220,10 +211,8 @@ _ui_regions = ui.card(
     ui.p("Prefectures colored by traditional geographic regions of Japan."),
     output_map(
         "regions_map",
-        geometry=GEOMETRY,
+        GEOMETRY,
         tooltips=TOOLTIPS,
-        view_box=VIEWBOX,
-        overlay_geometry=DIVIDERS,
         overlay_aesthetic=DIVIDER_STYLE,
     ),
     ui.div(

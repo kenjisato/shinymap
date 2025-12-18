@@ -9,36 +9,36 @@ rids = list(DEMO_GEOMETRY.regions.keys())
 # Single Select -------------------
 
 _ui_single = ui.card(
-    ui.card_header("Single Select"), 
+    ui.card_header("Single Select"),
     ui.input_select(
-        "single_select_input", 
-        "Select a Region", 
+        "single_select_input",
+        "Select a Region",
         rids
     ),
-    output_map("single_select_output"),
+    output_map("single_select_output", DEMO_GEOMETRY, tooltips=TOOLTIPS),
 )
 
 _ui_multiple = ui.card(
-    ui.card_header("Multiple Select"), 
+    ui.card_header("Multiple Select"),
     ui.input_selectize(
-        "multiple_select_input", 
-        "Select Regions", 
+        "multiple_select_input",
+        "Select Regions",
         rids,
         multiple=True,
     ),
-    output_map("multiple_select_output"),
+    output_map("multiple_select_output", DEMO_GEOMETRY, tooltips=TOOLTIPS),
 )
 
 def ui_input_numeric(rid):
     return ui.input_numeric(rid, rid.capitalize(), 0, min=0, max=10)
 
 _ui_count = ui.card(
-    ui.card_header("Alpha"), 
+    ui.card_header("Alpha"),
     ui.layout_column_wrap(
         *[ui_input_numeric(rid) for rid in rids],
         width=1/3,
     ),
-    output_map("alpha_output"),
+    output_map("alpha_output", DEMO_GEOMETRY, tooltips=TOOLTIPS),
 )
 
 
@@ -60,7 +60,7 @@ def server_output(input, output, session):
     def single_select_output():
         selected = input.single_select_input()
         return (
-            MapSelection(DEMO_GEOMETRY, selected=selected, tooltips=TOOLTIPS)
+            MapSelection(selected=selected)
             .with_fill_color("#e2e8f0")  # Base color for all regions
             .with_fill_color_selected("#fbbf24")  # Highlight selected region
         )
@@ -69,7 +69,7 @@ def server_output(input, output, session):
     def multiple_select_output():
         selected = input.multiple_select_input()
         return (
-            MapSelection(DEMO_GEOMETRY, selected=selected, tooltips=TOOLTIPS)
+            MapSelection(selected=selected)
             .with_fill_color("#e2e8f0")  # Base color for all regions
             .with_fill_color_selected("#fbbf24")  # Highlight selected regions
         )
@@ -77,7 +77,7 @@ def server_output(input, output, session):
     @render_map
     def alpha_output():
         counts = {rid: input[rid]() for rid in rids}
-        return MapCount(DEMO_GEOMETRY, counts=counts, tooltips=TOOLTIPS).with_fill_color([
+        return MapCount(counts=counts).with_fill_color([
             "#eff6ff", "#bfdbfe", "#60a5fa", "#2563eb", "#1e40af",
             "#1e3a8a", "#172554", "#0f172a", "#020617", "#000000", "#000000"
         ])

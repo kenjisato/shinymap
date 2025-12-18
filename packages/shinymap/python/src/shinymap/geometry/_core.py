@@ -120,6 +120,29 @@ class Geometry:
 
         return cls(regions=regions, metadata=metadata)
 
+    @classmethod
+    def from_json_file(cls, json_path: str | Path) -> "Geometry":
+        """Load geometry from JSON file.
+
+        Args:
+            json_path: Path to JSON file in shinymap format
+
+        Returns:
+            Geometry object with normalized list-based paths
+
+        Example:
+            >>> geo = Geometry.from_json_file("japan_prefectures.json")
+            >>> geo.regions.keys()
+            dict_keys(['01', '02', ...])
+        """
+        import json
+        from pathlib import Path
+
+        path = Path(json_path)
+        with open(path) as f:
+            data = json.load(f)
+        return cls.from_dict(data)
+
     def viewbox(self, padding: float = 0.02) -> tuple[float, float, float, float]:
         """Get viewBox from metadata, or compute from geometry coordinates.
 

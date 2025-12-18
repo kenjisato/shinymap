@@ -47,7 +47,7 @@ _ui_qualitative = ui.card(
             value={},
             hover_highlight={"stroke_width": 1},
         ),
-        output_map("qualitative_output"),
+        output_map("qualitative_output", DEMO_GEOMETRY, tooltips=TOOLTIPS),
     ),
 )
 
@@ -60,7 +60,7 @@ def _server_qualitative(input, output, session):
         counts = {selected: 1} if selected else {}
 
         return (
-            Map(DEMO_GEOMETRY, tooltips=TOOLTIPS)
+            Map()
             .with_fill_color(fills_for_qualitative(counts))
             .with_counts(counts)
             .with_active(selected_ids(counts))
@@ -84,7 +84,7 @@ _ui_count_helpers = ui.card(
             value={},
             hover_highlight={"stroke_width": 2},
         ),
-        output_map("count_output"),
+        output_map("count_output", DEMO_GEOMETRY, tooltips=TOOLTIPS),
     ),
 )
 
@@ -94,7 +94,7 @@ def _server_count_helpers(input, output, session):
     def count_output():
         counts = input.clicks() or {}
         return (
-            Map(DEMO_GEOMETRY, tooltips=TOOLTIPS)
+            Map()
             .with_fill_color(scale_sequential(counts, list(DEMO_GEOMETRY.regions.keys()), max_count=10))
             .with_counts(counts)
         )
