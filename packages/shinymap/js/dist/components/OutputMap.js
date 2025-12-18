@@ -1,5 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { normalizeGeometry } from "../utils/geometry";
 const DEFAULT_VIEWBOX = "0 0 100 100";
 const DEFAULT_AESTHETIC = {
     fillColor: "#e2e8f0",
@@ -33,14 +34,17 @@ export function OutputMap(props) {
     counts, activeIds, onRegionClick, resolveAesthetic, regionProps, fillColorSelected, // RENAMED from selectionAesthetic
     fillColorNotSelected, // RENAMED from notSelectionAesthetic
     overlayGeometry, overlayAesthetic, hoverHighlight, } = props;
+    // Normalize geometry to string format (handles both string and string[] paths)
+    const normalizedGeometry = useMemo(() => normalizeGeometry(geometry), [geometry]);
+    const normalizedOverlayGeometry = useMemo(() => (overlayGeometry ? normalizeGeometry(overlayGeometry) : undefined), [overlayGeometry]);
     const [hovered, setHovered] = useState(null);
     const activeSet = normalizeActive(activeIds);
-    const normalizedFillColor = normalize(fillColor, geometry);
-    const normalizedStrokeWidth = normalize(strokeWidthProp, geometry);
-    const normalizedStrokeColor = normalize(strokeColorProp, geometry);
-    const normalizedFillOpacity = normalize(fillOpacityProp, geometry);
+    const normalizedFillColor = normalize(fillColor, normalizedGeometry);
+    const normalizedStrokeWidth = normalize(strokeWidthProp, normalizedGeometry);
+    const normalizedStrokeColor = normalize(strokeColorProp, normalizedGeometry);
+    const normalizedFillOpacity = normalize(fillOpacityProp, normalizedGeometry);
     const countMap = counts !== null && counts !== void 0 ? counts : {};
-    return (_jsx("svg", { role: "img", className: className, style: { width: "100%", height: "100%", ...containerStyle }, viewBox: viewBox, children: _jsxs("g", { children: [Object.entries(geometry).map(([id, d]) => {
+    return (_jsx("svg", { role: "img", className: className, style: { width: "100%", height: "100%", ...containerStyle }, viewBox: viewBox, children: _jsxs("g", { children: [Object.entries(normalizedGeometry).map(([id, d]) => {
                     var _a;
                     const tooltip = tooltips === null || tooltips === void 0 ? void 0 : tooltips[id];
                     const isActive = activeSet.has(id);
@@ -82,8 +86,8 @@ export function OutputMap(props) {
                     const handleMouseEnter = () => setHovered(id);
                     const handleMouseLeave = () => setHovered((current) => (current === id ? null : current));
                     return (_jsx("path", { d: d, fill: resolved.fillColor, fillOpacity: resolved.fillOpacity, stroke: resolved.strokeColor, strokeWidth: resolved.strokeWidth, onClick: onRegionClick ? () => onRegionClick(id) : undefined, onMouseEnter: handleMouseEnter, onMouseLeave: handleMouseLeave, onFocus: handleMouseEnter, onBlur: handleMouseLeave, style: onRegionClick ? { cursor: "pointer" } : undefined, ...regionOverrides, children: tooltip ? _jsx("title", { children: tooltip }) : null }, id));
-                }), overlayGeometry &&
-                    Object.entries(overlayGeometry).map(([id, d]) => {
+                }), normalizedOverlayGeometry &&
+                    Object.entries(normalizedOverlayGeometry).map(([id, d]) => {
                         const overlayStyle = {
                             ...DEFAULT_AESTHETIC,
                             ...overlayAesthetic,
@@ -91,7 +95,7 @@ export function OutputMap(props) {
                         return (_jsx("path", { d: d, fill: overlayStyle.fillColor, fillOpacity: overlayStyle.fillOpacity, stroke: overlayStyle.strokeColor, strokeWidth: overlayStyle.strokeWidth, pointerEvents: "none" }, `overlay-${id}`));
                     }), Array.from(activeSet).map((id) => {
                     var _a;
-                    if (!geometry[id])
+                    if (!normalizedGeometry[id])
                         return null;
                     const count = (_a = countMap[id]) !== null && _a !== void 0 ? _a : 0;
                     let resolved = {
@@ -118,6 +122,6 @@ export function OutputMap(props) {
                         if (overrides)
                             resolved = { ...resolved, ...overrides };
                     }
-                    return (_jsx("path", { d: geometry[id], fill: resolved.fillColor, fillOpacity: resolved.fillOpacity, stroke: resolved.strokeColor, strokeWidth: resolved.strokeWidth, pointerEvents: "none" }, `selection-overlay-${id}`));
-                }), hovered && hoverHighlight && geometry[hovered] && (_jsx("path", { d: geometry[hovered], fill: (_a = hoverHighlight.fillColor) !== null && _a !== void 0 ? _a : "none", fillOpacity: (_b = hoverHighlight.fillOpacity) !== null && _b !== void 0 ? _b : 0, stroke: (_c = hoverHighlight.strokeColor) !== null && _c !== void 0 ? _c : "#1e40af", strokeWidth: (_d = hoverHighlight.strokeWidth) !== null && _d !== void 0 ? _d : 2, pointerEvents: "none" }, `hover-overlay-${hovered}`))] }) }));
+                    return (_jsx("path", { d: normalizedGeometry[id], fill: resolved.fillColor, fillOpacity: resolved.fillOpacity, stroke: resolved.strokeColor, strokeWidth: resolved.strokeWidth, pointerEvents: "none" }, `selection-overlay-${id}`));
+                }), hovered && hoverHighlight && normalizedGeometry[hovered] && (_jsx("path", { d: normalizedGeometry[hovered], fill: (_a = hoverHighlight.fillColor) !== null && _a !== void 0 ? _a : "none", fillOpacity: (_b = hoverHighlight.fillOpacity) !== null && _b !== void 0 ? _b : 0, stroke: (_c = hoverHighlight.strokeColor) !== null && _c !== void 0 ? _c : "#1e40af", strokeWidth: (_d = hoverHighlight.strokeWidth) !== null && _d !== void 0 ? _d : 2, pointerEvents: "none" }, `hover-overlay-${hovered}`))] }) }));
 }

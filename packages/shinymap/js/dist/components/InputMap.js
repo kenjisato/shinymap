@@ -1,5 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useEffect, useMemo, useState } from "react";
+import { normalizeGeometry } from "../utils/geometry";
 const DEFAULT_VIEWBOX = "0 0 100 100";
 const DEFAULT_AESTHETIC = {
     fillColor: "#e2e8f0",
@@ -28,7 +29,10 @@ function normalizeFillColor(fillColor, geometry) {
 export function InputMap(props) {
     var _a, _b, _c, _d, _e;
     const { geometry, tooltips, fillColor, className, containerStyle, viewBox = DEFAULT_VIEWBOX, defaultAesthetic = DEFAULT_AESTHETIC, resolveAesthetic, regionProps, value, onChange, cycle, maxSelection, overlayGeometry, overlayAesthetic, hoverHighlight, selectedAesthetic, } = props;
-    const normalizedFillColor = useMemo(() => normalizeFillColor(fillColor, geometry), [fillColor, geometry]);
+    // Normalize geometry to string format (handles both string and string[] paths)
+    const normalizedGeometry = useMemo(() => normalizeGeometry(geometry), [geometry]);
+    const normalizedOverlayGeometry = useMemo(() => (overlayGeometry ? normalizeGeometry(overlayGeometry) : undefined), [overlayGeometry]);
+    const normalizedFillColor = useMemo(() => normalizeFillColor(fillColor, normalizedGeometry), [fillColor, normalizedGeometry]);
     const [hovered, setHovered] = useState(null);
     // Use internal state for counts, initialized from value prop
     const [counts, setCounts] = useState(value !== null && value !== void 0 ? value : {});
@@ -63,7 +67,7 @@ export function InputMap(props) {
         if (isActivating && activeCount >= maxSel) {
             if (maxSel === 1) {
                 // Replace the active region with the newly clicked one.
-                const next = Object.fromEntries(Object.keys(geometry).map((key) => [key, key === id ? nextCount : 0]));
+                const next = Object.fromEntries(Object.keys(normalizedGeometry).map((key) => [key, key === id ? nextCount : 0]));
                 setCounts(next);
                 onChange === null || onChange === void 0 ? void 0 : onChange(next);
             }
@@ -74,7 +78,7 @@ export function InputMap(props) {
         setCounts(next);
         onChange === null || onChange === void 0 ? void 0 : onChange(next);
     };
-    return (_jsxs("svg", { role: "img", className: className, style: { width: "100%", height: "100%", ...containerStyle }, viewBox: viewBox, children: [_jsxs("g", { children: [Object.entries(geometry).map(([id, d]) => {
+    return (_jsxs("svg", { role: "img", className: className, style: { width: "100%", height: "100%", ...containerStyle }, viewBox: viewBox, children: [_jsxs("g", { children: [Object.entries(normalizedGeometry).map(([id, d]) => {
                         var _a;
                         const tooltip = tooltips === null || tooltips === void 0 ? void 0 : tooltips[id];
                         const isHovered = hovered === id;
@@ -111,8 +115,8 @@ export function InputMap(props) {
                         const handleMouseEnter = () => setHovered(id);
                         const handleMouseLeave = () => setHovered((current) => (current === id ? null : current));
                         return (_jsx("path", { d: d, fill: resolved.fillColor, fillOpacity: resolved.fillOpacity, stroke: resolved.strokeColor, strokeWidth: resolved.strokeWidth, style: { cursor: "pointer" }, onMouseEnter: handleMouseEnter, onMouseLeave: handleMouseLeave, onFocus: handleMouseEnter, onBlur: handleMouseLeave, onClick: () => handleClick(id), ...extraProps, children: tooltip ? _jsx("title", { children: tooltip }) : null }, id));
-                    }), overlayGeometry &&
-                        Object.entries(overlayGeometry).map(([id, d]) => {
+                    }), normalizedOverlayGeometry &&
+                        Object.entries(normalizedOverlayGeometry).map(([id, d]) => {
                             const overlayStyle = {
                                 ...DEFAULT_AESTHETIC,
                                 ...overlayAesthetic,
@@ -120,7 +124,7 @@ export function InputMap(props) {
                             return (_jsx("path", { d: d, fill: overlayStyle.fillColor, fillOpacity: overlayStyle.fillOpacity, stroke: overlayStyle.strokeColor, strokeWidth: overlayStyle.strokeWidth, pointerEvents: "none" }, `overlay-${id}`));
                         })] }), _jsx("g", { children: Array.from(selected).map((id) => {
                     var _a;
-                    if (!geometry[id])
+                    if (!normalizedGeometry[id])
                         return null;
                     const count = (_a = counts[id]) !== null && _a !== void 0 ? _a : 0;
                     let resolved = { ...DEFAULT_AESTHETIC, ...defaultAesthetic };
@@ -146,6 +150,6 @@ export function InputMap(props) {
                             resolved = { ...resolved, ...overrides };
                         }
                     }
-                    return (_jsx("path", { d: geometry[id], fill: resolved.fillColor, fillOpacity: resolved.fillOpacity, stroke: resolved.strokeColor, strokeWidth: resolved.strokeWidth, pointerEvents: "none" }, `selection-overlay-${id}`));
-                }) }), _jsx("g", { children: hovered && hoverHighlight && geometry[hovered] && (_jsx("path", { d: geometry[hovered], fill: (_b = hoverHighlight.fillColor) !== null && _b !== void 0 ? _b : "none", fillOpacity: (_c = hoverHighlight.fillOpacity) !== null && _c !== void 0 ? _c : (hoverHighlight.fillColor ? 1 : 0), stroke: (_d = hoverHighlight.strokeColor) !== null && _d !== void 0 ? _d : "#1e40af", strokeWidth: (_e = hoverHighlight.strokeWidth) !== null && _e !== void 0 ? _e : 2, pointerEvents: "none" }, `hover-overlay-${hovered}`)) })] }));
+                    return (_jsx("path", { d: normalizedGeometry[id], fill: resolved.fillColor, fillOpacity: resolved.fillOpacity, stroke: resolved.strokeColor, strokeWidth: resolved.strokeWidth, pointerEvents: "none" }, `selection-overlay-${id}`));
+                }) }), _jsx("g", { children: hovered && hoverHighlight && normalizedGeometry[hovered] && (_jsx("path", { d: normalizedGeometry[hovered], fill: (_b = hoverHighlight.fillColor) !== null && _b !== void 0 ? _b : "none", fillOpacity: (_c = hoverHighlight.fillOpacity) !== null && _c !== void 0 ? _c : (hoverHighlight.fillColor ? 1 : 0), stroke: (_d = hoverHighlight.strokeColor) !== null && _d !== void 0 ? _d : "#1e40af", strokeWidth: (_e = hoverHighlight.strokeWidth) !== null && _e !== void 0 ? _e : 2, pointerEvents: "none" }, `hover-overlay-${hovered}`)) })] }));
 }

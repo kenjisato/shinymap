@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 
 import type { AestheticStyle, InputMapMode, InputMapProps, RegionId } from "../types";
+import { normalizeGeometry } from "../utils/geometry";
 
 const DEFAULT_VIEWBOX = "0 0 100 100";
 const DEFAULT_AESTHETIC: AestheticStyle = {
@@ -51,7 +52,14 @@ export function InputMap(props: InputMapProps) {
     selectedAesthetic,
   } = props;
 
-  const normalizedFillColor = useMemo(() => normalizeFillColor(fillColor, geometry), [fillColor, geometry]);
+  // Normalize geometry to string format (handles both string and string[] paths)
+  const normalizedGeometry = useMemo(() => normalizeGeometry(geometry), [geometry]);
+  const normalizedOverlayGeometry = useMemo(
+    () => (overlayGeometry ? normalizeGeometry(overlayGeometry) : undefined),
+    [overlayGeometry]
+  );
+
+  const normalizedFillColor = useMemo(() => normalizeFillColor(fillColor, normalizedGeometry), [fillColor, normalizedGeometry]);
   const [hovered, setHovered] = useState<RegionId | null>(null);
   // Use internal state for counts, initialized from value prop
   const [counts, setCounts] = useState<Record<RegionId, number>>(value ?? {});
@@ -93,7 +101,7 @@ export function InputMap(props: InputMapProps) {
       if (maxSel === 1) {
         // Replace the active region with the newly clicked one.
         const next = Object.fromEntries(
-          Object.keys(geometry).map((key) => [key, key === id ? nextCount : 0])
+          Object.keys(normalizedGeometry).map((key) => [key, key === id ? nextCount : 0])
         );
         setCounts(next);
         onChange?.(next);
@@ -116,7 +124,7 @@ export function InputMap(props: InputMapProps) {
     >
       {/* Group 1: Base layer - all regions with base styling only, interactive */}
       <g>
-        {Object.entries(geometry).map(([id, d]) => {
+        {Object.entries(normalizedGeometry).map(([id, d]) => {
           const tooltip = tooltips?.[id];
           const isHovered = hovered === id;
           const isSelected = selected.has(id);
@@ -179,8 +187,8 @@ export function InputMap(props: InputMapProps) {
         })}
 
         {/* Non-interactive overlay (dividers, borders, grids) */}
-        {overlayGeometry &&
-          Object.entries(overlayGeometry).map(([id, d]) => {
+        {normalizedOverlayGeometry &&
+          Object.entries(normalizedOverlayGeometry).map(([id, d]) => {
             const overlayStyle = {
               ...DEFAULT_AESTHETIC,
               ...overlayAesthetic,
@@ -202,7 +210,7 @@ export function InputMap(props: InputMapProps) {
       {/* Group 2: Selection layer - selected regions only, non-interactive */}
       <g>
         {Array.from(selected).map((id) => {
-          if (!geometry[id]) return null;
+          if (!normalizedGeometry[id]) return null;
 
           const count = counts[id] ?? 0;
           let resolved: AestheticStyle = { ...DEFAULT_AESTHETIC, ...defaultAesthetic };
@@ -235,7 +243,7 @@ export function InputMap(props: InputMapProps) {
           return (
             <path
               key={`selection-overlay-${id}`}
-              d={geometry[id]}
+              d={normalizedGeometry[id]}
               fill={resolved.fillColor}
               fillOpacity={resolved.fillOpacity}
               stroke={resolved.strokeColor}
@@ -248,10 +256,10 @@ export function InputMap(props: InputMapProps) {
 
       {/* Group 3: Hover layer - hovered region only, non-interactive */}
       <g>
-        {hovered && hoverHighlight && geometry[hovered] && (
+        {hovered && hoverHighlight && normalizedGeometry[hovered] && (
           <path
             key={`hover-overlay-${hovered}`}
-            d={geometry[hovered]}
+            d={normalizedGeometry[hovered]}
             fill={hoverHighlight.fillColor ?? "none"}
             fillOpacity={hoverHighlight.fillOpacity ?? (hoverHighlight.fillColor ? 1 : 0)}
             stroke={hoverHighlight.strokeColor ?? "#1e40af"}

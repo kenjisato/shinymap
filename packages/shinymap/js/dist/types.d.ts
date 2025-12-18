@@ -1,6 +1,11 @@
 import type React from "react";
 export type RegionId = string;
-export type GeometryMap = Record<RegionId, string>;
+/**
+ * Geometry map supports both formats:
+ * - string: Single path (e.g., "M 0 0 L 10 10")
+ * - string[]: Multiple paths (e.g., ["M 0 0 L 10 10", "M 20 20 L 30 30"])
+ */
+export type GeometryMap = Record<RegionId, string | string[]>;
 export type TooltipMap = Record<RegionId, string>;
 export type FillMap = string | Record<RegionId, string>;
 export type InputMapMode = "single" | "multiple" | "count";

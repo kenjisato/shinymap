@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 
 import type { AestheticStyle, OutputMapProps, RegionId } from "../types";
+import { normalizeGeometry } from "../utils/geometry";
 
 const DEFAULT_VIEWBOX = "0 0 100 100";
 const DEFAULT_AESTHETIC: AestheticStyle = {
@@ -53,12 +54,19 @@ export function OutputMap(props: OutputMapProps) {
     hoverHighlight,
   } = props;
 
+  // Normalize geometry to string format (handles both string and string[] paths)
+  const normalizedGeometry = useMemo(() => normalizeGeometry(geometry), [geometry]);
+  const normalizedOverlayGeometry = useMemo(
+    () => (overlayGeometry ? normalizeGeometry(overlayGeometry) : undefined),
+    [overlayGeometry]
+  );
+
   const [hovered, setHovered] = useState<RegionId | null>(null);
   const activeSet = normalizeActive(activeIds);
-  const normalizedFillColor = normalize(fillColor, geometry);
-  const normalizedStrokeWidth = normalize(strokeWidthProp, geometry);
-  const normalizedStrokeColor = normalize(strokeColorProp, geometry);
-  const normalizedFillOpacity = normalize(fillOpacityProp, geometry);
+  const normalizedFillColor = normalize(fillColor, normalizedGeometry);
+  const normalizedStrokeWidth = normalize(strokeWidthProp, normalizedGeometry);
+  const normalizedStrokeColor = normalize(strokeColorProp, normalizedGeometry);
+  const normalizedFillOpacity = normalize(fillOpacityProp, normalizedGeometry);
   const countMap = counts ?? {};
 
   return (
@@ -69,7 +77,7 @@ export function OutputMap(props: OutputMapProps) {
       viewBox={viewBox}
     >
       <g>
-        {Object.entries(geometry).map(([id, d]) => {
+        {Object.entries(normalizedGeometry).map(([id, d]) => {
           const tooltip = tooltips?.[id];
           const isActive = activeSet.has(id);
           const count = countMap[id] ?? 0;
@@ -135,8 +143,8 @@ export function OutputMap(props: OutputMapProps) {
         })}
 
         {/* Non-interactive overlay (dividers, borders, grids) */}
-        {overlayGeometry &&
-          Object.entries(overlayGeometry).map(([id, d]) => {
+        {normalizedOverlayGeometry &&
+          Object.entries(normalizedOverlayGeometry).map(([id, d]) => {
             const overlayStyle = {
               ...DEFAULT_AESTHETIC,
               ...overlayAesthetic,
@@ -156,7 +164,7 @@ export function OutputMap(props: OutputMapProps) {
 
         {/* Selection overlay - render active regions on top to ensure borders are visible */}
         {Array.from(activeSet).map((id) => {
-          if (!geometry[id]) return null;
+          if (!normalizedGeometry[id]) return null;
 
           const count = countMap[id] ?? 0;
           let resolved: AestheticStyle = {
@@ -188,7 +196,7 @@ export function OutputMap(props: OutputMapProps) {
           return (
             <path
               key={`selection-overlay-${id}`}
-              d={geometry[id]}
+              d={normalizedGeometry[id]}
               fill={resolved.fillColor}
               fillOpacity={resolved.fillOpacity}
               stroke={resolved.strokeColor}
@@ -199,10 +207,10 @@ export function OutputMap(props: OutputMapProps) {
         })}
 
         {/* Hover overlay - rendered on top with pointer-events: none */}
-        {hovered && hoverHighlight && geometry[hovered] && (
+        {hovered && hoverHighlight && normalizedGeometry[hovered] && (
           <path
             key={`hover-overlay-${hovered}`}
-            d={geometry[hovered]}
+            d={normalizedGeometry[hovered]}
             fill={hoverHighlight.fillColor ?? "none"}
             fillOpacity={hoverHighlight.fillOpacity ?? 0}
             stroke={hoverHighlight.strokeColor ?? "#1e40af"}
