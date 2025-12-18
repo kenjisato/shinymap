@@ -121,7 +121,7 @@ class Geometry:
         return cls(regions=regions, metadata=metadata)
 
     @classmethod
-    def from_json_file(cls, json_path: str | Path) -> "Geometry":
+    def from_json(cls, json_path: str | Path) -> "Geometry":
         """Load geometry from JSON file.
 
         Args:
@@ -131,7 +131,7 @@ class Geometry:
             Geometry object with normalized list-based paths
 
         Example:
-            >>> geo = Geometry.from_json_file("japan_prefectures.json")
+            >>> geo = Geometry.from_json("japan_prefectures.json")
             >>> geo.regions.keys()
             dict_keys(['01', '02', ...])
         """
@@ -139,9 +139,95 @@ class Geometry:
         from pathlib import Path
 
         path = Path(json_path)
-        with open(path) as f:
-            data = json.load(f)
+        if not path.exists():
+            raise FileNotFoundError(f"JSON file not found: {path}")
+
+        try:
+            with open(path) as f:
+                data = json.load(f)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Failed to parse JSON file: {e}")
+
         return cls.from_dict(data)
+
+    @classmethod
+    def from_svg(
+        cls,
+        svg_path: str | Path,
+        extract_viewbox: bool = True,
+    ) -> "Geometry":
+        """Extract geometry from SVG file.
+
+        Extracts path elements from an SVG file and generates auto-IDs for paths
+        without IDs (path_1, path_2, etc.). This is the starting point for the
+        interactive workflow where you can inspect extracted paths and apply
+        transformations.
+
+        Args:
+            svg_path: Path to input SVG file
+            extract_viewbox: If True, extract viewBox from SVG root element
+
+        Returns:
+            Geometry object with extracted paths
+
+        Raises:
+            FileNotFoundError: If svg_path does not exist
+            ValueError: If SVG parsing fails
+
+        Example:
+            >>> # Basic extraction
+            >>> geo = Geometry.from_svg("map.svg")
+            >>> geo.regions.keys()
+            dict_keys(['path_1', 'path_2', 'path_3'])
+            >>>
+            >>> # With transformations
+            >>> geo = Geometry.from_svg("map.svg")
+            >>> geo.relabel({"hokkaido": ["path_1", "path_2"]})
+            >>> geo.set_overlays(["_border"])
+            >>> geo.to_json("output.json")
+        """
+        svg_path = Path(svg_path)
+        if not svg_path.exists():
+            raise FileNotFoundError(f"SVG file not found: {svg_path}")
+
+        try:
+            tree = ET.parse(svg_path)
+            root = tree.getroot()
+        except ET.ParseError as e:
+            raise ValueError(f"Failed to parse SVG: {e}") from e
+
+        # SVG namespace handling
+        ns = {"svg": "http://www.w3.org/2000/svg"}
+
+        # Extract viewBox from root SVG element
+        viewbox = None
+        if extract_viewbox:
+            viewbox = root.get("viewBox")
+
+        # Extract all path elements with d attribute
+        # Generate IDs for paths without them
+        regions: dict[str, list[str]] = {}
+        auto_id_counter = 1
+
+        for path_elem in root.findall(".//svg:path[@d]", ns):
+            path_d = path_elem.get("d")
+            if not path_d:
+                continue
+
+            # Get existing ID or generate one
+            path_id = path_elem.get("id")
+            if not path_id:
+                path_id = f"path_{auto_id_counter}"
+                auto_id_counter += 1
+
+            regions[path_id] = [path_d.strip()]
+
+        # Build metadata
+        metadata: dict[str, Any] = {}
+        if viewbox:
+            metadata["viewBox"] = viewbox
+
+        return cls(regions=regions, metadata=metadata)
 
     def viewbox(self, padding: float = 0.02) -> tuple[float, float, float, float]:
         """Get viewBox from metadata, or compute from geometry coordinates.
@@ -220,6 +306,145 @@ class Geometry:
         """
         overlay_ids = set(self.overlays())
         return {k: v for k, v in self.regions.items() if k in overlay_ids}
+
+    def relabel(self, mapping: dict[str, str | list[str]]) -> "Geometry":
+        """Rename or merge regions (returns new Geometry object).
+
+        This method applies relabeling transformations to create a new Geometry
+        object with renamed or merged regions. Original object is unchanged.
+
+        Args:
+            mapping: Dict mapping new IDs to old ID(s)
+                - String value: rename single region (e.g., {"tokyo": "path_5"})
+                - List value: merge multiple regions (e.g., {"hokkaido": ["path_1", "path_2"]})
+
+        Returns:
+            New Geometry object with relabeled regions
+
+        Raises:
+            ValueError: If an old ID in mapping doesn't exist
+
+        Example:
+            >>> geo = Geometry.from_dict({
+            ...     "path_1": ["M 0 0 L 10 0"],
+            ...     "path_2": ["M 20 0 L 30 0"],
+            ...     "path_3": ["M 40 0 L 50 0"]
+            ... })
+            >>> # Rename and merge
+            >>> geo2 = geo.relabel({
+            ...     "region_a": ["path_1", "path_2"],  # Merge
+            ...     "_border": "path_3"                 # Rename
+            ... })
+            >>> geo2.regions.keys()
+            dict_keys(['region_a', '_border'])
+        """
+        new_regions: dict[str, list[str]] = {}
+        relabeled_ids: set[str] = set()
+
+        # Apply relabeling
+        for new_id, old_id_or_ids in mapping.items():
+            # Normalize to list for uniform processing
+            old_ids = [old_id_or_ids] if isinstance(old_id_or_ids, str) else old_id_or_ids
+
+            # Collect all paths (flatten nested lists from multiple regions)
+            path_parts = []
+            for old_id in old_ids:
+                if old_id not in self.regions:
+                    raise ValueError(f"Path '{old_id}' not found in geometry")
+                # Extend to flatten: self.regions[old_id] is already a list
+                path_parts.extend(self.regions[old_id])
+                relabeled_ids.add(old_id)
+
+            # Store as list (single region = single-element, merge = multi-element)
+            new_regions[new_id] = path_parts
+
+        # Keep regions that weren't relabeled
+        for region_id, paths in self.regions.items():
+            if region_id not in relabeled_ids:
+                new_regions[region_id] = paths
+
+        return Geometry(regions=new_regions, metadata=dict(self.metadata))
+
+    def set_overlays(self, overlay_ids: list[str]) -> "Geometry":
+        """Set overlay region IDs in metadata (returns new Geometry object).
+
+        Args:
+            overlay_ids: List of region IDs to mark as overlays
+
+        Returns:
+            New Geometry object with updated overlay metadata
+
+        Example:
+            >>> geo = Geometry.from_dict({
+            ...     "region": ["M 0 0"],
+            ...     "_border": ["M 0 0 L 100 0"]
+            ... })
+            >>> geo2 = geo.set_overlays(["_border"])
+            >>> geo2.overlays()
+            ['_border']
+        """
+        new_metadata = dict(self.metadata)
+        new_metadata["overlays"] = overlay_ids
+        return Geometry(regions=dict(self.regions), metadata=new_metadata)
+
+    def update_metadata(self, metadata: dict[str, Any]) -> "Geometry":
+        """Update metadata (returns new Geometry object).
+
+        Merges provided metadata with existing metadata. Existing keys are
+        overwritten by new values.
+
+        Args:
+            metadata: Dict of metadata to merge
+
+        Returns:
+            New Geometry object with updated metadata
+
+        Example:
+            >>> geo = Geometry.from_dict({"region": ["M 0 0"]})
+            >>> geo2 = geo.update_metadata({
+            ...     "source": "Wikimedia Commons",
+            ...     "license": "CC BY-SA 3.0"
+            ... })
+            >>> geo2.metadata["source"]
+            'Wikimedia Commons'
+        """
+        new_metadata = {**self.metadata, **metadata}
+        return Geometry(regions=dict(self.regions), metadata=new_metadata)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Export to dict in shinymap JSON format.
+
+        Returns:
+            Dict with _metadata and region paths (list-based format)
+
+        Example:
+            >>> geo = Geometry.from_dict({
+            ...     "region": ["M 0 0"],
+            ...     "_metadata": {"viewBox": "0 0 100 100"}
+            ... })
+            >>> geo.to_dict()
+            {'_metadata': {'viewBox': '0 0 100 100'}, 'region': ['M 0 0']}
+        """
+        output: dict[str, Any] = {}
+        if self.metadata:
+            output["_metadata"] = dict(self.metadata)
+        output.update(self.regions)
+        return output
+
+    def to_json(self, output_path: str | Path) -> None:
+        """Write geometry to JSON file.
+
+        Args:
+            output_path: Path to write JSON file
+
+        Example:
+            >>> geo = Geometry.from_svg("map.svg")
+            >>> geo.to_json("output.json")
+        """
+        output_path = Path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(self.to_dict(), f, indent=2, ensure_ascii=False)
 
 
 def _parse_svg_path_bounds(path_d: str) -> tuple[float, float, float, float]:
@@ -372,13 +597,14 @@ def from_svg(
     output_path: Path | str | None = None,
     extract_viewbox: bool = True,
 ) -> dict[str, Any]:
-    """Extract intermediate JSON from SVG file (Step 1 of interactive workflow).
+    """Extract extracted JSON from SVG file (Step 1 of interactive workflow).
 
     This function extracts path elements from an SVG file and generates auto-IDs
-    for paths without IDs. The result is "intermediate JSON" that can be further
-    transformed using from_json().
+    for paths without IDs. The result is "extracted JSON" (before relabeling) that
+    can be further transformed using from_json().
 
     For one-shot conversion with all transformations, use convert() instead.
+    For OOP API, use Geometry.from_svg() instead.
 
     Args:
         svg_path: Path to input SVG file
@@ -386,105 +612,55 @@ def from_svg(
         extract_viewbox: If True, extract viewBox from SVG root element
 
     Returns:
-        Dict in intermediate JSON format with auto-generated IDs
+        Dict in extracted JSON format with auto-generated IDs
 
     Raises:
         FileNotFoundError: If svg_path does not exist
         ValueError: If SVG parsing fails
 
     Example:
-        >>> # Interactive workflow: Step 1 - Extract intermediate JSON
-        >>> intermediate = from_svg("map.svg", "map_intermediate.json")
-        >>> # Inspect intermediate JSON, identify paths to group/rename
+        >>> # Interactive workflow: Step 1 - Extract
+        >>> extracted = from_svg("map.svg", "map_extracted.json")
+        >>> # Inspect extracted JSON, identify paths to group/rename
         >>> # Step 2 - Apply transformations
         >>> final = from_json(
-        ...     intermediate,
-        ...     id_mapping={"path_1": "region_01"},
-        ...     grouping={"hokkaido": ["path_2", "path_3"]}
+        ...     extracted,
+        ...     relabel={"region_01": "path_1", "hokkaido": ["path_2", "path_3"]}
         ... )
 
         >>> # Or: one-shot conversion
         >>> final = convert(
         ...     "map.svg",
         ...     "map.json",
-        ...     id_mapping={"path_1": "region_01"},
-        ...     grouping={"hokkaido": ["path_2", "path_3"]}
+        ...     relabel={"region_01": "path_1"}
         ... )
     """
-    svg_path = Path(svg_path)
-    if not svg_path.exists():
-        msg = f"SVG file not found: {svg_path}"
-        raise FileNotFoundError(msg)
-
-    try:
-        tree = ET.parse(svg_path)
-        root = tree.getroot()
-    except ET.ParseError as e:
-        msg = f"Failed to parse SVG: {e}"
-        raise ValueError(msg) from e
-
-    # SVG namespace handling
-    ns = {"svg": "http://www.w3.org/2000/svg"}
-
-    # Extract viewBox from root SVG element
-    viewbox = None
-    if extract_viewbox:
-        viewbox = root.get("viewBox")
-
-    # Extract all path elements with d attribute
-    # Generate IDs for paths without them
-    output_paths: dict[str, list[str]] = {}
-    auto_id_counter = 1
-
-    for path_elem in root.findall(".//svg:path[@d]", ns):
-        path_d = path_elem.get("d")
-        if not path_d:
-            continue
-
-        # Get existing ID or generate one
-        path_id = path_elem.get("id")
-        if not path_id:
-            path_id = f"path_{auto_id_counter}"
-            auto_id_counter += 1
-
-        output_paths[path_id] = [path_d.strip()]
-
-    # Build metadata
-    meta: dict[str, Any] = {}
-    if viewbox:
-        meta["viewBox"] = viewbox
-
-    # Construct output
-    output: dict[str, Any] = {}
-    if meta:
-        output["_metadata"] = meta
-
-    output.update(output_paths)
+    # Use Geometry class method internally
+    geo = Geometry.from_svg(svg_path, extract_viewbox=extract_viewbox)
 
     # Write to file if output_path provided
     if output_path:
-        output_path = Path(output_path)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(output_path, "w", encoding="utf-8") as f:
-            json.dump(output, f, indent=2, ensure_ascii=False)
+        geo.to_json(output_path)
 
-    return output
+    return geo.to_dict()
 
 
 def from_json(
-    intermediate_json: dict[str, Any] | Path | str,
+    extracted_json: dict[str, Any] | Path | str,
     output_path: Path | str | None = None,
     relabel: dict[str, str | list[str]] | None = None,
     overlay_ids: list[str] | None = None,
     metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Transform intermediate JSON to final JSON (Step 2 of interactive workflow).
+    """Transform extracted JSON to final JSON (Step 2 of interactive workflow).
 
-    This function takes "intermediate" JSON (raw SVG paths with auto-generated IDs)
+    This function takes "extracted" JSON (raw SVG paths with auto-generated IDs)
     and applies relabeling (renaming/grouping) and metadata updates to produce final JSON.
 
+    For OOP API, use Geometry.from_dict() or Geometry.from_json_file() with method chaining instead.
+
     Args:
-        intermediate_json: Input JSON dict (or path to JSON file) with path data
+        extracted_json: Input JSON dict (or path to JSON file) with path data
         output_path: Optional path to write JSON output (if None, returns dict only)
         relabel: Optional dict to rename or merge paths. Maps new ID to old ID(s).
                  - String value: rename single path (e.g., {"okinawa": "path_3"})
@@ -496,21 +672,21 @@ def from_json(
         Transformed JSON dict in shinymap format
 
     Raises:
-        FileNotFoundError: If intermediate_json is a path and file doesn't exist
+        FileNotFoundError: If extracted_json is a path and file doesn't exist
         ValueError: If JSON parsing fails or relabeled paths not found
 
     Example:
         >>> # Interactive workflow
-        >>> # Step 1: Extract intermediate JSON
-        >>> intermediate = from_svg("map.svg")
+        >>> # Step 1: Extract
+        >>> extracted = from_svg("map.svg")
         >>>
-        >>> # Inspect intermediate, plan transformations
-        >>> print(list(intermediate.keys()))
+        >>> # Inspect extracted, plan transformations
+        >>> print(list(extracted.keys()))
         ['_metadata', 'path_1', 'path_2', 'path_3']
         >>>
         >>> # Step 2: Apply transformations
         >>> final = from_json(
-        ...     intermediate,
+        ...     extracted,
         ...     relabel={
         ...         "region_north": ["path_1", "path_2"],  # Merge multiple
         ...         "_border": "path_3",                    # Rename single
@@ -521,89 +697,29 @@ def from_json(
         >>>
         >>> # Result has merged and renamed paths
         >>> final["region_north"]  # Merged path_1 + path_2
-        'M 0 0 L 100 0 L 100 100 Z M 200 0 L 300 0 L 300 100 Z'
         >>> final["_border"]  # Renamed from path_3
-        'M 0 200 L 100 200 L 100 300 Z'
         >>> final["_metadata"]["overlays"]
         ['_border']
     """
-    # Load from file if path provided
-    if isinstance(intermediate_json, (Path, str)):
-        json_path = Path(intermediate_json)
-        if not json_path.exists():
-            msg = f"JSON file not found: {json_path}"
-            raise FileNotFoundError(msg)
-        try:
-            with open(json_path, "r", encoding="utf-8") as f:
-                data: dict[str, Any] = json.load(f)
-        except json.JSONDecodeError as e:
-            msg = f"Failed to parse JSON: {e}"
-            raise ValueError(msg) from e
-        intermediate_json = data
-    # Extract existing paths (list format only)
-    input_paths: dict[str, list[str]] = {}
-    for key, value in intermediate_json.items():
-        if isinstance(value, list):
-            input_paths[key] = value
+    # Load from file or dict
+    if isinstance(extracted_json, (Path, str)):
+        geo = Geometry.from_json(extracted_json)
+    else:
+        geo = Geometry.from_dict(extracted_json)
 
-    # Extract existing metadata
-    existing_meta = intermediate_json.get("_metadata", {})
-    if not isinstance(existing_meta, dict):
-        existing_meta = {}
-
-    # Process relabel mapping
-    output_paths: dict[str, list[str]] = {}
-    relabeled_ids: set[str] = set()
-
+    # Apply transformations using Geometry methods
     if relabel:
-        for new_id, old_id_or_ids in relabel.items():
-            # Normalize to list for uniform processing
-            old_ids = [old_id_or_ids] if isinstance(old_id_or_ids, str) else old_id_or_ids
-
-            # Collect all paths (flatten nested lists from multiple regions)
-            path_parts = []
-            for old_id in old_ids:
-                if old_id not in input_paths:
-                    msg = f"Path '{old_id}' (mapped to '{new_id}') not found in intermediate JSON"
-                    raise ValueError(msg)
-                # Extend to flatten: input_paths[old_id] is already a list
-                path_parts.extend(input_paths[old_id])
-                relabeled_ids.add(old_id)
-
-            # Store as list (single region = single-element, merge = multi-element)
-            output_paths[new_id] = path_parts
-
-    # Process remaining paths (not relabeled) - keep original IDs
-    for path_id, path_list in input_paths.items():
-        if path_id not in relabeled_ids:
-            output_paths[path_id] = path_list
-
-    # Build merged metadata
-    merged_meta = {**existing_meta}
-
-    # Merge user-provided metadata
-    if metadata:
-        merged_meta.update(metadata)
-
-    # Update overlays list
+        geo = geo.relabel(relabel)
     if overlay_ids:
-        merged_meta["overlays"] = overlay_ids
-
-    # Construct output
-    output: dict[str, Any] = {}
-    if merged_meta:
-        output["_metadata"] = merged_meta
-
-    output.update(output_paths)
+        geo = geo.set_overlays(overlay_ids)
+    if metadata:
+        geo = geo.update_metadata(metadata)
 
     # Write to file if output_path provided
     if output_path:
-        output_path = Path(output_path)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(output_path, "w", encoding="utf-8") as f:
-            json.dump(output, f, indent=2, ensure_ascii=False)
+        geo.to_json(output_path)
 
-    return output
+    return geo.to_dict()
 
 
 def convert(

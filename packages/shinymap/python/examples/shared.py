@@ -1,3 +1,6 @@
+from textwrap import dedent
+
+from shiny import ui
 from shinymap import QUALITATIVE
 from shinymap.geometry import Geometry
 
@@ -10,3 +13,6 @@ DEMO_GEOMETRY = Geometry.from_dict({
 
 TOOLTIPS = {"circle": "Circle", "square": "Square", "triangle": "Triangle"}
 SHAPE_COLORS = {"circle": QUALITATIVE[0], "square": QUALITATIVE[1], "triangle": QUALITATIVE[2]}
+
+def code_sample(code):
+    return ui.pre(ui.code(dedent(code)))

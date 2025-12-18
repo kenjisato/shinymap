@@ -795,3 +795,334 @@ def test_compute_viewbox_from_dict_skips_metadata():
     # Should compute from actual geometry, not use metadata viewBox
     # Covers "region" (0-100) and "_overlay" (200-300)
     assert viewbox == "0.0 0.0 300.0 100.0"
+
+
+# ============================================================================
+# Geometry OOP API tests
+# ============================================================================
+
+
+@pytest.mark.unit
+def test_geometry_from_svg_class_method(sample_svg_file):
+    """Test Geometry.from_svg() class method."""
+    from shinymap.geometry import Geometry
+
+    geo = Geometry.from_svg(sample_svg_file, extract_viewbox=True)
+
+    assert isinstance(geo, Geometry)
+    assert len(geo.regions) == 3
+    assert "viewBox" in geo.metadata
+    assert geo.metadata["viewBox"] == "0 0 100 100"
+    assert "path_1" in geo.regions
+    assert "path_2" in geo.regions
+    assert "bottom" in geo.regions
+
+
+@pytest.mark.unit
+def test_geometry_from_json_class_method(sample_intermediate_json):
+    """Test Geometry.from_json() class method."""
+    from shinymap.geometry import Geometry
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+        json.dump(sample_intermediate_json, f)
+        json_path = f.name
+
+    try:
+        geo = Geometry.from_json(json_path)
+
+        assert isinstance(geo, Geometry)
+        assert len(geo.regions) == 3
+        assert "viewBox" in geo.metadata
+        assert "path_1" in geo.regions
+        assert "bottom" in geo.regions
+
+    finally:
+        Path(json_path).unlink(missing_ok=True)
+
+
+@pytest.mark.unit
+def test_geometry_from_dict_class_method(sample_intermediate_json):
+    """Test Geometry.from_dict() class method."""
+    from shinymap.geometry import Geometry
+
+    geo = Geometry.from_dict(sample_intermediate_json)
+
+    assert isinstance(geo, Geometry)
+    assert len(geo.regions) == 3
+    assert "viewBox" in geo.metadata
+    assert geo.metadata["viewBox"] == "0 0 100 100"
+
+
+@pytest.mark.unit
+def test_geometry_relabel_rename_single(sample_intermediate_json):
+    """Test Geometry.relabel() with single region rename."""
+    from shinymap.geometry import Geometry
+
+    geo = Geometry.from_dict(sample_intermediate_json)
+    geo_relabeled = geo.relabel({"top_left": "path_1"})
+
+    # Check original unchanged (immutable)
+    assert "path_1" in geo.regions
+    assert "top_left" not in geo.regions
+
+    # Check new object has rename
+    assert "top_left" in geo_relabeled.regions
+    assert "path_1" not in geo_relabeled.regions
+    assert "path_2" in geo_relabeled.regions  # Unchanged
+    assert "bottom" in geo_relabeled.regions  # Unchanged
+
+
+@pytest.mark.unit
+def test_geometry_relabel_merge_multiple(sample_intermediate_json):
+    """Test Geometry.relabel() with region merge."""
+    from shinymap.geometry import Geometry
+
+    geo = Geometry.from_dict(sample_intermediate_json)
+    geo_merged = geo.relabel({"top_merged": ["path_1", "path_2"]})
+
+    # Check original unchanged
+    assert "path_1" in geo.regions
+    assert "path_2" in geo.regions
+    assert "top_merged" not in geo.regions
+
+    # Check new object has merge
+    assert "top_merged" in geo_merged.regions
+    assert "path_1" not in geo_merged.regions
+    assert "path_2" not in geo_merged.regions
+    assert "bottom" in geo_merged.regions  # Unchanged
+
+    # Check merged paths
+    expected = ["M 10 10 L 40 10 L 40 40 L 10 40 Z", "M 60 10 L 90 10 L 90 40 L 60 40 Z"]
+    assert geo_merged.regions["top_merged"] == expected
+
+
+@pytest.mark.unit
+def test_geometry_relabel_nonexistent_raises(sample_intermediate_json):
+    """Test Geometry.relabel() raises ValueError for nonexistent region."""
+    from shinymap.geometry import Geometry
+
+    geo = Geometry.from_dict(sample_intermediate_json)
+
+    with pytest.raises(ValueError, match="Path 'nonexistent' not found"):
+        geo.relabel({"new": "nonexistent"})
+
+
+@pytest.mark.unit
+def test_geometry_set_overlays(sample_intermediate_json):
+    """Test Geometry.set_overlays() method."""
+    from shinymap.geometry import Geometry
+
+    geo = Geometry.from_dict(sample_intermediate_json)
+    geo_overlays = geo.set_overlays(["bottom", "_border"])
+
+    # Check original unchanged
+    assert "overlays" not in geo.metadata
+
+    # Check new object has overlays
+    assert "overlays" in geo_overlays.metadata
+    assert geo_overlays.metadata["overlays"] == ["bottom", "_border"]
+    assert "viewBox" in geo_overlays.metadata  # Other metadata preserved
+
+
+@pytest.mark.unit
+def test_geometry_update_metadata(sample_intermediate_json):
+    """Test Geometry.update_metadata() method."""
+    from shinymap.geometry import Geometry
+
+    geo = Geometry.from_dict(sample_intermediate_json)
+    geo_updated = geo.update_metadata({"source": "Test", "license": "MIT"})
+
+    # Check original unchanged
+    assert "source" not in geo.metadata
+    assert "license" not in geo.metadata
+
+    # Check new object has updated metadata
+    assert geo_updated.metadata["source"] == "Test"
+    assert geo_updated.metadata["license"] == "MIT"
+    assert geo_updated.metadata["viewBox"] == "0 0 100 100"  # Original preserved
+
+
+@pytest.mark.unit
+def test_geometry_update_metadata_overwrites(sample_intermediate_json):
+    """Test Geometry.update_metadata() overwrites existing keys."""
+    from shinymap.geometry import Geometry
+
+    geo = Geometry.from_dict(sample_intermediate_json)
+    geo_updated = geo.update_metadata({"viewBox": "0 0 200 200"})
+
+    # Check original unchanged
+    assert geo.metadata["viewBox"] == "0 0 100 100"
+
+    # Check new object has overwritten value
+    assert geo_updated.metadata["viewBox"] == "0 0 200 200"
+
+
+@pytest.mark.unit
+def test_geometry_to_dict(sample_intermediate_json):
+    """Test Geometry.to_dict() method."""
+    from shinymap.geometry import Geometry
+
+    geo = Geometry.from_dict(sample_intermediate_json)
+    output = geo.to_dict()
+
+    assert "_metadata" in output
+    assert output["_metadata"] == geo.metadata
+    assert "path_1" in output
+    assert "path_2" in output
+    assert "bottom" in output
+
+
+@pytest.mark.unit
+def test_geometry_to_json(sample_intermediate_json):
+    """Test Geometry.to_json() method."""
+    from shinymap.geometry import Geometry
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+        output_path = f.name
+
+    try:
+        geo = Geometry.from_dict(sample_intermediate_json)
+        geo.to_json(output_path)
+
+        # Verify file created
+        assert Path(output_path).exists()
+
+        # Verify file contents
+        with open(output_path) as f:
+            file_data = json.load(f)
+
+        assert file_data == geo.to_dict()
+
+    finally:
+        Path(output_path).unlink(missing_ok=True)
+
+
+@pytest.mark.unit
+def test_geometry_method_chaining(sample_intermediate_json):
+    """Test Geometry fluent API with method chaining."""
+    from shinymap.geometry import Geometry
+
+    geo = (
+        Geometry.from_dict(sample_intermediate_json)
+        .relabel({"top_merged": ["path_1", "path_2"]})
+        .set_overlays(["bottom"])
+        .update_metadata({"source": "Test", "processed": "true"})
+    )
+
+    # Verify all transformations applied
+    assert "top_merged" in geo.regions
+    assert "path_1" not in geo.regions
+    assert "path_2" not in geo.regions
+    assert geo.metadata["overlays"] == ["bottom"]
+    assert geo.metadata["source"] == "Test"
+    assert geo.metadata["processed"] == "true"
+    assert geo.metadata["viewBox"] == "0 0 100 100"  # Original preserved
+
+
+@pytest.mark.unit
+def test_geometry_immutability(sample_intermediate_json):
+    """Test that Geometry transformations are immutable."""
+    from shinymap.geometry import Geometry
+
+    original = Geometry.from_dict(sample_intermediate_json)
+    original_region_count = len(original.regions)
+    original_metadata_keys = set(original.metadata.keys())
+
+    # Apply multiple transformations
+    modified = original.relabel({"new": "path_1"})
+    modified = modified.set_overlays(["bottom"])
+    modified = modified.update_metadata({"custom": "value"})
+
+    # Verify original unchanged
+    assert len(original.regions) == original_region_count
+    assert set(original.metadata.keys()) == original_metadata_keys
+    assert "path_1" in original.regions
+    assert "new" not in original.regions
+    assert "overlays" not in original.metadata
+    assert "custom" not in original.metadata
+
+    # Verify modified has changes
+    assert "new" in modified.regions
+    assert "path_1" not in modified.regions
+    assert "overlays" in modified.metadata
+    assert "custom" in modified.metadata
+
+
+@pytest.mark.integration
+def test_geometry_oop_workflow(sample_svg_file):
+    """Test complete OOP workflow: load -> transform -> export."""
+    from shinymap.geometry import Geometry
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        output_path = Path(tmpdir) / "output.json"
+
+        # Complete workflow using OOP API
+        geo = (
+            Geometry.from_svg(sample_svg_file, extract_viewbox=True)
+            .relabel({
+                "top_merged": ["path_1", "path_2"],
+                "_border": "bottom",
+            })
+            .set_overlays(["_border"])
+            .update_metadata({"source": "Test SVG", "license": "MIT"})
+        )
+
+        # Export to file
+        geo.to_json(output_path)
+
+        # Verify file created
+        assert output_path.exists()
+
+        # Load back and verify
+        geo_reloaded = Geometry.from_json(output_path)
+        assert "top_merged" in geo_reloaded.regions
+        assert "_border" in geo_reloaded.regions
+        assert geo_reloaded.metadata["overlays"] == ["_border"]
+        assert geo_reloaded.metadata["source"] == "Test SVG"
+
+
+@pytest.mark.integration
+def test_functional_api_uses_geometry_internally(sample_svg_file):
+    """Test that functional API delegates to Geometry class."""
+    from shinymap.geometry import Geometry
+
+    # Functional API
+    result_functional = from_svg(sample_svg_file, output_path=None)
+
+    # OOP API
+    geo = Geometry.from_svg(sample_svg_file, extract_viewbox=True)
+    result_oop = geo.to_dict()
+
+    # Should produce identical results
+    assert result_functional == result_oop
+
+
+@pytest.mark.integration
+def test_geometry_oop_equivalence_with_functional(sample_svg_file):
+    """Test that OOP and functional APIs produce identical results."""
+    relabel = {"merged": ["path_1", "path_2"], "border": "bottom"}
+    overlay_ids = ["border"]
+    metadata = {"source": "Test", "license": "MIT"}
+
+    # Functional API
+    result_functional = convert(
+        sample_svg_file,
+        output_path=None,
+        relabel=relabel,
+        overlay_ids=overlay_ids,
+        metadata=metadata,
+    )
+
+    # OOP API
+    from shinymap.geometry import Geometry
+
+    geo = (
+        Geometry.from_svg(sample_svg_file, extract_viewbox=True)
+        .relabel(relabel)
+        .set_overlays(overlay_ids)
+        .update_metadata(metadata)
+    )
+    result_oop = geo.to_dict()
+
+    # Should be identical
+    assert result_functional == result_oop

@@ -1,22 +1,45 @@
+from textwrap import dedent
+
 from shiny import App, ui, render
 
 from shinymap import Map, input_map, output_map, render_map, scale_qualitative
 
-from shared import DEMO_GEOMETRY, TOOLTIPS, SHAPE_COLORS
+from shared import DEMO_GEOMETRY, TOOLTIPS, SHAPE_COLORS, code_sample
 
 
 # Single Select Example ---------
 _ui_single = ui.card(
     ui.card_header("Single Select"),
     ui.layout_columns(
-        input_map(
-            "region_single",
-            DEMO_GEOMETRY,
-            tooltips=TOOLTIPS,
-            mode="single",
-            hover_highlight={"stroke_width": 1},
+        ui.div(
+            ui.h4("Code"),
+            code_sample("""\
+                # UI
+                input_map(
+                    "region_single",
+                    DEMO_GEOMETRY,
+                    tooltips=TOOLTIPS,
+                    mode="single",
+                )
+
+                # SERVER
+                def server(input):
+                    ...
+                    # input.region_single() 
+                """
+            )
         ),
         ui.div(
+            ui.h4("Input Map"),
+            input_map(
+                "region_single",
+                DEMO_GEOMETRY,
+                tooltips=TOOLTIPS,
+                mode="single",
+            ),
+        ),
+        ui.div(
+            ui.h4("Output Example"),
             ui.help_text("Selected region: "),
             ui.output_text_verbatim("single_select", placeholder=True),
         ),
@@ -33,14 +56,34 @@ def _server_single(input, output, session):
 _ui_multiple = ui.card(
     ui.card_header("Multiple Select"),
     ui.layout_columns(
-        input_map(
-            "region_multi",
-            DEMO_GEOMETRY,
-            tooltips=TOOLTIPS,
-            mode="multiple",
-            hover_highlight={"stroke_width": 1},
+        ui.div(
+            ui.h4("Code"),code_sample("""\
+                # UI
+                input_map(
+                    "region_multi",
+                    DEMO_GEOMETRY,
+                    tooltips=TOOLTIPS,
+                    mode="multiple",
+                ),
+
+                # SERVER
+                def server(input):
+                    ...
+                    # input.region_multi() 
+                """
+            )
         ),
         ui.div(
+            ui.h4("Input Map"), 
+            input_map(
+                "region_multi",
+                DEMO_GEOMETRY,
+                tooltips=TOOLTIPS,
+                mode="multiple",
+            ),
+        ),
+        ui.div(
+            ui.h4("Output Example"),
             ui.help_text("Selected regions:"),
             ui.output_text_verbatim("multi_select", placeholder=True),
         )

@@ -6,7 +6,7 @@ from pathlib import Path
 
 from shiny import reactive, render, ui, App
 
-from .._core import Geometry, from_json, convert, infer_relabel
+from .._core import Geometry, convert, infer_relabel
 from ..._ui import render_map, input_map, output_map, update_map, Map
 from ._tool import generate_code, load_file
 
@@ -35,7 +35,7 @@ panel_upload = ui.nav_panel(
     )
 )
 
-def server_file_upload(input, file_name, intermediate_json):
+def server_file_upload(input, file_name, extracted_data):
 
     @render_map
     def output_path_file():
@@ -52,10 +52,10 @@ def server_file_upload(input, file_name, intermediate_json):
     def upload_file():
         if _initial_file is None:
             return ui.input_file(
-                        "path_file", 
-                        "Choose SVG or JSON file", 
-                        accept=[".svg", ".json"], 
-                        multiple=False, 
+                        "path_file",
+                        "Choose SVG or JSON file",
+                        accept=[".svg", ".json"],
+                        multiple=False,
                     )
 
     @reactive.effect
@@ -64,7 +64,7 @@ def server_file_upload(input, file_name, intermediate_json):
         """Parse uploaded SVG or JSON file."""
         file_info = input.path_file()
         if not file_info:
-            intermediate_json.set(None)
+            extracted_data.set(None)
             return
 
         # Read the uploaded file
@@ -72,9 +72,9 @@ def server_file_upload(input, file_name, intermediate_json):
         file_name.set(file_info[0]["name"])
 
         try:
-            intermediate_json.set(load_file(file_path, file_name()))
+            extracted_data.set(load_file(file_path, file_name()))
         except Exception as e:
-            intermediate_json.set({"error": str(e)})
+            extracted_data.set({"error": str(e)})
 
     @render.text
     def path_file_name():
@@ -115,19 +115,18 @@ panel_relabeling = ui.nav_panel(
     )
 )
 
-def server_relabeling(input, intermediate_json, relabel_rules, registered_ids, overlay_ids):
+def server_relabeling(input, extracted_data, relabel_rules, registered_ids, overlay_ids):
     @render.ui
     def map_relabeling():
-        """Preview the intermediate geometry with state-based styling."""
-        data = intermediate_json()
+        """Preview the extracted geometry with state-based styling."""
+        data = extracted_data()
         if not data or "error" in data:
             return ui.p("Invalid data")
 
-        # Get intermediate JSON (list-based path format)
-        intermediate = data.get("intermediate", {})
-
-        # Create Geometry object from intermediate JSON
-        geo = Geometry.from_dict(intermediate)
+        # Get Geometry object from loaded data
+        geo = data.get("geometry")
+        if not geo:
+            return ui.p("Invalid data")
 
         if not geo.regions:
             return ui.p("Invalid data")
@@ -333,24 +332,24 @@ app_ui = ui.page_fillable(
 
 def server(input, output, session):
 
-    intermediate_json = reactive.value()
+    extracted_data = reactive.value()
     file_name = reactive.value()
     relabel_rules = reactive.value({})  # Format: {"new_id": ["old_id1", "old_id2"]}
     registered_ids = reactive.value(set())  # R flag: objects marked for relabeling
     overlay_ids = reactive.value(set())
-    
+
     if _initial_file is not None:
-        cli_json = load_file(str(_initial_file), _initial_file.name)
-        intermediate_json.set(cli_json)
+        cli_data = load_file(str(_initial_file), _initial_file.name)
+        extracted_data.set(cli_data)
         file_name.set(_initial_file.name)
-    
-    server_file_upload(input, file_name, intermediate_json)
-    server_relabeling(input, intermediate_json, relabel_rules, registered_ids, overlay_ids)
+
+    server_file_upload(input, file_name, extracted_data)
+    server_relabeling(input, extracted_data, relabel_rules, registered_ids, overlay_ids)
 
     @render.text
     def path_list():
-        """Display list of path IDs found/generated in intermediate JSON."""
-        data = intermediate_json()
+        """Display list of path IDs found/generated in extracted JSON."""
+        data = extracted_data()
         if not data:
             return "No SVG file uploaded yet."
 
@@ -381,7 +380,7 @@ def server(input, output, session):
     @reactive.calc
     def get_conversion_params():
         """Get all conversion parameters."""
-        data = intermediate_json()
+        data = extracted_data()
         if not data or "error" in data:
             return None
 
@@ -398,7 +397,7 @@ def server(input, output, session):
             _overlay_ids = None
 
         out = {
-            "intermediate": data["intermediate"],
+            "geometry": data["geometry"],
             "input_filename": data["filename"],
             "output_filename": input.output_filename(),
             "metadata": metadata,
@@ -408,12 +407,12 @@ def server(input, output, session):
         return out
 
     @reactive.calc
-    def get_intermediate_json():
-        """Get intermediate JSON for preview."""
-        data = intermediate_json()
+    def get_extracted_geo():
+        """Get extracted Geometry object."""
+        data = extracted_data()
         if not data or "error" in data:
             return None
-        return data.get("intermediate")
+        return data.get("geometry")
 
     @reactive.calc
     def get_final_json():
@@ -423,15 +422,22 @@ def server(input, output, session):
             return None
 
         try:
-            # Apply transformations to intermediate JSON
-            result = from_json(
-                params["intermediate"],
-                output_path=None,  # Don't write to file
-                relabel=params["relabel"],
-                overlay_ids=params["overlay_ids"],
-                metadata=params["metadata"],
-            )
-            return result
+            # Apply transformations using Geometry methods
+            geo = params["geometry"]
+
+            # Apply relabeling if specified
+            if params["relabel"]:
+                geo = geo.relabel(params["relabel"])
+
+            # Set overlays if specified
+            if params["overlay_ids"]:
+                geo = geo.set_overlays(params["overlay_ids"])
+
+            # Update metadata if specified
+            if params["metadata"]:
+                geo = geo.update_metadata(params["metadata"])
+
+            return geo.to_dict()
         except Exception as e:
             return {"error": str(e)}
 
@@ -516,7 +522,7 @@ def server(input, output, session):
             original_filename = original_file_info[0]["name"]
         else:
             # Use currently loaded file as original
-            data = intermediate_json()
+            data = extracted_data()
             if not data or "error" in data:
                 return "No file loaded."
             original_path = data["file_path"]

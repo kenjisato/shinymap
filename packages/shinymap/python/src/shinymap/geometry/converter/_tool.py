@@ -1,7 +1,6 @@
-import json
 from pathlib import Path
 
-from .._core import from_svg
+from .._core import Geometry
 
 def generate_code(
     input_filename: str,
@@ -42,32 +41,30 @@ def generate_code(
 
 
 def load_file(file_path: str, filename: str):
-    """Load SVG or JSON file and generate/load intermediate JSON."""
+    """Load SVG or JSON file and return Geometry object with metadata."""
 
     # Determine file type by extension
     path = Path(file_path)
     is_json = path.suffix.lower() == ".json"
 
+    # Load geometry based on file type
     if is_json:
-        # Load existing intermediate JSON
-        with open(file_path) as f:
-            intermediate = json.load(f)
+        geo = Geometry.from_json(file_path)
         # Try to get original source from metadata
-        original_source = intermediate.get("_metadata", {}).get("original_source", filename)
+        original_source = geo.metadata.get("original_source", filename)
     else:
-        # Assume SVG and generate intermediate JSON
-        intermediate = from_svg(file_path, output_path=None, extract_viewbox=True)
+        # SVG file
+        geo = Geometry.from_svg(file_path, extract_viewbox=True)
         original_source = filename
 
-    # Extract path IDs for display (list format)
-    path_ids = [key for key, value in intermediate.items() if isinstance(value, list)]
+    # Extract path IDs for display
+    path_ids = list(geo.regions.keys())
 
-    json_data = {
-            "filename": filename,
-            "original_source": original_source,
-            "file_path": file_path,
-            "intermediate": intermediate,
-            "path_ids": path_ids,
-        }
-    
-    return json_data
+    # Return data bundle with geometry and metadata for the app
+    return {
+        "filename": filename,
+        "original_source": original_source,
+        "file_path": file_path,
+        "geometry": geo,
+        "path_ids": path_ids,
+    }
