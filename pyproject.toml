@@ -15,3 +15,8 @@ members = [
   "packages/shinymap/python",
   "packages/shinymapjp/python",
 ]
+
+[dependency-groups]
+dev = [
+    "svgpathtools>=1.7.2",
+]
