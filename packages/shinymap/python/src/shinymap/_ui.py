@@ -4,13 +4,16 @@ import json
 from collections.abc import Mapping, MutableMapping
 from dataclasses import asdict, dataclass
 from functools import wraps
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from htmltools import HTMLDependency, Tag, TagList, css
 from shiny import render, ui
 from shiny.session import Session, require_active_session
 
 from . import __version__
+
+if TYPE_CHECKING:
+    from .geometry import Geometry
 
 GeometryMap = Mapping[str, str | list[str]]
 TooltipMap = Mapping[str, str] | None
@@ -600,7 +603,7 @@ class MapSelectionBuilder(MapBuilder):
         selected: Selection = None,
         *,
         tooltips: TooltipMap = None,
-        view_box: str | None = None,
+        view_box: tuple[float, float, float, float] | None = None,
         overlay_regions: GeometryMap | None = None,
         overlay_aesthetic: Mapping[str, Any] | None = None,
     ):
@@ -768,7 +771,7 @@ class MapCountBuilder(MapBuilder):
         counts: CountMap = None,
         *,
         tooltips: TooltipMap = None,
-        view_box: str | None = None,
+        view_box: tuple[float, float, float, float] | None = None,
         overlay_regions: GeometryMap | None = None,
         overlay_aesthetic: Mapping[str, Any] | None = None,
     ):
