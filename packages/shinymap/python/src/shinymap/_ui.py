@@ -53,6 +53,15 @@ def _drop_nones(data: MutableMapping[str, Any]) -> MutableMapping[str, Any]:
     return {k: v for k, v in data.items() if v is not None}
 
 
+def _viewbox_to_str(view_box: tuple[float, float, float, float] | str | None) -> str | None:
+    """Convert viewBox tuple to string format, or pass through string."""
+    if view_box is None:
+        return None
+    if isinstance(view_box, str):
+        return view_box
+    return f"{view_box[0]} {view_box[1]} {view_box[2]} {view_box[3]}"
+
+
 def _normalize_geometry(geometry: GeometryMap) -> Mapping[str, str]:
     """Normalize geometry to flat string format for JavaScript.
 
@@ -481,11 +490,6 @@ class MapBuilder:
 
     def build(self) -> MapPayload:
         """Build and return the MapPayload."""
-        # Convert tuple viewBox to string for serialization (temporary until React updated)
-        view_box_str = None
-        if self._view_box:
-            view_box_str = f"{self._view_box[0]} {self._view_box[1]} {self._view_box[2]} {self._view_box[3]}"
-
         return MapPayload(
             geometry=self._regions,
             tooltips=self._tooltips,
@@ -495,7 +499,7 @@ class MapBuilder:
             stroke_width=self._stroke_width,
             counts=self._counts,
             active_ids=self._active_ids,
-            view_box=view_box_str,
+            view_box=_viewbox_to_str(self._view_box),
             default_aesthetic=self._default_aesthetic,
             overlay_geometry=self._overlay_regions,
             overlay_aesthetic=self._overlay_aesthetic,
@@ -672,7 +676,7 @@ class MapSelectionBuilder(MapBuilder):
             stroke_width=self._stroke_width,
             counts=self._counts,
             active_ids=self._selected,  # Mark selected regions as active
-            view_box=self._view_box,
+            view_box=_viewbox_to_str(self._view_box),
             default_aesthetic=self._default_aesthetic,
             fill_color_selected=self._fill_color_selected,
             fill_color_not_selected=self._fill_color_not_selected,
@@ -867,7 +871,7 @@ class MapCountBuilder(MapBuilder):
             stroke_width=self._stroke_width,
             counts=self._counts,
             active_ids=self._active_ids,
-            view_box=self._view_box,
+            view_box=_viewbox_to_str(self._view_box),
             default_aesthetic=self._default_aesthetic,
             count_palette=self._count_palette,
             overlay_geometry=self._overlay_regions,
