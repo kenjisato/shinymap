@@ -201,6 +201,8 @@ def input_map(
         default_aesthetic = theme_config["default_aesthetic"]
     if fill_color is None and "fill_color" in theme_config:
         fill_color = theme_config["fill_color"]
+    if overlay_aesthetic is None and "overlay_aesthetic" in theme_config:
+        overlay_aesthetic = theme_config["overlay_aesthetic"]
 
     if mode not in {None, "single", "multiple", "count"}:
         raise ValueError('mode must be one of "single", "multiple", "count", or None')

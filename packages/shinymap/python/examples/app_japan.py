@@ -4,16 +4,21 @@ Demonstrates shinymap with Japanese prefecture boundaries.
 Shows various interaction modes and data visualization patterns.
 """
 
+import random
 from pathlib import Path
+from pprint import pformat
+
 from shiny import App, render, ui, reactive
 
 from shinymap import (
     Map,
     MapSelection,
     MapCount,
+    configure_theme,
     input_map,
     output_map,
     render_map,
+    update_map,
     scale_sequential,
     scale_qualitative,
     SEQUENTIAL_BLUE,
@@ -22,6 +27,7 @@ from shinymap import (
 from shinymap.geometry import Geometry
 
 from japan_prefectures import PREF_NAMES_JA, PREF_NAMES_ROMAJI
+from shared import code_sample
 
 # Load geometry using the Geometry class
 GEOMETRY_PATH = Path(__file__).parent / "data" / "japan_prefectures.json"
@@ -29,33 +35,85 @@ GEOMETRY = Geometry.from_json(GEOMETRY_PATH)
 
 TOOLTIPS = {code: f"{name} ({PREF_NAMES_ROMAJI[code]})" for code, name in PREF_NAMES_JA.items()}
 
-# Divider styling (no fill, gray stroke)
-DIVIDER_STYLE = {"fillColor": "none", "strokeColor": "#999999", "strokeWidth": 2.0}
+# Styles
 
+## Base style
+configure_theme(
+    default_aesthetic={
+        "fill_color": "#ddd", 
+        "stroke_color": "#fff", 
+        "stroke_width": 3
+    },
+    hover_highlight={
+        "fill_color": "#ffff66", 
+        "stroke_color": "#d1d5db", 
+        "stroke_width": 1
+    },
+    selected_aesthetic={
+        "fill_color": "darkseagreen"
+    },
+    overlay_aesthetic={
+        "fill_color": "none", 
+        "stroke_color": "#999999", 
+        "stroke_width": 2.0
+    },
+)
 
 # Example 1: Simple selection (single mode)
 _ui_single = ui.card(
     ui.card_header("Single Prefecture Selection"),
     ui.p("Click a prefecture to select it. Useful for drilling down into regional data."),
     ui.layout_columns(
-        input_map(
-            "selected_pref",
-            GEOMETRY,
-            tooltips=TOOLTIPS,
-            mode="single",
-            default_aesthetic={"fillColor": "#e5e7eb", "strokeColor": "#d1d5db", "strokeWidth": 1},
-            hover_highlight={"stroke_color": "#374151", "stroke_width": 2},
-            overlay_aesthetic=DIVIDER_STYLE,
+        ui.TagList(
+            ui.h4("Code"),
+            code_sample(
+                """\
+                # UI
+                input_map(
+                    "selected_pref",
+                    GEOMETRY,
+                    tooltips=TOOLTIPS,
+                    mode="single",
+                )
+
+                # SERVER
+                def server(input):
+                    ...
+                    # input.selected_pref()
+                    # => Returns GEOMETRY's key: 01, 02, ...
+                """
+            )
         ),
-        ui.div(
-            ui.help_text("Selected prefecture:"),
-            ui.output_text_verbatim("selected_pref_display", placeholder=True),
+        ui.TagList(
+            ui.h4("Input Map"),
+            input_map(
+                "selected_pref",
+                GEOMETRY,
+                tooltips=TOOLTIPS,
+                mode="single",
+            ),
+        ),
+        ui.TagList(
+            ui.h4("Output Example"),
+            ui.div(
+                ui.help_text("Selected ID"),
+                ui.output_text_verbatim("selected_pref_raw", placeholder=True),
+            ),
+            ui.div(
+                ui.help_text("Selected prefecture:"),
+                ui.output_text_verbatim("selected_pref_display", placeholder=True),
+            )
         ),
     ),
 )
 
 
 def _server_single(input, output, session):
+    @render.text
+    def selected_pref_raw():
+        value = input.selected_pref()
+        return  value if value is not None else "None"
+    
     @render.text
     def selected_pref_display():
         code = input.selected_pref()
@@ -69,45 +127,63 @@ _ui_multi = ui.card(
     ui.card_header("Multiple Prefecture Selection"),
     ui.p("Select multiple prefectures to compare. Click again to deselect."),
     ui.layout_columns(
-        input_map(
-            "multi_pref",
-            GEOMETRY,
-            tooltips=TOOLTIPS,
-            mode="multiple",
-            default_aesthetic={"fillColor": "#e5e7eb", "strokeColor": "#d1d5db", "strokeWidth": 1},
-            hover_highlight={"stroke_color": "#374151", "stroke_width": 2},
-            overlay_aesthetic=DIVIDER_STYLE,
+        ui.TagList(
+            ui.h4("Code"),
+            code_sample(
+                """\
+                # UI
+                input_map(
+                    "multi_pref",
+                    GEOMETRY,
+                    tooltips=TOOLTIPS,
+                    mode="multiple",
+                ),
+
+                # SERVER
+                def server(input):
+                    ...
+                    # input.multi_pref()
+                    # => Returns a tuple of GEOMETRY's keys
+                """
+            )
         ),
-        output_map(
-            "multi_visual",
-            GEOMETRY,
-            tooltips=TOOLTIPS,
-            overlay_aesthetic=DIVIDER_STYLE,
+        ui.TagList(
+            ui.h4("Input Map"),
+            input_map(
+                "multi_pref",
+                GEOMETRY,
+                tooltips=TOOLTIPS,
+                mode="multiple"
+            ),
         ),
+        ui.TagList(
+            ui.h4("Output Example"),
+            ui.layout_columns(
+                ui.div(
+                    ui.help_text("Selected IDs:"),
+                    ui.output_text_verbatim("multi_pref_raw", placeholder=True),
+                ),
+                ui.div(
+                    ui.help_text("Selected Prefectures:"),
+                    ui.output_text_verbatim("multi_pref_display", placeholder=True),
+                )
+            )
+            
+        )
     ),
-    ui.output_text_verbatim("multi_pref_display"),
 )
 
 
 def _server_multi(input, output, session):
-    @render_map
-    def multi_visual():
-        selected = input.multi_pref()
-        # Static params (geometry, tooltips, etc.) defined in output_map() above
-        return (
-            MapSelection(selected=selected)
-            .with_fill_color("#e5e7eb")
-            .with_fill_color_selected({"fillColor": "#3b82f6", "strokeColor": "#1e40af", "strokeWidth": 2})
-            .with_stroke_color("transparent")
-        )
 
     @render.text
+    def multi_pref_raw():
+        return pformat(input.multi_pref(), width=15)
+    
+    @render.text
     def multi_pref_display():
-        selected = input.multi_pref()
-        if selected:
-            names = [f"{PREF_NAMES_JA[code]} ({PREF_NAMES_ROMAJI[code]})" for code in selected]
-            return f"Selected {len(selected)} prefectures:\n" + "\n".join(f"  • {name}" for name in names)
-        return "No prefectures selected"
+        pref_names = [PREF_NAMES_JA[p] for p in input.multi_pref()]
+        return "\n".join(pref_names)
 
 
 # Example 3: Count mode with population simulation
@@ -115,144 +191,145 @@ _ui_count = ui.card(
     ui.card_header("Visit Counter (Count Mode)"),
     ui.p("Click prefectures to count visits. Color intensity increases with count."),
     ui.layout_columns(
-        input_map(
-            "visit_counts",
-            GEOMETRY,
-            tooltips=TOOLTIPS,
-            mode="count",
-            value={},
-            default_aesthetic={"fillColor": "#e5e7eb", "strokeColor": "#d1d5db", "strokeWidth": 1},
-            hover_highlight={"stroke_color": "#374151", "stroke_width": 2},
-            overlay_aesthetic=DIVIDER_STYLE,
+        ui.TagList(
+            ui.h4("Code"),
+            code_sample("""\
+                # UI
+                input_map(
+                    "visit_counts",
+                    GEOMETRY,
+                    tooltips=TOOLTIPS,
+                    mode="count",
+                ),
+
+                # SERVER
+                def server(input):
+                    ...
+                    # input.visit_counts()
+                    # => Returns dict { id: count } 
+            """)
         ),
-        output_map(
-            "visit_visual",
-            GEOMETRY,
-            tooltips=TOOLTIPS,
-            overlay_aesthetic=DIVIDER_STYLE,
+        ui.TagList(
+            ui.h4("Input Map"),
+            input_map(
+                "visit_counts",
+                GEOMETRY,
+                tooltips=TOOLTIPS,
+                mode="count",
+            ),
         ),
-    ),
-    ui.div(
-        ui.input_action_button("reset_counts", "Reset Counts"),
-        ui.output_text_verbatim("visit_summary"),
+        ui.TagList(
+            ui.h4("Output Example"),
+            ui.input_action_button("reset_counts", "Reset Counts"),
+            ui.layout_columns(
+                ui.output_text_verbatim("count_raw"),
+                ui.output_text_verbatim("count_by_name", placeholder=True)
+            )
+        ),
     ),
 )
 
 
 def _server_count(input, output, session):
-    @render_map
-    def visit_visual():
-        counts = input.visit_counts() or {}
-
-        # Use sequential color scale for prefectures (or default gray if no counts)
-        if counts:
-            fills = scale_sequential(counts, list(GEOMETRY.regions.keys()), palette=SEQUENTIAL_BLUE, max_count=10)
-        else:
-            fills = "#e5e7eb"
-
-        # Static params (geometry, tooltips, etc.) defined in output_map() above
-        return (
-            Map()
-            .with_fill_color(fills)
-            .with_counts(counts)
-            .with_stroke_color("transparent")
-        )
-
+    
     @render.text
-    def visit_summary():
-        counts = input.visit_counts() or {}
-        if not counts:
-            return "No visits yet. Click prefectures to start counting!"
-
-        total = sum(counts.values())
-        visited = len(counts)
-        top_3 = sorted(counts.items(), key=lambda x: x[1], reverse=True)[:3]
-
-        summary = f"Total visits: {total}\n"
-        summary += f"Prefectures visited: {visited}/47\n\n"
-        summary += "Top 3 most visited:\n"
-        for code, count in top_3:
-            summary += f"  {count}× {PREF_NAMES_JA[code]}\n"
-
-        return summary
+    def count_raw():
+        return pformat(input.visit_counts(), width=15)
+    
+    @render.text
+    def count_by_name():
+        _counts = input.visit_counts()
+        _count_table = [f"{PREF_NAMES_JA[k]}: {v}" for k, v in _counts.items()]
+        return "\n".join(_count_table)
 
     @reactive.effect
     @reactive.event(input.reset_counts)
     def _():
-        # Reset by sending empty dict - this updates the input value
-        pass  # In real app, would use update function
+        update_map("visit_counts", value={})
 
 
-# Example 4: Regional grouping
-REGIONS = {
-    "Hokkaido": ["01"],
-    "Tohoku": ["02", "03", "04", "05", "06", "07"],
-    "Kanto": ["08", "09", "10", "11", "12", "13", "14"],
-    "Chubu": ["15", "16", "17", "18", "19", "20", "21", "22", "23"],
-    "Kansai": ["24", "25", "26", "27", "28", "29", "30"],
-    "Chugoku": ["31", "32", "33", "34", "35"],
-    "Shikoku": ["36", "37", "38", "39"],
-    "Kyushu": ["40", "41", "42", "43", "44", "45", "46", "47"],
-}
-
-REGION_COLORS = {
-    "Hokkaido": "#ef4444",
-    "Tohoku": "#f97316",
-    "Kanto": "#f59e0b",
-    "Chubu": "#84cc16",
-    "Kansai": "#06b6d4",
-    "Chugoku": "#3b82f6",
-    "Shikoku": "#8b5cf6",
-    "Kyushu": "#ec4899",
-}
+# Example 4: Categorical Mapping
 
 _ui_regions = ui.card(
-    ui.card_header("Regional Grouping"),
-    ui.p("Prefectures colored by traditional geographic regions of Japan."),
-    output_map(
-        "regions_map",
-        GEOMETRY,
-        tooltips=TOOLTIPS,
-        overlay_aesthetic=DIVIDER_STYLE,
-    ),
-    ui.div(
-        ui.help_text("Regions:"),
-        ui.HTML(
-            "<div style='display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-top: 0.5rem;'>"
-            + "".join(
-                f"<div style='display: flex; align-items: center; gap: 0.5rem;'>"
-                f"<div style='width: 1rem; height: 1rem; background-color: {color}; border-radius: 0.125rem;'></div>"
-                f"<span style='font-size: 0.875rem;'>{region}</span>"
-                f"</div>"
-                for region, color in REGION_COLORS.items()
-            )
-            + "</div>"
+    ui.card_header("Categorical Mapping"),
+    ui.p("Prefectures colored by cateogory."),
+    ui.layout_columns(
+        ui.TagList(
+            ui.h4("Code"),
+            code_sample("""\
+                # UI
+                output_map(
+                    "categorical_map",
+                    GEOMETRY,
+                    tooltips=TOOLTIPS,
+                ),
+
+                # SERVER
+                @render_map
+                def categorical_map():
+                    fills = {}
+                    # pref_categories() => { '01': 'green', '02': 'red', ... }
+                    # COLORS => { 'green': "#84cc16", 'red': "#ef4444", ... }
+                    for region, group in pref_categories().items():
+                        fills[region] = COLORS[group]
+
+                    return Map().with_fill_color(fills)
+                """)
         ),
+        ui.TagList(
+            ui.h4("Input Example"),
+            ui.input_action_button("shuffle_value", "Shuffle Values"),
+            ui.output_text_verbatim("pref_to_category", placeholder=True)
+        ),
+        ui.TagList(
+            ui.h4("Output Map"),
+            output_map(
+                "categorical_map",
+                GEOMETRY,
+                tooltips=TOOLTIPS,
+            ),
+        ),
+    ),    
+    ui.div(
+        
     ),
 )
 
 
 def _server_regions(input, output, session):
+
+    COLORS = {
+        "red": "#ef4444",
+        "orange": "#f59e0b",
+        "green": "#84cc16",
+        "blue": "#3b82f6",
+        "purple": "#8b5cf6",
+    }
+
+    pref_categories = reactive.value()
+
+    @reactive.effect
+    @reactive.event(input.shuffle_value)
+    def _reset_values():
+        _colors = list(COLORS.keys())
+        pref_categories.set(
+            {k: v for k, v in zip(GEOMETRY.regions.keys(), random.choices(_colors, k=47))}
+        )
+
+    @render.text
+    def pref_to_category():
+        return pformat(pref_categories(), width=30)
+
     @render_map
-    def regions_map():
+    def categorical_map():
         # Create color mapping for all prefectures
         fills = {}
-        fill_opacities = {}
 
-        for region, prefs in REGIONS.items():
-            color = REGION_COLORS[region]
-            for pref in prefs:
-                fills[pref] = color
-                fill_opacities[pref] = 0.8
+        for region, group in pref_categories().items():
+            fills[region] = COLORS[group]
 
         # Static params (geometry, tooltips, etc.) defined in output_map() above
-        return (
-            Map()
-            .with_fill_color(fills)
-            .with_stroke_color("#ffffff")
-            .with_stroke_width(1.0)
-            .with_fill_opacity(fill_opacities)
-        )
+        return Map().with_fill_color(fills)
 
 
 # Combine all examples
