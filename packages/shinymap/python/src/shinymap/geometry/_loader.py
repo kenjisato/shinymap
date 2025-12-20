@@ -5,6 +5,11 @@ files at runtime in Shiny applications. It handles:
 - Loading and parsing JSON files
 - Separating main geometry from overlays
 - Computing or extracting viewBox
+
+TEMPORARY: This module uses v0.x string-based format for backward compatibility
+with the existing frontend. Phase 3 will update the frontend to accept polymorphic
+elements, at which point this module will be refactored to return Element objects
+instead of strings.
 """
 
 from __future__ import annotations
@@ -27,12 +32,11 @@ def load_geometry(
 ) -> tuple[dict[str, str], dict[str, str], str]:
     """Load SVG geometry from shinymap JSON format.
 
-    Expects JSON files with list-based path format:
-    {
-      "_metadata": {"viewBox": "0 0 100 100"},
-      "region_01": ["M 10 10 L 40 10 L 40 40 L 10 40 Z"],
-      "hokkaido": ["M 0 0 L 100 0 Z", "M 200 0 L 300 0 Z"]
-    }
+    TEMPORARY: Returns string-based paths for v0.x frontend compatibility.
+    Phase 3 will update this to return polymorphic Element objects.
+
+    Currently supports both v0.x (strings) and v1.x (element dicts) input formats,
+    but always returns v0.x string format for backward compatibility.
 
     Path lists are joined with spaces for rendering: " ".join(path_list)
 

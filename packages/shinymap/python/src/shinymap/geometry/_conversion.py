@@ -277,15 +277,28 @@ def infer_relabel(
     intermediate_paths = {k: v for k, v in intermediate_data.items() if isinstance(v, list)}
     final_paths = {k: v for k, v in final_data.items() if isinstance(v, list)}
 
+    # Helper to convert element to hashable representation
+    def to_hashable(elem):
+        """Convert element (string or dict) to hashable form."""
+        if isinstance(elem, str):
+            return elem
+        elif isinstance(elem, dict):
+            # Convert dict to sorted tuple of items for hashing
+            return tuple(sorted(elem.items()))
+        else:
+            return str(elem)
+
     # Build reverse mapping: tuple(path_list) -> intermediate_id
-    intermediate_data_to_id: dict[tuple[str, ...], str] = {
-        tuple(path_list): iid for iid, path_list in intermediate_paths.items()
+    # Use hashable representation for v1.x element dicts
+    intermediate_data_to_id: dict[tuple, str] = {
+        tuple(to_hashable(elem) for elem in path_list): iid
+        for iid, path_list in intermediate_paths.items()
     }
 
     relabel: dict[str, str | list[str]] = {}
 
     for final_id, final_path_list in final_paths.items():
-        final_tuple = tuple(final_path_list)
+        final_tuple = tuple(to_hashable(elem) for elem in final_path_list)
 
         # Check if this exact list matches an intermediate path
         if final_tuple in intermediate_data_to_id:
@@ -301,16 +314,17 @@ def infer_relabel(
 
             # Strategy: find intermediate IDs whose paths match elements in final_path_list
             matched_ids = []
-            for path_str in final_path_list:
-                # Find intermediate ID with this exact path as single element
+            for elem in final_path_list:
+                # Find intermediate ID with this exact element as single-element list
+                elem_hashable = to_hashable(elem)
                 found = False
                 for iid, ipath_list in intermediate_paths.items():
-                    if len(ipath_list) == 1 and ipath_list[0] == path_str:
+                    if len(ipath_list) == 1 and to_hashable(ipath_list[0]) == elem_hashable:
                         matched_ids.append(iid)
                         found = True
                         break
                 if not found:
-                    # Path doesn't match any intermediate - might be manually edited
+                    # Element doesn't match any intermediate - might be manually edited
                     matched_ids = []
                     break
 
