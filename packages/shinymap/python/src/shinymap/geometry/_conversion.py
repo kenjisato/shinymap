@@ -204,7 +204,7 @@ def convert(
         >>> final = from_json(intermediate, relabel={...})
     """
     # Determine file type by extension
-    file_path = Path(input_path)
+    file_path = Path(input_path).expanduser()
 
     intermediate: dict[str, Any] | Path
     if file_path.suffix.lower() == ".json":
@@ -252,7 +252,7 @@ def infer_relabel(
         {"region_a": "path_1", "hokkaido": ["path_2", "path_3"]}
     """
     # Load initial file
-    initial_path = Path(initial_file)
+    initial_path = Path(initial_file).expanduser()
     if not initial_path.exists():
         msg = f"Initial file not found: {initial_path}"
         raise FileNotFoundError(msg)

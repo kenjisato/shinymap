@@ -116,7 +116,7 @@ class Geometry:
             >>> geo.regions.keys()
             dict_keys(['01', '02', ...])
         """
-        path = PathType(json_path)
+        path = PathType(json_path).expanduser()
         if not path.exists():
             raise FileNotFoundError(f"JSON file not found: {path}")
 
@@ -169,7 +169,7 @@ class Geometry:
         """
         from ._elements import Circle, Ellipse, Line, Path, Polygon, Rect, Text
 
-        svg_path = PathType(svg_path)
+        svg_path = PathType(svg_path).expanduser()
         if not svg_path.exists():
             raise FileNotFoundError(f"SVG file not found: {svg_path}")
 
@@ -584,7 +584,7 @@ class Geometry:
             >>> geo = Geometry.from_svg("map.svg")
             >>> geo.to_json("output.json")
         """
-        output_path = PathType(output_path)
+        output_path = PathType(output_path).expanduser()
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with open(output_path, "w", encoding="utf-8") as f:
             json.dump(self.to_dict(), f, indent=2, ensure_ascii=False)

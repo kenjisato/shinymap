@@ -85,7 +85,7 @@ def load_geometry(
         ...     viewbox_covers_overlays=False
         ... )
     """
-    json_path = Path(json_path)
+    json_path = Path(json_path).expanduser()
     if not json_path.exists():
         msg = f"JSON file not found: {json_path}"
         raise FileNotFoundError(msg)
