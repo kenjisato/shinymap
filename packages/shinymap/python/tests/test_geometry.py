@@ -407,11 +407,16 @@ def test_convert_with_merge(sample_svg_file):
     assert "bottom" not in result
 
     # Should have merged all three paths (list format)
+    # v1.x format: Elements are dicts with type and attributes
     all_regions = result["all_regions"]
     assert len(all_regions) == 3
-    assert any("M 10 10" in path for path in all_regions)
-    assert any("M 60 10" in path for path in all_regions)
-    assert any("M 10 60" in path for path in all_regions)
+    # Check that all elements are path dicts
+    assert all(isinstance(elem, dict) and elem.get("type") == "path" for elem in all_regions)
+    # Check that the merged paths contain the expected path data
+    path_strings = [elem.get("d", "") for elem in all_regions]
+    assert any("M 10 10" in path for path in path_strings)
+    assert any("M 60 10" in path for path in path_strings)
+    assert any("M 10 60" in path for path in path_strings)
 
 
 @pytest.mark.unit
@@ -614,13 +619,14 @@ def test_convert_svg_vs_json_equivalence(sample_svg_file):
 def test_infer_relabel_from_svg(sample_svg_file):
     """Test inferring relabel from SVG to final JSON."""
     from shinymap.geometry import infer_relabel
-    
-    # Create final JSON with renames
+
+    # Create final JSON with renames (v1.x format with Element dicts)
+    # Must match what from_svg() produces, including fill attributes
     final = {
         "_metadata": {"viewBox": "0 0 100 100"},
-        "top_left": ["M 10 10 L 40 10 L 40 40 L 10 40 Z"],
-        "top_right": ["M 60 10 L 90 10 L 90 40 L 60 40 Z"],
-        "bottom": ["M 10 60 L 90 60 L 90 90 L 10 90 Z"],
+        "top_left": [{"type": "path", "d": "M 10 10 L 40 10 L 40 40 L 10 40 Z", "fill": "red"}],
+        "top_right": [{"type": "path", "d": "M 60 10 L 90 10 L 90 40 L 60 40 Z", "fill": "blue"}],
+        "bottom": [{"type": "path", "d": "M 10 60 L 90 60 L 90 90 L 10 90 Z", "fill": "green"}],
     }
 
     inferred = infer_relabel(sample_svg_file, final)
@@ -636,12 +642,16 @@ def test_infer_relabel_from_svg(sample_svg_file):
 def test_infer_relabel_merge(sample_svg_file):
     """Test inferring merge transformations."""
     from shinymap.geometry import infer_relabel
-    
-    # Create final JSON with merge
+
+    # Create final JSON with merge (v1.x format with Element dicts)
+    # Must match what from_svg() produces, including fill attributes
     final = {
         "_metadata": {"viewBox": "0 0 100 100"},
-        "all_top": ["M 10 10 L 40 10 L 40 40 L 10 40 Z", "M 60 10 L 90 10 L 90 40 L 60 40 Z"],
-        "bottom": ["M 10 60 L 90 60 L 90 90 L 10 90 Z"],
+        "all_top": [
+            {"type": "path", "d": "M 10 10 L 40 10 L 40 40 L 10 40 Z", "fill": "red"},
+            {"type": "path", "d": "M 60 10 L 90 10 L 90 40 L 60 40 Z", "fill": "blue"},
+        ],
+        "bottom": [{"type": "path", "d": "M 10 60 L 90 60 L 90 90 L 10 90 Z", "fill": "green"}],
     }
 
     inferred = infer_relabel(sample_svg_file, final)
@@ -655,17 +665,18 @@ def test_infer_relabel_merge(sample_svg_file):
 def test_infer_relabel_from_intermediate_json(sample_svg_file):
     """Test inferring relabel from intermediate JSON."""
     from shinymap.geometry import infer_relabel
-    
+
     with tempfile.TemporaryDirectory() as tmpdir:
         intermediate_path = Path(tmpdir) / "intermediate.json"
         from_svg(sample_svg_file, output_path=intermediate_path)
 
-        # Create final JSON
+        # Create final JSON (v1.x format with Element dicts)
+        # Must match what from_svg() produces, including fill attributes
         final = {
             "_metadata": {"viewBox": "0 0 100 100"},
-            "region_a": ["M 10 10 L 40 10 L 40 40 L 10 40 Z"],
-            "region_b": ["M 60 10 L 90 10 L 90 40 L 60 40 Z"],
-            "bottom": ["M 10 60 L 90 60 L 90 90 L 10 90 Z"],
+            "region_a": [{"type": "path", "d": "M 10 10 L 40 10 L 40 40 L 10 40 Z", "fill": "red"}],
+            "region_b": [{"type": "path", "d": "M 60 10 L 90 10 L 90 40 L 60 40 Z", "fill": "blue"}],
+            "bottom": [{"type": "path", "d": "M 10 60 L 90 60 L 90 90 L 10 90 Z", "fill": "green"}],
         }
 
         inferred = infer_relabel(intermediate_path, final)
