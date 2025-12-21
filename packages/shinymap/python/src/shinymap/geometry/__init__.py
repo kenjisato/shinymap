@@ -113,9 +113,11 @@ from ._core import (
     load_geometry,
 )
 from ._elements import Circle, Ellipse, Line, Path, Polygon, Rect, Text
+from ._regions import Regions
 
 __all__ = [
     "Geometry",
+    "Regions",
     "compute_viewbox_from_dict",
     "convert",
     "from_svg",

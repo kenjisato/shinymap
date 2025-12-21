@@ -9,6 +9,7 @@ from pathlib import Path as PathType
 from typing import TYPE_CHECKING, Any
 
 from ._bounds import _normalize_geometry_dict, calculate_viewbox
+from ._regions import Regions
 
 if TYPE_CHECKING:
     from ._elements import Element
@@ -25,7 +26,7 @@ class Geometry:
     The class automatically converts between formats for seamless migration.
 
     Attributes:
-        regions: Dictionary mapping region IDs to lists of elements
+        regions: Regions object (dict subclass) mapping region IDs to lists of elements
                  (str for v0.x compatibility, Element objects for v1.x)
         metadata: Optional metadata dict (viewBox, overlays, source, license, etc.)
 
@@ -43,8 +44,13 @@ class Geometry:
         >>> from shinymap.geometry import Circle
         >>> geo = Geometry(regions={"r1": [Circle(cx=100, cy=100, r=50)]}, metadata={})
     """
-    regions: dict[str, list[str | Element]]
+    regions: Regions
     metadata: dict[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self):
+        """Convert regions to Regions object if needed."""
+        if not isinstance(self.regions, Regions):
+            self.regions = Regions(self.regions)
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Geometry:
@@ -78,7 +84,7 @@ class Geometry:
         """
         from ._element_mixins import JSONSerializableMixin
 
-        regions: dict[str, list[str | Element]] = {}
+        regions_dict: dict[str, list[str | Element]] = {}
         metadata = {}
 
         for key, value in data.items():
@@ -91,15 +97,15 @@ class Geometry:
                 if value and isinstance(value[0], dict):
                     # v1.x format: list of element dicts - use generic from_dict
                     elements = [JSONSerializableMixin.from_dict(elem_dict) for elem_dict in value]
-                    regions[key] = elements
+                    regions_dict[key] = elements
                 else:
                     # v0.x format: list of strings
-                    regions[key] = value
+                    regions_dict[key] = value
             elif isinstance(value, str):
                 # v0.x format: single string path
-                regions[key] = [value]
+                regions_dict[key] = [value]
 
-        return cls(regions=regions, metadata=metadata)
+        return cls(regions=Regions(regions_dict), metadata=metadata)
 
     @classmethod
     def from_json(cls, json_path: str | PathType) -> Geometry:
@@ -308,7 +314,7 @@ class Geometry:
         if viewbox:
             metadata["viewBox"] = viewbox
 
-        return cls(regions=regions, metadata=metadata)
+        return cls(regions=Regions(regions), metadata=metadata)
 
     def viewbox(self, padding: float = 0.02) -> tuple[float, float, float, float]:
         """Get viewBox from metadata, or compute from geometry coordinates.
@@ -392,11 +398,11 @@ class Geometry:
         overlays = self.metadata.get("overlays", [])
         return list(overlays) if isinstance(overlays, list) else []
 
-    def main_regions(self) -> dict[str, list[str | Element]]:
+    def main_regions(self) -> Regions:
         """Get main regions (excluding overlays).
 
         Returns:
-            Dict of main regions {regionId: [element1, ...]}
+            Regions object with main regions {regionId: [element1, ...]}
             (elements can be strings for v0.x or Element objects for v1.x)
 
         Example:
@@ -406,16 +412,16 @@ class Geometry:
             ...     "_metadata": {"overlays": ["_border"]}
             ... })
             >>> geo.main_regions()
-            {'region': ['M 0 0']}
+            Regions({'region': ['M 0 0']})
         """
         overlay_ids = set(self.overlays())
-        return {k: v for k, v in self.regions.items() if k not in overlay_ids}
+        return Regions({k: v for k, v in self.regions.items() if k not in overlay_ids})
 
-    def overlay_regions(self) -> dict[str, list[str | Element]]:
+    def overlay_regions(self) -> Regions:
         """Get overlay regions only.
 
         Returns:
-            Dict of overlay regions {regionId: [element1, ...]}
+            Regions object with overlay regions {regionId: [element1, ...]}
             (elements can be strings for v0.x or Element objects for v1.x)
 
         Example:
@@ -425,10 +431,10 @@ class Geometry:
             ...     "_metadata": {"overlays": ["_border"]}
             ... })
             >>> geo.overlay_regions()
-            {'_border': ['M 0 0 L 100 0']}
+            Regions({'_border': ['M 0 0 L 100 0']})
         """
         overlay_ids = set(self.overlays())
-        return {k: v for k, v in self.regions.items() if k in overlay_ids}
+        return Regions({k: v for k, v in self.regions.items() if k in overlay_ids})
 
     def relabel(self, mapping: dict[str, str | list[str]]) -> Geometry:
         """Rename or merge regions (returns new Geometry object).
@@ -486,7 +492,7 @@ class Geometry:
             if region_id not in relabeled_ids:
                 new_regions[region_id] = paths
 
-        return Geometry(regions=new_regions, metadata=dict(self.metadata))
+        return Geometry(regions=Regions(new_regions), metadata=dict(self.metadata))
 
     def set_overlays(self, overlay_ids: list[str]) -> Geometry:
         """Set overlay region IDs in metadata (returns new Geometry object).
@@ -508,7 +514,7 @@ class Geometry:
         """
         new_metadata = dict(self.metadata)
         new_metadata["overlays"] = overlay_ids
-        return Geometry(regions=dict(self.regions), metadata=new_metadata)
+        return Geometry(regions=Regions(dict(self.regions)), metadata=new_metadata)
 
     def update_metadata(self, metadata: dict[str, Any]) -> Geometry:
         """Update metadata (returns new Geometry object).
@@ -532,7 +538,7 @@ class Geometry:
             'Wikimedia Commons'
         """
         new_metadata = {**self.metadata, **metadata}
-        return Geometry(regions=dict(self.regions), metadata=new_metadata)
+        return Geometry(regions=Regions(dict(self.regions)), metadata=new_metadata)
 
     def to_dict(self) -> dict[str, Any]:
         """Export to dict in shinymap JSON format.
