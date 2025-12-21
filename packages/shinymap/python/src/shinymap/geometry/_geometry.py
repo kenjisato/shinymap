@@ -8,7 +8,6 @@ from dataclasses import dataclass, field
 from pathlib import Path as PathType
 from typing import TYPE_CHECKING, Any
 
-from ._bounds import _normalize_geometry_dict, calculate_viewbox
 from ._regions import Regions
 
 if TYPE_CHECKING:
@@ -44,6 +43,7 @@ class Geometry:
         >>> from shinymap.geometry import Circle
         >>> geo = Geometry(regions={"r1": [Circle(cx=100, cy=100, r=50)]}, metadata={})
     """
+
     regions: Regions
     metadata: dict[str, Any] = field(default_factory=dict)
 
@@ -212,28 +212,30 @@ class Geometry:
         for circle_elem in root.findall(".//svg:circle", ns):
             elem_id = get_element_id(circle_elem, "circle")
             circle = Circle(
-                cx=circle_elem.get("cx"),
-                cy=circle_elem.get("cy"),
-                r=circle_elem.get("r"),
+                cx=circle_elem.get("cx"),  # type: ignore[arg-type]
+                cy=circle_elem.get("cy"),  # type: ignore[arg-type]
+                r=circle_elem.get("r"),  # type: ignore[arg-type]
                 fill=circle_elem.get("fill"),
                 stroke=circle_elem.get("stroke"),
-                stroke_width=circle_elem.get("stroke-width"),
+                stroke_width=circle_elem.get("stroke-width"),  # type: ignore[arg-type]
             )
             regions[elem_id] = [circle]
 
         # Extract rectangles
         for rect_elem in root.findall(".//svg:rect", ns):
             elem_id = get_element_id(rect_elem, "rect")
+            # NOTE: svg.py accepts string attributes at runtime but type annotations expect numbers
+            # This is a known limitation of svg.py's type annotations
             rect = Rect(
-                x=rect_elem.get("x"),
-                y=rect_elem.get("y"),
-                width=rect_elem.get("width"),
-                height=rect_elem.get("height"),
-                rx=rect_elem.get("rx"),
-                ry=rect_elem.get("ry"),
+                x=rect_elem.get("x"),  # type: ignore[arg-type]
+                y=rect_elem.get("y"),  # type: ignore[arg-type]
+                width=rect_elem.get("width"),  # type: ignore[arg-type]
+                height=rect_elem.get("height"),  # type: ignore[arg-type]
+                rx=rect_elem.get("rx"),  # type: ignore[arg-type]
+                ry=rect_elem.get("ry"),  # type: ignore[arg-type]
                 fill=rect_elem.get("fill"),
                 stroke=rect_elem.get("stroke"),
-                stroke_width=rect_elem.get("stroke-width"),
+                stroke_width=rect_elem.get("stroke-width"),  # type: ignore[arg-type]
             )
             regions[elem_id] = [rect]
 
@@ -244,10 +246,10 @@ class Geometry:
                 continue
             elem_id = get_element_id(path_elem, "path")
             path = Path(
-                d=path_d.strip(),
+                d=path_d.strip(),  # type: ignore[arg-type]
                 fill=path_elem.get("fill"),
                 stroke=path_elem.get("stroke"),
-                stroke_width=path_elem.get("stroke-width"),
+                stroke_width=path_elem.get("stroke-width"),  # type: ignore[arg-type]
             )
             regions[elem_id] = [path]
 
@@ -260,10 +262,10 @@ class Geometry:
             # Convert points string to list of numbers
             points = [float(p) for p in points_str.replace(",", " ").split()]
             polygon = Polygon(
-                points=points,
+                points=points,  # type: ignore[arg-type]
                 fill=polygon_elem.get("fill"),
                 stroke=polygon_elem.get("stroke"),
-                stroke_width=polygon_elem.get("stroke-width"),
+                stroke_width=polygon_elem.get("stroke-width"),  # type: ignore[arg-type]
             )
             regions[elem_id] = [polygon]
 
@@ -271,13 +273,13 @@ class Geometry:
         for ellipse_elem in root.findall(".//svg:ellipse", ns):
             elem_id = get_element_id(ellipse_elem, "ellipse")
             ellipse = Ellipse(
-                cx=ellipse_elem.get("cx"),
-                cy=ellipse_elem.get("cy"),
-                rx=ellipse_elem.get("rx"),
-                ry=ellipse_elem.get("ry"),
+                cx=ellipse_elem.get("cx"),  # type: ignore[arg-type]
+                cy=ellipse_elem.get("cy"),  # type: ignore[arg-type]
+                rx=ellipse_elem.get("rx"),  # type: ignore[arg-type]
+                ry=ellipse_elem.get("ry"),  # type: ignore[arg-type]
                 fill=ellipse_elem.get("fill"),
                 stroke=ellipse_elem.get("stroke"),
-                stroke_width=ellipse_elem.get("stroke-width"),
+                stroke_width=ellipse_elem.get("stroke-width"),  # type: ignore[arg-type]
             )
             regions[elem_id] = [ellipse]
 
@@ -285,12 +287,12 @@ class Geometry:
         for line_elem in root.findall(".//svg:line", ns):
             elem_id = get_element_id(line_elem, "line")
             line = Line(
-                x1=line_elem.get("x1"),
-                y1=line_elem.get("y1"),
-                x2=line_elem.get("x2"),
-                y2=line_elem.get("y2"),
+                x1=line_elem.get("x1"),  # type: ignore[arg-type]
+                y1=line_elem.get("y1"),  # type: ignore[arg-type]
+                x2=line_elem.get("x2"),  # type: ignore[arg-type]
+                y2=line_elem.get("y2"),  # type: ignore[arg-type]
                 stroke=line_elem.get("stroke"),
-                stroke_width=line_elem.get("stroke-width"),
+                stroke_width=line_elem.get("stroke-width"),  # type: ignore[arg-type]
             )
             regions[elem_id] = [line]
 
@@ -300,10 +302,10 @@ class Geometry:
             # Get text content (may be in text attribute or as element text)
             text_content = text_elem.text or ""
             text = Text(
-                x=text_elem.get("x"),
-                y=text_elem.get("y"),
+                x=text_elem.get("x"),  # type: ignore[arg-type]
+                y=text_elem.get("y"),  # type: ignore[arg-type]
                 text=text_content.strip() if text_content else None,
-                font_size=text_elem.get("font-size"),
+                font_size=text_elem.get("font-size"),  # type: ignore[arg-type]
                 font_family=text_elem.get("font-family"),
                 fill=text_elem.get("fill"),
             )
@@ -314,7 +316,7 @@ class Geometry:
         if viewbox:
             metadata["viewBox"] = viewbox
 
-        return cls(regions=Regions(regions), metadata=metadata)
+        return cls(regions=Regions(regions), metadata=metadata)  # type: ignore[arg-type]
 
     def viewbox(self, padding: float = 0.02) -> tuple[float, float, float, float]:
         """Get viewBox from metadata, or compute from geometry coordinates.
@@ -490,9 +492,9 @@ class Geometry:
         # Keep regions that weren't relabeled
         for region_id, paths in self.regions.items():
             if region_id not in relabeled_ids:
-                new_regions[region_id] = paths
+                new_regions[region_id] = paths  # type: ignore[assignment]
 
-        return Geometry(regions=Regions(new_regions), metadata=dict(self.metadata))
+        return Geometry(regions=Regions(new_regions), metadata=dict(self.metadata))  # type: ignore[arg-type]
 
     def set_overlays(self, overlay_ids: list[str]) -> Geometry:
         """Set overlay region IDs in metadata (returns new Geometry object).
@@ -600,6 +602,7 @@ class Geometry:
 
         Uses reprlib for concise output suitable for interactive use.
         Shows region count instead of full region data.
+        Uses global repr configuration from get_repr_config().
 
         Example:
             >>> geo = Geometry.from_svg("map.svg")
@@ -608,17 +611,25 @@ class Geometry:
         """
         import reprlib
 
+        from ._repr_config import get_repr_config
+
+        config = get_repr_config()
+
         r = reprlib.Repr()
-        r.maxdict = 5  # Show up to 5 metadata items
+        r.maxdict = config.max_metadata_items
 
         # Create summary for regions (show count + preview of keys)
         region_count = len(self.regions)
-        if region_count <= 5:
+        show_threshold = max(3, config.max_regions // 2)
+        if region_count <= show_threshold:
             region_keys = list(self.regions.keys())
             regions_repr = f"{{{', '.join(repr(k) for k in region_keys)}}}"
         else:
-            region_keys = list(self.regions.keys())[:3]
-            regions_repr = f"{{{', '.join(repr(k) for k in region_keys)}, ... ({region_count} regions)}}"
+            preview_count = max(2, show_threshold // 2)
+            region_keys = list(self.regions.keys())[:preview_count]
+            regions_repr = (
+                f"{{{', '.join(repr(k) for k in region_keys)}, ... ({region_count} regions)}}"
+            )
 
         # Use reprlib for metadata
         metadata_repr = r.repr(self.metadata)

@@ -114,6 +114,7 @@ from ._core import (
 )
 from ._elements import Circle, Ellipse, Line, Path, Polygon, Rect, Text
 from ._regions import Regions
+from ._repr_config import ReprConfig, get_repr_config, set_repr_options
 
 __all__ = [
     "Geometry",
@@ -131,4 +132,7 @@ __all__ = [
     "Polygon",
     "Rect",
     "Text",
+    "ReprConfig",
+    "get_repr_config",
+    "set_repr_options",
 ]

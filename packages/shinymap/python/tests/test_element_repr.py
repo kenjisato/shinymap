@@ -1,7 +1,5 @@
 """Tests for custom __repr__, __str__, attrs(), and as_svg() methods."""
 
-import pytest
-
 from shinymap.geometry import Circle, Ellipse, Geometry, Line, Path, Polygon, Rect, Text
 
 
@@ -118,7 +116,7 @@ class TestAttrsMethod:
             attrs_list = list(elem.attrs())
             assert len(attrs_list) > 0  # Each element has at least some attributes
             # All yielded values should be non-None
-            for key, val in attrs_list:
+            for _key, val in attrs_list:
                 assert val is not None
 
 

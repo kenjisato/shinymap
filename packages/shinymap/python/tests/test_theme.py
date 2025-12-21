@@ -96,7 +96,6 @@ def test_theme_reconfiguration():
 @pytest.mark.unit
 def test_thread_safety():
     """Test that theme configuration is thread-safe across sessions."""
-    geo = Geometry.from_dict({"a": ["M 0 0 L 10 0"]})
     results = {}
 
     def make_map_with_config(thread_id, stroke_width):

@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator, KeysView, ValuesView
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ._elements import Element
 
 
-class Regions(dict):
+class Regions(dict[str, list["str | Element"]]):
     """Dictionary subclass with clean repr for region data.
 
     This class wraps the regions dictionary to provide a more readable
@@ -29,34 +28,40 @@ class Regions(dict):
 
         Shows region IDs and their elements in a readable format.
         Truncates long lists and shows counts for large dictionaries.
+        Uses global repr configuration from get_repr_config().
         """
         import reprlib
+
+        from ._repr_config import get_repr_config
 
         if not self:
             return "Regions({})"
 
+        config = get_repr_config()
+
         # For small dictionaries, show all entries
-        if len(self) <= 10:
+        if len(self) <= config.max_regions:
             lines = ["Regions({"]
             for key, value in self.items():
                 # Use reprlib for value to keep it concise
                 r = reprlib.Repr()
-                r.maxlist = 3  # Show first 3 elements max
+                r.maxlist = config.max_elements
                 val_repr = r.repr(value)
                 lines.append(f"  {key!r}: {val_repr},")
             lines.append("})")
             return "\n".join(lines)
         else:
             # For large dictionaries, show first few + count
+            show_count = max(1, config.max_regions // 2)
             lines = ["Regions({"]
             for i, (key, value) in enumerate(self.items()):
-                if i >= 5:  # Show first 5 entries
+                if i >= show_count:
                     break
                 r = reprlib.Repr()
-                r.maxlist = 3
+                r.maxlist = config.max_elements
                 val_repr = r.repr(value)
                 lines.append(f"  {key!r}: {val_repr},")
-            remaining = len(self) - 5
+            remaining = len(self) - show_count
             lines.append(f"  ... ({remaining} more regions)")
             lines.append("})")
             return "\n".join(lines)

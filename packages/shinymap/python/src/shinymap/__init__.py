@@ -16,6 +16,7 @@ from ._colors import (
     scale_qualitative,
     scale_sequential,
 )
+from ._sentinel import MISSING, MissingType
 from ._theme import configure_theme
 from ._ui import (
     Map,
@@ -33,6 +34,8 @@ from ._ui import (
 
 __all__ = [
     "__version__",
+    "MISSING",
+    "MissingType",
     "Map",
     "MapBuilder",
     "MapSelection",
