@@ -113,6 +113,7 @@ from ._core import (
     load_geometry,
 )
 from ._elements import Circle, Ellipse, Line, Path, Polygon, Rect, Text
+from ._export import export_svg
 from ._regions import Regions
 from ._repr_config import ReprConfig, get_repr_config, set_repr_options
 
@@ -123,8 +124,9 @@ __all__ = [
     "convert",
     "from_svg",
     "from_json",
+    "export_svg",
     "infer_relabel",
-    "load_geometry",
+    # "load_geometry",  # Deprecated - use Geometry.from_json() instead
     "Circle",
     "Ellipse",
     "Line",

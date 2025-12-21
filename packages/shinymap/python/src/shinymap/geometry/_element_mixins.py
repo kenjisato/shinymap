@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    import svg
+    pass
 
 
 @dataclass
@@ -309,17 +309,25 @@ class ShinymapElementMixin(BoundsMixin, JSONSerializableMixin):
     - to_dict() for JSON serialization
     - from_dict() class method for deserialization
     - Clean __repr__() showing only non-None attributes
+    - SVG markup via str() (from svg.py's __str__)
+
+    Note on str() vs repr():
+    - repr(element) → Clean Python representation: Circle(cx=100, cy=100, r=50)
+    - str(element) → SVG markup: <circle cx="100" cy="100" r="50"/>
     """
 
     def __repr__(self) -> str:
-        """Return clean repr showing only non-None attributes.
+        """Return clean Python repr showing only non-None attributes.
 
         Uses reprlib for concise output similar to to_dict() format.
         Only shows attributes with non-None values.
 
         Example:
-            >>> Circle(cx=100, cy=100, r=50, fill="#ff0000")
-            Circle(cx=100, cy=100, r=50, fill='#ff0000')
+            >>> circle = Circle(cx=100, cy=100, r=50, fill="#ff0000")
+            >>> repr(circle)
+            "Circle(cx=100, cy=100, r=50, fill='#ff0000')"
+            >>> str(circle)  # SVG markup from svg.py
+            '<circle cx="100" cy="100" r="50" fill="#ff0000"/>'
         """
         import reprlib
 
@@ -335,35 +343,6 @@ class ShinymapElementMixin(BoundsMixin, JSONSerializableMixin):
             return f"{class_name}({', '.join(attrs)})"
         else:
             return f"{class_name}()"
-
-    def __str__(self) -> str:
-        """Return same as __repr__ for consistent display.
-
-        Override svg.py's __str__ which returns SVG markup.
-        """
-        return self.__repr__()
-
-    def as_svg(self) -> str:
-        """Return SVG markup string for this element.
-
-        This method provides access to svg.py's native SVG rendering,
-        which is overridden by our custom __str__/__repr__.
-
-        Returns:
-            SVG markup string (e.g., '<circle cx="100" cy="100" r="50"/>')
-
-        Example:
-            >>> circle = Circle(cx=100, cy=100, r=50, fill="#ff0000")
-            >>> circle  # Shows clean repr
-            Circle(cx=100, cy=100, r=50, fill='#ff0000')
-            >>> circle.as_svg()  # Shows SVG markup
-            '<circle cx="100" cy="100" r="50" fill="#ff0000"/>'
-        """
-        # Call svg.Element's __str__ method directly
-        # This bypasses our override and gets the original SVG rendering
-        import svg
-
-        return svg.Element.__str__(self)
 
 
 __all__ = ["BoundsMixin", "JSONSerializableMixin", "ShinymapElementMixin"]

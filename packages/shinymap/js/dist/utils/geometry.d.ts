@@ -1,22 +1,24 @@
-import type { GeometryMap, RegionId } from "../types";
+import type { Element, GeometryMap, RegionId } from "../types";
 /**
- * Normalize a single path to string format.
+ * Normalize a single region value to Element array format.
  *
- * Accepts both formats:
- * - string: Returns as-is
- * - string[]: Joins with space
+ * Handles both v0.x (string paths) and v1.x (polymorphic elements):
+ * - string → PathElement
+ * - string[] → PathElement[]
+ * - Element → [Element]
+ * - Element[] → Element[]
  *
- * @param path - Path in string or array format
- * @returns Normalized path string
+ * @param value - Region value in any supported format
+ * @returns Array of Element objects
  */
-export declare function normalizePath(path: string | string[]): string;
+export declare function normalizeRegion(value: string | string[] | Element | Element[]): Element[];
 /**
- * Normalize entire geometry map to flat string format.
+ * Normalize entire geometry map to Element array format.
  *
- * Converts all paths to strings by joining arrays with spaces.
- * This is the format expected by SVG <path d="..."> attributes.
+ * Converts all region values to Element[] format, handling both v0.x
+ * (string paths) and v1.x (polymorphic elements) formats.
  *
- * @param geometry - Geometry map with string or array paths
- * @returns Normalized geometry map with only string paths
+ * @param geometry - Geometry map in any supported format
+ * @returns Normalized geometry map with Element[] values
  */
-export declare function normalizeGeometry(geometry: GeometryMap): Record<RegionId, string>;
+export declare function normalizeGeometry(geometry: GeometryMap): Record<RegionId, Element[]>;

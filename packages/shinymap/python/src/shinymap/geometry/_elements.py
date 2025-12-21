@@ -35,7 +35,7 @@ import svg
 from ._element_mixins import ShinymapElementMixin
 
 if TYPE_CHECKING:
-    from typing import Any
+    pass
 
 
 @dataclass
@@ -66,10 +66,6 @@ class Circle(svg.Circle, ShinymapElementMixin):
         """Return clean repr showing only non-None attributes."""
         return ShinymapElementMixin.__repr__(self)
 
-    def __str__(self) -> str:
-        """Return same as __repr__ for consistent display."""
-        return ShinymapElementMixin.__str__(self)
-
 
 @dataclass
 class Rect(svg.Rect, ShinymapElementMixin):
@@ -95,10 +91,6 @@ class Rect(svg.Rect, ShinymapElementMixin):
     def __repr__(self) -> str:
         """Return clean repr showing only non-None attributes."""
         return ShinymapElementMixin.__repr__(self)
-
-    def __str__(self) -> str:
-        """Return same as __repr__ for consistent display."""
-        return ShinymapElementMixin.__str__(self)
 
 
 @dataclass
@@ -134,10 +126,6 @@ class Path(svg.Path, ShinymapElementMixin):
         """Return clean repr showing only non-None attributes."""
         return ShinymapElementMixin.__repr__(self)
 
-    def __str__(self) -> str:
-        """Return same as __repr__ for consistent display."""
-        return ShinymapElementMixin.__str__(self)
-
 
 @dataclass
 class Polygon(svg.Polygon, ShinymapElementMixin):
@@ -158,10 +146,6 @@ class Polygon(svg.Polygon, ShinymapElementMixin):
     def __repr__(self) -> str:
         """Return clean repr showing only non-None attributes."""
         return ShinymapElementMixin.__repr__(self)
-
-    def __str__(self) -> str:
-        """Return same as __repr__ for consistent display."""
-        return ShinymapElementMixin.__str__(self)
 
 
 @dataclass
@@ -187,10 +171,6 @@ class Ellipse(svg.Ellipse, ShinymapElementMixin):
         """Return clean repr showing only non-None attributes."""
         return ShinymapElementMixin.__repr__(self)
 
-    def __str__(self) -> str:
-        """Return same as __repr__ for consistent display."""
-        return ShinymapElementMixin.__str__(self)
-
 
 @dataclass
 class Line(svg.Line, ShinymapElementMixin):
@@ -214,10 +194,6 @@ class Line(svg.Line, ShinymapElementMixin):
     def __repr__(self) -> str:
         """Return clean repr showing only non-None attributes."""
         return ShinymapElementMixin.__repr__(self)
-
-    def __str__(self) -> str:
-        """Return same as __repr__ for consistent display."""
-        return ShinymapElementMixin.__str__(self)
 
 
 @dataclass

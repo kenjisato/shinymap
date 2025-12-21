@@ -291,9 +291,7 @@ class TestTextJSON:
 
     def test_to_dict_with_font_properties(self):
         """Text.to_dict() preserves font properties."""
-        text = Text(
-            x=100, y=100, text="Test", font_size=14, font_family="Arial", fill="#000000"
-        )
+        text = Text(x=100, y=100, text="Test", font_size=14, font_family="Arial", fill="#000000")
         data = text.to_dict()
 
         assert data["font_size"] == 14

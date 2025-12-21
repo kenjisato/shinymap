@@ -19,7 +19,7 @@ uv add shinymap
 ```python
 from shinymap import Map, MapPayload, input_map, output_map, render_map
 from shinymap import scale_sequential, scale_qualitative, SEQUENTIAL, QUALITATIVE
-from shinymap.geometry import load_geometry, convert, from_svg, from_json
+from shinymap.geometry import Geometry, convert, from_svg, from_json
 ```
 
 ### Map Components
@@ -41,7 +41,7 @@ from shinymap.geometry import load_geometry, convert, from_svg, from_json
 
 The `shinymap.geometry` subpackage provides tools for converting SVG files to shinymap's JSON format:
 
-- **`load_geometry(json_path, overlay_keys=None)`**: Load geometry from shinymap JSON files. Returns `(geometry, overlay_geometry, viewbox)` tuple.
+- **`Geometry.from_json(json_path)`**: Load geometry from shinymap JSON files. Returns a Geometry object with methods for accessing regions, overlays, and viewbox.
 - **`from_svg(svg_path, output_path=None)`**: Extract intermediate JSON from SVG file with auto-generated path IDs.
 - **`from_json(intermediate_json, output_path=None, relabel=None, ...)`**: Transform intermediate JSON by renaming/merging paths.
 - **`convert(input_path, output_path=None, relabel=None, ...)`**: One-shot SVG to JSON conversion.

@@ -39,29 +39,40 @@ class TestElementRepr:
         assert "d='M 0 0 L 100 0'" in repr_str
         assert "fill='#0000ff'" in repr_str
 
-    def test_str_equals_repr(self):
-        """__str__ should return same as __repr__ for consistency."""
+    def test_str_returns_svg_markup(self):
+        """__str__ should return SVG markup (for svg.py compatibility)."""
         circle = Circle(cx=100, cy=100, r=50)
-        assert str(circle) == repr(circle)
+        str_output = str(circle)
+
+        # str() returns SVG markup from svg.py
+        assert str_output.startswith("<circle")
+        assert 'cx="100"' in str_output
+
+        # repr() returns clean Python representation
+        repr_output = repr(circle)
+        assert repr_output.startswith("Circle(")
+        assert "cx=100" in repr_output
 
 
 class TestElementStr:
-    """Test that __str__ returns clean repr, not SVG markup."""
+    """Test that __str__ returns SVG markup."""
 
-    def test_str_not_svg_markup(self):
-        """str() should NOT return SVG markup (that's what as_svg() is for)."""
+    def test_str_returns_svg_markup(self):
+        """str() should return SVG markup (from svg.py)."""
         circle = Circle(cx=100, cy=100, r=50, fill="#ff0000")
         str_output = str(circle)
 
-        # Should be repr format, not SVG
-        assert str_output.startswith("Circle(")
-        assert not str_output.startswith("<circle")
+        # Should be SVG markup from svg.py
+        assert str_output.startswith("<circle")
+        assert 'cx="100"' in str_output
+        assert 'fill="#ff0000"' in str_output
 
-    def test_print_shows_clean_output(self):
-        """Printing element should show clean repr."""
+    def test_print_shows_svg_markup(self):
+        """Printing element shows SVG markup (useful for debugging/export)."""
         rect = Rect(x=10, y=20, width=100, height=80)
-        # This is what users see when they type the variable name in REPL
-        assert str(rect).startswith("Rect(")
+        str_output = str(rect)
+        assert str_output.startswith("<rect")
+        assert 'x="10"' in str_output
 
 
 class TestAttrsMethod:
@@ -120,13 +131,13 @@ class TestAttrsMethod:
                 assert val is not None
 
 
-class TestAsSvgMethod:
-    """Test as_svg() method for getting SVG markup."""
+class TestSvgMarkupGeneration:
+    """Test SVG markup generation via str()."""
 
-    def test_as_svg_returns_markup(self):
-        """as_svg() should return SVG markup string."""
+    def test_str_returns_svg_markup(self):
+        """str() should return SVG markup string."""
         circle = Circle(cx=100, cy=100, r=50, fill="#ff0000")
-        svg_markup = circle.as_svg()
+        svg_markup = str(circle)
 
         assert svg_markup.startswith("<circle")
         assert 'cx="100"' in svg_markup
@@ -134,10 +145,10 @@ class TestAsSvgMethod:
         assert 'r="50"' in svg_markup
         assert 'fill="#ff0000"' in svg_markup
 
-    def test_as_svg_rect(self):
-        """as_svg() for Rect element."""
+    def test_str_svg_for_rect(self):
+        """str() returns SVG markup for Rect element."""
         rect = Rect(x=10, y=20, width=100, height=80, fill="#00ff00")
-        svg_markup = rect.as_svg()
+        svg_markup = str(rect)
 
         assert svg_markup.startswith("<rect")
         assert 'x="10"' in svg_markup
@@ -145,23 +156,23 @@ class TestAsSvgMethod:
         assert 'width="100"' in svg_markup
         assert 'height="80"' in svg_markup
 
-    def test_as_svg_differs_from_str(self):
-        """as_svg() should return different output than str()."""
+    def test_str_differs_from_repr(self):
+        """str() returns SVG markup, repr() returns Python representation."""
         circle = Circle(cx=100, cy=100, r=50)
 
-        # str() returns clean repr
+        # str() returns SVG markup
         str_output = str(circle)
-        assert str_output.startswith("Circle(")
+        assert str_output.startswith("<circle")
 
-        # as_svg() returns SVG markup
-        svg_output = circle.as_svg()
-        assert svg_output.startswith("<circle")
+        # repr() returns clean Python representation
+        repr_output = repr(circle)
+        assert repr_output.startswith("Circle(")
 
         # They should be different
-        assert str_output != svg_output
+        assert str_output != repr_output
 
-    def test_as_svg_all_element_types(self):
-        """as_svg() works for all element types."""
+    def test_str_svg_all_element_types(self):
+        """str() works for all element types."""
         test_cases = [
             (Circle(cx=100, cy=100, r=50), "<circle"),
             (Rect(x=10, y=20, width=100, height=80), "<rect"),
@@ -173,13 +184,13 @@ class TestAsSvgMethod:
         ]
 
         for elem, expected_start in test_cases:
-            svg_markup = elem.as_svg()
+            svg_markup = str(elem)
             assert svg_markup.startswith(expected_start)
 
-    def test_as_svg_omits_none_attributes(self):
-        """as_svg() should not include None attributes in markup."""
+    def test_str_svg_omits_none_attributes(self):
+        """str() should not include None attributes in SVG markup."""
         circle = Circle(cx=100, cy=100, r=50)  # No fill specified
-        svg_markup = circle.as_svg()
+        svg_markup = str(circle)
 
         # Should NOT have fill attribute in markup if it's None
         # svg.py handles this automatically

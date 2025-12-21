@@ -18,25 +18,24 @@ _initial_file: Path | None
 panel_upload = ui.nav_panel(
     "Upload",
     ui.h2("Upload File"),
-
     ui.layout_columns(
         ui.TagList(
             ui.output_ui("upload_file"),
             output_map("output_path_file"),
             ui.output_text("path_file_name"),
             ui.input_text("meta_source", "Source"),
-            ui.input_text("meta_license", "License")
+            ui.input_text("meta_license", "License"),
         ),
         ui.TagList(
             ui.help_text("Path IDs"),
             ui.output_text_verbatim("path_list", placeholder=True),
         ),
         col_widths=(4, 8),
-    )
+    ),
 )
 
-def server_file_upload(input, file_name, extracted_data):
 
+def server_file_upload(input, file_name, extracted_data):
     @render_map
     def output_path_file():
         if _initial_file is not None:
@@ -52,11 +51,11 @@ def server_file_upload(input, file_name, extracted_data):
     def upload_file():
         if _initial_file is None:
             return ui.input_file(
-                        "path_file",
-                        "Choose SVG or JSON file",
-                        accept=[".svg", ".json"],
-                        multiple=False,
-                    )
+                "path_file",
+                "Choose SVG or JSON file",
+                accept=[".svg", ".json"],
+                multiple=False,
+            )
 
     @reactive.effect
     @reactive.event(input.path_file)
@@ -93,9 +92,9 @@ panel_relabeling = ui.nav_panel(
             ui.layout_columns(
                 ui.layout_columns(
                     ui.TagList(
-                    ui.help_text("New ID"),
-                    ui.input_text("new_id", ""),
-                ),
+                        ui.help_text("New ID"),
+                        ui.input_text("new_id", ""),
+                    ),
                     ui.input_radio_buttons(
                         "target_layer",
                         "Layer",
@@ -103,7 +102,7 @@ panel_relabeling = ui.nav_panel(
                         selected="Interactive",
                         inline=True,
                     ),
-                    col_widths=(6, 6)
+                    col_widths=(6, 6),
                 ),
                 ui.TagList(
                     ui.input_action_button("register_relabel", "Register", class_="btn-primary"),
@@ -115,9 +114,10 @@ panel_relabeling = ui.nav_panel(
             ui.output_text_verbatim("selected_original_ids", placeholder=True),
             ui.help_text("Registered objects (pending relabeling)"),
             ui.output_text_verbatim("registered_objects_display", placeholder=True),
-        )
-    )
+        ),
+    ),
 )
+
 
 def server_relabeling(input, extracted_data, relabel_rules, registered_ids, overlay_ids):
     @render.ui
@@ -304,8 +304,8 @@ panel_gen_code = ui.nav_panel(
             ui.h2("Conversion Code"),
             ui.output_text_verbatim("code_preview"),
             ui.download_button("download_code", "Download Python Code"),
-        )
-    )
+        ),
+    ),
 )
 
 ## Inference Page =====================================================================
@@ -343,11 +343,10 @@ app_ui = ui.page_fillable(
 )
 
 
-
 ## Server =====================================================================
 
-def server(input, output, session):
 
+def server(input, output, session):
     extracted_data = reactive.value()
     file_name = reactive.value()
     relabel_rules = reactive.value({})  # Format: {"new_id": ["old_id1", "old_id2"]}

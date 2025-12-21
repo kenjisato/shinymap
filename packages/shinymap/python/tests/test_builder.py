@@ -9,10 +9,9 @@ from shinymap.geometry import Geometry
 @pytest.mark.unit
 def test_map_builder_basic():
     """Test basic Map builder functionality."""
-    geo = Geometry.from_dict({
-        "a": ["M0 0 L10 0 L10 10 L0 10 Z"],
-        "b": ["M20 0 L30 0 L30 10 L20 10 Z"]
-    })
+    geo = Geometry.from_dict(
+        {"a": ["M0 0 L10 0 L10 10 L0 10 Z"], "b": ["M20 0 L30 0 L30 10 L20 10 Z"]}
+    )
 
     map_obj = Map(geo)
     payload = map_obj.build()
@@ -90,11 +89,7 @@ def test_map_payload_creation():
 @pytest.mark.unit
 def test_fill_color_string_normalization():
     """Test that fill_color parameter accepts both string and dict."""
-    geo = Geometry.from_dict({
-        "a": ["M0 0"],
-        "b": ["M10 10"],
-        "c": ["M20 20"]
-    })
+    geo = Geometry.from_dict({"a": ["M0 0"], "b": ["M10 10"], "c": ["M20 20"]})
 
     # Test with string fill_color - should normalize to dict
     map_obj = Map(geo).with_fill_color("red")
@@ -115,11 +110,7 @@ def test_fill_color_string_normalization():
 @pytest.mark.unit
 def test_fill_color_merging():
     """Test that multiple with_fill_color() calls merge instead of replace."""
-    geo = Geometry.from_dict({
-        "a": ["M0 0"],
-        "b": ["M10 10"],
-        "c": ["M20 20"]
-    })
+    geo = Geometry.from_dict({"a": ["M0 0"], "b": ["M10 10"], "c": ["M20 20"]})
 
     # Test base color + override pattern
     map_obj = (
@@ -157,11 +148,7 @@ def test_map_selection_basic():
     """Test MapSelection basic usage."""
     from shinymap import MapSelection
 
-    geo = Geometry.from_dict({
-        "a": ["M0 0"],
-        "b": ["M10 10"],
-        "c": ["M20 20"]
-    })
+    geo = Geometry.from_dict({"a": ["M0 0"], "b": ["M10 10"], "c": ["M20 20"]})
 
     map_obj = (
         MapSelection(geo, selected="b")
@@ -181,18 +168,10 @@ def test_map_selection_full_aesthetic():
     """Test MapSelection with full aesthetic dict."""
     from shinymap import MapSelection
 
-    geo = Geometry.from_dict({
-        "a": ["M0 0"],
-        "b": ["M10 10"]
-    })
+    geo = Geometry.from_dict({"a": ["M0 0"], "b": ["M10 10"]})
 
-    map_obj = (
-        MapSelection(geo, selected="a")
-        .with_fill_color_selected({
-            "fillColor": "#fbbf24",
-            "strokeWidth": 2,
-            "strokeColor": "#f59e0b"
-        })
+    map_obj = MapSelection(geo, selected="a").with_fill_color_selected(
+        {"fillColor": "#fbbf24", "strokeWidth": 2, "strokeColor": "#f59e0b"}
     )
     payload = map_obj.build()
     json_output = payload.as_json()
@@ -206,19 +185,15 @@ def test_map_count_palette():
     """Test MapCount with color palette."""
     from shinymap import MapCount
 
-    geo = Geometry.from_dict({
-        "a": ["M0 0"],
-        "b": ["M10 10"],
-        "c": ["M20 20"]
-    })
+    geo = Geometry.from_dict({"a": ["M0 0"], "b": ["M10 10"], "c": ["M20 20"]})
     counts = {"a": 0, "b": 1, "c": 2}
 
     map_obj = MapCount(geo, counts).with_fill_color(["blue", "red", "green"])
     payload = map_obj.build()
     json_output = payload.as_json()
 
-    assert json_output["fillColor"]["a"] == "blue"   # count 0
-    assert json_output["fillColor"]["b"] == "red"    # count 1
+    assert json_output["fillColor"]["a"] == "blue"  # count 0
+    assert json_output["fillColor"]["b"] == "red"  # count 1
     assert json_output["fillColor"]["c"] == "green"  # count 2
     assert json_output["counts"] == counts
     assert json_output["countPalette"] == ["blue", "red", "green"]
@@ -227,14 +202,11 @@ def test_map_count_palette():
 @pytest.mark.unit
 def test_map_count_palette_cycling():
     """Test MapCount palette cycling for counts > palette length."""
-    from shinymap import MapCount
     import warnings
 
-    geo = Geometry.from_dict({
-        "a": ["M0 0"],
-        "b": ["M10 10"],
-        "c": ["M20 20"]
-    })
+    from shinymap import MapCount
+
+    geo = Geometry.from_dict({"a": ["M0 0"], "b": ["M10 10"], "c": ["M20 20"]})
     counts = {"a": 0, "b": 3, "c": 6}  # 3 and 6 cycle back
 
     # Should issue a warning about cycling
@@ -247,9 +219,9 @@ def test_map_count_palette_cycling():
     payload = map_obj.build()
     json_output = payload.as_json()
 
-    assert json_output["fillColor"]["a"] == "blue"   # 0 % 3 = 0
-    assert json_output["fillColor"]["b"] == "blue"   # 3 % 3 = 0
-    assert json_output["fillColor"]["c"] == "blue"   # 6 % 3 = 0
+    assert json_output["fillColor"]["a"] == "blue"  # 0 % 3 = 0
+    assert json_output["fillColor"]["b"] == "blue"  # 3 % 3 = 0
+    assert json_output["fillColor"]["c"] == "blue"  # 6 % 3 = 0
 
 
 @pytest.mark.unit
@@ -274,6 +246,7 @@ def test_static_params_merging():
 
     # Create payload without static params
     from shinymap import MapPayload
+
     payload = MapPayload(
         fill_color={"a": "red", "b": "blue"},  # Dynamic data
     )
@@ -297,8 +270,8 @@ def test_static_params_merging():
 @pytest.mark.unit
 def test_static_params_builder_precedence():
     """Test that builder params take precedence over static params."""
-    from shinymap._ui import _apply_static_params, _static_map_params
     from shinymap import MapPayload
+    from shinymap._ui import _apply_static_params, _static_map_params
 
     static_geometry = {"a": "M0 0", "b": "M10 10"}
     builder_geometry = {"x": "M20 20", "y": "M30 30"}

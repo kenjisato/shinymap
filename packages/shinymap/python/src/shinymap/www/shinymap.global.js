@@ -21740,7 +21740,135 @@ var shinymap = (() => {
 
   // src/components/InputMap.tsx
   var import_react = __toESM(require_react(), 1);
+
+  // src/utils/geometry.ts
+  function normalizeRegion(value) {
+    if (typeof value === "object" && "type" in value) {
+      return Array.isArray(value) ? value : [value];
+    }
+    if (typeof value === "string") {
+      return [{ type: "path", d: value }];
+    }
+    if (Array.isArray(value)) {
+      if (value.length === 0) return [];
+      const first = value[0];
+      if (typeof first === "object" && "type" in first) {
+        return value;
+      } else {
+        return value.map((d) => ({ type: "path", d }));
+      }
+    }
+    throw new Error(`Invalid region value: ${JSON.stringify(value)}`);
+  }
+  function normalizeGeometry(geometry) {
+    const result = {};
+    for (const [regionId, value] of Object.entries(geometry)) {
+      result[regionId] = normalizeRegion(value);
+    }
+    return result;
+  }
+
+  // src/utils/renderElement.tsx
   var import_jsx_runtime = __toESM(require_jsx_runtime(), 1);
+  function renderElement(props) {
+    const {
+      element,
+      key,
+      fill,
+      fillOpacity,
+      stroke,
+      strokeWidth,
+      cursor,
+      pointerEvents,
+      onClick,
+      onMouseEnter,
+      onMouseLeave,
+      onFocus,
+      onBlur,
+      tooltip,
+      extraProps
+    } = props;
+    const commonProps = {
+      fill,
+      fillOpacity,
+      stroke,
+      strokeWidth,
+      style: cursor ? { cursor } : void 0,
+      pointerEvents,
+      onClick,
+      onMouseEnter,
+      onMouseLeave,
+      onFocus,
+      onBlur,
+      ...extraProps
+    };
+    const titleElement = tooltip ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("title", { children: tooltip }) : null;
+    switch (element.type) {
+      case "circle":
+        return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", { cx: element.cx, cy: element.cy, r: element.r, ...commonProps, children: titleElement }, key);
+      case "rect":
+        return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+          "rect",
+          {
+            x: element.x,
+            y: element.y,
+            width: element.width,
+            height: element.height,
+            rx: element.rx,
+            ry: element.ry,
+            ...commonProps,
+            children: titleElement
+          },
+          key
+        );
+      case "path":
+        return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: element.d, ...commonProps, children: titleElement }, key);
+      case "polygon":
+        return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("polygon", { points: element.points, ...commonProps, children: titleElement }, key);
+      case "ellipse":
+        return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ellipse", { cx: element.cx, cy: element.cy, rx: element.rx, ry: element.ry, ...commonProps, children: titleElement }, key);
+      case "line":
+        return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+          "line",
+          {
+            x1: element.x1,
+            y1: element.y1,
+            x2: element.x2,
+            y2: element.y2,
+            ...commonProps,
+            children: titleElement
+          },
+          key
+        );
+      case "text":
+        return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+          "text",
+          {
+            x: element.x,
+            y: element.y,
+            fontSize: element.fontSize,
+            fontFamily: element.fontFamily,
+            fontWeight: element.fontWeight,
+            fontStyle: element.fontStyle,
+            textAnchor: element.textAnchor,
+            dominantBaseline: element.dominantBaseline,
+            transform: element.transform,
+            ...commonProps,
+            children: [
+              element.text,
+              titleElement
+            ]
+          },
+          key
+        );
+      default:
+        const exhaustiveCheck = element;
+        throw new Error(`Unknown element type: ${exhaustiveCheck.type}`);
+    }
+  }
+
+  // src/components/InputMap.tsx
+  var import_jsx_runtime2 = __toESM(require_jsx_runtime(), 1);
   var DEFAULT_VIEWBOX = "0 0 100 100";
   var DEFAULT_AESTHETIC = {
     fillColor: "#e2e8f0",
@@ -21783,7 +21911,12 @@ var shinymap = (() => {
       hoverHighlight,
       selectedAesthetic
     } = props;
-    const normalizedFillColor = (0, import_react.useMemo)(() => normalizeFillColor(fillColor, geometry), [fillColor, geometry]);
+    const normalizedGeometry = (0, import_react.useMemo)(() => normalizeGeometry(geometry), [geometry]);
+    const normalizedOverlayGeometry = (0, import_react.useMemo)(
+      () => overlayGeometry ? normalizeGeometry(overlayGeometry) : void 0,
+      [overlayGeometry]
+    );
+    const normalizedFillColor = (0, import_react.useMemo)(() => normalizeFillColor(fillColor, normalizedGeometry), [fillColor, normalizedGeometry]);
     const [hovered, setHovered] = (0, import_react.useState)(null);
     const [counts, setCounts] = (0, import_react.useState)(value ?? {});
     const selected = (0, import_react.useMemo)(() => buildSelected(counts), [counts]);
@@ -21805,7 +21938,7 @@ var shinymap = (() => {
       if (isActivating && activeCount >= maxSel) {
         if (maxSel === 1) {
           const next2 = Object.fromEntries(
-            Object.keys(geometry).map((key) => [key, key === id ? nextCount : 0])
+            Object.keys(normalizedGeometry).map((key) => [key, key === id ? nextCount : 0])
           );
           setCounts(next2);
           onChange?.(next2);
@@ -21816,7 +21949,7 @@ var shinymap = (() => {
       setCounts(next);
       onChange?.(next);
     };
-    return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+    return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(
       "svg",
       {
         role: "img",
@@ -21824,8 +21957,8 @@ var shinymap = (() => {
         style: { width: "100%", height: "100%", ...containerStyle },
         viewBox,
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("g", { children: [
-            Object.entries(geometry).map(([id, d]) => {
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("g", { children: [
+            Object.entries(normalizedGeometry).flatMap(([id, elements]) => {
               const tooltip = tooltips?.[id];
               const isHovered = hovered === id;
               const isSelected = selected.has(id);
@@ -21857,47 +21990,46 @@ var shinymap = (() => {
               });
               const handleMouseEnter = () => setHovered(id);
               const handleMouseLeave = () => setHovered((current) => current === id ? null : current);
-              return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                "path",
-                {
-                  d,
+              return elements.map(
+                (element, index) => renderElement({
+                  element,
+                  key: `${id}-${index}`,
                   fill: resolved.fillColor,
                   fillOpacity: resolved.fillOpacity,
                   stroke: resolved.strokeColor,
                   strokeWidth: resolved.strokeWidth,
-                  style: { cursor: "pointer" },
+                  cursor: "pointer",
                   onMouseEnter: handleMouseEnter,
                   onMouseLeave: handleMouseLeave,
                   onFocus: handleMouseEnter,
                   onBlur: handleMouseLeave,
                   onClick: () => handleClick(id),
-                  ...extraProps,
-                  children: tooltip ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("title", { children: tooltip }) : null
-                },
-                id
+                  tooltip,
+                  extraProps
+                })
               );
             }),
-            overlayGeometry && Object.entries(overlayGeometry).map(([id, d]) => {
+            normalizedOverlayGeometry && Object.entries(normalizedOverlayGeometry).flatMap(([id, elements]) => {
               const overlayStyle = {
                 ...DEFAULT_AESTHETIC,
                 ...overlayAesthetic
               };
-              return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                "path",
-                {
-                  d,
+              return elements.map(
+                (element, index) => renderElement({
+                  element,
+                  key: `overlay-${id}-${index}`,
                   fill: overlayStyle.fillColor,
                   fillOpacity: overlayStyle.fillOpacity,
                   stroke: overlayStyle.strokeColor,
                   strokeWidth: overlayStyle.strokeWidth,
                   pointerEvents: "none"
-                },
-                `overlay-${id}`
+                })
               );
             })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("g", { children: Array.from(selected).map((id) => {
-            if (!geometry[id]) return null;
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("g", { children: Array.from(selected).flatMap((id) => {
+            const elements = normalizedGeometry[id];
+            if (!elements) return [];
             const count = counts[id] ?? 0;
             let resolved = { ...DEFAULT_AESTHETIC, ...defaultAesthetic };
             if (normalizedFillColor && normalizedFillColor[id]) {
@@ -21919,30 +22051,28 @@ var shinymap = (() => {
                 resolved = { ...resolved, ...overrides };
               }
             }
-            return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-              "path",
-              {
-                d: geometry[id],
+            return elements.map(
+              (element, index) => renderElement({
+                element,
+                key: `selection-overlay-${id}-${index}`,
                 fill: resolved.fillColor,
                 fillOpacity: resolved.fillOpacity,
                 stroke: resolved.strokeColor,
                 strokeWidth: resolved.strokeWidth,
                 pointerEvents: "none"
-              },
-              `selection-overlay-${id}`
+              })
             );
           }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("g", { children: hovered && hoverHighlight && geometry[hovered] && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-            "path",
-            {
-              d: geometry[hovered],
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("g", { children: hovered && hoverHighlight && normalizedGeometry[hovered]?.map(
+            (element, index) => renderElement({
+              element,
+              key: `hover-overlay-${hovered}-${index}`,
               fill: hoverHighlight.fillColor ?? "none",
               fillOpacity: hoverHighlight.fillOpacity ?? (hoverHighlight.fillColor ? 1 : 0),
               stroke: hoverHighlight.strokeColor ?? "#1e40af",
               strokeWidth: hoverHighlight.strokeWidth ?? 2,
               pointerEvents: "none"
-            },
-            `hover-overlay-${hovered}`
+            })
           ) })
         ]
       }
@@ -21951,7 +22081,7 @@ var shinymap = (() => {
 
   // src/components/OutputMap.tsx
   var import_react2 = __toESM(require_react(), 1);
-  var import_jsx_runtime2 = __toESM(require_jsx_runtime(), 1);
+  var import_jsx_runtime3 = __toESM(require_jsx_runtime(), 1);
   var DEFAULT_VIEWBOX2 = "0 0 100 100";
   var DEFAULT_AESTHETIC2 = {
     fillColor: "#e2e8f0",
@@ -22000,22 +22130,27 @@ var shinymap = (() => {
       overlayAesthetic,
       hoverHighlight
     } = props;
+    const normalizedGeometry = (0, import_react2.useMemo)(() => normalizeGeometry(geometry), [geometry]);
+    const normalizedOverlayGeometry = (0, import_react2.useMemo)(
+      () => overlayGeometry ? normalizeGeometry(overlayGeometry) : void 0,
+      [overlayGeometry]
+    );
     const [hovered, setHovered] = (0, import_react2.useState)(null);
     const activeSet = normalizeActive(activeIds);
-    const normalizedFillColor = normalize(fillColor, geometry);
-    const normalizedStrokeWidth = normalize(strokeWidthProp, geometry);
-    const normalizedStrokeColor = normalize(strokeColorProp, geometry);
-    const normalizedFillOpacity = normalize(fillOpacityProp, geometry);
+    const normalizedFillColor = normalize(fillColor, normalizedGeometry);
+    const normalizedStrokeWidth = normalize(strokeWidthProp, normalizedGeometry);
+    const normalizedStrokeColor = normalize(strokeColorProp, normalizedGeometry);
+    const normalizedFillOpacity = normalize(fillOpacityProp, normalizedGeometry);
     const countMap = counts ?? {};
-    return /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
       "svg",
       {
         role: "img",
         className,
         style: { width: "100%", height: "100%", ...containerStyle },
         viewBox,
-        children: /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("g", { children: [
-          Object.entries(geometry).map(([id, d]) => {
+        children: /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("g", { children: [
+          Object.entries(normalizedGeometry).flatMap(([id, elements]) => {
             const tooltip = tooltips?.[id];
             const isActive = activeSet.has(id);
             const count = countMap[id] ?? 0;
@@ -22051,46 +22186,45 @@ var shinymap = (() => {
             });
             const handleMouseEnter = () => setHovered(id);
             const handleMouseLeave = () => setHovered((current) => current === id ? null : current);
-            return /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
-              "path",
-              {
-                d,
+            return elements.map(
+              (element, index) => renderElement({
+                element,
+                key: `${id}-${index}`,
                 fill: resolved.fillColor,
                 fillOpacity: resolved.fillOpacity,
                 stroke: resolved.strokeColor,
                 strokeWidth: resolved.strokeWidth,
+                cursor: onRegionClick ? "pointer" : void 0,
                 onClick: onRegionClick ? () => onRegionClick(id) : void 0,
                 onMouseEnter: handleMouseEnter,
                 onMouseLeave: handleMouseLeave,
                 onFocus: handleMouseEnter,
                 onBlur: handleMouseLeave,
-                style: onRegionClick ? { cursor: "pointer" } : void 0,
-                ...regionOverrides,
-                children: tooltip ? /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("title", { children: tooltip }) : null
-              },
-              id
+                tooltip,
+                extraProps: regionOverrides
+              })
             );
           }),
-          overlayGeometry && Object.entries(overlayGeometry).map(([id, d]) => {
+          normalizedOverlayGeometry && Object.entries(normalizedOverlayGeometry).flatMap(([id, elements]) => {
             const overlayStyle = {
               ...DEFAULT_AESTHETIC2,
               ...overlayAesthetic
             };
-            return /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
-              "path",
-              {
-                d,
+            return elements.map(
+              (element, index) => renderElement({
+                element,
+                key: `overlay-${id}-${index}`,
                 fill: overlayStyle.fillColor,
                 fillOpacity: overlayStyle.fillOpacity,
                 stroke: overlayStyle.strokeColor,
                 strokeWidth: overlayStyle.strokeWidth,
                 pointerEvents: "none"
-              },
-              `overlay-${id}`
+              })
             );
           }),
-          Array.from(activeSet).map((id) => {
-            if (!geometry[id]) return null;
+          Array.from(activeSet).flatMap((id) => {
+            const elements = normalizedGeometry[id];
+            if (!elements) return [];
             const count = countMap[id] ?? 0;
             let resolved = {
               ...DEFAULT_AESTHETIC2,
@@ -22113,30 +22247,28 @@ var shinymap = (() => {
               });
               if (overrides) resolved = { ...resolved, ...overrides };
             }
-            return /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
-              "path",
-              {
-                d: geometry[id],
+            return elements.map(
+              (element, index) => renderElement({
+                element,
+                key: `selection-overlay-${id}-${index}`,
                 fill: resolved.fillColor,
                 fillOpacity: resolved.fillOpacity,
                 stroke: resolved.strokeColor,
                 strokeWidth: resolved.strokeWidth,
                 pointerEvents: "none"
-              },
-              `selection-overlay-${id}`
+              })
             );
           }),
-          hovered && hoverHighlight && geometry[hovered] && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
-            "path",
-            {
-              d: geometry[hovered],
+          hovered && hoverHighlight && normalizedGeometry[hovered]?.map(
+            (element, index) => renderElement({
+              element,
+              key: `hover-overlay-${hovered}-${index}`,
               fill: hoverHighlight.fillColor ?? "none",
               fillOpacity: hoverHighlight.fillOpacity ?? 0,
               stroke: hoverHighlight.strokeColor ?? "#1e40af",
               strokeWidth: hoverHighlight.strokeWidth ?? 2,
               pointerEvents: "none"
-            },
-            `hover-overlay-${hovered}`
+            })
           )
         ] })
       }
@@ -22178,7 +22310,7 @@ var shinymap = (() => {
   };
 
   // src/index.tsx
-  var import_jsx_runtime3 = __toESM(require_jsx_runtime(), 1);
+  var import_jsx_runtime4 = __toESM(require_jsx_runtime(), 1);
   function createRoot(target) {
     return (0, import_client.createRoot)(target);
   }
@@ -22195,13 +22327,13 @@ var shinymap = (() => {
     const root = getRoot(target);
     const componentProps = { ...props, onChange: onChange ?? props.onChange };
     const Component = InputMap;
-    root.render(/* @__PURE__ */ (0, import_jsx_runtime3.jsx)(Component, { ...componentProps }));
+    root.render(/* @__PURE__ */ (0, import_jsx_runtime4.jsx)(Component, { ...componentProps }));
     return root;
   }
   function renderOutputMap(target, props) {
     const root = getRoot(target);
     const Component = OutputMap;
-    root.render(/* @__PURE__ */ (0, import_jsx_runtime3.jsx)(Component, { ...props }));
+    root.render(/* @__PURE__ */ (0, import_jsx_runtime4.jsx)(Component, { ...props }));
     return root;
   }
   return __toCommonJS(index_exports);

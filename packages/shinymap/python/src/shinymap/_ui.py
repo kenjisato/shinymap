@@ -13,9 +13,9 @@ from shiny.session import Session, require_active_session
 from . import __version__
 
 if TYPE_CHECKING:
-    from .geometry import Geometry
+    from .geometry import Element, Geometry
 
-GeometryMap = Mapping[str, str | list[str]]
+GeometryMap = Mapping[str, str | list[str] | dict[str, Any] | list[dict[str, Any]]]
 TooltipMap = Mapping[str, str] | None
 FillMap = str | Mapping[str, str] | None
 CountMap = Mapping[str, int] | None
@@ -62,19 +62,45 @@ def _viewbox_to_str(view_box: tuple[float, float, float, float] | str | None) ->
     return f"{view_box[0]} {view_box[1]} {view_box[2]} {view_box[3]}"
 
 
-def _normalize_geometry(geometry: GeometryMap) -> Mapping[str, str]:
-    """Normalize geometry to flat string format for JavaScript.
+def _normalize_geometry(geometry: GeometryMap) -> Mapping[str, list[dict[str, Any]]]:
+    """Normalize geometry to Element list format for JavaScript.
 
-    Accepts both formats:
-    - Flat strings: {"id": "M 0 0 L 10 10"}
-    - List format: {"id": ["M 0 0 L 10 10", "M 20 20 L 30 30"]}
+    Handles both v0.x (strings) and v1.x (Element objects) formats:
+    - v0.x: strings are converted to path elements
+    - v1.x: Element objects are serialized via to_dict()
 
-    Returns flat strings joined with spaces.
+    Returns list of Element dicts for JSON transmission with camelCase keys.
     """
-    return {
-        region_id: " ".join(paths) if isinstance(paths, list) else paths
-        for region_id, paths in geometry.items()
-    }
+    def _to_camel_dict(d: dict[str, Any]) -> dict[str, Any]:
+        """Convert dict keys from snake_case to camelCase."""
+        return {_to_camel(k): v for k, v in d.items()}
+
+    result: dict[str, list[dict[str, Any]]] = {}
+    for region_id, value in geometry.items():
+        # Handle different input formats
+        if isinstance(value, str):
+            # v0.x: single string path
+            result[region_id] = [{"type": "path", "d": value}]
+        elif isinstance(value, list):
+            elements: list[dict[str, Any]] = []
+            for item in value:
+                if isinstance(item, str):
+                    # v0.x: string path
+                    elements.append({"type": "path", "d": item})
+                elif hasattr(item, 'to_dict'):
+                    # v1.x: Element object - convert to camelCase
+                    elements.append(_to_camel_dict(item.to_dict()))
+                elif isinstance(item, dict):
+                    # Already serialized - convert to camelCase
+                    elements.append(_to_camel_dict(item))
+            result[region_id] = elements
+        elif hasattr(value, 'to_dict'):
+            # v1.x: single Element object - convert to camelCase
+            result[region_id] = [_to_camel_dict(value.to_dict())]
+        elif isinstance(value, dict):
+            # Already serialized - convert to camelCase
+            result[region_id] = [_to_camel_dict(value)]
+    return result
 
 
 def _normalize_fills(fills: FillMap, geometry: GeometryMap) -> Mapping[str, str] | None:
@@ -113,8 +139,14 @@ def _camel_props(data: MutableMapping[str, Any]) -> MutableMapping[str, Any]:
     }
 
     # Keys whose values are aesthetic dicts that need recursive conversion
-    aesthetic_keys = {"default_aesthetic", "hover_highlight", "selected_aesthetic",
-                      "overlay_aesthetic", "fill_color_selected", "fill_color_not_selected"}
+    aesthetic_keys = {
+        "default_aesthetic",
+        "hover_highlight",
+        "selected_aesthetic",
+        "overlay_aesthetic",
+        "fill_color_selected",
+        "fill_color_not_selected",
+    }
 
     out: MutableMapping[str, Any] = {}
     for key, value in data.items():
@@ -210,6 +242,7 @@ def input_map(
     # Validate hover_highlight - opacity changes don't work with overlay-based hover
     if hover_highlight is not None:
         import warnings
+
         invalid_keys = {"fill_opacity", "fillOpacity", "stroke_opacity", "strokeOpacity"}
         found_invalid = invalid_keys & set(hover_highlight.keys())
         if found_invalid:
@@ -246,7 +279,7 @@ def input_map(
 
     props = _camel_props(
         {
-            "geometry": main_regions,
+            "geometry": _normalize_geometry(main_regions),
             "tooltips": tooltips,
             "fill_color": _normalize_fills(fill_color, main_regions),
             "mode": mode,
@@ -257,7 +290,7 @@ def input_map(
             "default_aesthetic": default_aesthetic,
             "hover_highlight": hover_highlight,
             "selected_aesthetic": selected_aesthetic,
-            "overlay_geometry": overlay_regions_dict if overlay_regions_dict else None,
+            "overlay_geometry": _normalize_geometry(overlay_regions_dict) if overlay_regions_dict else None,
             "overlay_aesthetic": overlay_aesthetic,
         }
     )
@@ -418,9 +451,7 @@ class MapBuilder:
         self._active_ids = active_ids
         return self
 
-    def with_view_box(
-        self, view_box: tuple[float, float, float, float]
-    ) -> MapBuilder:
+    def with_view_box(self, view_box: tuple[float, float, float, float]) -> MapBuilder:
         """Set the SVG viewBox as tuple (x, y, width, height)."""
         self._view_box = view_box
         return self
@@ -1114,9 +1145,7 @@ def _apply_static_params(payload: MapPayload, output_id: str) -> MapPayload:
 
     # Merge geometry from static params if not provided by builder
     merged_geometry = (
-        payload.geometry
-        if payload.geometry is not None
-        else static_params.get("geometry")
+        payload.geometry if payload.geometry is not None else static_params.get("geometry")
     )
 
     # Convert count_palette to fill_color if needed
@@ -1124,6 +1153,7 @@ def _apply_static_params(payload: MapPayload, output_id: str) -> MapPayload:
     merged_fill_color = payload.fill_color
     if payload.count_palette and merged_geometry and not payload.fill_color:
         import warnings
+
         # Convert palette to fill map using the merged geometry
         count_fills = {}
         max_count = max(payload.counts.values(), default=0) if payload.counts else 0
@@ -1150,9 +1180,7 @@ def _apply_static_params(payload: MapPayload, output_id: str) -> MapPayload:
     return MapPayload(
         geometry=merged_geometry,
         tooltips=(
-            payload.tooltips
-            if payload.tooltips is not None
-            else static_params.get("tooltips")
+            payload.tooltips if payload.tooltips is not None else static_params.get("tooltips")
         ),
         fill_color=merged_fill_color,  # May be converted from palette
         stroke_width=payload.stroke_width,  # Always from builder
@@ -1161,9 +1189,7 @@ def _apply_static_params(payload: MapPayload, output_id: str) -> MapPayload:
         counts=payload.counts,  # Always from builder
         active_ids=payload.active_ids,  # Always from builder
         view_box=(
-            payload.view_box
-            if payload.view_box is not None
-            else static_params.get("view_box")
+            payload.view_box if payload.view_box is not None else static_params.get("view_box")
         ),
         default_aesthetic=(
             payload.default_aesthetic

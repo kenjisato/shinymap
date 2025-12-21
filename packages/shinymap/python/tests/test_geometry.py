@@ -675,7 +675,9 @@ def test_infer_relabel_from_intermediate_json(sample_svg_file):
         final = {
             "_metadata": {"viewBox": "0 0 100 100"},
             "region_a": [{"type": "path", "d": "M 10 10 L 40 10 L 40 40 L 10 40 Z", "fill": "red"}],
-            "region_b": [{"type": "path", "d": "M 60 10 L 90 10 L 90 40 L 60 40 Z", "fill": "blue"}],
+            "region_b": [
+                {"type": "path", "d": "M 60 10 L 90 10 L 90 40 L 60 40 Z", "fill": "blue"}
+            ],
             "bottom": [{"type": "path", "d": "M 10 60 L 90 60 L 90 90 L 10 90 Z", "fill": "green"}],
         }
 
@@ -690,13 +692,13 @@ def test_infer_relabel_from_intermediate_json(sample_svg_file):
 def test_infer_relabel_no_changes(sample_intermediate_json):
     """Test that infer_relabel returns None when no transformations."""
     from shinymap.geometry import infer_relabel
-    
+
     with tempfile.TemporaryDirectory() as tmpdir:
         # Write intermediate to file
         intermediate_path = Path(tmpdir) / "intermediate.json"
         with open(intermediate_path, "w") as f:
             json.dump(sample_intermediate_json, f)
-        
+
         # Final is identical to intermediate
         final = sample_intermediate_json.copy()
 
@@ -1070,10 +1072,12 @@ def test_geometry_oop_workflow(sample_svg_file):
         # Complete workflow using OOP API
         geo = (
             Geometry.from_svg(sample_svg_file, extract_viewbox=True)
-            .relabel({
-                "top_merged": ["path_1", "path_2"],
-                "_border": "bottom",
-            })
+            .relabel(
+                {
+                    "top_merged": ["path_1", "path_2"],
+                    "_border": "bottom",
+                }
+            )
             .set_overlays(["_border"])
             .update_metadata({"source": "Test SVG", "license": "MIT"})
         )

@@ -71,8 +71,5 @@ if __name__ == "__main__":
         raise FileNotFoundError(f"{cli_file}")
 
     app_run(
-        initial_file=cli_file,
-        host=args.host,
-        port=args.port,
-        launch_browser=args.launch_browser
+        initial_file=cli_file, host=args.host, port=args.port, launch_browser=args.launch_browser
     )

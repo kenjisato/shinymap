@@ -32,11 +32,12 @@ def load_geometry(
 ) -> tuple[dict[str, str], dict[str, str], str]:
     """Load SVG geometry from shinymap JSON format.
 
-    TEMPORARY: Returns string-based paths for v0.x frontend compatibility.
-    Phase 3 will update this to return polymorphic Element objects.
+    .. deprecated:: 1.0.0
+        Use :meth:`Geometry.from_json` instead, which returns a Geometry object
+        with methods for accessing regions, overlays, and viewbox.
 
-    Currently supports both v0.x (strings) and v1.x (element dicts) input formats,
-    but always returns v0.x string format for backward compatibility.
+    This function returns a low-level tuple format and always converts to strings.
+    The Geometry API is more convenient and preserves polymorphic element types.
 
     Path lists are joined with spaces for rendering: " ".join(path_list)
 
@@ -85,6 +86,15 @@ def load_geometry(
         ...     viewbox_covers_overlays=False
         ... )
     """
+    warnings.warn(
+        "load_geometry() is deprecated and will be removed in a future version. "
+        "Use Geometry.from_json() instead, which returns a Geometry object with "
+        "methods for accessing regions (.main_regions()), overlays (.overlay_regions()), "
+        "and viewbox (.viewbox()).",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+
     json_path = Path(json_path).expanduser()
     if not json_path.exists():
         msg = f"JSON file not found: {json_path}"

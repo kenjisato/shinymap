@@ -7,9 +7,7 @@ from contextvars import ContextVar
 from typing import Any
 
 # Thread-safe context variable for app-level theme configuration
-_theme_config: ContextVar[Mapping[str, Any] | None] = ContextVar(
-    "shinymap_theme", default=None
-)
+_theme_config: ContextVar[Mapping[str, Any] | None] = ContextVar("shinymap_theme", default=None)
 
 
 def configure_theme(**kwargs: Any) -> None:

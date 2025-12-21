@@ -1,29 +1,55 @@
 /**
- * Normalize a single path to string format.
+ * Normalize a single region value to Element array format.
  *
- * Accepts both formats:
- * - string: Returns as-is
- * - string[]: Joins with space
+ * Handles both v0.x (string paths) and v1.x (polymorphic elements):
+ * - string → PathElement
+ * - string[] → PathElement[]
+ * - Element → [Element]
+ * - Element[] → Element[]
  *
- * @param path - Path in string or array format
- * @returns Normalized path string
+ * @param value - Region value in any supported format
+ * @returns Array of Element objects
  */
-export function normalizePath(path) {
-    return Array.isArray(path) ? path.join(" ") : path;
+export function normalizeRegion(value) {
+    // v1.x: Already Element or Element[]
+    if (typeof value === "object" && "type" in value) {
+        return Array.isArray(value) ? value : [value];
+    }
+    // v0.x: string or string[] (treated as path elements)
+    if (typeof value === "string") {
+        return [{ type: "path", d: value }];
+    }
+    if (Array.isArray(value)) {
+        // Could be Element[] or string[]
+        if (value.length === 0)
+            return [];
+        // Check first element to determine type
+        const first = value[0];
+        if (typeof first === "object" && "type" in first) {
+            // Element[]
+            return value;
+        }
+        else {
+            // string[] - convert to PathElement[]
+            return value.map((d) => ({ type: "path", d }));
+        }
+    }
+    // Shouldn't reach here with proper types
+    throw new Error(`Invalid region value: ${JSON.stringify(value)}`);
 }
 /**
- * Normalize entire geometry map to flat string format.
+ * Normalize entire geometry map to Element array format.
  *
- * Converts all paths to strings by joining arrays with spaces.
- * This is the format expected by SVG <path d="..."> attributes.
+ * Converts all region values to Element[] format, handling both v0.x
+ * (string paths) and v1.x (polymorphic elements) formats.
  *
- * @param geometry - Geometry map with string or array paths
- * @returns Normalized geometry map with only string paths
+ * @param geometry - Geometry map in any supported format
+ * @returns Normalized geometry map with Element[] values
  */
 export function normalizeGeometry(geometry) {
     const result = {};
-    for (const [regionId, path] of Object.entries(geometry)) {
-        result[regionId] = normalizePath(path);
+    for (const [regionId, value] of Object.entries(geometry)) {
+        result[regionId] = normalizeRegion(value);
     }
     return result;
 }

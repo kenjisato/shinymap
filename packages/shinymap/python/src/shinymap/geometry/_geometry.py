@@ -307,7 +307,12 @@ class Geometry:
                 text=text_content.strip() if text_content else None,
                 font_size=text_elem.get("font-size"),  # type: ignore[arg-type]
                 font_family=text_elem.get("font-family"),
+                font_weight=text_elem.get("font-weight"),  # type: ignore[arg-type]
+                font_style=text_elem.get("font-style"),  # type: ignore[arg-type]
+                text_anchor=text_elem.get("text-anchor"),  # type: ignore[arg-type]
+                dominant_baseline=text_elem.get("dominant-baseline"),  # type: ignore[arg-type]
                 fill=text_elem.get("fill"),
+                transform=text_elem.get("transform"),  # type: ignore[arg-type]
             )
             regions[elem_id] = [text]
 

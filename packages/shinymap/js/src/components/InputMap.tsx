@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 
-import type { AestheticStyle, InputMapMode, InputMapProps, RegionId } from "../types";
+import type { AestheticStyle, Element, InputMapMode, InputMapProps, RegionId } from "../types";
 import { normalizeGeometry } from "../utils/geometry";
+import { renderElement } from "../utils/renderElement";
 
 const DEFAULT_VIEWBOX = "0 0 100 100";
 const DEFAULT_AESTHETIC: AestheticStyle = {
@@ -22,7 +23,7 @@ function buildSelected(value: Record<RegionId, number> | undefined): Set<RegionI
 
 function normalizeFillColor(
   fillColor: string | Record<RegionId, string> | undefined,
-  geometry: Record<RegionId, string>
+  geometry: Record<RegionId, Element[]>
 ): Record<RegionId, string> | undefined {
   if (!fillColor) return undefined;
   if (typeof fillColor === "string") {
@@ -52,7 +53,7 @@ export function InputMap(props: InputMapProps) {
     selectedAesthetic,
   } = props;
 
-  // Normalize geometry to string format (handles both string and string[] paths)
+  // Normalize geometry to Element[] format (handles both v0.x strings and v1.x polymorphic elements)
   const normalizedGeometry = useMemo(() => normalizeGeometry(geometry), [geometry]);
   const normalizedOverlayGeometry = useMemo(
     () => (overlayGeometry ? normalizeGeometry(overlayGeometry) : undefined),
@@ -124,7 +125,7 @@ export function InputMap(props: InputMapProps) {
     >
       {/* Group 1: Base layer - all regions with base styling only, interactive */}
       <g>
-        {Object.entries(normalizedGeometry).map(([id, d]) => {
+        {Object.entries(normalizedGeometry).flatMap(([id, elements]) => {
           const tooltip = tooltips?.[id];
           const isHovered = hovered === id;
           const isSelected = selected.has(id);
@@ -165,52 +166,53 @@ export function InputMap(props: InputMapProps) {
           const handleMouseEnter = () => setHovered(id);
           const handleMouseLeave = () => setHovered((current) => (current === id ? null : current));
 
-          return (
-            <path
-              key={id}
-              d={d}
-              fill={resolved.fillColor}
-              fillOpacity={resolved.fillOpacity}
-              stroke={resolved.strokeColor}
-              strokeWidth={resolved.strokeWidth}
-              style={{ cursor: "pointer" }}
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
-              onFocus={handleMouseEnter}
-              onBlur={handleMouseLeave}
-              onClick={() => handleClick(id)}
-              {...extraProps}
-            >
-              {tooltip ? <title>{tooltip}</title> : null}
-            </path>
+          // Render each element in the region
+          return elements.map((element, index) =>
+            renderElement({
+              element,
+              key: `${id}-${index}`,
+              fill: resolved.fillColor,
+              fillOpacity: resolved.fillOpacity,
+              stroke: resolved.strokeColor,
+              strokeWidth: resolved.strokeWidth,
+              cursor: "pointer",
+              onMouseEnter: handleMouseEnter,
+              onMouseLeave: handleMouseLeave,
+              onFocus: handleMouseEnter,
+              onBlur: handleMouseLeave,
+              onClick: () => handleClick(id),
+              tooltip,
+              extraProps: extraProps as Record<string, unknown>,
+            })
           );
         })}
 
         {/* Non-interactive overlay (dividers, borders, grids) */}
         {normalizedOverlayGeometry &&
-          Object.entries(normalizedOverlayGeometry).map(([id, d]) => {
+          Object.entries(normalizedOverlayGeometry).flatMap(([id, elements]) => {
             const overlayStyle = {
               ...DEFAULT_AESTHETIC,
               ...overlayAesthetic,
             };
-            return (
-              <path
-                key={`overlay-${id}`}
-                d={d}
-                fill={overlayStyle.fillColor}
-                fillOpacity={overlayStyle.fillOpacity}
-                stroke={overlayStyle.strokeColor}
-                strokeWidth={overlayStyle.strokeWidth}
-                pointerEvents="none"
-              />
+            return elements.map((element, index) =>
+              renderElement({
+                element,
+                key: `overlay-${id}-${index}`,
+                fill: overlayStyle.fillColor,
+                fillOpacity: overlayStyle.fillOpacity,
+                stroke: overlayStyle.strokeColor,
+                strokeWidth: overlayStyle.strokeWidth,
+                pointerEvents: "none",
+              })
             );
           })}
       </g>
 
       {/* Group 2: Selection layer - selected regions only, non-interactive */}
       <g>
-        {Array.from(selected).map((id) => {
-          if (!normalizedGeometry[id]) return null;
+        {Array.from(selected).flatMap((id) => {
+          const elements = normalizedGeometry[id];
+          if (!elements) return [];
 
           const count = counts[id] ?? 0;
           let resolved: AestheticStyle = { ...DEFAULT_AESTHETIC, ...defaultAesthetic };
@@ -240,33 +242,35 @@ export function InputMap(props: InputMapProps) {
             }
           }
 
-          return (
-            <path
-              key={`selection-overlay-${id}`}
-              d={normalizedGeometry[id]}
-              fill={resolved.fillColor}
-              fillOpacity={resolved.fillOpacity}
-              stroke={resolved.strokeColor}
-              strokeWidth={resolved.strokeWidth}
-              pointerEvents="none"
-            />
+          return elements.map((element, index) =>
+            renderElement({
+              element,
+              key: `selection-overlay-${id}-${index}`,
+              fill: resolved.fillColor,
+              fillOpacity: resolved.fillOpacity,
+              stroke: resolved.strokeColor,
+              strokeWidth: resolved.strokeWidth,
+              pointerEvents: "none",
+            })
           );
         })}
       </g>
 
       {/* Group 3: Hover layer - hovered region only, non-interactive */}
       <g>
-        {hovered && hoverHighlight && normalizedGeometry[hovered] && (
-          <path
-            key={`hover-overlay-${hovered}`}
-            d={normalizedGeometry[hovered]}
-            fill={hoverHighlight.fillColor ?? "none"}
-            fillOpacity={hoverHighlight.fillOpacity ?? (hoverHighlight.fillColor ? 1 : 0)}
-            stroke={hoverHighlight.strokeColor ?? "#1e40af"}
-            strokeWidth={hoverHighlight.strokeWidth ?? 2}
-            pointerEvents="none"
-          />
-        )}
+        {hovered &&
+          hoverHighlight &&
+          normalizedGeometry[hovered]?.map((element, index) =>
+            renderElement({
+              element,
+              key: `hover-overlay-${hovered}-${index}`,
+              fill: hoverHighlight.fillColor ?? "none",
+              fillOpacity: hoverHighlight.fillOpacity ?? (hoverHighlight.fillColor ? 1 : 0),
+              stroke: hoverHighlight.strokeColor ?? "#1e40af",
+              strokeWidth: hoverHighlight.strokeWidth ?? 2,
+              pointerEvents: "none",
+            })
+          )}
       </g>
     </svg>
   );
