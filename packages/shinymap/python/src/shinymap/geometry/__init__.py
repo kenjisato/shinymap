@@ -112,6 +112,7 @@ from ._core import (
     infer_relabel,
     load_geometry,
 )
+from ._elements import Circle, Ellipse, Line, Path, Polygon, Rect, Text
 
 __all__ = [
     "Geometry",
@@ -121,4 +122,11 @@ __all__ = [
     "from_json",
     "infer_relabel",
     "load_geometry",
+    "Circle",
+    "Ellipse",
+    "Line",
+    "Path",
+    "Polygon",
+    "Rect",
+    "Text",
 ]

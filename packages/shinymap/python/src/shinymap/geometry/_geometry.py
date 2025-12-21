@@ -588,3 +588,33 @@ class Geometry:
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with open(output_path, "w", encoding="utf-8") as f:
             json.dump(self.to_dict(), f, indent=2, ensure_ascii=False)
+
+    def __repr__(self) -> str:
+        """Return clean repr showing regions summary and metadata.
+
+        Uses reprlib for concise output suitable for interactive use.
+        Shows region count instead of full region data.
+
+        Example:
+            >>> geo = Geometry.from_svg("map.svg")
+            >>> geo
+            Geometry(regions={47 regions}, metadata={'viewBox': '0 0 1000 1000'})
+        """
+        import reprlib
+
+        r = reprlib.Repr()
+        r.maxdict = 5  # Show up to 5 metadata items
+
+        # Create summary for regions (show count + preview of keys)
+        region_count = len(self.regions)
+        if region_count <= 5:
+            region_keys = list(self.regions.keys())
+            regions_repr = f"{{{', '.join(repr(k) for k in region_keys)}}}"
+        else:
+            region_keys = list(self.regions.keys())[:3]
+            regions_repr = f"{{{', '.join(repr(k) for k in region_keys)}, ... ({region_count} regions)}}"
+
+        # Use reprlib for metadata
+        metadata_repr = r.repr(self.metadata)
+
+        return f"Geometry(regions={regions_repr}, metadata={metadata_repr})"

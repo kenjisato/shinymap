@@ -178,6 +178,29 @@ class JSONSerializableMixin:
     2. Reference: Users can inspect original design, but shinymap ignores during render
     """
 
+    def attrs(self):
+        """Iterate over non-None attributes excluding internal fields.
+
+        Yields tuples of (key, value) for attributes that should be serialized.
+        Filters out None values and internal fields (elements, element_name).
+
+        Yields:
+            Tuple of (attribute_name, attribute_value)
+
+        Example:
+            >>> circle = Circle(cx=100, cy=100, r=50, fill="#ff0000")
+            >>> for key, val in circle.attrs():
+            ...     print(f"{key}={val}")
+            cx=100
+            cy=100
+            r=50
+            fill=#ff0000
+        """
+        for key, val in vars(self).items():
+            if val is None or key in ("elements", "element_name"):
+                continue
+            yield key, val
+
     def to_dict(self) -> dict[str, Any]:
         """Convert element to dict for JSON serialization.
 
@@ -203,10 +226,7 @@ class JSONSerializableMixin:
         result = {"type": self.element_name}  # type: ignore
 
         # Serialize all non-None attributes
-        for key, val in vars(self).items():
-            if val is None or key in ("elements", "element_name"):
-                continue
-
+        for key, val in self.attrs():
             # Handle special cases for complex types
             if key == "d" and hasattr(val, "__iter__") and not isinstance(val, str):
                 # PathData list → string
@@ -288,9 +308,62 @@ class ShinymapElementMixin(BoundsMixin, JSONSerializableMixin):
     - bounds() method for bounding box calculation
     - to_dict() for JSON serialization
     - from_dict() class method for deserialization
+    - Clean __repr__() showing only non-None attributes
     """
 
-    pass
+    def __repr__(self) -> str:
+        """Return clean repr showing only non-None attributes.
+
+        Uses reprlib for concise output similar to to_dict() format.
+        Only shows attributes with non-None values.
+
+        Example:
+            >>> Circle(cx=100, cy=100, r=50, fill="#ff0000")
+            Circle(cx=100, cy=100, r=50, fill='#ff0000')
+        """
+        import reprlib
+
+        class_name = self.__class__.__name__
+        attrs = []
+
+        for key, val in self.attrs():
+            # Use reprlib for string truncation
+            val_repr = reprlib.repr(val)
+            attrs.append(f"{key}={val_repr}")
+
+        if attrs:
+            return f"{class_name}({', '.join(attrs)})"
+        else:
+            return f"{class_name}()"
+
+    def __str__(self) -> str:
+        """Return same as __repr__ for consistent display.
+
+        Override svg.py's __str__ which returns SVG markup.
+        """
+        return self.__repr__()
+
+    def as_svg(self) -> str:
+        """Return SVG markup string for this element.
+
+        This method provides access to svg.py's native SVG rendering,
+        which is overridden by our custom __str__/__repr__.
+
+        Returns:
+            SVG markup string (e.g., '<circle cx="100" cy="100" r="50"/>')
+
+        Example:
+            >>> circle = Circle(cx=100, cy=100, r=50, fill="#ff0000")
+            >>> circle  # Shows clean repr
+            Circle(cx=100, cy=100, r=50, fill='#ff0000')
+            >>> circle.as_svg()  # Shows SVG markup
+            '<circle cx="100" cy="100" r="50" fill="#ff0000"/>'
+        """
+        # Call svg.Element's __str__ method directly
+        # This bypasses our override and gets the original SVG rendering
+        import svg
+
+        return svg.Element.__str__(self)
 
 
 __all__ = ["BoundsMixin", "JSONSerializableMixin", "ShinymapElementMixin"]
