@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "shinymap"
-version = "0.2.1"
+version = "0.3.0-dev"
 description = "Interactive SVG map components for Shiny for Python"
 readme = "README.md"
 authors = [{name = "shinymap contributors"}]
