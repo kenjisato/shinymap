@@ -42,7 +42,7 @@ Note:
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from typing import Any, Literal
 
 
@@ -137,8 +137,7 @@ class ParentProperty:
 
     def __rsub__(self, other: float | int) -> RelativeExpr:
         raise TypeError(
-            "Cannot subtract PARENT.property from a value; "
-            "use PARENT.property - value instead"
+            "Cannot subtract PARENT.property from a value; use PARENT.property - value instead"
         )
 
     def __mul__(self, other: float | int) -> RelativeExpr:
@@ -181,12 +180,9 @@ class ParentProxy:
 # The singleton PARENT object
 PARENT = ParentProxy()
 
-
-# Import MISSING sentinel and aesthetics for proper handling
-from dataclasses import dataclass, fields
-
-from ._aesthetics import BaseAesthetic, LineAesthetic, ShapeAesthetic, TextAesthetic
-from ._sentinel import MISSING, MissingType
+# Runtime imports for aesthetic resolution (placed here to avoid circular imports)
+from ._aesthetics import BaseAesthetic, LineAesthetic, ShapeAesthetic, TextAesthetic  # noqa: E402
+from ._sentinel import MISSING, MissingType  # noqa: E402
 
 # Default aesthetic values by type (matches JavaScript DEFAULT_AESTHETIC_VALUES)
 DEFAULT_SHAPE_AESTHETIC = ShapeAesthetic(
@@ -233,6 +229,7 @@ class RegionState:
         is_hovered: Whether the region is currently hovered
         group: Optional group name for group-based aesthetics
     """
+
     region_id: str
     is_selected: bool = False
     is_hovered: bool = False
@@ -253,6 +250,7 @@ class AestheticConfig:
         aes_group: Per-group aesthetic overrides
         fill_color: Per-region or global fill color override
     """
+
     aes_base: BaseAesthetic | None = None
     aes_select: BaseAesthetic | None = None
     aes_hover: BaseAesthetic | None | MissingType = MISSING
@@ -344,6 +342,7 @@ def resolve_region(
 
     # Layer 1.5: Per-region fill_color override
     if config.fill_color is not None:
+        fill: str | None
         if isinstance(config.fill_color, str):
             fill = config.fill_color
         else:
@@ -370,6 +369,7 @@ def resolve_region(
     # Layer 4: HOVER (if hovered)
     if state.is_hovered:
         # Determine effective hover aesthetic
+        hover_aes: BaseAesthetic | None
         if isinstance(config.aes_hover, MissingType):
             # Not specified: use default hover
             hover_aes = DEFAULT_HOVER_AESTHETIC
@@ -412,7 +412,10 @@ def preview_region(
     """
     lines: list[str] = []
     lines.append(f"=== Aesthetic Resolution for '{state.region_id}' ===")
-    lines.append(f"State: is_selected={state.is_selected}, is_hovered={state.is_hovered}, group={state.group}")
+    lines.append(
+        f"State: is_selected={state.is_selected}, is_hovered={state.is_hovered}, "
+        f"group={state.group}"
+    )
     lines.append("")
 
     def format_aes(aes: ShapeAesthetic, prev: ShapeAesthetic | None = None) -> list[str]:
@@ -474,16 +477,17 @@ def preview_region(
     # Layer 1.5: fill_color override
     if config.fill_color is not None:
         lines.append("[1.5] fill_color override")
+        fill_override: str | None
         if isinstance(config.fill_color, str):
-            fill = config.fill_color
-            lines.append(f"  Input: '{fill}' (global)")
+            fill_override = config.fill_color
+            lines.append(f"  Input: '{fill_override}' (global)")
         else:
-            fill = config.fill_color.get(state.region_id)
+            fill_override = config.fill_color.get(state.region_id)
             lines.append(f"  Input: {config.fill_color}")
-            lines.append(f"  For region '{state.region_id}': {fill}")
-        if fill is not None:
+            lines.append(f"  For region '{state.region_id}': {fill_override}")
+        if fill_override is not None:
             current = ShapeAesthetic(
-                fill_color=fill,
+                fill_color=fill_override,
                 fill_opacity=current.fill_opacity,
                 stroke_color=current.stroke_color,
                 stroke_width=current.stroke_width,
@@ -527,17 +531,18 @@ def preview_region(
     # Layer 4: HOVER
     if state.is_hovered:
         lines.append("[4] HOVER (is_hovered=True)")
+        hover_aes_preview: BaseAesthetic | None
         if isinstance(config.aes_hover, MissingType):
-            hover_aes = DEFAULT_HOVER_AESTHETIC
+            hover_aes_preview = DEFAULT_HOVER_AESTHETIC
             lines.append("  Input (using DEFAULT_HOVER_AESTHETIC):")
         elif config.aes_hover is None:
-            hover_aes = None
+            hover_aes_preview = None
             lines.append("  Input: None (hover disabled)")
         else:
-            hover_aes = config.aes_hover
+            hover_aes_preview = config.aes_hover
             lines.append("  Input:")
-        lines.extend(format_input(hover_aes))
-        current = _merge_aesthetic(hover_aes, current)
+        lines.extend(format_input(hover_aes_preview))
+        current = _merge_aesthetic(hover_aes_preview, current)
         lines.append("  Resolved:")
         lines.extend(format_aes(current, prev))
         lines.append("")

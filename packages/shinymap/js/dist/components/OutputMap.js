@@ -111,9 +111,13 @@ export function OutputMap(props) {
                     baseAes = {
                         ...baseAes,
                         ...((normalizedFillColor === null || normalizedFillColor === void 0 ? void 0 : normalizedFillColor[id]) ? { fillColor: normalizedFillColor[id] } : {}),
-                        ...((normalizedStrokeWidth === null || normalizedStrokeWidth === void 0 ? void 0 : normalizedStrokeWidth[id]) !== undefined ? { strokeWidth: normalizedStrokeWidth[id] } : {}),
+                        ...((normalizedStrokeWidth === null || normalizedStrokeWidth === void 0 ? void 0 : normalizedStrokeWidth[id]) !== undefined
+                            ? { strokeWidth: normalizedStrokeWidth[id] }
+                            : {}),
                         ...((normalizedStrokeColor === null || normalizedStrokeColor === void 0 ? void 0 : normalizedStrokeColor[id]) ? { strokeColor: normalizedStrokeColor[id] } : {}),
-                        ...((normalizedFillOpacity === null || normalizedFillOpacity === void 0 ? void 0 : normalizedFillOpacity[id]) !== undefined ? { fillOpacity: normalizedFillOpacity[id] } : {}),
+                        ...((normalizedFillOpacity === null || normalizedFillOpacity === void 0 ? void 0 : normalizedFillOpacity[id]) !== undefined
+                            ? { fillOpacity: normalizedFillOpacity[id] }
+                            : {}),
                     };
                     // Apply selection-specific aesthetics (layer 4a)
                     if (isActive && aesSelect) {
@@ -205,9 +209,13 @@ export function OutputMap(props) {
                     baseAes = {
                         ...baseAes,
                         ...((normalizedFillColor === null || normalizedFillColor === void 0 ? void 0 : normalizedFillColor[id]) ? { fillColor: normalizedFillColor[id] } : {}),
-                        ...((normalizedStrokeWidth === null || normalizedStrokeWidth === void 0 ? void 0 : normalizedStrokeWidth[id]) !== undefined ? { strokeWidth: normalizedStrokeWidth[id] } : {}),
+                        ...((normalizedStrokeWidth === null || normalizedStrokeWidth === void 0 ? void 0 : normalizedStrokeWidth[id]) !== undefined
+                            ? { strokeWidth: normalizedStrokeWidth[id] }
+                            : {}),
                         ...((normalizedStrokeColor === null || normalizedStrokeColor === void 0 ? void 0 : normalizedStrokeColor[id]) ? { strokeColor: normalizedStrokeColor[id] } : {}),
-                        ...((normalizedFillOpacity === null || normalizedFillOpacity === void 0 ? void 0 : normalizedFillOpacity[id]) !== undefined ? { fillOpacity: normalizedFillOpacity[id] } : {}),
+                        ...((normalizedFillOpacity === null || normalizedFillOpacity === void 0 ? void 0 : normalizedFillOpacity[id]) !== undefined
+                            ? { fillOpacity: normalizedFillOpacity[id] }
+                            : {}),
                     };
                     // Create base RenderedRegion
                     const baseRegion = createRenderedRegion(id, baseAes);
@@ -260,10 +268,18 @@ export function OutputMap(props) {
                         }
                         baseAes = {
                             ...baseAes,
-                            ...((normalizedFillColor === null || normalizedFillColor === void 0 ? void 0 : normalizedFillColor[hovered]) ? { fillColor: normalizedFillColor[hovered] } : {}),
-                            ...((normalizedStrokeWidth === null || normalizedStrokeWidth === void 0 ? void 0 : normalizedStrokeWidth[hovered]) !== undefined ? { strokeWidth: normalizedStrokeWidth[hovered] } : {}),
-                            ...((normalizedStrokeColor === null || normalizedStrokeColor === void 0 ? void 0 : normalizedStrokeColor[hovered]) ? { strokeColor: normalizedStrokeColor[hovered] } : {}),
-                            ...((normalizedFillOpacity === null || normalizedFillOpacity === void 0 ? void 0 : normalizedFillOpacity[hovered]) !== undefined ? { fillOpacity: normalizedFillOpacity[hovered] } : {}),
+                            ...((normalizedFillColor === null || normalizedFillColor === void 0 ? void 0 : normalizedFillColor[hovered])
+                                ? { fillColor: normalizedFillColor[hovered] }
+                                : {}),
+                            ...((normalizedStrokeWidth === null || normalizedStrokeWidth === void 0 ? void 0 : normalizedStrokeWidth[hovered]) !== undefined
+                                ? { strokeWidth: normalizedStrokeWidth[hovered] }
+                                : {}),
+                            ...((normalizedStrokeColor === null || normalizedStrokeColor === void 0 ? void 0 : normalizedStrokeColor[hovered])
+                                ? { strokeColor: normalizedStrokeColor[hovered] }
+                                : {}),
+                            ...((normalizedFillOpacity === null || normalizedFillOpacity === void 0 ? void 0 : normalizedFillOpacity[hovered]) !== undefined
+                                ? { fillOpacity: normalizedFillOpacity[hovered] }
+                                : {}),
                         };
                         const baseRegion = createRenderedRegion(hovered, baseAes);
                         // Step 2: If active, create selection RenderedRegion with base as parent

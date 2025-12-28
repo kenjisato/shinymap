@@ -98,8 +98,8 @@ def validate_aesthetic_for_elements(
             if non_none_fills:
                 context_str = f" for {context}" if context else ""
                 warnings.warn(
-                    f"Fill aesthetics {non_none_fills} have no effect on Line elements{context_str}. "
-                    f"Use aes.Line() for stroke-only aesthetics.",
+                    f"Fill aesthetics {non_none_fills} have no effect on Line elements"
+                    f"{context_str}. Use aes.Line() for stroke-only aesthetics.",
                     UserWarning,
                     stacklevel=3,
                 )

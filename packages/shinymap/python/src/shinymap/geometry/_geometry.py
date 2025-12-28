@@ -499,7 +499,7 @@ class Geometry:
                 relabeled_ids.add(old_id)
 
             # Store as list (single region = single-element, merge = multi-element)
-            new_regions[new_id] = path_parts
+            new_regions[new_id] = path_parts  # type: ignore[assignment]
 
         # Keep regions that weren't relabeled
         for region_id, paths in self.regions.items():
@@ -621,7 +621,7 @@ class Geometry:
                     serialized_elements.append(elem)
                 else:
                     # v1.x format: serialize Element to dict
-                    serialized_elements.append(elem.to_dict())
+                    serialized_elements.append(elem.to_dict())  # type: ignore[arg-type]
             output[region_id] = serialized_elements
 
         return output

@@ -126,9 +126,7 @@ export function resolveGroupAesthetic(
   // Find all groups this region belongs to
   for (const [groupName, aesthetic] of Object.entries(aesGroup)) {
     const groupMembers = groups[groupName];
-    const isMember = groupMembers
-      ? groupMembers.includes(id)
-      : groupName === id; // Singleton group
+    const isMember = groupMembers ? groupMembers.includes(id) : groupName === id; // Singleton group
 
     if (isMember) {
       if (!result) {

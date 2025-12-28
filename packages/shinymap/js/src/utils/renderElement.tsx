@@ -146,7 +146,14 @@ export function renderElement(props: RenderElementProps): React.ReactElement {
 
     case "ellipse":
       return (
-        <ellipse key={key} cx={element.cx} cy={element.cy} rx={element.rx} ry={element.ry} {...commonProps}>
+        <ellipse
+          key={key}
+          cx={element.cx}
+          cy={element.cy}
+          rx={element.rx}
+          ry={element.ry}
+          {...commonProps}
+        >
           {titleElement}
         </ellipse>
       );

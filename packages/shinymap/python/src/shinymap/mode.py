@@ -240,8 +240,12 @@ class Count:
         >>> # Per-group palettes
         >>> mode = Count(
         ...     aes=aes.ByGroup(
-        ...         group_a=aes.Indexed(fill_color="#ef4444", fill_opacity=linspace(0.2, 1.0, num=5)),
-        ...         group_b=aes.Indexed(fill_color="#3b82f6", fill_opacity=linspace(0.2, 1.0, num=5)),
+        ...         group_a=aes.Indexed(
+        ...             fill_color="#ef4444", fill_opacity=linspace(0.2, 1.0, num=5)
+        ...         ),
+        ...         group_b=aes.Indexed(
+        ...             fill_color="#3b82f6", fill_opacity=linspace(0.2, 1.0, num=5)
+        ...         ),
         ...     ),
         ... )
     """
@@ -280,9 +284,9 @@ def _serialize_aes(aes: Any) -> dict[str, Any]:
                 groups[key] = value.to_dict()
         return {"type": "byGroup", "groups": groups}
     elif hasattr(aes, "to_dict"):
-        return aes.to_dict()
+        return aes.to_dict()  # type: ignore[no-any-return]
     else:
-        return aes
+        return aes  # type: ignore[no-any-return]
 
 
 # Type alias for mode parameter

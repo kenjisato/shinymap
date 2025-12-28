@@ -24,23 +24,23 @@ Usage:
 
 from __future__ import annotations
 
-# Neutral colors
-from .neutral import NEUTRALS
-
-# Qualitative palette
-from .qualitative import QUALITATIVE
-
-# Sequential palettes
-from .sequential import SEQUENTIAL_BLUE, SEQUENTIAL_GREEN, SEQUENTIAL_ORANGE
-
 # Binary (two-state) palettes
 from .binary import BINARY_GREEN, BINARY_RED, BINARY_TOGGLE
 
 # Cycle mode palettes
 from .cycle import HUE_CYCLE_4, LIKERT_5, PRIORITY_5, SENTIMENT_3
 
+# Neutral colors
+from .neutral import NEUTRALS
+
+# Qualitative palette
+from .qualitative import QUALITATIVE
+
 # Scale functions
 from .scale import lerp_hex, scale_diverging, scale_qualitative, scale_sequential
+
+# Sequential palettes
+from .sequential import SEQUENTIAL_BLUE, SEQUENTIAL_GREEN, SEQUENTIAL_ORANGE
 
 __all__ = [
     # Neutral

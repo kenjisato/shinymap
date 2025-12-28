@@ -29,8 +29,8 @@ class TestExportSvgBasic:
         assert 'viewBox="0 0 200 200"' in content
 
         # Verify elements with id attributes
-        assert "id=\"circle_region\"" in content
-        assert "id=\"rect_region\"" in content
+        assert 'id="circle_region"' in content
+        assert 'id="rect_region"' in content
 
         # Verify element types
         assert "<circle" in content

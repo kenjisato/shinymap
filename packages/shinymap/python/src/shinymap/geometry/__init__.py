@@ -110,7 +110,6 @@ from ._core import (
     from_json,
     from_svg,
     infer_relabel,
-    load_geometry,
 )
 from ._elements import Circle, Ellipse, Line, Path, Polygon, Rect, Text
 from ._export import export_svg

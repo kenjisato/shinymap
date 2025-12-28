@@ -1,7 +1,20 @@
 import React, { useEffect, useMemo, useState } from "react";
 
-import type { AestheticStyle, Element, InputMapProps, MapModeType, RegionId, RenderedRegion } from "../types";
-import { createRenderedRegion, DEFAULT_AESTHETIC_VALUES, DEFAULT_HOVER_AESTHETIC, getIndexedDataForRegion, resolveIndexedAesthetic } from "../types";
+import type {
+  AestheticStyle,
+  Element,
+  InputMapProps,
+  MapModeType,
+  RegionId,
+  RenderedRegion,
+} from "../types";
+import {
+  createRenderedRegion,
+  DEFAULT_AESTHETIC_VALUES,
+  DEFAULT_HOVER_AESTHETIC,
+  getIndexedDataForRegion,
+  resolveIndexedAesthetic,
+} from "../types";
 import { normalizeGeometry } from "../utils/geometry";
 import { assignLayers, resolveGroupAesthetic } from "../utils/layers";
 import { renderElement } from "../utils/renderElement";
@@ -81,7 +94,10 @@ export function InputMap(props: InputMapProps) {
     [normalizedGeometry, underlays, overlays, hidden, geometryMetadata]
   );
 
-  const normalizedFillColor = useMemo(() => normalizeFillColor(fillColor, normalizedGeometry), [fillColor, normalizedGeometry]);
+  const normalizedFillColor = useMemo(
+    () => normalizeFillColor(fillColor, normalizedGeometry),
+    [fillColor, normalizedGeometry]
+  );
   const [hovered, setHovered] = useState<RegionId | null>(null);
   // Use internal state for counts, initialized from value prop
   const [counts, setCounts] = useState<Record<RegionId, number>>(value ?? {});
@@ -102,7 +118,8 @@ export function InputMap(props: InputMapProps) {
     throw new Error("Cycle mode requires n >= 2");
   }
   const effectiveCycle =
-    cycle ?? (modeType === "single" ? 2 : modeType === "multiple" ? 2 : modeType === "count" ? Infinity : 2);
+    cycle ??
+    (modeType === "single" ? 2 : modeType === "multiple" ? 2 : modeType === "count" ? Infinity : 2);
   const effectiveMax =
     maxSelection ??
     (modeType === "single"
@@ -210,10 +227,18 @@ export function InputMap(props: InputMapProps) {
             baseAes = {
               ...baseAes,
               ...(indexedAes.fillColor !== undefined ? { fillColor: indexedAes.fillColor } : {}),
-              ...(indexedAes.fillOpacity !== undefined ? { fillOpacity: indexedAes.fillOpacity } : {}),
-              ...(indexedAes.strokeColor !== undefined ? { strokeColor: indexedAes.strokeColor } : {}),
-              ...(indexedAes.strokeWidth !== undefined ? { strokeWidth: indexedAes.strokeWidth } : {}),
-              ...(indexedAes.strokeDasharray !== undefined ? { strokeDasharray: indexedAes.strokeDasharray } : {}),
+              ...(indexedAes.fillOpacity !== undefined
+                ? { fillOpacity: indexedAes.fillOpacity }
+                : {}),
+              ...(indexedAes.strokeColor !== undefined
+                ? { strokeColor: indexedAes.strokeColor }
+                : {}),
+              ...(indexedAes.strokeWidth !== undefined
+                ? { strokeWidth: indexedAes.strokeWidth }
+                : {}),
+              ...(indexedAes.strokeDasharray !== undefined
+                ? { strokeDasharray: indexedAes.strokeDasharray }
+                : {}),
             };
           }
 
@@ -309,50 +334,51 @@ export function InputMap(props: InputMapProps) {
       {/* Layer 4: Selection layer - selected regions only, non-interactive */}
       {/* Skip selection layer when using aesIndexed (base layer already shows state) */}
       <g>
-        {!aesIndexed && Array.from(selected).flatMap((id) => {
-          // Only render selection overlay for regions in base layer
-          if (!layerAssignment.base.has(id)) return [];
+        {!aesIndexed &&
+          Array.from(selected).flatMap((id) => {
+            // Only render selection overlay for regions in base layer
+            if (!layerAssignment.base.has(id)) return [];
 
-          const elements = normalizedGeometry[id];
-          if (!elements) return [];
+            const elements = normalizedGeometry[id];
+            if (!elements) return [];
 
-          // Build base aesthetic
-          let baseAes: AestheticStyle = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
-          const groupAes = resolveGroupAesthetic(id, aesGroup, geometryMetadata);
-          if (groupAes) {
-            baseAes = { ...baseAes, ...groupAes };
-          }
-          if (normalizedFillColor && normalizedFillColor[id]) {
-            baseAes.fillColor = normalizedFillColor[id];
-          }
+            // Build base aesthetic
+            let baseAes: AestheticStyle = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
+            const groupAes = resolveGroupAesthetic(id, aesGroup, geometryMetadata);
+            if (groupAes) {
+              baseAes = { ...baseAes, ...groupAes };
+            }
+            if (normalizedFillColor && normalizedFillColor[id]) {
+              baseAes.fillColor = normalizedFillColor[id];
+            }
 
-          // Create base RenderedRegion
-          const baseRegion = createRenderedRegion(id, baseAes);
+            // Create base RenderedRegion
+            const baseRegion = createRenderedRegion(id, baseAes);
 
-          // Build selection aesthetic on top of base
-          // Note: aesSelect takes precedence - resolveAesthetic is for base layer styling only
-          let selectAes: AestheticStyle = {};
-          if (aesSelect) {
-            selectAes = { ...aesSelect };
-          }
+            // Build selection aesthetic on top of base
+            // Note: aesSelect takes precedence - resolveAesthetic is for base layer styling only
+            let selectAes: AestheticStyle = {};
+            if (aesSelect) {
+              selectAes = { ...aesSelect };
+            }
 
-          // Create selection RenderedRegion with base as parent
-          const selectRegion = createRenderedRegion(id, selectAes, baseRegion);
+            // Create selection RenderedRegion with base as parent
+            const selectRegion = createRenderedRegion(id, selectAes, baseRegion);
 
-          return elements.map((element, index) =>
-            renderElement({
-              element,
-              key: `selection-overlay-${id}-${index}`,
-              fill: selectRegion.aesthetic.fillColor,
-              fillOpacity: selectRegion.aesthetic.fillOpacity,
-              stroke: selectRegion.aesthetic.strokeColor,
-              strokeWidth: selectRegion.aesthetic.strokeWidth,
-              strokeDasharray: selectRegion.aesthetic.strokeDasharray,
-              nonScalingStroke: selectRegion.aesthetic.nonScalingStroke,
-              pointerEvents: "none",
-            })
-          );
-        })}
+            return elements.map((element, index) =>
+              renderElement({
+                element,
+                key: `selection-overlay-${id}-${index}`,
+                fill: selectRegion.aesthetic.fillColor,
+                fillOpacity: selectRegion.aesthetic.fillOpacity,
+                stroke: selectRegion.aesthetic.strokeColor,
+                strokeWidth: selectRegion.aesthetic.strokeWidth,
+                strokeDasharray: selectRegion.aesthetic.strokeDasharray,
+                nonScalingStroke: selectRegion.aesthetic.nonScalingStroke,
+                pointerEvents: "none",
+              })
+            );
+          })}
       </g>
 
       {/* Layer 5: Hover layer - hovered region only, non-interactive */}
@@ -381,10 +407,18 @@ export function InputMap(props: InputMapProps) {
               baseAes = {
                 ...baseAes,
                 ...(indexedAes.fillColor !== undefined ? { fillColor: indexedAes.fillColor } : {}),
-                ...(indexedAes.fillOpacity !== undefined ? { fillOpacity: indexedAes.fillOpacity } : {}),
-                ...(indexedAes.strokeColor !== undefined ? { strokeColor: indexedAes.strokeColor } : {}),
-                ...(indexedAes.strokeWidth !== undefined ? { strokeWidth: indexedAes.strokeWidth } : {}),
-                ...(indexedAes.strokeDasharray !== undefined ? { strokeDasharray: indexedAes.strokeDasharray } : {}),
+                ...(indexedAes.fillOpacity !== undefined
+                  ? { fillOpacity: indexedAes.fillOpacity }
+                  : {}),
+                ...(indexedAes.strokeColor !== undefined
+                  ? { strokeColor: indexedAes.strokeColor }
+                  : {}),
+                ...(indexedAes.strokeWidth !== undefined
+                  ? { strokeWidth: indexedAes.strokeWidth }
+                  : {}),
+                ...(indexedAes.strokeDasharray !== undefined
+                  ? { strokeDasharray: indexedAes.strokeDasharray }
+                  : {}),
               };
             }
 
@@ -408,7 +442,8 @@ export function InputMap(props: InputMapProps) {
                 element,
                 key: `hover-overlay-${hovered}-${index}`,
                 fill: hoverRegion.aesthetic.fillColor ?? "none",
-                fillOpacity: hoverRegion.aesthetic.fillOpacity ?? (hoverRegion.aesthetic.fillColor ? 1 : 0),
+                fillOpacity:
+                  hoverRegion.aesthetic.fillOpacity ?? (hoverRegion.aesthetic.fillColor ? 1 : 0),
                 stroke: hoverRegion.aesthetic.strokeColor,
                 strokeWidth: hoverRegion.aesthetic.strokeWidth,
                 strokeDasharray: hoverRegion.aesthetic.strokeDasharray,

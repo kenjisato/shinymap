@@ -25,8 +25,8 @@ from ._sentinel import MISSING, MissingType
 from .mode import Count, Cycle, ModeType, Multiple, Single
 
 if TYPE_CHECKING:
+    from ._wash import WashConfig
     from .geometry import Geometry
-    from ._wash import AesParam, WashConfig
 
 GeometryMap = Mapping[str, str | list[str] | dict[str, Any] | list[dict[str, Any]]]
 TooltipMap = Mapping[str, str] | None
@@ -66,6 +66,7 @@ def _to_camel(snake_str: str) -> str:
 
 def _normalize_geometry(geometry: GeometryMap) -> Mapping[str, list[dict[str, Any]]]:
     """Normalize geometry to Element list format for JavaScript."""
+
     def _to_camel_dict(d: dict[str, Any]) -> dict[str, Any]:
         return {_to_camel(k): v for k, v in d.items()}
 
@@ -78,12 +79,12 @@ def _normalize_geometry(geometry: GeometryMap) -> Mapping[str, list[dict[str, An
             for item in value:
                 if isinstance(item, str):
                     elements.append({"type": "path", "d": item})
-                elif hasattr(item, 'to_dict'):
+                elif hasattr(item, "to_dict"):
                     elements.append(_to_camel_dict(item.to_dict()))
                 elif isinstance(item, dict):
                     elements.append(_to_camel_dict(item))
             result[region_id] = elements
-        elif hasattr(value, 'to_dict'):
+        elif hasattr(value, "to_dict"):
             result[region_id] = [_to_camel_dict(value.to_dict())]
         elif isinstance(value, dict):
             result[region_id] = [_to_camel_dict(value)]
@@ -112,7 +113,8 @@ def _convert_nested_aes(aes: dict[str, Any]) -> dict[str, Any]:
             # Group is a dict of group_name -> aesthetic dict
             result[key] = {
                 group_name: _convert_aesthetic_dict(group_aes)
-                if isinstance(group_aes, dict) else group_aes
+                if isinstance(group_aes, dict)
+                else group_aes
                 for group_name, group_aes in value.items()
             }
         elif isinstance(value, dict):
@@ -190,21 +192,25 @@ def _merge_lines_as_path_into_aes(
         return ByGroup(**line_group_entries)
     elif isinstance(aes, ByGroup):
         # Merge: user entries take priority
-        merged = dict(line_group_entries)
+        merged_entries = dict(line_group_entries)
         for key in aes.keys():
-            merged[key] = aes[key]
-        return ByGroup(**merged)
+            merged_entries[key] = aes[key]
+        return ByGroup(**merged_entries)
     elif isinstance(aes, ByState):
         # User provided ByState for global config - wrap in ByGroup and add line entries
         # ByState applies to __all, line entries apply to specific regions
-        merged: dict[str, ByState | BaseAesthetic | None | MissingType] = dict(line_group_entries)
-        merged["__all"] = aes
-        return ByGroup(**merged)
+        bystate_entries: dict[str, ByState | BaseAesthetic | None | MissingType] = dict(
+            line_group_entries
+        )
+        bystate_entries["__all"] = aes
+        return ByGroup(**bystate_entries)
     elif isinstance(aes, BaseAesthetic):
         # User provided single aesthetic - wrap in ByGroup
-        merged2: dict[str, ByState | BaseAesthetic | None | MissingType] = dict(line_group_entries)
-        merged2["__all"] = aes
-        return ByGroup(**merged2)
+        base_entries: dict[str, ByState | BaseAesthetic | None | MissingType] = dict(
+            line_group_entries
+        )
+        base_entries["__all"] = aes
+        return ByGroup(**base_entries)
     else:
         return aes
 
@@ -223,7 +229,7 @@ def _convert_aes_to_dict(
         Dict with keys: base, hover, select, group (ready for _camel_props)
     """
     # Import here to avoid circular dependency
-    from ._wash import _convert_to_aes_dict, WashConfig
+    from ._wash import WashConfig, _convert_to_aes_dict
 
     # Create empty wash config if not provided
     if wash_config is None:
@@ -336,7 +342,7 @@ def base_input_map(
 
     # Build props with new nested structure
     props_dict: dict[str, Any] = {
-        "geometry": _normalize_geometry(all_regions),
+        "geometry": _normalize_geometry(all_regions),  # type: ignore[arg-type]
         "tooltips": tooltips,
         "view_box": vb_str,
         "geometry_metadata": geometry_metadata,

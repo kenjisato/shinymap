@@ -162,7 +162,11 @@ export type AesIndexedConfig =
  * If the value is not an array, returns it as-is.
  * For arrays, uses modulo for wrapping (Cycle mode) or clamping (Count mode).
  */
-function getIndexedValue<T>(value: IndexedValue<T> | undefined, index: number, wrap: boolean): T | undefined {
+function getIndexedValue<T>(
+  value: IndexedValue<T> | undefined,
+  index: number,
+  wrap: boolean
+): T | undefined {
   if (value === undefined) return undefined;
   if (!Array.isArray(value)) return value;
   if (value.length === 0) return undefined;
@@ -357,9 +361,9 @@ export type RenderedRegion = {
  * out-of-box experience, or define their own aesthetics.
  */
 export const DEFAULT_AESTHETIC_VALUES: Required<ResolvedAesthetic> = {
-  fillColor: "#f1f5f9",  // slate-100: subtle, reserved default
+  fillColor: "#f1f5f9", // slate-100: subtle, reserved default
   fillOpacity: 1,
-  strokeColor: "#94a3b8",  // slate-400: subtle border
+  strokeColor: "#94a3b8", // slate-400: subtle border
   strokeWidth: 0.5,
   strokeDasharray: "",
   nonScalingStroke: false,
@@ -381,12 +385,12 @@ export const DEFAULT_AESTHETIC_VALUES: Required<ResolvedAesthetic> = {
  */
 export const LIBRARY_AESTHETIC_DEFAULTS = {
   base: {
-    fillColor: "#e2e8f0",   // slate-200: neutral base
+    fillColor: "#e2e8f0", // slate-200: neutral base
     strokeColor: "#94a3b8", // slate-400: subtle border
     strokeWidth: 0.5,
   } as AestheticStyle,
   select: {
-    fillColor: "#bfdbfe",   // blue-200: selected highlight
+    fillColor: "#bfdbfe", // blue-200: selected highlight
     strokeColor: "#1e40af", // blue-800: strong border
     strokeWidth: 1,
   } as AestheticStyle,
@@ -405,7 +409,7 @@ export const LIBRARY_AESTHETIC_DEFAULTS = {
     strokeWidth: 0.5,
   } as AestheticStyle,
   text: {
-    fillColor: "#1e293b",   // slate-800
+    fillColor: "#1e293b", // slate-800
   } as AestheticStyle,
 };
 
@@ -476,12 +480,40 @@ export function createRenderedRegion(
   parent?: RenderedRegion
 ): RenderedRegion {
   const resolved: ResolvedAesthetic = {
-    fillColor: resolveStringProperty(aes.fillColor, parent, "fillColor", DEFAULT_AESTHETIC_VALUES.fillColor),
-    fillOpacity: resolveNumericProperty(aes.fillOpacity, parent, "fillOpacity", DEFAULT_AESTHETIC_VALUES.fillOpacity),
-    strokeColor: resolveStringProperty(aes.strokeColor, parent, "strokeColor", DEFAULT_AESTHETIC_VALUES.strokeColor),
-    strokeWidth: resolveNumericProperty(aes.strokeWidth, parent, "strokeWidth", DEFAULT_AESTHETIC_VALUES.strokeWidth),
-    strokeDasharray: resolveStringProperty(aes.strokeDasharray, parent, "strokeDasharray", DEFAULT_AESTHETIC_VALUES.strokeDasharray),
-    nonScalingStroke: aes.nonScalingStroke ?? parent?.aesthetic.nonScalingStroke ?? DEFAULT_AESTHETIC_VALUES.nonScalingStroke,
+    fillColor: resolveStringProperty(
+      aes.fillColor,
+      parent,
+      "fillColor",
+      DEFAULT_AESTHETIC_VALUES.fillColor
+    ),
+    fillOpacity: resolveNumericProperty(
+      aes.fillOpacity,
+      parent,
+      "fillOpacity",
+      DEFAULT_AESTHETIC_VALUES.fillOpacity
+    ),
+    strokeColor: resolveStringProperty(
+      aes.strokeColor,
+      parent,
+      "strokeColor",
+      DEFAULT_AESTHETIC_VALUES.strokeColor
+    ),
+    strokeWidth: resolveNumericProperty(
+      aes.strokeWidth,
+      parent,
+      "strokeWidth",
+      DEFAULT_AESTHETIC_VALUES.strokeWidth
+    ),
+    strokeDasharray: resolveStringProperty(
+      aes.strokeDasharray,
+      parent,
+      "strokeDasharray",
+      DEFAULT_AESTHETIC_VALUES.strokeDasharray
+    ),
+    nonScalingStroke:
+      aes.nonScalingStroke ??
+      parent?.aesthetic.nonScalingStroke ??
+      DEFAULT_AESTHETIC_VALUES.nonScalingStroke,
   };
 
   return { id, aesthetic: resolved, parent };

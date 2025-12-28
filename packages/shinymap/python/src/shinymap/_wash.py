@@ -38,13 +38,21 @@ AesParam = ByGroup | ByState | BaseAesthetic | None | MissingType
 
 # Valid keys for each aesthetic type
 _SHAPE_KEYS = {
-    "fill_color", "fill_opacity", "stroke_color",
-    "stroke_width", "stroke_dasharray", "non_scaling_stroke",
+    "fill_color",
+    "fill_opacity",
+    "stroke_color",
+    "stroke_width",
+    "stroke_dasharray",
+    "non_scaling_stroke",
 }
 _LINE_KEYS = {"stroke_color", "stroke_width", "stroke_dasharray", "non_scaling_stroke"}
 _TEXT_KEYS = {
-    "fill_color", "fill_opacity", "stroke_color",
-    "stroke_width", "stroke_dasharray", "non_scaling_stroke",
+    "fill_color",
+    "fill_opacity",
+    "stroke_color",
+    "stroke_width",
+    "stroke_dasharray",
+    "non_scaling_stroke",
 }
 
 
@@ -53,8 +61,7 @@ def _warn_unknown_keys(d: dict[str, Any], valid_keys: set[str], aesthetic_type: 
     unknown = set(d.keys()) - valid_keys
     if unknown:
         warnings.warn(
-            f"Unknown keys for {aesthetic_type}: {unknown}. "
-            f"Valid keys are: {sorted(valid_keys)}",
+            f"Unknown keys for {aesthetic_type}: {unknown}. Valid keys are: {sorted(valid_keys)}",
             UserWarning,
             stacklevel=4,  # Caller -> _normalize_to_by_state -> _dict_to_* -> here
         )
@@ -252,7 +259,7 @@ class WashResult:
         """
         from ._base import base_render_map
 
-        return base_render_map(fn)
+        return base_render_map(fn)  # type: ignore[no-any-return]
 
 
 def _get_wash_defaults_for_kind(config: WashConfig, kind: str) -> dict[str, Any]:
@@ -279,9 +286,7 @@ def _get_wash_defaults_for_kind(config: WashConfig, kind: str) -> dict[str, Any]
     return defaults
 
 
-def _apply_path_kind_defaults(
-    aesthetic: BaseAesthetic, config: WashConfig
-) -> dict[str, Any]:
+def _apply_path_kind_defaults(aesthetic: BaseAesthetic, config: WashConfig) -> dict[str, Any]:
     """Apply wash defaults based on PathAesthetic.kind, then merge with explicit values.
 
     For PathAesthetic with kind="line", starts with line defaults from wash config,
@@ -365,9 +370,7 @@ def _convert_to_legacy_format(
     return aes_base, aes_hover, aes_select, aes_group
 
 
-def _convert_to_aes_dict(
-    config: WashConfig, aes: AesParam
-) -> dict[str, Any] | None:
+def _convert_to_aes_dict(config: WashConfig, aes: AesParam) -> dict[str, Any] | None:
     """Convert wash config and aes parameter to new nested aes dict format.
 
     Returns a dict with keys: base, hover, select, group

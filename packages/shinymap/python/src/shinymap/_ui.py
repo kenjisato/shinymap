@@ -273,11 +273,10 @@ def _apply_static_params(builder: MapBuilder, output_id: str) -> MapBuilder:
 
     # Create new builder with merged parameters
     # Builder values (if set) override static values
-    merged = MapBuilder(
-        regions=builder._regions if builder._regions is not None else static_params.get("geometry"),
-        tooltips=builder._tooltips if builder._tooltips is not None else static_params.get("tooltips"),
-        view_box=builder._view_box if builder._view_box is not None else static_params.get("view_box"),
-    )
+    regions = builder._regions if builder._regions is not None else static_params.get("geometry")
+    tooltips = builder._tooltips if builder._tooltips is not None else static_params.get("tooltips")
+    view_box = builder._view_box if builder._view_box is not None else static_params.get("view_box")
+    merged = MapBuilder(regions=regions, tooltips=tooltips, view_box=view_box)
 
     # Copy over builder-set values
     if builder._value is not None:
@@ -415,8 +414,8 @@ def update_map(
 # Import at module end to avoid circular dependency (_wash imports _base)
 # =============================================================================
 
-from ._wash import wash  # noqa: E402
 from . import aes  # noqa: E402
+from ._wash import wash  # noqa: E402
 from .relative import PARENT  # noqa: E402
 
 # Create default wash instance with library defaults for base, select, hover.

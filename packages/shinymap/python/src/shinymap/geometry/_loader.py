@@ -15,6 +15,7 @@ instead of strings.
 from __future__ import annotations
 
 import json
+import warnings
 from pathlib import Path
 from typing import Any
 

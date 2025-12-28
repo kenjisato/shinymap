@@ -61,9 +61,10 @@ export function OutputMap(props: OutputMapProps) {
   const aesGroup = aes?.group;
 
   // Extract per-region fill colors from aes.base if it's a dict
-  const aesBaseFillColorDict = typeof aesBaseRaw.fillColor === "object" && aesBaseRaw.fillColor !== null
-    ? aesBaseRaw.fillColor as Record<RegionId, string>
-    : undefined;
+  const aesBaseFillColorDict =
+    typeof aesBaseRaw.fillColor === "object" && aesBaseRaw.fillColor !== null
+      ? (aesBaseRaw.fillColor as Record<RegionId, string>)
+      : undefined;
 
   // Extract from nested layers config
   const underlays = layers?.underlays;
@@ -168,9 +169,13 @@ export function OutputMap(props: OutputMapProps) {
           baseAes = {
             ...baseAes,
             ...(normalizedFillColor?.[id] ? { fillColor: normalizedFillColor[id] } : {}),
-            ...(normalizedStrokeWidth?.[id] !== undefined ? { strokeWidth: normalizedStrokeWidth[id] } : {}),
+            ...(normalizedStrokeWidth?.[id] !== undefined
+              ? { strokeWidth: normalizedStrokeWidth[id] }
+              : {}),
             ...(normalizedStrokeColor?.[id] ? { strokeColor: normalizedStrokeColor[id] } : {}),
-            ...(normalizedFillOpacity?.[id] !== undefined ? { fillOpacity: normalizedFillOpacity[id] } : {}),
+            ...(normalizedFillOpacity?.[id] !== undefined
+              ? { fillOpacity: normalizedFillOpacity[id] }
+              : {}),
           };
 
           // Apply selection-specific aesthetics (layer 4a)
@@ -285,9 +290,13 @@ export function OutputMap(props: OutputMapProps) {
           baseAes = {
             ...baseAes,
             ...(normalizedFillColor?.[id] ? { fillColor: normalizedFillColor[id] } : {}),
-            ...(normalizedStrokeWidth?.[id] !== undefined ? { strokeWidth: normalizedStrokeWidth[id] } : {}),
+            ...(normalizedStrokeWidth?.[id] !== undefined
+              ? { strokeWidth: normalizedStrokeWidth[id] }
+              : {}),
             ...(normalizedStrokeColor?.[id] ? { strokeColor: normalizedStrokeColor[id] } : {}),
-            ...(normalizedFillOpacity?.[id] !== undefined ? { fillOpacity: normalizedFillOpacity[id] } : {}),
+            ...(normalizedFillOpacity?.[id] !== undefined
+              ? { fillOpacity: normalizedFillOpacity[id] }
+              : {}),
           };
 
           // Create base RenderedRegion
@@ -352,10 +361,18 @@ export function OutputMap(props: OutputMapProps) {
             }
             baseAes = {
               ...baseAes,
-              ...(normalizedFillColor?.[hovered] ? { fillColor: normalizedFillColor[hovered] } : {}),
-              ...(normalizedStrokeWidth?.[hovered] !== undefined ? { strokeWidth: normalizedStrokeWidth[hovered] } : {}),
-              ...(normalizedStrokeColor?.[hovered] ? { strokeColor: normalizedStrokeColor[hovered] } : {}),
-              ...(normalizedFillOpacity?.[hovered] !== undefined ? { fillOpacity: normalizedFillOpacity[hovered] } : {}),
+              ...(normalizedFillColor?.[hovered]
+                ? { fillColor: normalizedFillColor[hovered] }
+                : {}),
+              ...(normalizedStrokeWidth?.[hovered] !== undefined
+                ? { strokeWidth: normalizedStrokeWidth[hovered] }
+                : {}),
+              ...(normalizedStrokeColor?.[hovered]
+                ? { strokeColor: normalizedStrokeColor[hovered] }
+                : {}),
+              ...(normalizedFillOpacity?.[hovered] !== undefined
+                ? { fillOpacity: normalizedFillOpacity[hovered] }
+                : {}),
             };
             const baseRegion = createRenderedRegion(hovered, baseAes);
 
@@ -374,7 +391,8 @@ export function OutputMap(props: OutputMapProps) {
                 element,
                 key: `hover-overlay-${hovered}-${index}`,
                 fill: hoverRegion.aesthetic.fillColor ?? "none",
-                fillOpacity: hoverRegion.aesthetic.fillOpacity ?? (hoverRegion.aesthetic.fillColor ? 1 : 0),
+                fillOpacity:
+                  hoverRegion.aesthetic.fillOpacity ?? (hoverRegion.aesthetic.fillColor ? 1 : 0),
                 stroke: hoverRegion.aesthetic.strokeColor,
                 strokeWidth: hoverRegion.aesthetic.strokeWidth,
                 strokeDasharray: hoverRegion.aesthetic.strokeDasharray,

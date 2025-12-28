@@ -40,9 +40,8 @@ def test_configure_theme_override():
 
     # Explicit override should take precedence (now via aes parameter)
     from shinymap import aes
-    tag = input_map("map1", geo, "single", aes=aes.ByState(
-        hover=aes.Shape(stroke_width=8)
-    ))
+
+    tag = input_map("map1", geo, "single", aes=aes.ByState(hover=aes.Shape(stroke_width=8)))
     assert tag is not None
 
 
@@ -53,9 +52,7 @@ def test_configure_theme_multiple_params():
 
     _theme_config.set(None)
 
-    configure_theme(
-        aes_hover={"stroke_width": 4}, aes_select={"fill_color": "#ffffcc"}
-    )
+    configure_theme(aes_hover={"stroke_width": 4}, aes_select={"fill_color": "#ffffcc"})
 
     # Verify both parameters were stored
     config = get_theme_config()

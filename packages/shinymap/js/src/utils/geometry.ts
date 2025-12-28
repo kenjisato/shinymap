@@ -34,7 +34,7 @@ export function normalizeRegion(value: string | string[] | Element | Element[]):
       return value as Element[];
     } else {
       // string[] - convert to PathElement[]
-      return value.map((d) => ({ type: "path", d } as PathElement));
+      return value.map((d) => ({ type: "path", d }) as PathElement);
     }
   }
 

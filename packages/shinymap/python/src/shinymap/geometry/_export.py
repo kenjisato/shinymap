@@ -107,16 +107,16 @@ def export_svg(
                 # svg.py elements are dataclasses, so we can use replace
                 import dataclasses
 
-                elem_with_id = dataclasses.replace(elem, id=region_id)
-                svg_elements.append(elem_with_id)
+                elem_with_id = dataclasses.replace(elem, id=region_id)  # type: ignore[type-var]
+                svg_elements.append(elem_with_id)  # type: ignore[arg-type]
             else:
-                svg_elements.append(elem)
+                svg_elements.append(elem)  # type: ignore[arg-type]
 
     # Create SVG root
     root = svg.SVG(
-        width=width_attr,
-        height=height_attr,
-        viewBox=viewbox_str,
+        width=width_attr,  # type: ignore[arg-type]
+        height=height_attr,  # type: ignore[arg-type]
+        viewBox=viewbox_str,  # type: ignore[arg-type]
         elements=svg_elements,
     )
 

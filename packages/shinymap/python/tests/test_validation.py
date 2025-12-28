@@ -17,10 +17,12 @@ class TestCollectElementTypes:
 
     def test_collect_from_geometry_object(self):
         """Collect element types from Geometry object."""
-        geo = Geometry.from_dict({
-            "region1": [{"type": "path", "d": "M 0 0 L 10 10"}],
-            "region2": [{"type": "circle", "cx": 5, "cy": 5, "r": 2}],
-        })
+        geo = Geometry.from_dict(
+            {
+                "region1": [{"type": "path", "d": "M 0 0 L 10 10"}],
+                "region2": [{"type": "circle", "cx": 5, "cy": 5, "r": 2}],
+            }
+        )
         types = _collect_element_types(geo)
         assert types == {"path", "circle"}
 
@@ -159,9 +161,7 @@ class TestValidateAestheticForElements:
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            validate_aesthetic_for_elements(
-                aesthetic, element_types, context="region 'grid_lines'"
-            )
+            validate_aesthetic_for_elements(aesthetic, element_types, context="region 'grid_lines'")
             assert len(w) == 1
             assert "region 'grid_lines'" in str(w[0].message)
 
@@ -182,9 +182,11 @@ class TestValidateGeometryAesthetics:
 
     def test_validates_default_aesthetic(self):
         """Validates default aesthetic against geometry."""
-        geo = Geometry.from_dict({
-            "lines": [{"type": "line", "x1": 0, "y1": 0, "x2": 10, "y2": 10}],
-        })
+        geo = Geometry.from_dict(
+            {
+                "lines": [{"type": "line", "x1": 0, "y1": 0, "x2": 10, "y2": 10}],
+            }
+        )
         default_aes = {"fill_color": "#fff"}
 
         with warnings.catch_warnings(record=True) as w:
@@ -195,12 +197,14 @@ class TestValidateGeometryAesthetics:
 
     def test_validates_group_aesthetics(self):
         """Validates per-group aesthetics."""
-        geo = Geometry.from_dict({
-            "_metadata": {"groups": {"grid": ["grid_h", "grid_v"]}},
-            "grid_h": [{"type": "line", "x1": 0, "y1": 50, "x2": 100, "y2": 50}],
-            "grid_v": [{"type": "line", "x1": 50, "y1": 0, "x2": 50, "y2": 100}],
-            "region1": [{"type": "path", "d": "M 0 0 L 10 10 Z"}],
-        })
+        geo = Geometry.from_dict(
+            {
+                "_metadata": {"groups": {"grid": ["grid_h", "grid_v"]}},
+                "grid_h": [{"type": "line", "x1": 0, "y1": 50, "x2": 100, "y2": 50}],
+                "grid_v": [{"type": "line", "x1": 50, "y1": 0, "x2": 50, "y2": 100}],
+                "region1": [{"type": "path", "d": "M 0 0 L 10 10 Z"}],
+            }
+        )
         aes_group = {"grid": {"fill_color": "#fff", "stroke_color": "#ddd"}}
 
         with warnings.catch_warnings(record=True) as w:
@@ -211,11 +215,13 @@ class TestValidateGeometryAesthetics:
 
     def test_no_warning_for_valid_aesthetics(self):
         """No warning when aesthetics are appropriate."""
-        geo = Geometry.from_dict({
-            "_metadata": {"groups": {"grid": ["grid_h"]}},
-            "grid_h": [{"type": "line", "x1": 0, "y1": 50, "x2": 100, "y2": 50}],
-            "region1": [{"type": "path", "d": "M 0 0 L 10 10 Z"}],
-        })
+        geo = Geometry.from_dict(
+            {
+                "_metadata": {"groups": {"grid": ["grid_h"]}},
+                "grid_h": [{"type": "line", "x1": 0, "y1": 50, "x2": 100, "y2": 50}],
+                "region1": [{"type": "path", "d": "M 0 0 L 10 10 Z"}],
+            }
+        )
         aes_group = {"grid": {"stroke_color": "#ddd", "stroke_width": 1}}
 
         with warnings.catch_warnings(record=True) as w:
