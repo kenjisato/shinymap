@@ -149,11 +149,15 @@ ui.input_radio_buttons("color_answer", "Select the complementary color:",
 
 **With shinymap**:
 ```python
-# Visual, intuitive selection on an actual color wheel
-input_map("color_answer", COLOR_WHEEL_GEOMETRY, mode="single", cycle=4)
+from shinymap import input_map, aes
+from shinymap.mode import Cycle
+
+# Visual, intuitive selection on an actual color wheel with cycling feedback
+CYCLE_COLORS = ["#e2e8f0", "#fecaca", "#fef08a", "#bbf7d0"]
+input_map("color_answer", COLOR_WHEEL_GEOMETRY, mode=Cycle(n=4, aes=aes.Indexed(fill_color=CYCLE_COLORS)))
 ```
 
-Students click directly on the color wheel's regions. The `cycle=4` parameter creates a red→yellow→green→gray cycling pattern, perfect for quiz feedback without separate answer-checking logic.
+Students click directly on the color wheel's regions. The `Cycle(n=4)` mode creates cycling visual feedback (gray→red→yellow→green→gray), perfect for quiz feedback without separate answer-checking logic.
 
 ### Story 2: Election Results Dashboard - Statistical Output
 
@@ -195,11 +199,14 @@ ui.input_checkbox_group("districts", "Select all districts you're familiar with:
 
 **With shinymap**:
 ```python
-# Visual map with clickable regions
-input_map("districts", STATE_DISTRICTS_GEOMETRY, mode="multiple", max_selection=10)
+from shinymap import input_map
+from shinymap.mode import Multiple
+
+# Visual map with clickable regions (max 10 selections)
+input_map("districts", STATE_DISTRICTS_GEOMETRY, mode=Multiple(max=10))
 ```
 
-Users click directly on the map regions they recognize. The `max_selection=10` parameter limits selections, and the visual interface makes spatial patterns immediately obvious.
+Users click directly on the map regions they recognize. The `Multiple(max=10)` mode limits selections, and the visual interface makes spatial patterns immediately obvious.
 
 ### Story 4: Event Registration - Seat Selection with Visual Feedback
 
@@ -213,8 +220,11 @@ Users click directly on the map regions they recognize. The `max_selection=10` p
 
 **With shinymap**:
 ```python
+from shinymap import input_map
+from shinymap.mode import Count
+
 # Interactive seat map with automatic visual feedback
-input_map("seats", THEATER_SEATING_GEOMETRY, mode="count", value={})
+input_map("seats", THEATER_SEATING_GEOMETRY, mode=Count())
 
 @render_map
 def seat_availability():
