@@ -1,6 +1,6 @@
 {
   "name": "shinymap",
-  "version": "0.0.1",
+  "version": "0.2.0",
   "description": "Core React map renderer with lightweight demo geometry.",
   "license": "MIT",
   "type": "module",
