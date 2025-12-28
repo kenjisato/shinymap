@@ -12,18 +12,11 @@ from shiny import App, render, ui, reactive
 
 from shinymap import (
     Map,
-    MapSelection,
-    MapCount,
-    configure_theme,
-    input_map,
-    output_map,
-    render_map,
+    aes,
     update_map,
-    scale_sequential,
-    scale_qualitative,
-    SEQUENTIAL_BLUE,
-    QUALITATIVE,
+    wash,
 )
+from shinymap.mode import Count
 from shinymap.geometry import Geometry
 
 from japan_prefectures import PREF_NAMES_JA, PREF_NAMES_ROMAJI
@@ -31,32 +24,33 @@ from shared import code_sample
 
 # Load geometry using the Geometry class
 GEOMETRY_PATH = Path(__file__).parent / "data" / "japan_prefectures.json"
-GEOMETRY = Geometry.from_json(GEOMETRY_PATH)
+GEOMETRY = Geometry.from_json(GEOMETRY_PATH).path_as_line("_divider_lines")
 
 TOOLTIPS = {code: f"{name} ({PREF_NAMES_ROMAJI[code]})" for code, name in PREF_NAMES_JA.items()}
 
-# Styles
-
-## Base style
-configure_theme(
-    default_aesthetic={
-        "fill_color": "#ddd", 
-        "stroke_color": "#fff", 
-        "stroke_width": 3
-    },
-    hover_highlight={
-        "fill_color": "#ffff66", 
-        "stroke_color": "#d1d5db", 
-        "stroke_width": 1
-    },
-    selected_aesthetic={
-        "fill_color": "darkseagreen"
-    },
-    overlay_aesthetic={
-        "fill_color": "none", 
-        "stroke_color": "#999999", 
-        "stroke_width": 2.0
-    },
+# Create wash with theme aesthetics
+# Note: stroke_width is in viewBox units (viewBox is ~1400x1450)
+wc = wash(
+    shape=aes.ByState(
+        base=aes.Shape(
+            fill_color="#ddd",
+            stroke_color="#fff",
+            stroke_width=0.3,
+        ),
+        select=aes.Shape(
+            fill_color="darkseagreen",
+        ),
+        hover=aes.Shape(
+            fill_color="#ffff66",
+            stroke_color="#d1d5db",
+            stroke_width=0.6,
+        ),
+    ),
+    # Line defaults: applied to aes.Path(kind="line", ...) elements
+    line=aes.Line(
+        stroke_color="#999",
+        stroke_width=1.5,
+    ),
 )
 
 # Example 1: Simple selection (single mode)
@@ -86,7 +80,7 @@ _ui_single = ui.card(
         ),
         ui.TagList(
             ui.h4("Input Map"),
-            input_map(
+            wc.input_map(
                 "selected_pref",
                 GEOMETRY,
                 tooltips=TOOLTIPS,
@@ -149,7 +143,7 @@ _ui_multi = ui.card(
         ),
         ui.TagList(
             ui.h4("Input Map"),
-            input_map(
+            wc.input_map(
                 "multi_pref",
                 GEOMETRY,
                 tooltips=TOOLTIPS,
@@ -211,11 +205,11 @@ _ui_count = ui.card(
         ),
         ui.TagList(
             ui.h4("Input Map"),
-            input_map(
+            wc.input_map(
                 "visit_counts",
                 GEOMETRY,
                 tooltips=TOOLTIPS,
-                mode="count",
+                mode=Count(),
             ),
         ),
         ui.TagList(
@@ -283,7 +277,7 @@ _ui_regions = ui.card(
         ),
         ui.TagList(
             ui.h4("Output Map"),
-            output_map(
+            wc.output_map(
                 "categorical_map",
                 GEOMETRY,
                 tooltips=TOOLTIPS,
@@ -320,7 +314,7 @@ def _server_regions(input, output, session):
     def pref_to_category():
         return pformat(pref_categories(), width=30)
 
-    @render_map
+    @wc.render_map
     def categorical_map():
         # Create color mapping for all prefectures
         fills = {}

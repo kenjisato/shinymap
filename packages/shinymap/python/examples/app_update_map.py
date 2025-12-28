@@ -2,7 +2,8 @@
 
 from shiny import App, ui, reactive, render
 
-from shinymap import input_map, update_map, QUALITATIVE
+from shinymap import aes, input_map, update_map
+from shinymap.color import QUALITATIVE
 
 from shared import DEMO_GEOMETRY, TOOLTIPS
 
@@ -18,11 +19,13 @@ app_ui = ui.page_fixed(
                 DEMO_GEOMETRY,
                 tooltips=TOOLTIPS,
                 mode="multiple",
-                default_aesthetic={
-                    "fill_color": "#e2e8f0",
-                    "stroke_color": "#94a3b8",
-                    "stroke_width": 1,
-                },
+                aes=aes.ByState(
+                    base=aes.Shape(
+                        fill_color="#e2e8f0",
+                        stroke_color="#94a3b8",
+                        stroke_width=1,
+                    )
+                ),
             ),
             ui.div(
                 ui.h4("Update Controls"),
@@ -61,7 +64,7 @@ def server(input, output, session):
         # Update selected aesthetic
         update_map(
             "test_update",
-            selected_aesthetic={
+            aes_select={
                 "fill_color": "#fbbf24",
                 "stroke_color": "#f59e0b",
                 "stroke_width": 3,
@@ -93,7 +96,7 @@ def server(input, output, session):
             fill_color="#e2e8f0",
             stroke_width=1,
             value={},
-            selected_aesthetic={
+            aes_select={
                 "fill_color": "#cbd5e1",
                 "stroke_width": 1,
             },

@@ -1,7 +1,7 @@
 from textwrap import dedent
 
 from shiny import ui
-from shinymap import QUALITATIVE
+from shinymap.color import QUALITATIVE
 from shinymap.geometry import Geometry
 
 DEMO_GEOMETRY = Geometry.from_dict({

@@ -1,6 +1,7 @@
 from shiny import App, ui, render, reactive, Session
 
-from shinymap import QUALITATIVE, Map, input_map, output_map, render_map, scale_qualitative
+from shinymap import Map, input_map, output_map, render_map
+from shinymap.color import QUALITATIVE, scale_qualitative
 from shiny_querynav import querynav
 
 from shared import DEMO_GEOMETRY, TOOLTIPS, SHAPE_COLORS

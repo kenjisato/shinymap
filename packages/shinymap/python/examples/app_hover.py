@@ -1,19 +1,35 @@
 from shiny import App, ui
 
-from shinymap import input_map
+from shinymap import aes, input_map
 
 from shared import DEMO_GEOMETRY, TOOLTIPS
 
-# Default -----
+# Default Hover -----
 
 _ui_default = ui.card(
-    ui.card_header("Default"),
-    ui.p("Increases stroke width by 1 on hover."),
+    ui.card_header("Default Hover"),
+    ui.p("Without aes parameter, the library default is used (stroke_width +1)."),
     ui.div(
         input_map(
-            "stroke_only",
+            "default_hover",
             DEMO_GEOMETRY,
             mode="multiple",
+            # aes not specified - uses library default
+        ),
+    ),
+)
+
+# Disabled Hover -----
+
+_ui_no_hover = ui.card(
+    ui.card_header("Disabled Hover"),
+    ui.p("With hover=None in ByState, hover effect is explicitly disabled."),
+    ui.div(
+        input_map(
+            "no_hover",
+            DEMO_GEOMETRY,
+            mode="multiple",
+            aes=aes.ByState(hover=None),  # Explicitly disable hover
         ),
     ),
 )
@@ -22,13 +38,13 @@ _ui_default = ui.card(
 
 _ui_stroke_width = ui.card(
     ui.card_header("Stroke Width Only"),
-    ui.p("Increases stroke width by 3 on hover."),
+    ui.p("Increases stroke width to 3 on hover."),
     ui.div(
         input_map(
-            "stroke_only",
+            "stroke_width",
             DEMO_GEOMETRY,
             mode="multiple",
-            hover_highlight={"stroke_width": 3},
+            aes=aes.ByState(hover=aes.Shape(stroke_width=3)),
         ),
     ),
 )
@@ -43,7 +59,7 @@ _ui_stroke_and_fill = ui.card(
         "stroke_and_fill",
         DEMO_GEOMETRY,
         mode="multiple",
-        hover_highlight={"stroke_width": 2, "fill_color": "#bfdbfe"},
+        aes=aes.ByState(hover=aes.Shape(stroke_width=2, fill_color="#bfdbfe")),
     ),
 )
 
@@ -57,7 +73,7 @@ _ui_subtle = ui.card(
             "subtle",
             DEMO_GEOMETRY,
             mode="multiple",
-            hover_highlight={"stroke_color": "#60a5fa", "stroke_width": 1},
+            aes=aes.ByState(hover=aes.Shape(stroke_color="#60a5fa", stroke_width=1)),
         ),
     ),
 )
@@ -72,7 +88,7 @@ _ui_stroke_color = ui.card(
         DEMO_GEOMETRY,
         tooltips=TOOLTIPS,
         mode="multiple",
-        hover_highlight={"stroke_color": "#ef4444", "stroke_width": 2},
+        aes=aes.ByState(hover=aes.Shape(stroke_color="#ef4444", stroke_width=2)),
     ),
 )
 
@@ -85,11 +101,11 @@ _ui_fill_color = ui.card(
         "fill_color",
         DEMO_GEOMETRY,
         mode="multiple",
-        hover_highlight={"fill_color": "#fef08a"},
+        aes=aes.ByState(hover=aes.Shape(fill_color="#fef08a")),
     ),
 )
 
-# Combined 
+# Combined
 
 _ui_combined = ui.card(
     ui.card_header("Combined Effects"),
@@ -98,23 +114,26 @@ _ui_combined = ui.card(
         "combined",
         DEMO_GEOMETRY,
         mode="multiple",
-        hover_highlight={
-            "stroke_width": 3,
-            "fill_color": "#fef08a",
-            "stroke_color": "#3b82f6",
-        },
+        aes=aes.ByState(
+            hover=aes.Shape(
+                stroke_width=3,
+                fill_color="#fef08a",
+                stroke_color="#3b82f6",
+            )
+        ),
     ),
 )
 
 ui_hover = ui.page_fixed(
     ui.h2("Hover Highlight Demo"),
     ui.p(
-        "This demo showcases different hover_highlight configurations. "
+        "This demo showcases different hover configurations using aes.ByState. "
         "Hover over the shapes to see the visual feedback. "
         "Note: Opacity changes don't work because hover creates an overlay copy."
     ),
     ui.layout_column_wrap(
         _ui_default,
+        _ui_no_hover,
         _ui_stroke_width,
         _ui_stroke_and_fill,
         _ui_subtle,

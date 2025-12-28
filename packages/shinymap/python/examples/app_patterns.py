@@ -2,15 +2,9 @@
 
 from shiny import App, ui
 
-from shinymap import (
-    QUALITATIVE,
-    Map,
-    input_map,
-    output_map,
-    render_map,
-    scale_qualitative,
-    scale_sequential,
-)
+from shinymap import Map, aes, input_map, output_map, render_map
+from shinymap.color import scale_qualitative, scale_sequential
+from shinymap.mode import Count
 
 from shared import DEMO_GEOMETRY, SHAPE_COLORS, TOOLTIPS
 
@@ -45,7 +39,7 @@ _ui_qualitative = ui.card(
             tooltips=TOOLTIPS,
             mode="single",
             value={},
-            hover_highlight={"stroke_width": 1},
+            aes=aes.ByState(hover=aes.Shape(stroke_width=1)),
         ),
         output_map("qualitative_output", DEMO_GEOMETRY, tooltips=TOOLTIPS),
     ),
@@ -58,13 +52,12 @@ def _server_qualitative(input, output, session):
         # Convert single selection (string | None) to count map for helper functions
         selected = input.region_single()
         counts = {selected: 1} if selected else {}
+        fills = fills_for_qualitative(counts)
 
-        return (
-            Map()
-            .with_fill_color(fills_for_qualitative(counts))
-            .with_counts(counts)
-            .with_active(selected_ids(counts))
-            .with_stroke_width(1.5)
+        return Map(
+            value=counts,
+            active=selected_ids(counts),
+            aes={"base": {"fillColor": fills, "strokeWidth": 1.5}}
         )
 
 
@@ -80,9 +73,9 @@ _ui_count_helpers = ui.card(
             "clicks",
             DEMO_GEOMETRY,
             tooltips=TOOLTIPS,
-            mode="count",
+            mode=Count(),
             value={},
-            hover_highlight={"stroke_width": 2},
+            aes=aes.ByState(hover=aes.Shape(stroke_width=2)),
         ),
         output_map("count_output", DEMO_GEOMETRY, tooltips=TOOLTIPS),
     ),
@@ -93,10 +86,10 @@ def _server_count_helpers(input, output, session):
     @render_map
     def count_output():
         counts = input.clicks() or {}
-        return (
-            Map()
-            .with_fill_color(scale_sequential(counts, list(DEMO_GEOMETRY.regions.keys()), max_count=10))
-            .with_counts(counts)
+        fills = scale_sequential(counts, list(DEMO_GEOMETRY.regions.keys()), max_count=10)
+        return Map(
+            value=counts,
+            aes={"base": {"fillColor": fills}}
         )
 
 
@@ -106,7 +99,9 @@ _code_examples = ui.card(
     ui.p("Reusable helper functions for common transformations:"),
     ui.tags.pre(
         ui.tags.code(
-            '''def selected_ids(counts: dict[str, int] | None) -> list[str]:
+            '''from shinymap.color import scale_qualitative
+
+def selected_ids(counts: dict[str, int] | None) -> list[str]:
     """Return IDs of regions with count > 0."""
     return [id for id, count in (counts or {}).items() if count > 0]
 
@@ -121,14 +116,14 @@ def fills_for_qualitative(counts: dict[str, int] | None) -> dict[str, str]:
 
 @render_map
 def qualitative_output():
-    # Convert single selection to count map for reusability
     selected = input.region_single()
     counts = {selected: 1} if selected else {}
+    fills = fills_for_qualitative(counts)
 
-    return (
-        Map(DEMO_GEOMETRY)
-        .with_fill_color(fills_for_qualitative(counts))
-        .with_active(selected_ids(counts))
+    return Map(
+        value=counts,
+        active=selected_ids(counts),
+        aes={"base": {"fillColor": fills}}
     )'''
         )
     ),

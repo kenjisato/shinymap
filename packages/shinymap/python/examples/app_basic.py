@@ -1,11 +1,8 @@
-from textwrap import dedent
+from shiny import App, render, ui
 
-from shiny import App, ui, render
+from shinymap import aes, input_map
 
-from shinymap import Map, input_map, output_map, render_map, scale_qualitative
-
-from shared import DEMO_GEOMETRY, TOOLTIPS, SHAPE_COLORS, code_sample
-
+from shared import DEMO_GEOMETRY, code_sample
 
 # Single Select Example ---------
 _ui_single = ui.card(
@@ -14,18 +11,23 @@ _ui_single = ui.card(
         ui.div(
             ui.h4("Code"),
             code_sample("""\
-                # UI
-                input_map(
-                    "region_single",
-                    DEMO_GEOMETRY,
-                    tooltips=TOOLTIPS,
-                    mode="single",
+                from shinymap import wash, aes
+
+                # Create wash with default aesthetics
+                wc = wash(
+                    shape=aes.ByState(
+                        base=aes.Shape(fill_color="#f0f9ff", stroke_color="#0369a1"),
+                        select=aes.Shape(fill_color="#7dd3fc"),
+                    ),
                 )
+
+                # UI
+                wc.input_map("region_single", GEOMETRY, mode="single")
 
                 # SERVER
                 def server(input):
+                    # input.region_single() returns str | None
                     ...
-                    # input.region_single() 
                 """
             )
         ),
@@ -34,7 +36,6 @@ _ui_single = ui.card(
             input_map(
                 "region_single",
                 DEMO_GEOMETRY,
-                tooltips=TOOLTIPS,
                 mode="single",
             ),
         ),
@@ -45,6 +46,7 @@ _ui_single = ui.card(
         ),
     ),
 )
+
 
 def _server_single(input, output, session):
     @render.text
@@ -57,28 +59,23 @@ _ui_multiple = ui.card(
     ui.card_header("Multiple Select"),
     ui.layout_columns(
         ui.div(
-            ui.h4("Code"),code_sample("""\
-                # UI
-                input_map(
-                    "region_multi",
-                    DEMO_GEOMETRY,
-                    tooltips=TOOLTIPS,
-                    mode="multiple",
-                ),
+            ui.h4("Code"),
+            code_sample("""\
+                # UI (using same wc from above)
+                wc.input_map("region_multi", GEOMETRY, mode="multiple")
 
                 # SERVER
                 def server(input):
+                    # input.region_multi() returns list[str]
                     ...
-                    # input.region_multi() 
                 """
             )
         ),
         ui.div(
-            ui.h4("Input Map"), 
+            ui.h4("Input Map"),
             input_map(
                 "region_multi",
                 DEMO_GEOMETRY,
-                tooltips=TOOLTIPS,
                 mode="multiple",
             ),
         ),
@@ -86,15 +83,15 @@ _ui_multiple = ui.card(
             ui.h4("Output Example"),
             ui.help_text("Selected regions:"),
             ui.output_text_verbatim("multi_select", placeholder=True),
-        )
-    )
+        ),
+    ),
 )
+
 
 def _server_multiple(input, output, session):
     @render.text
     def multi_select():
         return input.region_multi()
-
 
 
 # Put them together --------------
@@ -108,7 +105,6 @@ ui_basic = ui.page_fixed(
 def server_basic(input, output, session):
     _server_single(input, output, session)
     _server_multiple(input, output, session)
-
 
 
 app = App(ui_basic, server_basic)

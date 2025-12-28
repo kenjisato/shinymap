@@ -17,15 +17,15 @@ def test_configure_theme_basic():
     # Reset theme between tests
     _theme_config.set(None)
 
-    configure_theme(hover_highlight={"stroke_width": 4})
+    configure_theme(aes_hover={"stroke_width": 4})
 
     # Verify configuration was stored
     config = get_theme_config()
-    assert "hover_highlight" in config
-    assert config["hover_highlight"]["stroke_width"] == 4
+    assert "aes_hover" in config
+    assert config["aes_hover"]["stroke_width"] == 4
 
     # Verify input_map uses the configuration
-    tag = input_map("map1", geo)
+    tag = input_map("map1", geo, "single")
     assert tag is not None
 
 
@@ -36,10 +36,13 @@ def test_configure_theme_override():
 
     _theme_config.set(None)
 
-    configure_theme(hover_highlight={"stroke_width": 4})
+    configure_theme(aes_hover={"stroke_width": 4})
 
-    # Explicit override should take precedence
-    tag = input_map("map1", geo, hover_highlight={"stroke_width": 8})
+    # Explicit override should take precedence (now via aes parameter)
+    from shinymap import aes
+    tag = input_map("map1", geo, "single", aes=aes.ByState(
+        hover=aes.Shape(stroke_width=8)
+    ))
     assert tag is not None
 
 
@@ -51,15 +54,15 @@ def test_configure_theme_multiple_params():
     _theme_config.set(None)
 
     configure_theme(
-        hover_highlight={"stroke_width": 4}, selected_aesthetic={"fill_color": "#ffffcc"}
+        aes_hover={"stroke_width": 4}, aes_select={"fill_color": "#ffffcc"}
     )
 
     # Verify both parameters were stored
     config = get_theme_config()
-    assert "hover_highlight" in config
-    assert "selected_aesthetic" in config
+    assert "aes_hover" in config
+    assert "aes_select" in config
 
-    tag = input_map("map1", geo)
+    tag = input_map("map1", geo, "multiple")
     assert tag is not None
 
 
@@ -74,7 +77,7 @@ def test_no_theme_configured():
     config = get_theme_config()
     assert config == {}
 
-    tag = input_map("map1", geo)
+    tag = input_map("map1", geo, "single")
     assert tag is not None
 
 
@@ -83,14 +86,14 @@ def test_theme_reconfiguration():
     """Test that theme can be reconfigured."""
     _theme_config.set(None)
 
-    configure_theme(hover_highlight={"stroke_width": 4})
+    configure_theme(aes_hover={"stroke_width": 4})
     config1 = get_theme_config()
-    assert config1["hover_highlight"]["stroke_width"] == 4
+    assert config1["aes_hover"]["stroke_width"] == 4
 
     # Reconfigure with new value
-    configure_theme(hover_highlight={"stroke_width": 8})
+    configure_theme(aes_hover={"stroke_width": 8})
     config2 = get_theme_config()
-    assert config2["hover_highlight"]["stroke_width"] == 8
+    assert config2["aes_hover"]["stroke_width"] == 8
 
 
 @pytest.mark.unit
@@ -99,9 +102,9 @@ def test_thread_safety():
     results = {}
 
     def make_map_with_config(thread_id, stroke_width):
-        configure_theme(hover_highlight={"stroke_width": stroke_width})
+        configure_theme(aes_hover={"stroke_width": stroke_width})
         config = get_theme_config()
-        results[thread_id] = config["hover_highlight"]["stroke_width"]
+        results[thread_id] = config["aes_hover"]["stroke_width"]
 
     threads = [
         threading.Thread(target=make_map_with_config, args=(1, 4)),

@@ -2,9 +2,13 @@
 
 from shiny import App, render, ui
 
-from shinymap import input_map, output_map, render_map, scale_sequential, Map
+from shinymap import aes, input_map
+from shinymap.mode import Count, Cycle, Multiple
 
 from shared import DEMO_GEOMETRY, TOOLTIPS, code_sample
+
+# Traffic light colors for 4-state cycle
+CYCLE_COLORS = ["#e2e8f0", "#fecaca", "#fef08a", "#bbf7d0"]  # gray, red, yellow, green
 
 
 github_url = "https://github.com/kenjisato/shinymap/blob/main/packages/shinymap/python/examples/app_input_modes.py"
@@ -23,30 +27,32 @@ _ui_count_unlimited = ui.card(
         ui.div(
             ui.h4("Code"),
             code_sample("""\
+                from shinymap.mode import Count
+
                 # UI
                 input_map(
-                    "count_unlimited", 
-                    DEMO_GEOMETRY, 
-                    tooltips=TOOLTIPS, 
-                    mode="count"
+                    "count_unlimited",
+                    DEMO_GEOMETRY,
+                    tooltips=TOOLTIPS,
+                    mode=Count()
                 )
 
-                # SERVER   
+                # SERVER
                 def server(input):
                     ...
-                    # input.count_unlimited() 
+                    # input.count_unlimited()
                     # => { 'square': 1, 'circle': 2 } etc.
             """)
         ),
         ui.div(
             ui.h4("Input Map"),
             input_map(
-                "count_unlimited", 
-                DEMO_GEOMETRY, 
-                tooltips=TOOLTIPS, 
-                mode="count", 
+                "count_unlimited",
+                DEMO_GEOMETRY,
+                tooltips=TOOLTIPS,
+                mode=Count(aes=aes.Indexed(fill_color=CYCLE_COLORS)),
             ),
-        
+
         ),
         ui.div(
             ui.h4("Output Example"),
@@ -65,49 +71,46 @@ def _server_count_unlimited(input, output, session):
         return counts_str if counts_str else "No clicks yet"
 
 
-# Count Mode with Hue Cycling --------
+# Cycle Mode (Finite States) --------
 _ui_hue_cycle = ui.card(
-    ui.card_header("Count Mode - Hue Cycling (cycle=4)"),
+    ui.card_header("Cycle Mode (n=4)"),
     ui.p(
-        "Click shapes to cycle through colors: gray → red → yellow → green → gray. "
-        "Perfect for color wheel quizzes or categorical cycling!"
+        "Click shapes to cycle through states: 0 → 1 → 2 → 3 → 0. "
+        "Perfect for surveys or categorical selection!"
     ),
     ui.layout_columns(
         ui.div(
             ui.h4("Code"),
             code_sample("""\
+            from shinymap.mode import Cycle
+
             # UI
             input_map(
                 "count_cycle",
-                 DEMO_GEOMETRY, 
-                 tooltips=TOOLTIPS, 
-                 mode="count", 
-                 cycle=4
+                DEMO_GEOMETRY,
+                tooltips=TOOLTIPS,
+                mode=Cycle(n=4)
             )
 
             # SERVER
             def server(input):
                 ...
                 # input.count_cycle()
-                # => { }      
+                # => { 'circle': 2 } (state 2)
             """)
         ),
         ui.div(
             ui.h4("Input Map"),
-            # TODO: Clarify
-            #  - How to change palette?
-            #  - How to disable empty value? 
             input_map(
                 "count_cycle",
-                 DEMO_GEOMETRY, 
-                 tooltips=TOOLTIPS, 
-                 mode="count", 
-                 cycle=4, 
+                DEMO_GEOMETRY,
+                tooltips=TOOLTIPS,
+                mode=Cycle(n=4, aes=aes.Indexed(fill_color=CYCLE_COLORS)),
             ),
         ),
         ui.div(
             ui.h4("Output Example"),
-            ui.help_text("Current colors (0-3):"),
+            ui.help_text("Current states (0-3):"),
             ui.output_text_verbatim("count_cycle_output", placeholder=True),
         ),
     ),
@@ -118,9 +121,9 @@ def _server_hue_cycle(input, output, session):
     @render.text
     def count_cycle_output():
         value = input.count_cycle() or {}
-        color_names = ["gray", "red", "yellow", "green"]
+        state_names = ["state 0", "state 1", "state 2", "state 3"]
         counts_str = ", ".join(
-            [f"{id}: {color_names[count % 4]}" for id, count in value.items() if count > 0]
+            [f"{id}: {state_names[val]}" for id, val in value.items() if val > 0]
         )
         return counts_str if counts_str else "No clicks yet"
 
@@ -133,30 +136,30 @@ _ui_max_selection = ui.card(
         ui.div(
             ui.h4("Code"),
             code_sample("""\
+                from shinymap.mode import Multiple
+
                 # UI
                 input_map(
-                    "limited", 
-                    DEMO_GEOMETRY, 
-                    tooltips=TOOLTIPS, 
-                    mode="multiple", 
-                    max_selection=2
+                    "limited",
+                    DEMO_GEOMETRY,
+                    tooltips=TOOLTIPS,
+                    mode=Multiple(max_selection=2)
                 )
 
                 # SERVER
                 def server(input):
                     ...
                     # input.limited()
-                    # => ['square', 'circle']      
+                    # => ['square', 'circle']
                 """)
         ),
         ui.div(
             ui.h4("Input Map"),
             input_map(
-                "limited", 
-                DEMO_GEOMETRY, 
-                tooltips=TOOLTIPS, 
-                mode="multiple", 
-                max_selection=2
+                "limited",
+                DEMO_GEOMETRY,
+                tooltips=TOOLTIPS,
+                mode=Multiple(max_selection=2),
             ),
         ),
         ui.div(
