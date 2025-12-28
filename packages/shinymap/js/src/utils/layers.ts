@@ -1,0 +1,144 @@
+import type { AestheticStyle, Element, GeometryMetadata, RegionId } from "../types";
+
+/**
+ * Resolves group names to region IDs using geometry metadata.
+ *
+ * Groups can be:
+ * 1. Named groups defined in geometryMetadata.groups (e.g., "grid" -> ["grid_lat", "grid_lon"])
+ * 2. Individual region IDs used as singleton groups (e.g., "tokyo" -> ["tokyo"])
+ *
+ * @param groupNames - Array of group names to resolve
+ * @param geometry - The geometry map (for fallback to region IDs)
+ * @param metadata - Optional geometry metadata containing group definitions
+ * @returns Set of region IDs
+ */
+export function resolveGroups(
+  groupNames: string[] | undefined,
+  geometry: Record<RegionId, Element[]>,
+  metadata?: GeometryMetadata
+): Set<RegionId> {
+  const result = new Set<RegionId>();
+  if (!groupNames) return result;
+
+  const groups = metadata?.groups ?? {};
+
+  for (const name of groupNames) {
+    if (groups[name]) {
+      // Named group from metadata
+      for (const id of groups[name]) {
+        result.add(id);
+      }
+    } else if (geometry[name]) {
+      // Use as singleton group (region ID)
+      result.add(name);
+    }
+    // Silently ignore unknown group names
+  }
+
+  return result;
+}
+
+/**
+ * Layer assignment result.
+ * Regions are assigned to exactly one layer based on priority.
+ */
+export type LayerAssignment = {
+  underlay: Set<RegionId>;
+  base: Set<RegionId>;
+  overlay: Set<RegionId>;
+  hidden: Set<RegionId>;
+};
+
+/**
+ * Assigns regions to layers based on group membership.
+ *
+ * Layer priority (highest to lowest):
+ * 1. hidden - not rendered at all
+ * 2. overlays - rendered above base
+ * 3. underlays - rendered below base
+ * 4. base - default layer for all other regions
+ *
+ * A region appears in at most one layer.
+ *
+ * @param geometry - The normalized geometry map
+ * @param underlays - Group names for underlay layer
+ * @param overlays - Group names for overlay layer
+ * @param hidden - Group names to hide
+ * @param metadata - Optional geometry metadata
+ * @returns Layer assignment for each region
+ */
+export function assignLayers(
+  geometry: Record<RegionId, Element[]>,
+  underlays?: string[],
+  overlays?: string[],
+  hidden?: string[],
+  metadata?: GeometryMetadata
+): LayerAssignment {
+  // Resolve group names to region IDs
+  const underlayRegions = resolveGroups(underlays, geometry, metadata);
+  const overlayRegions = resolveGroups(overlays, geometry, metadata);
+  const hiddenRegions = resolveGroups(hidden, geometry, metadata);
+
+  const result: LayerAssignment = {
+    underlay: new Set(),
+    base: new Set(),
+    overlay: new Set(),
+    hidden: new Set(),
+  };
+
+  // Assign each region to exactly one layer based on priority
+  for (const id of Object.keys(geometry)) {
+    if (hiddenRegions.has(id)) {
+      result.hidden.add(id);
+    } else if (overlayRegions.has(id)) {
+      result.overlay.add(id);
+    } else if (underlayRegions.has(id)) {
+      result.underlay.add(id);
+    } else {
+      result.base.add(id);
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Resolves aesthetic for a region based on group membership.
+ *
+ * Aesthetics are merged in group order, with later groups overriding earlier ones.
+ * Only explicitly set properties override (MISSING values don't override).
+ *
+ * @param id - Region ID
+ * @param aesGroup - Per-group aesthetic overrides
+ * @param metadata - Optional geometry metadata
+ * @returns Merged aesthetic style for the region
+ */
+export function resolveGroupAesthetic(
+  id: RegionId,
+  aesGroup: Record<string, AestheticStyle> | undefined,
+  metadata?: GeometryMetadata
+): AestheticStyle | undefined {
+  if (!aesGroup) return undefined;
+
+  const groups = metadata?.groups ?? {};
+  let result: AestheticStyle | undefined;
+
+  // Find all groups this region belongs to
+  for (const [groupName, aesthetic] of Object.entries(aesGroup)) {
+    const groupMembers = groups[groupName];
+    const isMember = groupMembers
+      ? groupMembers.includes(id)
+      : groupName === id; // Singleton group
+
+    if (isMember) {
+      if (!result) {
+        result = { ...aesthetic };
+      } else {
+        // Merge: later groups override earlier ones
+        result = { ...result, ...aesthetic };
+      }
+    }
+  }
+
+  return result;
+}
