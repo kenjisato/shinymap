@@ -65,3 +65,11 @@ These topics are mentioned in SPEC.md but don't yet have detailed design documen
 - **Delta-based updates**: Sending only changed regions for large maps (performance optimization)
 - **Canvas fallback**: Alternative rendering for very large maps (1000+ regions)
 - **Geographic extension** (`shinymap-geo`): GeoJSON/TopoJSON loading, coordinate projections, `sf`/`geopandas` integration
+
+### Near-term TODOs (from v0.2.0 development)
+
+- **Converter app**: The SVG-to-Geometry converter app needs functionality to be useful. Currently a placeholder.
+- **`static_map()` function**: Python-only function to render a map as a static SVG string (no JavaScript/React). Useful for:
+  - Conversion workflow: preview geometry before saving
+  - Export: generate SVG files for documents/presentations
+  - Testing: visual regression tests without browser
