@@ -109,23 +109,26 @@ def my_map():
     )
 ```
 
-### Hover Customization
+### Aesthetic Parameters
 
-Customize hover effects using the `hover_highlight` parameter:
+Configure aesthetics using `aes_*` parameters:
 
 ```python
-# Input map with custom hover border
+from shinymap import aes
+
+# Input map with custom hover and selection aesthetics
 input_map(
     "region",
     geometry,
-    hover_highlight={"stroke_color": "#374151", "stroke_width": 2}
+    aes_hover=aes.Shape(stroke_color="#374151", stroke_width=2),
+    aes_select=aes.Shape(fill_color="#fbbf24"),
 )
 
-# Custom hover with fill overlay
+# Using dict syntax (alternative)
 input_map(
     "region",
     geometry,
-    hover_highlight={
+    aes_hover={
         "stroke_color": "#1e40af",
         "stroke_width": 2,
         "fill_color": "#3b82f6",
@@ -134,7 +137,7 @@ input_map(
 )
 ```
 
-Note: `hover_highlight` uses snake_case keys in Python (`stroke_color`, `stroke_width`, `fill_color`, `fill_opacity`) which are automatically converted to camelCase for JavaScript.
+Note: Aesthetic dicts use snake_case keys in Python (`stroke_color`, `stroke_width`, `fill_color`, `fill_opacity`) which are automatically converted to camelCase for JavaScript.
 
 ## Honest Positioning
 

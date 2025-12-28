@@ -49,20 +49,24 @@ Additionally, `output_map` provides simplified statistical visualizations (choro
 - React: JavaScript objects/arrays following standard patterns
 
 **Styling**:
-- Base aesthetics via `defaultAesthetic` (fillColor, strokeColor, strokeWidth, fillOpacity)
+- Base aesthetics via `defaultAesthetic` (fillColor, strokeColor, strokeWidth, fillOpacity, strokeDasharray, nonScalingStroke)
 - Dynamic styling via `resolveAesthetic` callback (args: id/mode/isHovered/isSelected/count/baseAesthetic)
 - Hover highlighting via `hoverHighlight` prop (renders as top-layer overlay for full border visibility)
 - Selection highlighting for input maps via `resolveAesthetic` (isSelected=true)
 - Selection highlighting for output maps via `fillColorSelected`/`fillColorNotSelected` props
+- Per-group aesthetics via `aesGroup` (group name → aesthetic style)
 - Extra SVG props via `regionProps` callback
 - Output maps support the same aesthetic system with `resolveAesthetic` and `regionProps`
+- Type-safe aesthetic builders: `aes.Shape()`, `aes.Line()`, `aes.Text()` with IDE autocomplete
+- Line style constants: `linestyle.SOLID`, `linestyle.DASHED`, `linestyle.DOTTED`, `linestyle.DASH_DOT`
+- Non-scaling stroke enabled by default (stroke widths are in screen pixels, not viewBox units)
 
 **Hover implementation**:
-- `hoverHighlight` prop defines hover aesthetic (default: darker stroke, width 2)
+- `aesHover` prop defines hover aesthetic (default: darker stroke, width 2)
 - Rendered as separate overlay layer on top of all regions (solves SVG z-index border visibility)
 - `pointer-events: none` ensures clicks pass through to base regions
-- When `hoverHighlight` is provided, `resolveAesthetic` receives `isHovered: false` (hover handled by overlay)
-- Snake_case keys in Python (`hover_highlight={"stroke_color": "...", "stroke_width": ...}`) automatically converted to camelCase for React
+- When `aesHover` is provided, `resolveAesthetic` receives `isHovered: false` (hover handled by overlay)
+- Snake_case keys in Python (`aes_hover={"stroke_color": "...", "stroke_width": ...}`) automatically converted to camelCase for React
 
 ### Packages and scope
 
@@ -335,12 +339,12 @@ input_map(
     tooltips=TOOLTIPS,
     mode="single",
     view_box=VIEWBOX,
-    default_aesthetic={
+    aes_base={
         "fillColor": "#e5e7eb",    # Light gray fill
         "strokeColor": "#d1d5db",  # Light gray border
         "strokeWidth": 1
     },
-    hover_highlight={
+    aes_hover={
         "stroke_color": "#374151",  # Darker border on hover
         "stroke_width": 2           # Thicker border on hover
     },
@@ -396,38 +400,79 @@ def my_map():
 - Available in all builders: `Map`, `MapSelection`, `MapCount`
 - Serialized in `MapPayload` and passed through to React components
 
-**Future enhancement** (multiple layers with render order):
+**Group-based Layer System** (implemented):
 
-To support both underlays and overlays with multiple layers:
+Regions can be assigned to different layers using group names:
 
 ```python
-# Proposed API (not yet implemented)
+from shinymap import input_map, aes, linestyle
+
+# Geometry with groups defined in metadata
+geo = Geometry.from_dict({
+    "_metadata": {
+        "viewBox": "0 0 100 100",
+        "groups": {
+            "grid": ["grid_h", "grid_v"],
+            "borders": ["divider_1", "divider_2"],
+        }
+    },
+    "grid_h": [...],
+    "grid_v": [...],
+    "divider_1": [...],
+    "divider_2": [...],
+    "region_a": [...],
+    "region_b": [...],
+})
+
 input_map(
     "map_id",
-    geometry,
-    underlays=[
-        {"geometry": GRID_LINES, "aesthetic": GRID_STYLE},
-        {"geometry": REFERENCE_MARKERS, "aesthetic": MARKER_STYLE},
-    ],
-    overlays=[
-        {"geometry": DIVIDERS, "aesthetic": DIVIDER_STYLE},
-        {"geometry": LABELS, "aesthetic": LABEL_STYLE},
-    ],
+    geo,
+    underlays=["grid"],      # Render grid below everything
+    overlays=["borders"],    # Render borders above base regions
+    hidden=["unused_region"], # Hide completely
+    aes_group={              # Per-group aesthetics
+        "grid": aes.Line(stroke_color="#ddd", stroke_dasharray=linestyle.DASHED).to_dict(),
+        "borders": aes.Line(stroke_color="#999", stroke_width=2).to_dict(),
+    },
 )
 ```
 
-**Render order** (proposed):
-1. Underlays (bottom to top)
-2. Interactive regions (with hover/click handling)
-3. Overlays (bottom to top)
+**Render order** (5 layers, bottom to top):
+1. **Underlay** - Background elements (grids, reference lines)
+2. **Base regions** - Interactive regions with click/hover handling
+3. **Overlay** - Non-interactive annotations (borders, labels)
+4. **Selection overlay** - Selected regions (border visibility)
+5. **Hover overlay** - Hovered region (always on top)
 
-**Example** (Japan prefecture map with dividing lines overlay):
+**Type-safe Aesthetic Builders**:
 
 ```python
-# Current implementation - overlay only
-DIVIDERS = get_japan_dividers()  # {"_divider_lines": "M 0 615 H 615 V 0"}
-DIVIDER_STYLE = {"fillColor": "none", "strokeColor": "#999999", "strokeWidth": 2.0}
+from shinymap import aes, linestyle
 
+# IDE autocomplete for all aesthetic properties
+grid_style = aes.Line(
+    stroke_color="#ddd",
+    stroke_width=1,
+    stroke_dasharray=linestyle.DASHED,  # Predefined: SOLID, DASHED, DOTTED, DASH_DOT
+)
+
+shape_style = aes.Shape(
+    fill_color="#3b82f6",
+    fill_opacity=0.8,
+    stroke_color="#1e40af",
+    stroke_width=2,
+)
+
+text_style = aes.Text(
+    fill_color="#000",
+    stroke_color="#fff",  # Outline for readability
+    stroke_width=0.5,
+)
+```
+
+**Example** (Japan prefecture map with grid underlay and dividers overlay):
+
+```python
 @render_map
 def prefecture_map():
     return (
@@ -436,23 +481,27 @@ def prefecture_map():
             selected=input.selected_prefectures(),
             tooltips=TOOLTIPS,
             view_box="0.0 0.0 1270.0 1524.0",
-            overlay_geometry=DIVIDERS,      # Rendered AFTER regions
-            overlay_aesthetic=DIVIDER_STYLE,
         )
         .with_fill_color("#e5e7eb")
         .with_fill_color_selected("#3b82f6")
     )
+
+# Static layer configuration in output_map
+output_map(
+    "prefecture_map",
+    GEOMETRY,
+    underlays=["grid"],
+    overlays=["dividers"],
+    aes_group={
+        "grid": {"stroke_color": "#eee", "stroke_dasharray": "5,5"},
+        "dividers": {"stroke_color": "#999", "stroke_width": 2},
+    },
+)
 ```
 
-**Current limitations**:
-- Only single overlay layer supported (no underlay support)
-- No control over rendering order for multiple annotation layers
-- Single aesthetic dict applies to all paths in overlay_geometry
-
-**Planned improvements**:
-- Add `underlay_geometry`/`underlay_aesthetic` for layers below interactive regions
-- Support multiple layers with explicit rendering order
-- Per-path aesthetics within layers (if needed)
+**Legacy API** (deprecated but supported):
+- `overlay_geometry` / `overlay_aesthetic` still work for backward compatibility
+- New code should use `overlays` + `aes_group` instead
 
 ### Static vs Dynamic Parameters (Planned)
 
