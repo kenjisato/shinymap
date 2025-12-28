@@ -48,25 +48,76 @@ Additionally, `output_map` provides simplified statistical visualizations (choro
 - R Shiny (planned): character scalar/vector for single/multiple, named integer vector for count
 - React: JavaScript objects/arrays following standard patterns
 
-**Styling**:
-- Base aesthetics via `defaultAesthetic` (fillColor, strokeColor, strokeWidth, fillOpacity, strokeDasharray, nonScalingStroke)
-- Dynamic styling via `resolveAesthetic` callback (args: id/mode/isHovered/isSelected/count/baseAesthetic)
-- Hover highlighting via `hoverHighlight` prop (renders as top-layer overlay for full border visibility)
-- Selection highlighting for input maps via `resolveAesthetic` (isSelected=true)
-- Selection highlighting for output maps via `fillColorSelected`/`fillColorNotSelected` props
-- Per-group aesthetics via `aesGroup` (group name → aesthetic style)
-- Extra SVG props via `regionProps` callback
-- Output maps support the same aesthetic system with `resolveAesthetic` and `regionProps`
-- Type-safe aesthetic builders: `aes.Shape()`, `aes.Line()`, `aes.Text()` with IDE autocomplete
-- Line style constants: `linestyle.SOLID`, `linestyle.DASHED`, `linestyle.DOTTED`, `linestyle.DASH_DOT`
-- Non-scaling stroke enabled by default (stroke widths are in screen pixels, not viewBox units)
+**Mode Classes** (v0.2.0):
+Mode configuration uses class instances instead of string literals for better customization:
+
+```python
+from shinymap import input_map
+from shinymap.mode import Single, Multiple, Cycle, Count
+
+# Basic modes (equivalent to mode="single" / mode="multiple")
+input_map("id", geometry, mode=Single())
+input_map("id", geometry, mode=Multiple())
+
+# Cycle mode: finite state cycling (0 → 1 → 2 → 3 → 0)
+input_map("id", geometry, mode=Cycle(n=4))
+
+# Count mode: unbounded or capped counting
+input_map("id", geometry, mode=Count())          # Unbounded
+input_map("id", geometry, mode=Count(max=10))    # Capped at 10
+
+# With initial values
+input_map("id", geometry, mode=Single(selected="region_a"))
+input_map("id", geometry, mode=Multiple(selected=["a", "b"]))
+input_map("id", geometry, mode=Count(values={"a": 3, "b": 5}))
+
+# With indexed aesthetics for visual feedback
+from shinymap import aes
+CYCLE_COLORS = ["#e2e8f0", "#fecaca", "#fef08a", "#bbf7d0"]
+input_map("id", geometry, mode=Cycle(n=4, aes=aes.Indexed(fill_color=CYCLE_COLORS)))
+```
+
+**Styling** (v0.2.0 - Hierarchical Aesthetic System):
+
+The aesthetic system uses a hierarchical structure with state-based and group-based configuration:
+
+```python
+from shinymap import aes, linestyle
+
+# State-based aesthetics (base, hover, select states)
+style = aes.ByState(
+    base=aes.Shape(fill_color="#e2e8f0", stroke_color="#94a3b8"),
+    hover=aes.Shape(stroke_color="#1e40af", stroke_width=2),
+    select=aes.Shape(fill_color="#3b82f6", stroke_color="#1e40af"),
+)
+
+# Group-based aesthetics (different regions get different styles)
+style = aes.ByGroup(
+    __all=aes.Shape(fill_color="#e2e8f0"),  # Default for all regions
+    tokyo=aes.Shape(fill_color="#fecaca"),   # Override for specific region
+    _dividers=aes.Line(stroke_color="#666"),  # Line regions
+)
+
+# Indexed aesthetics for count/cycle modes
+style = aes.Indexed(
+    fill_color=["#e2e8f0", "#bfdbfe", "#60a5fa", "#2563eb"],  # Array indexed by count
+)
+```
+
+**Type-safe aesthetic builders**:
+- `aes.Shape()`: For filled regions (fill_color, fill_opacity, stroke_color, stroke_width, stroke_dasharray)
+- `aes.Line()`: For stroke-only regions (stroke_color, stroke_width, stroke_dasharray)
+- `aes.Text()`: For text elements (fill_color, font_size, font_family)
+- `aes.ByState()`: Combines base/hover/select states
+- `aes.ByGroup()`: Per-region or per-group overrides
+- `aes.Indexed()`: Array-indexed aesthetics for count/cycle modes
+- `linestyle.SOLID`, `linestyle.DASHED`, `linestyle.DOTTED`, `linestyle.DASH_DOT`: Line style constants
 
 **Hover implementation**:
-- `aesHover` prop defines hover aesthetic (default: darker stroke, width 2)
+- Hover aesthetics defined in `aes.ByState(hover=...)` or via `aes_hover` parameter
 - Rendered as separate overlay layer on top of all regions (solves SVG z-index border visibility)
 - `pointer-events: none` ensures clicks pass through to base regions
-- When `aesHover` is provided, `resolveAesthetic` receives `isHovered: false` (hover handled by overlay)
-- Snake_case keys in Python (`aes_hover={"stroke_color": "...", "stroke_width": ...}`) automatically converted to camelCase for React
+- Snake_case keys in Python automatically converted to camelCase for React
 
 ### Packages and scope
 
@@ -93,9 +144,11 @@ This separation keeps the core library lightweight while allowing advanced GIS f
 
 The `shinymap.geometry` subpackage provides tools for converting SVG files to shinymap's JSON format and loading geometry for use in applications.
 
-**JSON Format**:
-Shinymap uses a **flexible path format** where each region can map to either a single string or a list of strings:
+**JSON Format** (v0.x and v1.x):
 
+Shinymap supports two JSON formats:
+
+**v0.x format** (backward compatible): String-based paths
 ```json
 {
   "_metadata": {
@@ -112,14 +165,36 @@ Shinymap uses a **flexible path format** where each region can map to either a s
 }
 ```
 
+**v1.x format** (polymorphic elements): Element objects with type information
+```json
+{
+  "_metadata": {
+    "viewBox": "0 0 100 100"
+  },
+  "circle_region": [{"type": "circle", "cx": 50, "cy": 50, "r": 30}],
+  "rect_region": [{"type": "rect", "x": 10, "y": 10, "width": 30, "height": 20}],
+  "path_region": [{"type": "path", "d": "M 0 0 L 100 100"}],
+  "text_label": [{"type": "text", "x": 50, "y": 50, "text": "Label"}]
+}
+```
+
+**Polymorphic Element Types** (v0.2.0):
+- `Circle`: cx, cy, r
+- `Rect`: x, y, width, height, rx, ry
+- `Ellipse`: cx, cy, rx, ry
+- `Path`: d (path data)
+- `Polygon`: points
+- `Line`: x1, y1, x2, y2
+- `Text`: x, y, text, font_size, font_family, text_anchor, dominant_baseline
+
+All element types support optional aesthetic attributes (fill, stroke, stroke_width) which are preserved for SVG export but NOT used by shinymap for interactive rendering.
+
 **Key points**:
-- Each region ID maps to **either a string or a list of strings**
-- String format: `"region_02": "M 50 10..."` (single path as string)
-- List format: `"region_01": ["M 10 10..."]` (single path as list)
-- Multi-element list: `"hokkaido": ["M 0 0...", "M 200 0..."]` (merged paths)
-- Both formats are supported throughout the stack (Python backend, React frontend)
-- List arrays are joined with spaces when rendering: `" ".join(path_list)`
-- The `Geometry` class prefers the list format for consistency, but UI functions accept both
+- v0.x format: Each region ID maps to **either a string or a list of strings**
+- v1.x format: Each region ID maps to **a list of element objects**
+- Both formats are automatically detected and supported throughout the stack
+- The `Geometry` class converts between formats seamlessly
+- `Geometry.from_svg()` returns v1.x format with polymorphic elements
 
 **Core Functions**:
 
@@ -217,12 +292,14 @@ geo = geo.relabel({"new_id": "old_id"})              # Rename single region
 geo = geo.relabel({"merged": ["id1", "id2"]})        # Merge multiple regions
 geo = geo.set_overlays(["_border", "_divider"])      # Mark overlay regions
 geo = geo.update_metadata({"source": "Custom"})      # Add/update metadata
+geo = geo.path_as_line("_dividers", "_grid")         # Mark regions as lines (v0.2.0)
 
 # Method chaining
 final = (
     Geometry.from_svg("map.svg")
     .relabel({"hokkaido": ["path_1", "path_2"]})
     .set_overlays(["_border"])
+    .path_as_line("_divider_lines")                  # Auto-apply stroke-only rendering
     .update_metadata({"source": "Custom", "license": "MIT"})
 )
 
@@ -288,6 +365,37 @@ Provide built-in color scaling functions for common statistical visualization pa
 
 All utilities use the internal `lerp_hex()` helper for color interpolation. Pre-defined palettes (SEQUENTIAL_BLUE, SEQUENTIAL_GREEN, SEQUENTIAL_ORANGE, QUALITATIVE) are provided but customizable.
 
+### Wash API (v0.2.0)
+
+The `wash()` function provides a factory pattern for creating themed map components with consistent aesthetics:
+
+```python
+from shinymap import wash, aes
+
+# Create themed map factory
+w = wash(
+    shape=aes.ByState(
+        base=aes.Shape(fill_color="#e2e8f0", stroke_color="#94a3b8"),
+        hover=aes.Shape(stroke_color="#1e40af", stroke_width=2),
+        select=aes.Shape(fill_color="#3b82f6"),
+    ),
+    line=aes.Line(stroke_color="#666", stroke_width=1),
+)
+
+# Use themed factory to create maps
+w.input_map("region", geometry, mode="single")
+w.output_map("display", geometry)
+
+# Access resolved aesthetics
+result = w.result  # WashResult with shape, line, text aesthetics
+```
+
+**Benefits**:
+- Consistent styling across multiple map components
+- Separates aesthetic configuration from map creation
+- IDE autocomplete for aesthetic properties
+- Type-safe aesthetic composition
+
 ### Partial Update API
 
 **`update_map(id, tooltips=, fills=, counts=, active_ids=, session=)`** provides selective property updates following Shiny's `update_*()` pattern (like `ui.update_slider`, `ui.update_select`).
@@ -329,27 +437,22 @@ This multi-layer approach guarantees:
 - All overlays use `pointer-events: none` so clicks pass through to base regions
 - No z-index conflicts or CSS hacks needed
 
-**Example with hover highlighting**:
+**Example with hover highlighting** (v0.2.0 syntax):
 
 ```python
-# Input map with custom hover highlight
+from shinymap import input_map, aes
+
+# Input map with custom aesthetics
 input_map(
     "prefecture_selector",
     GEOMETRY,
     tooltips=TOOLTIPS,
     mode="single",
-    view_box=VIEWBOX,
-    aes_base={
-        "fillColor": "#e5e7eb",    # Light gray fill
-        "strokeColor": "#d1d5db",  # Light gray border
-        "strokeWidth": 1
-    },
-    aes_hover={
-        "stroke_color": "#374151",  # Darker border on hover
-        "stroke_width": 2           # Thicker border on hover
-    },
-    overlay_geometry=DIVIDERS,      # Dividing lines rendered above base regions
-    overlay_aesthetic=DIVIDER_STYLE, # but below selection/hover overlays
+    aes=aes.ByState(
+        base=aes.Shape(fill_color="#e5e7eb", stroke_color="#d1d5db", stroke_width=1),
+        hover=aes.Shape(stroke_color="#374151", stroke_width=2),
+        select=aes.Shape(fill_color="#3b82f6"),
+    ),
 )
 ```
 
@@ -357,84 +460,90 @@ The hover overlay is automatically rendered on top of everything, ensuring the d
 
 **Non-Interactive Annotation Layers**
 
-**Purpose**: Display static annotation layers via `overlay_geometry` parameter.
+**Purpose**: Display static annotation layers that render above base regions but below selection/hover highlights.
 
 **Use cases**:
 - Dividing lines (e.g., separating repositioned insets from mainland)
 - Administrative boundaries that aren't clickable regions
 - Grid lines or reference markers
-- Annotations that should appear above base regions but below selection/hover highlights
 
-**Current implementation** (single overlay layer):
+**Current implementation** (v0.2.0 - layers parameter):
 
 ```python
-# Single overlay layer (rendered AFTER regions)
+from shinymap import input_map, aes
+from shinymap.geometry import Geometry
+
+# Option 1: Use path_as_line() for line regions
+geo = Geometry.from_json("map.json").path_as_line("_dividers")
+input_map("map_id", geo, mode="single")
+
+# Option 2: Use aes.ByGroup for per-region styling
 input_map(
     "map_id",
     geometry,
-    overlay_geometry=DIVIDERS,  # Dict[str, str] of SVG paths
-    overlay_aesthetic={         # Styling for overlay
-        "fillColor": "none",
-        "strokeColor": "#999999",
-        "strokeWidth": 2.0,
-    },
+    mode="single",
+    aes=aes.ByGroup(
+        __all=aes.Shape(fill_color="#e2e8f0"),
+        _dividers=aes.Line(stroke_color="#999", stroke_width=2),
+    ),
 )
-
-@render_map
-def my_map():
-    return (
-        Map(
-            geometry,
-            tooltips=tooltips,
-            view_box=viewbox,
-            overlay_geometry=dividers,
-            overlay_aesthetic=divider_style,
-        )
-        .with_fill_color(fills)
-    )
 ```
 
-**Implementation details** (current):
-- Single overlay layer rendered AFTER interactive regions
+**Implementation details**:
+- Overlay layer rendered AFTER interactive regions, BEFORE selection/hover
 - `pointerEvents="none"` prevents click interference
-- Available in all builders: `Map`, `MapSelection`, `MapCount`
-- Serialized in `MapPayload` and passed through to React components
+- Automatic layer detection from region ID prefixes (`_overlay_`, `_underlay_`, `_hidden_`)
 
-**Group-based Layer System** (implemented):
+**Layer System** (v0.2.0):
 
-Regions can be assigned to different layers using group names:
+Regions are automatically assigned to layers based on their ID prefixes:
 
 ```python
-from shinymap import input_map, aes, linestyle
+from shinymap import input_map, aes
+from shinymap.geometry import Geometry
 
-# Geometry with groups defined in metadata
+# Automatic layer detection from region ID prefixes
+geo = Geometry.from_dict({
+    "_metadata": {"viewBox": "0 0 100 100"},
+    "_underlay_grid": [...],       # Auto-detected as underlay (prefix: _underlay_)
+    "_overlay_border": [...],      # Auto-detected as overlay (prefix: _overlay_)
+    "_hidden_reference": [...],    # Auto-detected as hidden (prefix: _hidden_)
+    "region_a": [...],             # Normal interactive region
+    "region_b": [...],             # Normal interactive region
+})
+
+# Or use metadata overlays (traditional approach)
 geo = Geometry.from_dict({
     "_metadata": {
         "viewBox": "0 0 100 100",
-        "groups": {
-            "grid": ["grid_h", "grid_v"],
-            "borders": ["divider_1", "divider_2"],
-        }
+        "overlays": ["_border"],   # Explicit overlay declaration
     },
-    "grid_h": [...],
-    "grid_v": [...],
-    "divider_1": [...],
-    "divider_2": [...],
+    "_border": [...],
     "region_a": [...],
-    "region_b": [...],
 })
 
+# Or specify layers explicitly
 input_map(
     "map_id",
     geo,
-    underlays=["grid"],      # Render grid below everything
-    overlays=["borders"],    # Render borders above base regions
-    hidden=["unused_region"], # Hide completely
-    aes_group={              # Per-group aesthetics
-        "grid": aes.Line(stroke_color="#ddd", stroke_dasharray=linestyle.DASHED).to_dict(),
-        "borders": aes.Line(stroke_color="#999", stroke_width=2).to_dict(),
+    layers={
+        "underlays": ["grid_lines"],
+        "overlays": ["border_lines"],
+        "hidden": ["construction_guides"],
     },
 )
+```
+
+**Line regions** (v0.2.0):
+
+Mark path regions that represent lines (not filled shapes) for automatic stroke-only rendering:
+
+```python
+# Mark regions containing lines described in path notation
+geo = geo.path_as_line("_divider_lines", "_grid")
+
+# These regions automatically get stroke-only aesthetics
+# (fill="none", stroke applied from default line aesthetic)
 ```
 
 **Render order** (5 layers, bottom to top):
@@ -486,70 +595,43 @@ def prefecture_map():
         .with_fill_color_selected("#3b82f6")
     )
 
-# Static layer configuration in output_map
+# Static layer configuration in output_map (v0.2.0)
 output_map(
     "prefecture_map",
     GEOMETRY,
-    underlays=["grid"],
-    overlays=["dividers"],
-    aes_group={
-        "grid": {"stroke_color": "#eee", "stroke_dasharray": "5,5"},
-        "dividers": {"stroke_color": "#999", "stroke_width": 2},
-    },
+    layers={"underlays": ["grid"], "overlays": ["dividers"]},
+    aes=aes.ByGroup(
+        grid=aes.Line(stroke_color="#eee", stroke_dasharray="5,5"),
+        dividers=aes.Line(stroke_color="#999", stroke_width=2),
+    ),
 )
 ```
-
-**Legacy API** (deprecated but supported):
-- `overlay_geometry` / `overlay_aesthetic` still work for backward compatibility
-- New code should use `overlays` + `aes_group` instead
 
 ### Static vs Dynamic Parameters (Planned)
 
 **Vision**: Separate structural configuration (static) from reactive data (dynamic) to keep server code clean and focused.
 
-**Current API** (all parameters in builders):
+**Current API** (v0.2.0 - static params in output_map):
 
 ```python
-@render_map
-def my_map():
-    return (
-        Map(
-            geometry,           # Static - rarely changes
-            tooltips=tooltips,  # Static - usually constant
-            view_box=viewbox,   # Static - constant for given geometry
-            overlay_geometry=dividers,      # Static - constant
-            overlay_aesthetic=divider_style, # Static - constant
-        )
-        .with_fill_color(fills)  # Dynamic - from reactive data
-        .with_counts(counts)     # Dynamic - from reactive data
-    )
-```
+from shinymap import output_map, render_map, Map, aes
 
-**Problem**: Static parameters (geometry, tooltips, viewBox, overlay) are repeated in every `@render_map` function, cluttering server code with structural details that don't change.
-
-**Planned API** (static params in output_map()):
-
-```python
 # UI layer - define static structure once
 app_ui = ui.page_fluid(
     output_map(
         "my_map",
         geometry=GEOMETRY,           # Static - defined once
         tooltips=TOOLTIPS,           # Static - defined once
-        view_box=VIEWBOX,            # Static - defined once
-        overlay_geometry=DIVIDERS,   # Static - defined once
-        overlay_aesthetic=DIVIDER_STYLE,  # Static - defined once
+        aes=aes.ByState(...),        # Static - defined once
+        layers={"overlays": [...]},  # Static - defined once
     ),
 )
 
 # Server layer - focus only on reactive data transformations
 @render_map
 def my_map():
-    selected = input.selected_regions()
     fills = scale_qualitative(categories, region_ids)
-
-    # Clean, focused on data only
-    return MapSelection(selected=selected).with_fill_color(fills)
+    return Map(GEOMETRY).with_fill_color(fills)
 ```
 
 **Benefits**:
@@ -558,13 +640,7 @@ def my_map():
 3. **Easier maintenance**: Static configuration in one place, visible in UI definition
 4. **Consistent with Shiny patterns**: Similar to how `output_plot(width=, height=)` defines figure size in UI, not in render function
 
-**Implementation plan**:
-- Add optional static parameters to `output_map()` registration
-- Merge static params from `output_map()` with dynamic params from `Map*()` builders
-- Maintain backward compatibility: if param provided to both, builder value takes precedence
-- Static params available to all builders when omitted
-
-**Implementation status**: Not yet implemented. Static parameters currently must be passed to `Map*()` builders.
+**Implementation status** (v0.2.0): Implemented. Static parameters can be defined in `output_map()` and are merged with dynamic parameters from `Map*()` builders.
 
 ## Shiny for R (Future Work)
 
