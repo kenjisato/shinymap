@@ -308,39 +308,63 @@ def test_map_builder_basic():
 
 ---
 
-## Release Process
+## Git Workflow
+
+We use a **Main-Only Strategy** with a `dev` branch for development:
+
+```
+dev (default development branch)
+ │
+ └──> PR ──> main (releases only)
+              │
+              └──> auto-tag ──> PyPI publish
+```
+
+### Branches
+
+- **`dev`**: Default development branch. All work happens here.
+- **`main`**: Release branch. Only updated via PRs from `dev` (or hotfix branches).
+
+### Workflow
+
+1. **Development**: Work on `dev` branch (or feature branches that merge to `dev`)
+2. **CI runs**: On every push to `dev` and on PRs to `main`
+3. **Release**: Create PR from `dev` → `main`
+4. **Auto-tag**: When PR merges to `main`, a workflow automatically creates a version tag (if version is not `-dev`)
+5. **Publish**: Tag push triggers PyPI publish
+
+### Release Process
 
 (For maintainers)
 
-### Python Package
+1. **On `dev` branch**: Update version (remove `-dev` suffix) and CHANGELOG
+   ```bash
+   # In packages/shinymap/python/pyproject.toml and src/shinymap/__init__.py
+   # Change: version = "0.3.0-dev" → version = "0.3.0"
+   ```
 
-```bash
-cd packages/shinymap/python
+2. **Create PR**: `dev` → `main`
+   ```bash
+   gh pr create --base main --head dev --title "Release v0.3.0"
+   ```
 
-# 1. Update version in pyproject.toml
-# 2. Update CHANGELOG.md
-# 3. Build and publish
-rm -rf dist/
-uv build
-uv publish
+3. **Merge PR**: After CI passes and review
+   - Tag `v0.3.0` is automatically created
+   - PyPI publish triggers automatically
 
-cd ../../..
-```
+4. **Post-release on `dev`**: Bump to next dev version
+   ```bash
+   # Change: version = "0.3.0" → version = "0.4.0-dev"
+   ```
 
-### JavaScript Package
+### Hotfix Process
 
-```bash
-cd packages/shinymap/js
+For urgent fixes to `main`:
 
-# 1. Update version in package.json
-# 2. Rebuild bundle
-node build-global.js
-
-# 3. Publish to npm (if applicable)
-npm publish
-
-cd ../../..
-```
+1. Create hotfix branch from `main`: `git checkout -b hotfix/fix-name main`
+2. Fix and bump patch version (e.g., `0.3.0` → `0.3.1`)
+3. PR to `main`, merge, auto-tag, publish
+4. Merge `main` back to `dev` to sync the fix
 
 ---
 

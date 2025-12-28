@@ -45,6 +45,21 @@ Additionally, `output_map` provides simplified statistical visualizations (choro
 - **JavaScript/TypeScript**: React components in `packages/shinymap/js`
 - **License**: MIT (keep all dependencies MIT-compatible)
 
+## Git Workflow
+
+We use a **Main-Only Strategy**:
+
+- **`dev` branch**: Default development branch. All work happens here.
+- **`main` branch**: Release branch. Only updated via PRs from `dev`.
+- **Auto-tagging**: When PR merges to `main`, version tag is auto-created (skips `-dev` versions).
+- **Auto-publish**: Tag push triggers PyPI publish.
+
+**Key points for AI assistants**:
+- Always work on `dev` branch (check with `git branch`)
+- Never push directly to `main`
+- Version in `pyproject.toml` should be `X.Y.Z-dev` during development
+- See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed release process
+
 ## Key Documents
 
 Read these for detailed context:
