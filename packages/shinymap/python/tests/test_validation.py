@@ -2,8 +2,6 @@
 
 import warnings
 
-import pytest
-
 from shinymap._validation import (
     _collect_element_types,
     validate_aesthetic_for_elements,

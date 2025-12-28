@@ -1,6 +1,5 @@
 """Integration tests for export_svg() function."""
 
-from pathlib import Path as PathType
 
 from shinymap.geometry import Circle, Geometry, Path, Rect, Text, export_svg
 
