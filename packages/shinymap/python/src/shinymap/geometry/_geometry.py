@@ -240,6 +240,13 @@ class Geometry:
             regions[elem_id] = [rect]
 
         # Extract paths
+        # TODO: Detect paths that are semantically lines, not filled shapes.
+        # Detection heuristics:
+        # 1. fill="none" indicates stroke-only rendering
+        # 2. Path 'd' attribute not ending with 'Z' (close path) indicates open path
+        # Open paths without fill are typically lines (grid lines, dividers, borders).
+        # Consider converting such paths to Line elements or marking them for
+        # automatic stroke-only aesthetic handling.
         for path_elem in root.findall(".//svg:path[@d]", ns):
             path_d = path_elem.get("d")
             if not path_d:
@@ -545,6 +552,38 @@ class Geometry:
             'Wikimedia Commons'
         """
         new_metadata = {**self.metadata, **metadata}
+        return Geometry(regions=Regions(dict(self.regions)), metadata=new_metadata)
+
+    def path_as_line(self, *region_ids: str) -> Geometry:
+        """Mark regions as lines described in path notation.
+
+        Some SVG paths represent lines (dividers, borders, grids) rather than
+        filled shapes. This method stores the region IDs so that stroke-only
+        aesthetics are automatically applied.
+
+        Args:
+            *region_ids: Region IDs containing line elements in path notation
+
+        Returns:
+            New Geometry object with line regions recorded in metadata
+
+        Example:
+            >>> geo = Geometry.from_dict({
+            ...     "region": ["M 0 0 L 100 100"],
+            ...     "_divider": ["M 50 0 L 50 100"]
+            ... })
+            >>> geo2 = geo.path_as_line("_divider")
+            >>> # Now _divider will use stroke-only rendering
+        """
+        # Get existing list or create new one
+        existing = list(self.metadata.get("lines_as_path", []))
+
+        # Add new region IDs (avoid duplicates)
+        for region_id in region_ids:
+            if region_id not in existing:
+                existing.append(region_id)
+
+        new_metadata = {**self.metadata, "lines_as_path": existing}
         return Geometry(regions=Regions(dict(self.regions)), metadata=new_metadata)
 
     def to_dict(self) -> dict[str, Any]:
