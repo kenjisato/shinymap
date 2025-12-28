@@ -7,7 +7,8 @@ This document provides context for AI assistants (like Claude) working on the sh
 **shinymap** provides **visual alternatives to standard HTML form inputs** using SVG regions:
 - `input_map(mode="single")` → Visual radio buttons (select one region)
 - `input_map(mode="multiple")` → Visual checkboxes (select multiple regions)
-- `input_map(mode="count")` → Visual counter/range input (click to increment with visual feedback)
+- `input_map(mode=Count())` → Visual counter (click to increment with visual feedback)
+- `input_map(mode=Cycle(n))` → Visual state cycling (n discrete states)
 
 Additionally, `output_map` provides simplified statistical visualizations (choropleths, categorical coloring) with a declarative API.
 
@@ -29,9 +30,9 @@ Additionally, `output_map` provides simplified statistical visualizations (choro
 1. **Input-first philosophy**: These are form controls, not just visualizations. Return simple values (`str`, `list`, `dict`), not shapes/GeoJSON.
 
 2. **Unified count model**: Internally uses `{region_id: count}` representation. Python API transforms this to ergonomic types:
-   - `mode="single"` → `str | None`
-   - `mode="multiple"` → `list[str]`
-   - `mode="count"` → `dict[str, int]`
+   - `mode="single"` or `Single()` → `str | None`
+   - `mode="multiple"` or `Multiple()` → `list[str]`
+   - `Count()` or `Cycle(n)` → `dict[str, int]`
 
 3. **Geometry-agnostic**: Same API works for any SVG paths, not geography-specific.
 
@@ -94,10 +95,68 @@ Check these documents before making significant changes to ensure alignment with
 
 ## Common Patterns
 
-### Python Color Scaling
+### Input Map with wash()
+
+The `wash()` function creates configured map functions with custom default aesthetics:
 
 ```python
-from shinymap import scale_sequential, scale_diverging, scale_qualitative
+from shinymap import wash, aes, PARENT
+
+# Create wash with custom theme
+wc = wash(
+    shape=aes.ByState(
+        base=aes.Shape(fill_color="#e2e8f0", stroke_color="#94a3b8", stroke_width=0.5),
+        select=aes.Shape(fill_color="#bfdbfe", stroke_color="#1e40af"),
+        hover=aes.Shape(stroke_width=PARENT.stroke_width + 0.5),
+    ),
+    line=aes.Line(stroke_color="#94a3b8", stroke_width=0.5),
+)
+
+# Use washed functions
+wc.input_map("region", geometry, mode="single")
+wc.output_map("my_map", geometry)
+
+@wc.render_map
+def my_map():
+    return Map().with_value(counts)
+```
+
+### Output Map with Per-Region Colors
+
+Use `aes.ByGroup` to set per-region aesthetics:
+
+```python
+from shinymap import Map, aes
+
+@wc.render_map
+def categorical_map():
+    # Create per-region aesthetics
+    region_aes = {
+        region: aes.Shape(fill_color=COLORS[category])
+        for region, category in categories.items()
+    }
+    return Map(aes=aes.ByGroup(**region_aes))
+```
+
+### Count Mode with Indexed Aesthetics
+
+```python
+from shinymap import aes
+from shinymap.mode import Count
+from shinymap.color import SEQUENTIAL_ORANGE
+
+wc.input_map(
+    "counts",
+    geometry,
+    mode=Count(aes=aes.Indexed(fill_color=["lightgray", *SEQUENTIAL_ORANGE])),
+)
+```
+
+### Color Scale Functions
+
+```python
+from shinymap.color import scale_sequential, scale_diverging, scale_qualitative
+from shinymap.color import SEQUENTIAL_BLUE, QUALITATIVE
 
 # Sequential (count data)
 fills = scale_sequential(counts, region_ids, palette=SEQUENTIAL_BLUE, max_count=10)
@@ -109,50 +168,24 @@ fills = scale_diverging(values, region_ids, low_color="#ef4444", mid_color="#f3f
 fills = scale_qualitative(categories, region_ids, palette=QUALITATIVE)
 ```
 
-### MapBuilder Fluent API
+### MapBuilder Methods
+
+Available `MapBuilder` methods (via `Map()` or method chaining):
 
 ```python
-from shinymap import Map, render_map
-
-@render_map
-def my_map():
-    return (
-        Map(geometry, tooltips=tooltips)
-        .with_fill_color(fills)
-        .with_counts(counts)
-        .with_active(active_ids)
-    )
+Map(geometry, tooltips=tooltips, value=value, active=active_ids, aes=aes_config)
+# Or fluent API:
+Map(geometry).with_value(value).with_active(active_ids).with_aes(aes_config)
 ```
 
-### Aesthetic Parameters
+- `.with_value(dict)` - Set region values (counts)
+- `.with_active(list)` - Set active/highlighted region IDs
+- `.with_aes(ByGroup|ByState|Shape)` - Set aesthetic configuration
+- `.with_tooltips(dict)` - Set region tooltips
+- `.with_view_box(tuple)` - Set SVG viewBox
+- `.with_layers(dict)` - Set layer configuration
 
-Configure aesthetics using `aes_*` parameters:
-
-```python
-from shinymap import aes
-
-# Input map with custom hover and selection aesthetics
-input_map(
-    "region",
-    geometry,
-    aes_hover=aes.Shape(stroke_color="#374151", stroke_width=2),
-    aes_select=aes.Shape(fill_color="#fbbf24"),
-)
-
-# Using dict syntax (alternative)
-input_map(
-    "region",
-    geometry,
-    aes_hover={
-        "stroke_color": "#1e40af",
-        "stroke_width": 2,
-        "fill_color": "#3b82f6",
-        "fill_opacity": 0.2
-    }
-)
-```
-
-Note: Aesthetic dicts use snake_case keys in Python (`stroke_color`, `stroke_width`, `fill_color`, `fill_opacity`) which are automatically converted to camelCase for JavaScript.
+Note: There is NO `.with_fill_color()` method. Use `.with_aes(aes.ByGroup(...))` for per-region colors.
 
 ## Honest Positioning
 
