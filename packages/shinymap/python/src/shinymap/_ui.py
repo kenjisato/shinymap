@@ -8,11 +8,13 @@ from htmltools import Tag, TagList, css
 from shiny import ui
 from shiny.session import Session, require_active_session
 
+from ._aesthetics import BaseAesthetic, ByGroup, ByState
 from ._base import (
     CountMap,
     TooltipMap,
     _camel_props,
     _class_names,
+    _convert_aes_to_dict,
     _dependency,
     _merge_styles,
     _normalize_geometry,
@@ -22,6 +24,7 @@ if TYPE_CHECKING:
     from .geometry import Geometry
 
 Selection = str | list[str] | None
+AesType = ByGroup | ByState | BaseAesthetic | Mapping[str, Mapping[str, Any] | None] | None
 
 # Module-level registry for static parameters from output_map()
 _static_map_params: MutableMapping[str, Mapping[str, Any]] = {}
@@ -85,7 +88,7 @@ class MapBuilder:
         self._value: CountMap = None
         self._active_ids: Selection = None
         self._view_box = view_box
-        self._aes: Mapping[str, Mapping[str, Any] | None] | None = None
+        self._aes: AesType = None
         self._layers: Mapping[str, list[str] | None] | None = None
 
     def with_tooltips(self, tooltips: TooltipMap) -> MapBuilder:
@@ -108,11 +111,11 @@ class MapBuilder:
         self._view_box = view_box
         return self
 
-    def with_aes(self, aes: Mapping[str, Mapping[str, Any] | None]) -> MapBuilder:
+    def with_aes(self, aes: AesType) -> MapBuilder:
         """Set aesthetic configuration.
 
         Args:
-            aes: Nested dict with keys like 'base', 'hover', 'group'
+            aes: Aesthetic config (ByGroup, ByState, BaseAesthetic, or dict)
         """
         self._aes = aes
         return self
@@ -146,7 +149,11 @@ class MapBuilder:
         if self._view_box is not None:
             data["view_box"] = _viewbox_to_str(self._view_box)
         if self._aes is not None:
-            data["aes"] = self._aes
+            # Convert ByGroup/ByState/BaseAesthetic to dict format
+            if isinstance(self._aes, (ByGroup, ByState, BaseAesthetic)):
+                data["aes"] = _convert_aes_to_dict(self._aes)
+            else:
+                data["aes"] = self._aes
         if self._layers is not None:
             data["layers"] = self._layers
         if hasattr(self, "_geometry_metadata") and self._geometry_metadata is not None:
@@ -162,7 +169,7 @@ def Map(
     tooltips: dict[str, str] | None = None,
     value: dict[str, int] | None = None,
     active: list[str] | None = None,
-    aes: Mapping[str, Mapping[str, Any] | None] | None = None,
+    aes: AesType = None,
     layers: Mapping[str, list[str] | None] | None = None,
 ) -> MapBuilder:
     """Create map from Geometry object.
@@ -178,7 +185,7 @@ def Map(
         tooltips: Region tooltips
         value: Region values (counts, selection state)
         active: Active region IDs
-        aes: Aesthetic configuration (nested dict: base, hover, group)
+        aes: Aesthetic configuration (ByGroup, ByState, BaseAesthetic, or dict)
         layers: Layer configuration (nested dict: underlays, overlays, hidden)
 
     Example:
@@ -284,9 +291,31 @@ def _apply_static_params(builder: MapBuilder, output_id: str) -> MapBuilder:
     if builder._active_ids is not None:
         merged._active_ids = builder._active_ids
 
-    # Merge aes: builder values override static
+    # Merge aes: builder values override static, but preserve lines_as_path from static
     static_aes = static_params.get("aes")
-    if builder._aes is not None:
+    if builder._aes is not None and static_aes is not None:
+        # Need to merge: static aes contains lines_as_path entries, builder aes is user-provided
+        # Convert builder aes to dict and merge with static
+        from ._base import _convert_aes_to_dict
+
+        builder_aes_dict = (
+            _convert_aes_to_dict(builder._aes)
+            if isinstance(builder._aes, (ByGroup, ByState, BaseAesthetic))
+            else builder._aes
+        )
+        # Deep merge: static group entries are base, builder entries override
+        merged_aes: dict[str, Any] = dict(static_aes) if static_aes else {}
+        if builder_aes_dict:
+            for key, value in builder_aes_dict.items():
+                if key == "group" and isinstance(value, dict):
+                    # Merge group entries: builder overrides static
+                    if "group" not in merged_aes:
+                        merged_aes["group"] = {}
+                    merged_aes["group"] = {**merged_aes.get("group", {}), **value}
+                else:
+                    merged_aes[key] = value
+        merged._aes = merged_aes
+    elif builder._aes is not None:
         merged._aes = builder._aes
     elif static_aes is not None:
         merged._aes = static_aes

@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] - 2025-12-28
+
+### Added
+
+- `Map()` and `MapBuilder.with_aes()` now accept `aes.ByGroup`, `aes.ByState`, and `aes.Shape` directly
+  - Previously only accepted raw dict format
+  - Enables cleaner API: `Map(aes=aes.ByGroup(region1=aes.Shape(fill_color="#fff")))`
+
+### Fixed
+
+- Fix aes merging in `_apply_static_params()` to preserve `lines_as_path` entries from `output_map()`
+  - User-provided aes from `Map()` now properly merges with static aes containing `lines_as_path` data
+  - Ensures divider lines and other path-as-line regions retain correct aesthetics
+
 ## [0.2.1] - 2025-12-28
 
 ### Fixed

@@ -18,6 +18,7 @@ from shinymap import (
 )
 from shinymap.mode import Count
 from shinymap.geometry import Geometry
+from shinymap.color import SEQUENTIAL_ORANGE
 
 from japan_prefectures import PREF_NAMES_JA, PREF_NAMES_ROMAJI
 from shared import code_sample
@@ -209,7 +210,7 @@ _ui_count = ui.card(
                 "visit_counts",
                 GEOMETRY,
                 tooltips=TOOLTIPS,
-                mode=Count(),
+                mode=Count(aes=aes.Indexed(fill_color=["lightgray", *SEQUENTIAL_ORANGE])),
             ),
         ),
         ui.TagList(
@@ -261,13 +262,13 @@ _ui_regions = ui.card(
                 # SERVER
                 @render_map
                 def categorical_map():
-                    fills = {}
                     # pref_categories() => { '01': 'green', '02': 'red', ... }
                     # COLORS => { 'green': "#84cc16", 'red': "#ef4444", ... }
-                    for region, group in pref_categories().items():
-                        fills[region] = COLORS[group]
-
-                    return Map().with_fill_color(fills)
+                    region_aes = {
+                        region: aes.Shape(fill_color=COLORS[group])
+                        for region, group in pref_categories().items()
+                    }
+                    return Map(aes=aes.ByGroup(**region_aes))
                 """)
         ),
         ui.TagList(
@@ -316,14 +317,13 @@ def _server_regions(input, output, session):
 
     @wc.render_map
     def categorical_map():
-        # Create color mapping for all prefectures
-        fills = {}
-
-        for region, group in pref_categories().items():
-            fills[region] = COLORS[group]
-
+        # Create per-region aesthetics using ByGroup
         # Static params (geometry, tooltips, etc.) defined in output_map() above
-        return Map().with_fill_color(fills)
+        region_aes = {
+            region: aes.Shape(fill_color=COLORS[group])
+            for region, group in pref_categories().items()
+        }
+        return Map(aes=aes.ByGroup(**region_aes))
 
 
 # Combine all examples
