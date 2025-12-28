@@ -17,56 +17,53 @@ uv add shinymap
 ## API
 
 ```python
-from shinymap import Map, MapPayload, input_map, output_map, render_map
-from shinymap import scale_sequential, scale_qualitative, SEQUENTIAL, QUALITATIVE
-from shinymap.geometry import Geometry, convert, from_svg, from_json
+from shinymap import Map, input_map, output_map, render_map, aes
+from shinymap import scale_sequential, scale_qualitative
+from shinymap.mode import Single, Multiple, Cycle, Count
+from shinymap.geometry import Geometry
 ```
 
 ### Map Components
 
-- `input_map(id, geometry, mode="single"|"multiple"|"count", cycle=None, max_selection=None, hover_highlight=None, ...)` renders an interactive input.
-  - For `mode="single"`: returns a single selected region ID (string) or None
-  - For `mode="multiple"`: returns a list of selected region IDs
-  - For `mode="count"`: returns a dict mapping region IDs to counts
-  - `hover_highlight` accepts a dict with keys: `stroke_width`, `fill_opacity`, `stroke_color`, `fill_color` for customizing hover effects
-    - Hover effects are rendered as an overlay layer on top to ensure full border visibility
-    - Default hover highlight: `{"stroke_width": 2, "stroke_color": "#1e40af"}` (blue-800)
-- `output_map("map")` adds a placeholder in your UI; pair it with a `@render_map` output in the server.
-- `Map` (alias for `MapBuilder`) provides a fluent API for building map payloads with method chaining.
-- `MapPayload` models the data you can send to an output map: geometry, tooltips, fills, counts, active ids, default aesthetics, etc.
-- `render_map` is a convenience decorator that serializes a `Map`/`MapPayload` (or dict) and mounts the React output map.
-- `scale_sequential(counts, region_ids, max_count=None)` and `scale_qualitative(categories, region_ids, palette=None)` are helper functions for generating fill color maps.
+- `input_map(id, geometry, mode, ...)` renders an interactive input.
+  - Mode classes (v0.2.0):
+    - `Single()` or `mode="single"`: returns `str | None`
+    - `Multiple()` or `mode="multiple"`: returns `list[str]`
+    - `Cycle(n=4)`: cycles through n states, returns `dict[str, int]`
+    - `Count()` or `Count(max=10)`: counting mode, returns `dict[str, int]`
+  - Aesthetics via `aes` parameter:
+    - `aes.ByState(base=..., hover=..., select=...)`: state-based styling
+    - `aes.ByGroup(__all=..., region_id=...)`: per-region styling
+    - `aes.Indexed(fill_color=[...])`: indexed colors for cycle/count modes
+- `output_map("map", geometry, ...)` adds a placeholder with static parameters.
+- `Map` provides a fluent API for building map payloads with method chaining.
+- `render_map` decorator serializes a `Map` and mounts the React output map.
+- `scale_sequential()` and `scale_qualitative()` generate fill color maps.
 
 ### Geometry Utilities
 
-The `shinymap.geometry` subpackage provides tools for converting SVG files to shinymap's JSON format:
+The `shinymap.geometry` subpackage provides tools for working with SVG geometry:
 
-- **`Geometry.from_json(json_path)`**: Load geometry from shinymap JSON files. Returns a Geometry object with methods for accessing regions, overlays, and viewbox.
-- **`from_svg(svg_path, output_path=None)`**: Extract intermediate JSON from SVG file with auto-generated path IDs.
-- **`from_json(intermediate_json, output_path=None, relabel=None, ...)`**: Transform intermediate JSON by renaming/merging paths.
-- **`convert(input_path, output_path=None, relabel=None, ...)`**: One-shot SVG to JSON conversion.
-- **`infer_relabel(initial_file, final_json)`**: Infer relabel mapping from existing transformations.
+- **`Geometry.from_svg(svg_path)`**: Extract geometry from SVG files (v1.x polymorphic elements)
+- **`Geometry.from_json(json_path)`**: Load geometry from shinymap JSON files
+- **`geo.relabel({...})`**: Rename or merge regions
+- **`geo.set_overlays([...])`**: Mark overlay regions
+- **`geo.path_as_line("_dividers")`**: Mark regions as lines for stroke-only rendering
+- **`geo.to_json(path)`**: Export to JSON file
+
+**Polymorphic elements** (v0.2.0): Circle, Rect, Ellipse, Path, Polygon, Line, Text
 
 **Interactive converter app**:
 ```bash
 uv run python -m shinymap.geometry.converter -b
 ```
 
-See [geometry package documentation](src/shinymap/geometry/__init__.py) for detailed workflow examples.
-
-**Geometry format**: Shinymap uses a list-based path format where each region maps to a **list** of SVG path strings:
-```python
-geometry = {
-    "circle": ["M25,50 A20,20 0 1 1 24.999,50 Z"],  # Single-element list
-    "hokkaido": ["M 0 0...", "M 200 0..."],         # Multi-element list (merged paths)
-}
-```
-
 ## Minimal example
 
 ```python
 from shiny import App, ui
-from shinymap import Map, input_map, output_map, render_map, scale_sequential
+from shinymap import Map, input_map, output_map, render_map, scale_sequential, aes
+from shinymap.mode import Count
 
 DEMO_GEOMETRY = {
     "circle": ["M25,50 A20,20 0 1 1 24.999,50 Z"],
@@ -84,8 +81,7 @@ app_ui = ui.page_fluid(
             "region",
             DEMO_GEOMETRY,
             tooltips=TOOLTIPS,
-            mode="single",
-            hover_highlight={"stroke_width": 1},
+            mode="single",  # Returns str | None
         ),
         output_map("summary"),
     ),
@@ -96,8 +92,7 @@ app_ui = ui.page_fluid(
             "clicks",
             DEMO_GEOMETRY,
             tooltips=TOOLTIPS,
-            mode="count",
-            hover_highlight={"stroke_width": 2, "fill_opacity": -0.3},
+            mode=Count(),  # Returns dict[str, int]
         ),
         output_map("counts"),
     ),
@@ -107,21 +102,18 @@ app_ui = ui.page_fluid(
 def server(input, output, session):
     @render_map
     def summary():
-        # mode="single" returns a single ID (string) or None
         selected = input.region()
         return (
             Map(DEMO_GEOMETRY, tooltips=TOOLTIPS)
             .with_active(selected)
-            .with_stroke_width(1.5)
         )
 
     @render_map
     def counts():
-        # mode="count" returns a dict mapping region IDs to counts
         counts_data = input.clicks() or {}
         return (
             Map(DEMO_GEOMETRY, tooltips=TOOLTIPS)
-            .with_fills(scale_sequential(counts_data, list(DEMO_GEOMETRY.keys()), max_count=10))
+            .with_fill_color(scale_sequential(counts_data, list(DEMO_GEOMETRY.keys()), max_count=10))
             .with_counts(counts_data)
         )
 
