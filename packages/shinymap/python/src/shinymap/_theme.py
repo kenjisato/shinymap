@@ -23,9 +23,9 @@ def configure_theme(**kwargs: Any) -> None:
     Args:
         **kwargs: Aesthetic parameters to use as defaults.
                  Common parameters:
-                 - default_aesthetic: Base styling dict
-                 - selected_aesthetic: Selected region styling dict
-                 - hover_highlight: Hover overlay styling dict
+                 - aes_base: Base styling dict
+                 - aes_select: Selected region styling dict
+                 - aes_hover: Hover overlay styling dict
                  - fill_color: Fill color(s)
                  - Any other parameter accepted by input_map() or output_map()
 
@@ -34,8 +34,8 @@ def configure_theme(**kwargs: Any) -> None:
         >>> from shinymap import configure_theme, input_map
         >>>
         >>> configure_theme(
-        ...     selected_aesthetic={"fill_color": "#ffffcc"},
-        ...     hover_highlight={"stroke_width": 8}
+        ...     aes_select={"fill_color": "#ffffcc"},
+        ...     aes_hover={"stroke_width": 8}
         ... )
         >>>
         >>> # All maps in this session use the configured defaults
@@ -47,9 +47,9 @@ def configure_theme(**kwargs: Any) -> None:
         ... )
 
         Override for specific map:
-        >>> configure_theme(hover_highlight={"stroke_width": 4})
+        >>> configure_theme(aes_hover={"stroke_width": 4})
         >>> input_map("map1", geo)  # Uses stroke_width: 4
-        >>> input_map("map2", geo, hover_highlight={"stroke_width": 8})  # Override
+        >>> input_map("map2", geo, aes_hover={"stroke_width": 8})  # Override
 
     Note:
         - This configuration is session-scoped (thread-safe for Shiny apps)
