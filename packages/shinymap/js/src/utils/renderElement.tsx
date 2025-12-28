@@ -21,6 +21,10 @@ export type RenderElementProps = {
   stroke?: string;
   /** Stroke width (overrides element.strokeWidth) */
   strokeWidth?: number;
+  /** Stroke dash pattern (e.g., "5,5" for dashed lines) */
+  strokeDasharray?: string;
+  /** Non-scaling stroke (true = stroke width in screen pixels, default true) */
+  nonScalingStroke?: boolean;
   /** CSS cursor style */
   cursor?: string;
   /** Pointer events (e.g., "none" for overlays) */
@@ -63,6 +67,8 @@ export function renderElement(props: RenderElementProps): React.ReactElement {
     fillOpacity,
     stroke,
     strokeWidth,
+    strokeDasharray,
+    nonScalingStroke,
     cursor,
     pointerEvents,
     onClick,
@@ -74,12 +80,18 @@ export function renderElement(props: RenderElementProps): React.ReactElement {
     extraProps,
   } = props;
 
+  // Non-scaling stroke: default to true for predictable stroke widths
+  // When true, stroke-width is in screen pixels regardless of viewBox scaling
+  const vectorEffect = nonScalingStroke !== false ? "non-scaling-stroke" : undefined;
+
   // Common props for all SVG elements
   const commonProps = {
     fill,
     fillOpacity,
     stroke,
     strokeWidth,
+    strokeDasharray,
+    vectorEffect,
     style: cursor ? { cursor } : undefined,
     pointerEvents,
     onClick,

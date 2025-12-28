@@ -1,5 +1,5 @@
 import type { InputMapProps, OutputMapProps } from "./types";
-export type { GeometryMap, InputMapProps, OutputMapProps, RegionId, TooltipMap } from "./types";
+export type { AesConfig, GeometryMap, InputMapProps, LayersConfig, MapModeType, ModeConfig, OutputMapProps, RegionId, TooltipMap, } from "./types";
 export { InputMap } from "./components/InputMap";
 export { OutputMap } from "./components/OutputMap";
 export { palette, neutrals, qualitative, sequential } from "./palette";

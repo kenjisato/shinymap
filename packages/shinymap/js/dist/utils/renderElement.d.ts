@@ -19,6 +19,10 @@ export type RenderElementProps = {
     stroke?: string;
     /** Stroke width (overrides element.strokeWidth) */
     strokeWidth?: number;
+    /** Stroke dash pattern (e.g., "5,5" for dashed lines) */
+    strokeDasharray?: string;
+    /** Non-scaling stroke (true = stroke width in screen pixels, default true) */
+    nonScalingStroke?: boolean;
     /** CSS cursor style */
     cursor?: string;
     /** Pointer events (e.g., "none" for overlays) */

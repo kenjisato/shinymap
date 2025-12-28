@@ -14,13 +14,18 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
  * @returns React SVG element
  */
 export function renderElement(props) {
-    const { element, key, fill, fillOpacity, stroke, strokeWidth, cursor, pointerEvents, onClick, onMouseEnter, onMouseLeave, onFocus, onBlur, tooltip, extraProps, } = props;
+    const { element, key, fill, fillOpacity, stroke, strokeWidth, strokeDasharray, nonScalingStroke, cursor, pointerEvents, onClick, onMouseEnter, onMouseLeave, onFocus, onBlur, tooltip, extraProps, } = props;
+    // Non-scaling stroke: default to true for predictable stroke widths
+    // When true, stroke-width is in screen pixels regardless of viewBox scaling
+    const vectorEffect = nonScalingStroke !== false ? "non-scaling-stroke" : undefined;
     // Common props for all SVG elements
     const commonProps = {
         fill,
         fillOpacity,
         stroke,
         strokeWidth,
+        strokeDasharray,
+        vectorEffect,
         style: cursor ? { cursor } : undefined,
         pointerEvents,
         onClick,

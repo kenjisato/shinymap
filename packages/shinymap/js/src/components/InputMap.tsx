@@ -1,16 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 
-import type { AestheticStyle, Element, InputMapMode, InputMapProps, RegionId } from "../types";
+import type { AestheticStyle, Element, InputMapProps, MapModeType, RegionId, RenderedRegion } from "../types";
+import { createRenderedRegion, DEFAULT_AESTHETIC_VALUES, DEFAULT_HOVER_AESTHETIC, getIndexedDataForRegion, resolveIndexedAesthetic } from "../types";
 import { normalizeGeometry } from "../utils/geometry";
+import { assignLayers, resolveGroupAesthetic } from "../utils/layers";
 import { renderElement } from "../utils/renderElement";
 
 const DEFAULT_VIEWBOX = "0 0 100 100";
-const DEFAULT_AESTHETIC: AestheticStyle = {
-  fillColor: "#e2e8f0",
-  fillOpacity: 1,
-  strokeColor: "#334155",
-  strokeWidth: 1,
-};
 
 function buildSelected(value: Record<RegionId, number> | undefined): Set<RegionId> {
   const set = new Set<RegionId>();
@@ -40,24 +36,49 @@ export function InputMap(props: InputMapProps) {
     className,
     containerStyle,
     viewBox = DEFAULT_VIEWBOX,
-    defaultAesthetic = DEFAULT_AESTHETIC,
-    resolveAesthetic,
-    regionProps,
+    mode: modeConfig,
+    aes,
+    layers,
+    geometryMetadata,
     value,
     onChange,
-    cycle,
-    maxSelection,
+    resolveAesthetic,
+    regionProps,
+    // Deprecated props (for backward compatibility)
     overlayGeometry,
     overlayAesthetic,
-    hoverHighlight,
-    selectedAesthetic,
   } = props;
+
+  // Extract from nested aes config
+  const aesBase = aes?.base ?? DEFAULT_AESTHETIC_VALUES;
+  const aesHover = aes?.hover;
+  const aesSelect = aes?.select;
+  const aesGroup = aes?.group;
+
+  // Extract from nested layers config
+  const underlays = layers?.underlays;
+  const overlays = layers?.overlays;
+  const hidden = layers?.hidden;
+
+  // Extract from nested mode config
+  const modeType: MapModeType = modeConfig?.type ?? "multiple";
+  const cycle = modeConfig?.n;
+  const maxSelection = modeConfig?.maxSelection;
+  const aesIndexed = modeConfig?.aesIndexed;
 
   // Normalize geometry to Element[] format (handles both v0.x strings and v1.x polymorphic elements)
   const normalizedGeometry = useMemo(() => normalizeGeometry(geometry), [geometry]);
+
+  // Legacy overlay support (deprecated)
   const normalizedOverlayGeometry = useMemo(
     () => (overlayGeometry ? normalizeGeometry(overlayGeometry) : undefined),
     [overlayGeometry]
+  );
+
+  // New layer system: assign regions to layers
+  const layerAssignment = useMemo(
+    () => assignLayers(normalizedGeometry, underlays, overlays, hidden, geometryMetadata),
+    [normalizedGeometry, underlays, overlays, hidden, geometryMetadata]
   );
 
   const normalizedFillColor = useMemo(() => normalizeFillColor(fillColor, normalizedGeometry), [fillColor, normalizedGeometry]);
@@ -74,17 +95,21 @@ export function InputMap(props: InputMapProps) {
       onChange?.(value);
     }
   }, [value, onChange]);
-  // Determine mode: explicit prop wins; else cycle implies count; else multiple.
-  const mode: InputMapMode = props.mode ?? (cycle ? "count" : "multiple");
+
+  // Compute effective cycle and max selection from mode config
+  // For "cycle" mode, n is required from modeConfig
+  if (modeType === "cycle" && (cycle === undefined || cycle < 2)) {
+    throw new Error("Cycle mode requires n >= 2");
+  }
   const effectiveCycle =
-    cycle ?? (mode === "single" ? 2 : mode === "multiple" ? 2 : mode === "count" ? Infinity : 2);
+    cycle ?? (modeType === "single" ? 2 : modeType === "multiple" ? 2 : modeType === "count" ? Infinity : 2);
   const effectiveMax =
     maxSelection ??
-    (mode === "single"
+    (modeType === "single"
       ? 1
-      : mode === "multiple"
+      : modeType === "multiple"
         ? Infinity
-        : mode === "count"
+        : modeType === "count"
           ? Infinity
           : Infinity);
 
@@ -116,6 +141,38 @@ export function InputMap(props: InputMapProps) {
     onChange?.(next);
   };
 
+  // Helper to render a non-interactive layer (underlay or overlay)
+  const renderNonInteractiveLayer = (regionIds: Set<RegionId>, keyPrefix: string) => {
+    return Array.from(regionIds).flatMap((id) => {
+      const elements = normalizedGeometry[id];
+      if (!elements) return [];
+
+      // Build aesthetic chain: default -> aesBase -> groupAes
+      let layerAes: AestheticStyle = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
+      const groupAes = resolveGroupAesthetic(id, aesGroup, geometryMetadata);
+      if (groupAes) {
+        layerAes = { ...layerAes, ...groupAes };
+      }
+
+      // Create RenderedRegion to resolve any RelativeExpr
+      const region = createRenderedRegion(id, layerAes);
+
+      return elements.map((element, index) =>
+        renderElement({
+          element,
+          key: `${keyPrefix}-${id}-${index}`,
+          fill: region.aesthetic.fillColor,
+          fillOpacity: region.aesthetic.fillOpacity,
+          stroke: region.aesthetic.strokeColor,
+          strokeWidth: region.aesthetic.strokeWidth,
+          strokeDasharray: region.aesthetic.strokeDasharray,
+          nonScalingStroke: region.aesthetic.nonScalingStroke,
+          pointerEvents: "none",
+        })
+      );
+    });
+  };
+
   return (
     <svg
       role="img"
@@ -123,44 +180,74 @@ export function InputMap(props: InputMapProps) {
       style={{ width: "100%", height: "100%", ...containerStyle }}
       viewBox={viewBox}
     >
-      {/* Group 1: Base layer - all regions with base styling only, interactive */}
+      {/* Layer 1: Underlay - background elements (grids, etc.) */}
+      <g>{renderNonInteractiveLayer(layerAssignment.underlay, "underlay")}</g>
+
+      {/* Layer 2: Base layer - interactive regions */}
       <g>
-        {Object.entries(normalizedGeometry).flatMap(([id, elements]) => {
+        {Array.from(layerAssignment.base).flatMap((id) => {
+          const elements = normalizedGeometry[id];
+          if (!elements) return [];
+
           const tooltip = tooltips?.[id];
           const isHovered = hovered === id;
           const isSelected = selected.has(id);
           const count = counts[id] ?? 0;
 
-          let resolved: AestheticStyle = { ...DEFAULT_AESTHETIC, ...defaultAesthetic };
+          let baseAes: AestheticStyle = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
 
-          // Apply fillColor if provided
-          if (normalizedFillColor && normalizedFillColor[id]) {
-            resolved.fillColor = normalizedFillColor[id];
+          // Apply group aesthetic if available
+          const groupAes = resolveGroupAesthetic(id, aesGroup, geometryMetadata);
+          if (groupAes) {
+            baseAes = { ...baseAes, ...groupAes };
           }
 
-          // For base layer: do NOT apply selectedAesthetic or selection styling from resolveAesthetic
+          // Apply indexed aesthetic if available (for Cycle/Count modes)
+          const indexedData = getIndexedDataForRegion(aesIndexed, id, geometryMetadata);
+          if (indexedData) {
+            const indexedAes = resolveIndexedAesthetic(indexedData, count, cycle);
+            // Merge indexed aesthetic - only override properties that are defined
+            baseAes = {
+              ...baseAes,
+              ...(indexedAes.fillColor !== undefined ? { fillColor: indexedAes.fillColor } : {}),
+              ...(indexedAes.fillOpacity !== undefined ? { fillOpacity: indexedAes.fillOpacity } : {}),
+              ...(indexedAes.strokeColor !== undefined ? { strokeColor: indexedAes.strokeColor } : {}),
+              ...(indexedAes.strokeWidth !== undefined ? { strokeWidth: indexedAes.strokeWidth } : {}),
+              ...(indexedAes.strokeDasharray !== undefined ? { strokeDasharray: indexedAes.strokeDasharray } : {}),
+            };
+          }
+
+          // Apply fillColor if provided (overrides indexed)
+          if (normalizedFillColor && normalizedFillColor[id]) {
+            baseAes.fillColor = normalizedFillColor[id];
+          }
+
+          // For base layer: do NOT apply aesSelect or selection styling from resolveAesthetic
           if (resolveAesthetic) {
             // Always pass isHovered=false and isSelected=false for base layer
             const overrides = resolveAesthetic({
               id,
-              mode,
+              mode: modeType,
               isHovered: false,
               isSelected: false,
               count,
-              baseAesthetic: resolved,
+              baseAesthetic: baseAes,
             });
             if (overrides) {
-              resolved = { ...resolved, ...overrides };
+              baseAes = { ...baseAes, ...overrides };
             }
           }
 
+          // Create RenderedRegion to resolve any RelativeExpr
+          const region = createRenderedRegion(id, baseAes);
+
           const extraProps = regionProps?.({
             id,
-            mode,
+            mode: modeType,
             isHovered,
             isSelected,
             count,
-            baseAesthetic: resolved,
+            baseAesthetic: baseAes,
           });
 
           const handleMouseEnter = () => setHovered(id);
@@ -171,10 +258,12 @@ export function InputMap(props: InputMapProps) {
             renderElement({
               element,
               key: `${id}-${index}`,
-              fill: resolved.fillColor,
-              fillOpacity: resolved.fillOpacity,
-              stroke: resolved.strokeColor,
-              strokeWidth: resolved.strokeWidth,
+              fill: region.aesthetic.fillColor,
+              fillOpacity: region.aesthetic.fillOpacity,
+              stroke: region.aesthetic.strokeColor,
+              strokeWidth: region.aesthetic.strokeWidth,
+              strokeDasharray: region.aesthetic.strokeDasharray,
+              nonScalingStroke: region.aesthetic.nonScalingStroke,
               cursor: "pointer",
               onMouseEnter: handleMouseEnter,
               onMouseLeave: handleMouseLeave,
@@ -186,91 +275,148 @@ export function InputMap(props: InputMapProps) {
             })
           );
         })}
+      </g>
 
-        {/* Non-interactive overlay (dividers, borders, grids) */}
-        {normalizedOverlayGeometry &&
-          Object.entries(normalizedOverlayGeometry).flatMap(([id, elements]) => {
-            const overlayStyle = {
-              ...DEFAULT_AESTHETIC,
+      {/* Layer 3a: Legacy overlay (deprecated - for backward compatibility) */}
+      {normalizedOverlayGeometry && (
+        <g>
+          {Object.entries(normalizedOverlayGeometry).flatMap(([id, elements]) => {
+            const overlayAes: AestheticStyle = {
+              ...DEFAULT_AESTHETIC_VALUES,
               ...overlayAesthetic,
             };
+            const region = createRenderedRegion(id, overlayAes);
             return elements.map((element, index) =>
               renderElement({
                 element,
-                key: `overlay-${id}-${index}`,
-                fill: overlayStyle.fillColor,
-                fillOpacity: overlayStyle.fillOpacity,
-                stroke: overlayStyle.strokeColor,
-                strokeWidth: overlayStyle.strokeWidth,
+                key: `legacy-overlay-${id}-${index}`,
+                fill: region.aesthetic.fillColor,
+                fillOpacity: region.aesthetic.fillOpacity,
+                stroke: region.aesthetic.strokeColor,
+                strokeWidth: region.aesthetic.strokeWidth,
+                strokeDasharray: region.aesthetic.strokeDasharray,
+                nonScalingStroke: region.aesthetic.nonScalingStroke,
                 pointerEvents: "none",
               })
             );
           })}
-      </g>
+        </g>
+      )}
 
-      {/* Group 2: Selection layer - selected regions only, non-interactive */}
+      {/* Layer 3b: Overlay - annotations (borders, labels) */}
+      <g>{renderNonInteractiveLayer(layerAssignment.overlay, "overlay")}</g>
+
+      {/* Layer 4: Selection layer - selected regions only, non-interactive */}
+      {/* Skip selection layer when using aesIndexed (base layer already shows state) */}
       <g>
-        {Array.from(selected).flatMap((id) => {
+        {!aesIndexed && Array.from(selected).flatMap((id) => {
+          // Only render selection overlay for regions in base layer
+          if (!layerAssignment.base.has(id)) return [];
+
           const elements = normalizedGeometry[id];
           if (!elements) return [];
 
-          const count = counts[id] ?? 0;
-          let resolved: AestheticStyle = { ...DEFAULT_AESTHETIC, ...defaultAesthetic };
-
-          // Apply fillColor if provided
+          // Build base aesthetic
+          let baseAes: AestheticStyle = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
+          const groupAes = resolveGroupAesthetic(id, aesGroup, geometryMetadata);
+          if (groupAes) {
+            baseAes = { ...baseAes, ...groupAes };
+          }
           if (normalizedFillColor && normalizedFillColor[id]) {
-            resolved.fillColor = normalizedFillColor[id];
+            baseAes.fillColor = normalizedFillColor[id];
           }
 
-          // Apply selectedAesthetic if provided
-          if (selectedAesthetic) {
-            resolved = { ...resolved, ...selectedAesthetic };
+          // Create base RenderedRegion
+          const baseRegion = createRenderedRegion(id, baseAes);
+
+          // Build selection aesthetic on top of base
+          // Note: aesSelect takes precedence - resolveAesthetic is for base layer styling only
+          let selectAes: AestheticStyle = {};
+          if (aesSelect) {
+            selectAes = { ...aesSelect };
           }
 
-          // Apply resolveAesthetic with isSelected=true
-          if (resolveAesthetic) {
-            const overrides = resolveAesthetic({
-              id,
-              mode,
-              isHovered: false,
-              isSelected: true,
-              count,
-              baseAesthetic: resolved,
-            });
-            if (overrides) {
-              resolved = { ...resolved, ...overrides };
-            }
-          }
+          // Create selection RenderedRegion with base as parent
+          const selectRegion = createRenderedRegion(id, selectAes, baseRegion);
 
           return elements.map((element, index) =>
             renderElement({
               element,
               key: `selection-overlay-${id}-${index}`,
-              fill: resolved.fillColor,
-              fillOpacity: resolved.fillOpacity,
-              stroke: resolved.strokeColor,
-              strokeWidth: resolved.strokeWidth,
+              fill: selectRegion.aesthetic.fillColor,
+              fillOpacity: selectRegion.aesthetic.fillOpacity,
+              stroke: selectRegion.aesthetic.strokeColor,
+              strokeWidth: selectRegion.aesthetic.strokeWidth,
+              strokeDasharray: selectRegion.aesthetic.strokeDasharray,
+              nonScalingStroke: selectRegion.aesthetic.nonScalingStroke,
               pointerEvents: "none",
             })
           );
         })}
       </g>
 
-      {/* Group 3: Hover layer - hovered region only, non-interactive */}
+      {/* Layer 5: Hover layer - hovered region only, non-interactive */}
+      {/* aesHover: undefined = default, null = disabled, object = custom */}
       <g>
         {hovered &&
-          hoverHighlight &&
-          normalizedGeometry[hovered]?.map((element, index) =>
-            renderElement({
-              element,
-              key: `hover-overlay-${hovered}-${index}`,
-              fill: hoverHighlight.fillColor ?? "none",
-              fillOpacity: hoverHighlight.fillOpacity ?? (hoverHighlight.fillColor ? 1 : 0),
-              stroke: hoverHighlight.strokeColor ?? "#1e40af",
-              strokeWidth: hoverHighlight.strokeWidth ?? 2,
-              pointerEvents: "none",
-            })
-          )}
+          aesHover !== null &&
+          layerAssignment.base.has(hovered) &&
+          (() => {
+            // Determine effective hover aesthetic
+            const effectiveHover = aesHover ?? DEFAULT_HOVER_AESTHETIC;
+
+            // Build the parent chain for the hovered region
+            // Step 1: Create base RenderedRegion
+            let baseAes: AestheticStyle = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
+            const groupAes = resolveGroupAesthetic(hovered, aesGroup, geometryMetadata);
+            if (groupAes) {
+              baseAes = { ...baseAes, ...groupAes };
+            }
+
+            // Apply indexed aesthetic if available (for Cycle/Count modes)
+            const count = counts[hovered] ?? 0;
+            const indexedData = getIndexedDataForRegion(aesIndexed, hovered, geometryMetadata);
+            if (indexedData) {
+              const indexedAes = resolveIndexedAesthetic(indexedData, count, cycle);
+              baseAes = {
+                ...baseAes,
+                ...(indexedAes.fillColor !== undefined ? { fillColor: indexedAes.fillColor } : {}),
+                ...(indexedAes.fillOpacity !== undefined ? { fillOpacity: indexedAes.fillOpacity } : {}),
+                ...(indexedAes.strokeColor !== undefined ? { strokeColor: indexedAes.strokeColor } : {}),
+                ...(indexedAes.strokeWidth !== undefined ? { strokeWidth: indexedAes.strokeWidth } : {}),
+                ...(indexedAes.strokeDasharray !== undefined ? { strokeDasharray: indexedAes.strokeDasharray } : {}),
+              };
+            }
+
+            if (normalizedFillColor && normalizedFillColor[hovered]) {
+              baseAes.fillColor = normalizedFillColor[hovered];
+            }
+            const baseRegion = createRenderedRegion(hovered, baseAes);
+
+            // Step 2: If selected and not using indexed aesthetics, create selection RenderedRegion
+            let parentRegion: RenderedRegion = baseRegion;
+            if (!aesIndexed && selected.has(hovered) && aesSelect) {
+              parentRegion = createRenderedRegion(hovered, aesSelect, baseRegion);
+            }
+
+            // Step 3: Create hover RenderedRegion with parent chain
+            const hoverRegion = createRenderedRegion(hovered, effectiveHover, parentRegion);
+
+            // Render using resolved aesthetics
+            return normalizedGeometry[hovered]?.map((element, index) =>
+              renderElement({
+                element,
+                key: `hover-overlay-${hovered}-${index}`,
+                fill: hoverRegion.aesthetic.fillColor ?? "none",
+                fillOpacity: hoverRegion.aesthetic.fillOpacity ?? (hoverRegion.aesthetic.fillColor ? 1 : 0),
+                stroke: hoverRegion.aesthetic.strokeColor,
+                strokeWidth: hoverRegion.aesthetic.strokeWidth,
+                strokeDasharray: hoverRegion.aesthetic.strokeDasharray,
+                nonScalingStroke: hoverRegion.aesthetic.nonScalingStroke,
+                pointerEvents: "none",
+              })
+            );
+          })()}
       </g>
     </svg>
   );

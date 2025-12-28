@@ -1,16 +1,12 @@
 import React, { useMemo, useState } from "react";
 
-import type { AestheticStyle, Element, OutputMapProps, RegionId } from "../types";
+import type { AestheticStyle, Element, OutputMapProps, RegionId, RenderedRegion } from "../types";
+import { createRenderedRegion, DEFAULT_AESTHETIC_VALUES, DEFAULT_HOVER_AESTHETIC } from "../types";
 import { normalizeGeometry } from "../utils/geometry";
+import { assignLayers, resolveGroupAesthetic } from "../utils/layers";
 import { renderElement } from "../utils/renderElement";
 
 const DEFAULT_VIEWBOX = "0 0 100 100";
-const DEFAULT_AESTHETIC: AestheticStyle = {
-  fillColor: "#e2e8f0",
-  fillOpacity: 1,
-  strokeColor: "#334155",
-  strokeWidth: 1,
-};
 
 function normalizeActive(active: OutputMapProps["activeIds"]): Set<RegionId> {
   if (!active) return new Set();
@@ -38,28 +34,55 @@ export function OutputMap(props: OutputMapProps) {
     className,
     containerStyle,
     viewBox = DEFAULT_VIEWBOX,
-    defaultAesthetic = DEFAULT_AESTHETIC,
-    fillColor,  // RENAMED from fills
-    strokeWidth: strokeWidthProp,  // NEW
-    strokeColor: strokeColorProp,  // NEW
-    fillOpacity: fillOpacityProp,  // NEW
-    counts,
+    aes,
+    layers,
+    geometryMetadata,
+    fillColor,
+    strokeWidth: strokeWidthProp,
+    strokeColor: strokeColorProp,
+    fillOpacity: fillOpacityProp,
+    value,
     activeIds,
     onRegionClick,
     resolveAesthetic,
     regionProps,
-    fillColorSelected,  // RENAMED from selectionAesthetic
-    fillColorNotSelected,  // RENAMED from notSelectionAesthetic
+    // Deprecated props (for backward compatibility)
     overlayGeometry,
     overlayAesthetic,
-    hoverHighlight,
   } = props;
+
+  // Extract from nested aes config
+  // Note: aes.base.fillColor can be a single color or a per-region dict
+  const aesBaseRaw = aes?.base ?? DEFAULT_AESTHETIC_VALUES;
+  const aesBase = aesBaseRaw;
+  const aesHover = aes?.hover;
+  const aesSelect = aes?.select;
+  const aesNotSelect = aes?.notSelect;
+  const aesGroup = aes?.group;
+
+  // Extract per-region fill colors from aes.base if it's a dict
+  const aesBaseFillColorDict = typeof aesBaseRaw.fillColor === "object" && aesBaseRaw.fillColor !== null
+    ? aesBaseRaw.fillColor as Record<RegionId, string>
+    : undefined;
+
+  // Extract from nested layers config
+  const underlays = layers?.underlays;
+  const overlays = layers?.overlays;
+  const hidden = layers?.hidden;
 
   // Normalize geometry to Element[] format (handles both v0.x strings and v1.x polymorphic elements)
   const normalizedGeometry = useMemo(() => normalizeGeometry(geometry), [geometry]);
+
+  // Legacy overlay support (deprecated)
   const normalizedOverlayGeometry = useMemo(
     () => (overlayGeometry ? normalizeGeometry(overlayGeometry) : undefined),
     [overlayGeometry]
+  );
+
+  // New layer system: assign regions to layers
+  const layerAssignment = useMemo(
+    () => assignLayers(normalizedGeometry, underlays, overlays, hidden, geometryMetadata),
+    [normalizedGeometry, underlays, overlays, hidden, geometryMetadata]
   );
 
   const [hovered, setHovered] = useState<RegionId | null>(null);
@@ -68,7 +91,42 @@ export function OutputMap(props: OutputMapProps) {
   const normalizedStrokeWidth = normalize(strokeWidthProp, normalizedGeometry);
   const normalizedStrokeColor = normalize(strokeColorProp, normalizedGeometry);
   const normalizedFillOpacity = normalize(fillOpacityProp, normalizedGeometry);
-  const countMap = counts ?? {};
+  const countMap = value ?? {};
+
+  // Helper to render a non-interactive layer (underlay or overlay)
+  const renderNonInteractiveLayer = (regionIds: Set<RegionId>, keyPrefix: string) => {
+    return Array.from(regionIds).flatMap((id) => {
+      const elements = normalizedGeometry[id];
+      if (!elements) return [];
+
+      // Build aesthetic chain: default -> aesBase -> per-region fillColor -> groupAes
+      let layerAes: AestheticStyle = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
+      if (aesBaseFillColorDict?.[id]) {
+        layerAes = { ...layerAes, fillColor: aesBaseFillColorDict[id] };
+      }
+      const groupAes = resolveGroupAesthetic(id, aesGroup, geometryMetadata);
+      if (groupAes) {
+        layerAes = { ...layerAes, ...groupAes };
+      }
+
+      // Create RenderedRegion to resolve any RelativeExpr
+      const region = createRenderedRegion(id, layerAes);
+
+      return elements.map((element, index) =>
+        renderElement({
+          element,
+          key: `${keyPrefix}-${id}-${index}`,
+          fill: region.aesthetic.fillColor,
+          fillOpacity: region.aesthetic.fillOpacity,
+          stroke: region.aesthetic.strokeColor,
+          strokeWidth: region.aesthetic.strokeWidth,
+          strokeDasharray: region.aesthetic.strokeDasharray,
+          nonScalingStroke: region.aesthetic.nonScalingStroke,
+          pointerEvents: "none",
+        })
+      );
+    });
+  };
 
   return (
     <svg
@@ -77,15 +135,38 @@ export function OutputMap(props: OutputMapProps) {
       style={{ width: "100%", height: "100%", ...containerStyle }}
       viewBox={viewBox}
     >
+      {/* Layer 1: Underlay - background elements (grids, etc.) */}
+      <g>{renderNonInteractiveLayer(layerAssignment.underlay, "underlay")}</g>
+
+      {/* Layer 2: Base layer - interactive/display regions */}
       <g>
-        {Object.entries(normalizedGeometry).flatMap(([id, elements]) => {
+        {Array.from(layerAssignment.base).flatMap((id) => {
+          const elements = normalizedGeometry[id];
+          if (!elements) return [];
+
           const tooltip = tooltips?.[id];
           const isActive = activeSet.has(id);
           const count = countMap[id] ?? 0;
 
-          let resolved: AestheticStyle = {
-            ...DEFAULT_AESTHETIC,
-            ...defaultAesthetic,
+          let baseAes: AestheticStyle = {
+            ...DEFAULT_AESTHETIC_VALUES,
+            ...aesBase,
+          };
+
+          // Apply per-region fill color from aes.base.fillColor if it's a dict
+          if (aesBaseFillColorDict?.[id]) {
+            baseAes = { ...baseAes, fillColor: aesBaseFillColorDict[id] };
+          }
+
+          // Apply group aesthetic if available
+          const groupAes = resolveGroupAesthetic(id, aesGroup, geometryMetadata);
+          if (groupAes) {
+            baseAes = { ...baseAes, ...groupAes };
+          }
+
+          // Apply per-region overrides from top-level props
+          baseAes = {
+            ...baseAes,
             ...(normalizedFillColor?.[id] ? { fillColor: normalizedFillColor[id] } : {}),
             ...(normalizedStrokeWidth?.[id] !== undefined ? { strokeWidth: normalizedStrokeWidth[id] } : {}),
             ...(normalizedStrokeColor?.[id] ? { strokeColor: normalizedStrokeColor[id] } : {}),
@@ -93,10 +174,10 @@ export function OutputMap(props: OutputMapProps) {
           };
 
           // Apply selection-specific aesthetics (layer 4a)
-          if (isActive && fillColorSelected) {
-            resolved = { ...resolved, ...fillColorSelected };
-          } else if (!isActive && fillColorNotSelected) {
-            resolved = { ...resolved, ...fillColorNotSelected };
+          if (isActive && aesSelect) {
+            baseAes = { ...baseAes, ...aesSelect };
+          } else if (!isActive && aesNotSelect) {
+            baseAes = { ...baseAes, ...aesNotSelect };
           }
 
           // Apply resolveAesthetic callback (layer 4b)
@@ -105,17 +186,20 @@ export function OutputMap(props: OutputMapProps) {
               id,
               isActive,
               count,
-              baseAesthetic: resolved,
+              baseAesthetic: baseAes,
               tooltip,
             });
-            if (overrides) resolved = { ...resolved, ...overrides };
+            if (overrides) baseAes = { ...baseAes, ...overrides };
           }
+
+          // Create RenderedRegion to resolve any RelativeExpr
+          const region = createRenderedRegion(id, baseAes);
 
           const regionOverrides = regionProps?.({
             id,
             isActive,
             count,
-            baseAesthetic: resolved,
+            baseAesthetic: baseAes,
             tooltip,
           });
 
@@ -127,10 +211,12 @@ export function OutputMap(props: OutputMapProps) {
             renderElement({
               element,
               key: `${id}-${index}`,
-              fill: resolved.fillColor,
-              fillOpacity: resolved.fillOpacity,
-              stroke: resolved.strokeColor,
-              strokeWidth: resolved.strokeWidth,
+              fill: region.aesthetic.fillColor,
+              fillOpacity: region.aesthetic.fillOpacity,
+              stroke: region.aesthetic.strokeColor,
+              strokeWidth: region.aesthetic.strokeWidth,
+              strokeDasharray: region.aesthetic.strokeDasharray,
+              nonScalingStroke: region.aesthetic.nonScalingStroke,
               cursor: onRegionClick ? "pointer" : undefined,
               onClick: onRegionClick ? () => onRegionClick(id) : undefined,
               onMouseEnter: handleMouseEnter,
@@ -142,45 +228,75 @@ export function OutputMap(props: OutputMapProps) {
             })
           );
         })}
+      </g>
 
-        {/* Non-interactive overlay (dividers, borders, grids) */}
-        {normalizedOverlayGeometry &&
-          Object.entries(normalizedOverlayGeometry).flatMap(([id, elements]) => {
-            const overlayStyle = {
-              ...DEFAULT_AESTHETIC,
+      {/* Layer 3a: Legacy overlay (deprecated - for backward compatibility) */}
+      {normalizedOverlayGeometry && (
+        <g>
+          {Object.entries(normalizedOverlayGeometry).flatMap(([id, elements]) => {
+            const overlayAes: AestheticStyle = {
+              ...DEFAULT_AESTHETIC_VALUES,
               ...overlayAesthetic,
             };
+            const region = createRenderedRegion(id, overlayAes);
             return elements.map((element, index) =>
               renderElement({
                 element,
-                key: `overlay-${id}-${index}`,
-                fill: overlayStyle.fillColor,
-                fillOpacity: overlayStyle.fillOpacity,
-                stroke: overlayStyle.strokeColor,
-                strokeWidth: overlayStyle.strokeWidth,
+                key: `legacy-overlay-${id}-${index}`,
+                fill: region.aesthetic.fillColor,
+                fillOpacity: region.aesthetic.fillOpacity,
+                stroke: region.aesthetic.strokeColor,
+                strokeWidth: region.aesthetic.strokeWidth,
+                strokeDasharray: region.aesthetic.strokeDasharray,
+                nonScalingStroke: region.aesthetic.nonScalingStroke,
                 pointerEvents: "none",
               })
             );
           })}
+        </g>
+      )}
 
-        {/* Selection overlay - render active regions on top to ensure borders are visible */}
+      {/* Layer 3b: Overlay - annotations (borders, labels) */}
+      <g>{renderNonInteractiveLayer(layerAssignment.overlay, "overlay")}</g>
+
+      {/* Layer 4: Selection overlay - render active regions on top to ensure borders are visible */}
+      <g>
         {Array.from(activeSet).flatMap((id) => {
+          // Only render selection overlay for regions in base layer
+          if (!layerAssignment.base.has(id)) return [];
+
           const elements = normalizedGeometry[id];
           if (!elements) return [];
 
           const count = countMap[id] ?? 0;
-          let resolved: AestheticStyle = {
-            ...DEFAULT_AESTHETIC,
-            ...defaultAesthetic,
+
+          // Build base aesthetic
+          let baseAes: AestheticStyle = {
+            ...DEFAULT_AESTHETIC_VALUES,
+            ...aesBase,
+          };
+          if (aesBaseFillColorDict?.[id]) {
+            baseAes = { ...baseAes, fillColor: aesBaseFillColorDict[id] };
+          }
+          const groupAes = resolveGroupAesthetic(id, aesGroup, geometryMetadata);
+          if (groupAes) {
+            baseAes = { ...baseAes, ...groupAes };
+          }
+          baseAes = {
+            ...baseAes,
             ...(normalizedFillColor?.[id] ? { fillColor: normalizedFillColor[id] } : {}),
             ...(normalizedStrokeWidth?.[id] !== undefined ? { strokeWidth: normalizedStrokeWidth[id] } : {}),
             ...(normalizedStrokeColor?.[id] ? { strokeColor: normalizedStrokeColor[id] } : {}),
             ...(normalizedFillOpacity?.[id] !== undefined ? { fillOpacity: normalizedFillOpacity[id] } : {}),
           };
 
-          // Apply selection-specific aesthetics
-          if (fillColorSelected) {
-            resolved = { ...resolved, ...fillColorSelected };
+          // Create base RenderedRegion
+          const baseRegion = createRenderedRegion(id, baseAes);
+
+          // Build selection aesthetic on top of base
+          let selectAes: AestheticStyle = {};
+          if (aesSelect) {
+            selectAes = { ...aesSelect };
           }
 
           // Apply resolveAesthetic callback
@@ -189,39 +305,84 @@ export function OutputMap(props: OutputMapProps) {
               id,
               isActive: true,
               count,
-              baseAesthetic: resolved,
+              baseAesthetic: baseAes,
               tooltip: tooltips?.[id],
             });
-            if (overrides) resolved = { ...resolved, ...overrides };
+            if (overrides) selectAes = { ...selectAes, ...overrides };
           }
+
+          // Create selection RenderedRegion with base as parent
+          const selectRegion = createRenderedRegion(id, selectAes, baseRegion);
 
           return elements.map((element, index) =>
             renderElement({
               element,
               key: `selection-overlay-${id}-${index}`,
-              fill: resolved.fillColor,
-              fillOpacity: resolved.fillOpacity,
-              stroke: resolved.strokeColor,
-              strokeWidth: resolved.strokeWidth,
+              fill: selectRegion.aesthetic.fillColor,
+              fillOpacity: selectRegion.aesthetic.fillOpacity,
+              stroke: selectRegion.aesthetic.strokeColor,
+              strokeWidth: selectRegion.aesthetic.strokeWidth,
+              strokeDasharray: selectRegion.aesthetic.strokeDasharray,
+              nonScalingStroke: selectRegion.aesthetic.nonScalingStroke,
               pointerEvents: "none",
             })
           );
         })}
+      </g>
 
-        {/* Hover overlay - rendered on top with pointer-events: none */}
+      {/* Layer 5: Hover overlay - rendered on top with pointer-events: none */}
+      {/* aesHover: undefined = default, null = disabled, object = custom */}
+      <g>
         {hovered &&
-          hoverHighlight &&
-          normalizedGeometry[hovered]?.map((element, index) =>
-            renderElement({
-              element,
-              key: `hover-overlay-${hovered}-${index}`,
-              fill: hoverHighlight.fillColor ?? "none",
-              fillOpacity: hoverHighlight.fillOpacity ?? 0,
-              stroke: hoverHighlight.strokeColor ?? "#1e40af",
-              strokeWidth: hoverHighlight.strokeWidth ?? 2,
-              pointerEvents: "none",
-            })
-          )}
+          aesHover !== null &&
+          layerAssignment.base.has(hovered) &&
+          (() => {
+            // Determine effective hover aesthetic
+            const effectiveHover = aesHover ?? DEFAULT_HOVER_AESTHETIC;
+
+            // Build the parent chain for the hovered region
+            // Step 1: Create base RenderedRegion
+            let baseAes: AestheticStyle = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
+            if (aesBaseFillColorDict?.[hovered]) {
+              baseAes = { ...baseAes, fillColor: aesBaseFillColorDict[hovered] };
+            }
+            const groupAes = resolveGroupAesthetic(hovered, aesGroup, geometryMetadata);
+            if (groupAes) {
+              baseAes = { ...baseAes, ...groupAes };
+            }
+            baseAes = {
+              ...baseAes,
+              ...(normalizedFillColor?.[hovered] ? { fillColor: normalizedFillColor[hovered] } : {}),
+              ...(normalizedStrokeWidth?.[hovered] !== undefined ? { strokeWidth: normalizedStrokeWidth[hovered] } : {}),
+              ...(normalizedStrokeColor?.[hovered] ? { strokeColor: normalizedStrokeColor[hovered] } : {}),
+              ...(normalizedFillOpacity?.[hovered] !== undefined ? { fillOpacity: normalizedFillOpacity[hovered] } : {}),
+            };
+            const baseRegion = createRenderedRegion(hovered, baseAes);
+
+            // Step 2: If active, create selection RenderedRegion with base as parent
+            let parentRegion: RenderedRegion = baseRegion;
+            if (activeSet.has(hovered) && aesSelect) {
+              parentRegion = createRenderedRegion(hovered, aesSelect, baseRegion);
+            }
+
+            // Step 3: Create hover RenderedRegion with parent chain
+            const hoverRegion = createRenderedRegion(hovered, effectiveHover, parentRegion);
+
+            // Render using resolved aesthetics
+            return normalizedGeometry[hovered]?.map((element, index) =>
+              renderElement({
+                element,
+                key: `hover-overlay-${hovered}-${index}`,
+                fill: hoverRegion.aesthetic.fillColor ?? "none",
+                fillOpacity: hoverRegion.aesthetic.fillOpacity ?? (hoverRegion.aesthetic.fillColor ? 1 : 0),
+                stroke: hoverRegion.aesthetic.strokeColor,
+                strokeWidth: hoverRegion.aesthetic.strokeWidth,
+                strokeDasharray: hoverRegion.aesthetic.strokeDasharray,
+                nonScalingStroke: hoverRegion.aesthetic.nonScalingStroke,
+                pointerEvents: "none",
+              })
+            );
+          })()}
       </g>
     </svg>
   );
