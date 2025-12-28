@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from .._core import Geometry
+from .._core import Outline
 
 
 def generate_code(
@@ -42,7 +42,7 @@ def generate_code(
 
 
 def load_file(file_path: str, filename: str):
-    """Load SVG or JSON file and return Geometry object with metadata."""
+    """Load SVG or JSON file and return Outline object with metadata."""
 
     # Determine file type by extension
     path = Path(file_path)
@@ -50,12 +50,12 @@ def load_file(file_path: str, filename: str):
 
     # Load geometry based on file type
     if is_json:
-        geo = Geometry.from_json(file_path)
+        geo = Outline.from_json(file_path)
         # Try to get original source from metadata
         original_source = geo.metadata.get("original_source", filename)
     else:
         # SVG file
-        geo = Geometry.from_svg(file_path, extract_viewbox=True)
+        geo = Outline.from_svg(file_path, extract_viewbox=True)
         original_source = filename
 
     # Extract path IDs for display

@@ -1,9 +1,7 @@
-"""Geometry utilities for working with SVG paths.
+"""Outline utilities for working with SVG paths.
 
 This subpackage provides tools for:
 - Converting SVG files to shinymap JSON format (convert, from_svg, from_json)
-- Loading geometry from JSON files (load_geometry)
-- Computing viewBox from geometry dicts (compute_viewbox_from_dict)
 - Inferring conversion code from original source (infer_relabel)
 
 ## JSON Format
@@ -104,8 +102,7 @@ convert(
 from __future__ import annotations
 
 from ._core import (
-    Geometry,
-    compute_viewbox_from_dict,
+    Outline,
     convert,
     from_json,
     from_svg,
@@ -117,15 +114,13 @@ from ._regions import Regions
 from ._repr_config import ReprConfig, get_repr_config, set_repr_options
 
 __all__ = [
-    "Geometry",
+    "Outline",
     "Regions",
-    "compute_viewbox_from_dict",
     "convert",
     "from_svg",
     "from_json",
     "export_svg",
     "infer_relabel",
-    # "load_geometry",  # Deprecated - use Geometry.from_json() instead
     "Circle",
     "Ellipse",
     "Line",

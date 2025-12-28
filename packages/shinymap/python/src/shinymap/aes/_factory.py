@@ -5,13 +5,13 @@ IDE autocomplete support. Use these instead of directly instantiating the
 aesthetic classes.
 
 Usage:
-    >>> from shinymap import aes, linestyle
+    >>> from shinymap import aes
     >>>
     >>> # Create shape aesthetic (for filled regions)
     >>> region_aes = aes.Shape(fill_color="#3b82f6", stroke_width=1)
     >>>
     >>> # Create line aesthetic (stroke only, no fill)
-    >>> grid_aes = aes.Line(stroke_color="#ddd", stroke_dasharray=linestyle.DASHED)
+    >>> grid_aes = aes.Line(stroke_color="#ddd", stroke_dasharray=aes.line.dashed)
     >>>
     >>> # Create path aesthetic (for paths used as lines or with explicit control)
     >>> divider_aes = aes.Path(kind="line", stroke_color="#000")  # applies line defaults
@@ -37,7 +37,9 @@ from __future__ import annotations
 
 from typing import Literal
 
-from ._aesthetics import (
+from ..relative import RelativeExpr
+from ..types import MISSING, MissingType
+from ._core import (
     ByGroup,
     ByState,
     ByType,
@@ -47,8 +49,6 @@ from ._aesthetics import (
     ShapeAesthetic,
     TextAesthetic,
 )
-from ._sentinel import MISSING, MissingType
-from .relative import RelativeExpr
 
 PathKind = Literal["shape", "line", "text"]
 
@@ -68,15 +68,15 @@ def Line(
     Args:
         stroke_color: Stroke color (e.g., "#ddd"). None means "none" in SVG.
         stroke_width: Stroke width in viewBox units, or RelativeExpr for parent-relative values
-        stroke_dasharray: Dash pattern (e.g., "5,5" for dashed). Use linestyle constants.
+        stroke_dasharray: Dash pattern (e.g., "5,5" for dashed). Use aes.line constants.
         non_scaling_stroke: If True, stroke width is in screen pixels (default: False)
 
     Returns:
         LineAesthetic instance
 
     Example:
-        >>> from shinymap import aes, linestyle
-        >>> grid_aes = aes.Line(stroke_color="#ddd", stroke_dasharray=linestyle.DASHED)
+        >>> from shinymap import aes
+        >>> grid_aes = aes.Line(stroke_color="#ddd", stroke_dasharray=aes.line.dashed)
     """
     return LineAesthetic(
         stroke_color=stroke_color,
@@ -182,7 +182,7 @@ def Path(
 
     Args:
         kind: Semantic type for default aesthetic resolution ("shape", "line", "text").
-              When set, wash() applies the corresponding type's defaults.
+              When set, Wash() applies the corresponding type's defaults.
               Use "line" for paths that are semantically lines (grid, dividers).
         fill_color: Fill color. None means "none" (stroke-only, no fill).
         fill_opacity: Fill opacity (0.0 to 1.0), or RelativeExpr for parent-relative

@@ -16,14 +16,17 @@ from typing import TYPE_CHECKING
 
 import svg
 
-from shinymap._sentinel import MISSING, MissingType
+from shinymap.types import MISSING, MissingType
 
 if TYPE_CHECKING:
-    from ._geometry import Geometry
+    from ._geometry import Outline
+
+# Type alias for backward compatibility in type hints
+Geometry = "Outline"
 
 
 def export_svg(
-    geometry: Geometry,
+    geometry: Outline,
     output_path: str | PathType,
     viewbox: str | MissingType = MISSING,
     width: int | str | MissingType = MISSING,

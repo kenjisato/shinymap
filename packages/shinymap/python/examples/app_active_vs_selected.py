@@ -8,10 +8,10 @@ Key distinction:
 from shiny import App, render, ui
 
 from shinymap import Map, input_map, output_map, render_map
-from shinymap.color import scale_sequential
+from shinymap.aes.color import scale_sequential
 from shinymap.mode import Count
 
-from shared import DEMO_GEOMETRY, TOOLTIPS
+from shared import DEMO_OUTLINE, TOOLTIPS
 
 
 # Example 1: User selection tracking
@@ -22,8 +22,8 @@ _ui_user_selection = ui.card(
         "The 'active' parameter highlights the selected regions."
     ),
     ui.layout_columns(
-        input_map("user_selected", DEMO_GEOMETRY, tooltips=TOOLTIPS, mode="multiple"),
-        output_map("user_selection_display", DEMO_GEOMETRY, tooltips=TOOLTIPS),
+        input_map("user_selected", DEMO_OUTLINE, tooltips=TOOLTIPS, mode="multiple"),
+        output_map("user_selection_display", DEMO_OUTLINE, tooltips=TOOLTIPS),
     ),
     ui.output_text_verbatim("user_selection_text"),
 )
@@ -53,8 +53,8 @@ _ui_programmatic = ui.card(
         "Here, we use thicker borders for regions with counts above a threshold."
     ),
     ui.layout_columns(
-        input_map("region_counts", DEMO_GEOMETRY, tooltips=TOOLTIPS, mode=Count(), value={}),
-        output_map("programmatic_display", DEMO_GEOMETRY, tooltips=TOOLTIPS),
+        input_map("region_counts", DEMO_OUTLINE, tooltips=TOOLTIPS, mode=Count(), value={}),
+        output_map("programmatic_display", DEMO_OUTLINE, tooltips=TOOLTIPS),
     ),
     ui.output_text_verbatim("programmatic_text"),
 )
@@ -69,11 +69,11 @@ def _server_programmatic(input, output, session):
         high_value_regions = set(rid for rid, count in counts.items() if count >= 3)
 
         # Use sequential color scale
-        fills = scale_sequential(counts, list(DEMO_GEOMETRY.regions.keys()), max_count=10)
+        fills = scale_sequential(counts, list(DEMO_OUTLINE.regions.keys()), max_count=10)
 
         # Create stroke width dict: thicker for high-value regions
         stroke_widths = {rid: 4.0 if rid in high_value_regions else 1.0
-                        for rid in DEMO_GEOMETRY.regions.keys()}
+                        for rid in DEMO_OUTLINE.regions.keys()}
 
         return Map(
             value=counts,
@@ -97,8 +97,8 @@ _ui_combined = ui.card(
         "for regions that are 'neighbors' of selected regions (simulated)."
     ),
     ui.layout_columns(
-        input_map("combined_selected", DEMO_GEOMETRY, tooltips=TOOLTIPS, mode="single"),
-        output_map("combined_display", DEMO_GEOMETRY, tooltips=TOOLTIPS),
+        input_map("combined_selected", DEMO_OUTLINE, tooltips=TOOLTIPS, mode="single"),
+        output_map("combined_display", DEMO_OUTLINE, tooltips=TOOLTIPS),
     ),
     ui.output_text_verbatim("combined_text"),
 )
@@ -122,7 +122,7 @@ def _server_combined(input, output, session):
 
         # Build fill color dict: neighbors get light blue, selected gets blue
         fill_colors = {}
-        for rid in DEMO_GEOMETRY.regions.keys():
+        for rid in DEMO_OUTLINE.regions.keys():
             if rid == selected:
                 fill_colors[rid] = "#3b82f6"  # Selected: blue
             elif rid in neighbors:

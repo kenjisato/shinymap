@@ -13,7 +13,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from ._geometry import Geometry
+from ._geometry import Outline
 
 
 def from_svg(
@@ -28,7 +28,7 @@ def from_svg(
     can be further transformed using from_json().
 
     For one-shot conversion with all transformations, use convert() instead.
-    For OOP API, use Geometry.from_svg() instead.
+    For OOP API, use Outline.from_svg() instead.
 
     Args:
         svg_path: Path to input SVG file
@@ -59,8 +59,8 @@ def from_svg(
         ...     relabel={"region_01": "path_1"}
         ... )
     """
-    # Use Geometry class method internally
-    geo = Geometry.from_svg(svg_path, extract_viewbox=extract_viewbox)
+    # Use Outline class method internally
+    geo = Outline.from_svg(svg_path, extract_viewbox=extract_viewbox)
 
     # Write to file if output_path provided
     if output_path:
@@ -81,7 +81,7 @@ def from_json(
     This function takes "extracted" JSON (raw SVG paths with auto-generated IDs)
     and applies relabeling (renaming/grouping) and metadata updates to produce final JSON.
 
-    For OOP API, use Geometry.from_dict() or Geometry.from_json_file() with method chaining instead.
+    For OOP API, use Outline.from_dict() or Outline.from_json_file() with method chaining instead.
 
     Args:
         extracted_json: Input JSON dict (or path to JSON file) with path data
@@ -127,11 +127,11 @@ def from_json(
     """
     # Load from file or dict
     if isinstance(extracted_json, (Path, str)):
-        geo = Geometry.from_json(extracted_json)
+        geo = Outline.from_json(extracted_json)
     else:
-        geo = Geometry.from_dict(extracted_json)
+        geo = Outline.from_dict(extracted_json)
 
-    # Apply transformations using Geometry methods
+    # Apply transformations using Outline methods
     if relabel:
         geo = geo.relabel(relabel)
     if overlay_ids:

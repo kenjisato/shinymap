@@ -83,10 +83,10 @@ class BoundsMixin:
     def _bounds_path(self) -> tuple[float, float, float, float]:
         """Calculate bounds for path element.
 
-        Uses existing _parse_svg_path_bounds for compatibility.
+        Uses path_bb from utils for compatibility.
         Converts svg.py's PathData objects to string first.
         """
-        from shinymap.geometry._bounds import _parse_svg_path_bounds
+        from ..utils import path_bb
 
         if self.d is None:  # type: ignore
             return (0.0, 0.0, 0.0, 0.0)
@@ -100,7 +100,7 @@ class BoundsMixin:
             # List of PathData objects
             path_str = " ".join(str(cmd) for cmd in self.d)  # type: ignore
 
-        return _parse_svg_path_bounds(path_str)
+        return path_bb(path_str)
 
     def _bounds_polygon(self) -> tuple[float, float, float, float]:
         """Calculate bounds for polygon element."""

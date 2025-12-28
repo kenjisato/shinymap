@@ -1,6 +1,6 @@
 """Tests for custom __repr__, __str__, attrs(), and as_svg() methods."""
 
-from shinymap.geometry import Circle, Ellipse, Geometry, Line, Path, Polygon, Rect, Text
+from shinymap.geometry import Circle, Ellipse, Line, Outline, Path, Polygon, Rect, Text
 
 
 class TestElementRepr:
@@ -197,19 +197,19 @@ class TestSvgMarkupGeneration:
         assert svg_markup.startswith("<circle")
 
 
-class TestGeometryRepr:
-    """Test clean __repr__ for Geometry class."""
+class TestOutlineRepr:
+    """Test clean __repr__ for Outline class."""
 
-    def test_geometry_repr_small_regions(self):
-        """Geometry repr with small number of regions shows all keys."""
+    def test_outline_repr_small_regions(self):
+        """Outline repr with small number of regions shows all keys."""
         circle = Circle(cx=100, cy=100, r=50)
-        geo = Geometry(
+        geo = Outline(
             regions={"r1": [circle], "r2": [circle], "r3": [circle]},
             metadata={"viewBox": "0 0 500 500"},
         )
         repr_str = repr(geo)
 
-        assert repr_str.startswith("Geometry(")
+        assert repr_str.startswith("Outline(")
         assert "regions=" in repr_str
         # With 3 regions, should show all keys
         assert "'r1'" in repr_str or '"r1"' in repr_str
@@ -218,26 +218,26 @@ class TestGeometryRepr:
         assert "metadata=" in repr_str
         assert "viewBox" in repr_str
 
-    def test_geometry_repr_many_regions(self):
-        """Geometry repr with many regions shows count."""
+    def test_outline_repr_many_regions(self):
+        """Outline repr with many regions shows count."""
         circle = Circle(cx=100, cy=100, r=50)
-        geo = Geometry(
+        geo = Outline(
             regions={f"region{i}": [circle] for i in range(20)},
             metadata={"viewBox": "0 0 1000 1000"},
         )
         repr_str = repr(geo)
 
-        assert repr_str.startswith("Geometry(")
+        assert repr_str.startswith("Outline(")
         assert "20 regions" in repr_str
         # Should show first few keys
         assert "region0" in repr_str
         # Should have ellipsis
         assert "..." in repr_str
 
-    def test_geometry_repr_with_complex_metadata(self):
-        """Geometry repr with complex metadata uses reprlib."""
+    def test_outline_repr_with_complex_metadata(self):
+        """Outline repr with complex metadata uses reprlib."""
         circle = Circle(cx=100, cy=100, r=50)
-        geo = Geometry(
+        geo = Outline(
             regions={"r1": [circle]},
             metadata={
                 "viewBox": "0 0 500 500",
@@ -251,6 +251,6 @@ class TestGeometryRepr:
         )
         repr_str = repr(geo)
 
-        assert repr_str.startswith("Geometry(")
+        assert repr_str.startswith("Outline(")
         # reprlib should truncate the metadata dict
         assert "metadata=" in repr_str

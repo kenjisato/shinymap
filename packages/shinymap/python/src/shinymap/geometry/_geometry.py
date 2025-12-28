@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class Geometry:
+class Outline:
     """Canonical geometry representation with polymorphic elements.
 
     This class encapsulates SVG geometry with metadata. It supports both:
@@ -37,11 +37,11 @@ class Geometry:
     Example:
         >>> # v0.x format (backward compatible)
         >>> data = {"region1": ["M 0 0 L 10 0"], "_metadata": {"viewBox": "0 0 100 100"}}
-        >>> geo = Geometry.from_dict(data)
+        >>> geo = Outline.from_dict(data)
         >>>
         >>> # v1.x format (polymorphic elements)
         >>> from shinymap.geometry import Circle
-        >>> geo = Geometry(regions={"r1": [Circle(cx=100, cy=100, r=50)]}, metadata={})
+        >>> geo = Outline(regions={"r1": [Circle(cx=100, cy=100, r=50)]}, metadata={})
     """
 
     regions: Regions
@@ -53,7 +53,7 @@ class Geometry:
             self.regions = Regions(self.regions)
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Geometry:
+    def from_dict(cls, data: dict[str, Any]) -> Outline:
         """Load geometry from dict (supports v0.x strings and v1.x element dicts).
 
         Automatically detects format and converts:
@@ -71,16 +71,16 @@ class Geometry:
 
         Example:
             >>> # v0.x string format (backward compatible)
-            >>> Geometry.from_dict({"a": "M 0 0 L 10 0"})
-            Geometry(regions={'a': ['M 0 0 L 10 0']}, metadata={})
+            >>> Outline.from_dict({"a": "M 0 0 L 10 0"})
+            Outline(regions={'a': ['M 0 0 L 10 0']}, metadata={})
 
             >>> # v0.x list format
-            >>> Geometry.from_dict({"a": ["M 0 0", "L 10 0"]})
-            Geometry(regions={'a': ['M 0 0', 'L 10 0']}, metadata={})
+            >>> Outline.from_dict({"a": ["M 0 0", "L 10 0"]})
+            Outline(regions={'a': ['M 0 0', 'L 10 0']}, metadata={})
 
             >>> # v1.x element format
-            >>> Geometry.from_dict({"a": [{"type": "circle", "cx": 100, "cy": 100, "r": 50}]})
-            Geometry(regions={'a': [Circle(cx=100, cy=100, r=50)]}, metadata={})
+            >>> Outline.from_dict({"a": [{"type": "circle", "cx": 100, "cy": 100, "r": 50}]})
+            Outline(regions={'a': [Circle(cx=100, cy=100, r=50)]}, metadata={})
         """
         from ._element_mixins import JSONSerializableMixin
 
@@ -108,7 +108,7 @@ class Geometry:
         return cls(regions=Regions(regions_dict), metadata=metadata)
 
     @classmethod
-    def from_json(cls, json_path: str | PathType) -> Geometry:
+    def from_json(cls, json_path: str | PathType) -> Outline:
         """Load geometry from JSON file.
 
         Args:
@@ -118,7 +118,7 @@ class Geometry:
             Geometry object with normalized list-based paths
 
         Example:
-            >>> geo = Geometry.from_json("japan_prefectures.json")
+            >>> geo = Outline.from_json("japan_prefectures.json")
             >>> geo.regions.keys()
             dict_keys(['01', '02', ...])
         """
@@ -139,7 +139,7 @@ class Geometry:
         cls,
         svg_path: str | PathType,
         extract_viewbox: bool = True,
-    ) -> Geometry:
+    ) -> Outline:
         """Extract geometry from SVG file (all element types).
 
         Extracts all supported SVG shape elements (path, circle, rect, polygon,
@@ -155,7 +155,7 @@ class Geometry:
             extract_viewbox: If True, extract viewBox from SVG root element
 
         Returns:
-            Geometry object with extracted elements (v1.x format)
+            Outline object with extracted elements (v1.x format)
 
         Raises:
             FileNotFoundError: If svg_path does not exist
@@ -163,12 +163,12 @@ class Geometry:
 
         Example:
             >>> # Basic extraction (all element types)
-            >>> geo = Geometry.from_svg("design.svg")
+            >>> geo = Outline.from_svg("design.svg")
             >>> geo.regions.keys()
             dict_keys(['circle_1', 'rect_1', 'path_1', 'text_1'])
             >>>
             >>> # With transformations
-            >>> geo = Geometry.from_svg("map.svg")
+            >>> geo = Outline.from_svg("map.svg")
             >>> geo.relabel({"hokkaido": ["circle_1", "circle_2"]})
             >>> geo.set_overlays(["_border"])
             >>> geo.to_json("output.json")
@@ -342,7 +342,7 @@ class Geometry:
             ViewBox tuple in format (x, y, width, height)
 
         Example:
-            >>> geo = Geometry.from_dict({"a": ["M 0 0 L 100 100"]})
+            >>> geo = Outline.from_dict({"a": ["M 0 0 L 100 100"]})
             >>> geo.viewbox()
             (-2.0, -2.0, 104.0, 104.0)  # With 2% padding
         """
@@ -362,9 +362,9 @@ class Geometry:
             for elem in elements:
                 if isinstance(elem, str):
                     # v0.x format: parse path string
-                    from ._bounds import _parse_svg_path_bounds
+                    from ..utils import path_bb
 
-                    bounds = _parse_svg_path_bounds(elem)
+                    bounds = path_bb(elem)
                     all_bounds.append(bounds)
                 else:
                     # v1.x format: use element's bounds() method
@@ -401,7 +401,7 @@ class Geometry:
             List of region IDs marked as overlays
 
         Example:
-            >>> geo = Geometry.from_dict({
+            >>> geo = Outline.from_dict({
             ...     "region": ["M 0 0"],
             ...     "_border": ["M 0 0 L 100 0"],
             ...     "_metadata": {"overlays": ["_border"]}
@@ -420,7 +420,7 @@ class Geometry:
             (elements can be strings for v0.x or Element objects for v1.x)
 
         Example:
-            >>> geo = Geometry.from_dict({
+            >>> geo = Outline.from_dict({
             ...     "region": ["M 0 0"],
             ...     "_border": ["M 0 0 L 100 0"],
             ...     "_metadata": {"overlays": ["_border"]}
@@ -439,7 +439,7 @@ class Geometry:
             (elements can be strings for v0.x or Element objects for v1.x)
 
         Example:
-            >>> geo = Geometry.from_dict({
+            >>> geo = Outline.from_dict({
             ...     "region": ["M 0 0"],
             ...     "_border": ["M 0 0 L 100 0"],
             ...     "_metadata": {"overlays": ["_border"]}
@@ -450,10 +450,10 @@ class Geometry:
         overlay_ids = set(self.overlays())
         return Regions({k: v for k, v in self.regions.items() if k in overlay_ids})
 
-    def relabel(self, mapping: dict[str, str | list[str]]) -> Geometry:
-        """Rename or merge regions (returns new Geometry object).
+    def relabel(self, mapping: dict[str, str | list[str]]) -> Outline:
+        """Rename or merge regions (returns new Outline object).
 
-        This method applies relabeling transformations to create a new Geometry
+        This method applies relabeling transformations to create a new Outline
         object with renamed or merged regions. Original object is unchanged.
 
         Args:
@@ -462,13 +462,13 @@ class Geometry:
                 - List value: merge multiple regions (e.g., {"hokkaido": ["path_1", "path_2"]})
 
         Returns:
-            New Geometry object with relabeled regions
+            New Outline object with relabeled regions
 
         Raises:
             ValueError: If an old ID in mapping doesn't exist
 
         Example:
-            >>> geo = Geometry.from_dict({
+            >>> geo = Outline.from_dict({
             ...     "path_1": ["M 0 0 L 10 0"],
             ...     "path_2": ["M 20 0 L 30 0"],
             ...     "path_3": ["M 40 0 L 50 0"]
@@ -506,19 +506,19 @@ class Geometry:
             if region_id not in relabeled_ids:
                 new_regions[region_id] = paths  # type: ignore[assignment]
 
-        return Geometry(regions=Regions(new_regions), metadata=dict(self.metadata))  # type: ignore[arg-type]
+        return Outline(regions=Regions(new_regions), metadata=dict(self.metadata))  # type: ignore[arg-type]
 
-    def set_overlays(self, overlay_ids: list[str]) -> Geometry:
-        """Set overlay region IDs in metadata (returns new Geometry object).
+    def set_overlays(self, overlay_ids: list[str]) -> Outline:
+        """Set overlay region IDs in metadata (returns new Outline object).
 
         Args:
             overlay_ids: List of region IDs to mark as overlays
 
         Returns:
-            New Geometry object with updated overlay metadata
+            New Outline object with updated overlay metadata
 
         Example:
-            >>> geo = Geometry.from_dict({
+            >>> geo = Outline.from_dict({
             ...     "region": ["M 0 0"],
             ...     "_border": ["M 0 0 L 100 0"]
             ... })
@@ -528,10 +528,10 @@ class Geometry:
         """
         new_metadata = dict(self.metadata)
         new_metadata["overlays"] = overlay_ids
-        return Geometry(regions=Regions(dict(self.regions)), metadata=new_metadata)
+        return Outline(regions=Regions(dict(self.regions)), metadata=new_metadata)
 
-    def update_metadata(self, metadata: dict[str, Any]) -> Geometry:
-        """Update metadata (returns new Geometry object).
+    def update_metadata(self, metadata: dict[str, Any]) -> Outline:
+        """Update metadata (returns new Outline object).
 
         Merges provided metadata with existing metadata. Existing keys are
         overwritten by new values.
@@ -540,10 +540,10 @@ class Geometry:
             metadata: Dict of metadata to merge
 
         Returns:
-            New Geometry object with updated metadata
+            New Outline object with updated metadata
 
         Example:
-            >>> geo = Geometry.from_dict({"region": ["M 0 0"]})
+            >>> geo = Outline.from_dict({"region": ["M 0 0"]})
             >>> geo2 = geo.update_metadata({
             ...     "source": "Wikimedia Commons",
             ...     "license": "CC BY-SA 3.0"
@@ -552,9 +552,9 @@ class Geometry:
             'Wikimedia Commons'
         """
         new_metadata = {**self.metadata, **metadata}
-        return Geometry(regions=Regions(dict(self.regions)), metadata=new_metadata)
+        return Outline(regions=Regions(dict(self.regions)), metadata=new_metadata)
 
-    def path_as_line(self, *region_ids: str) -> Geometry:
+    def path_as_line(self, *region_ids: str) -> Outline:
         """Mark regions as lines described in path notation.
 
         Some SVG paths represent lines (dividers, borders, grids) rather than
@@ -565,10 +565,10 @@ class Geometry:
             *region_ids: Region IDs containing line elements in path notation
 
         Returns:
-            New Geometry object with line regions recorded in metadata
+            New Outline object with line regions recorded in metadata
 
         Example:
-            >>> geo = Geometry.from_dict({
+            >>> geo = Outline.from_dict({
             ...     "region": ["M 0 0 L 100 100"],
             ...     "_divider": ["M 50 0 L 50 100"]
             ... })
@@ -584,7 +584,7 @@ class Geometry:
                 existing.append(region_id)
 
         new_metadata = {**self.metadata, "lines_as_path": existing}
-        return Geometry(regions=Regions(dict(self.regions)), metadata=new_metadata)
+        return Outline(regions=Regions(dict(self.regions)), metadata=new_metadata)
 
     def to_dict(self) -> dict[str, Any]:
         """Export to dict in shinymap JSON format.
@@ -598,13 +598,13 @@ class Geometry:
 
         Example:
             >>> # v0.x format (strings)
-            >>> geo = Geometry.from_dict({"region": ["M 0 0"]})
+            >>> geo = Outline.from_dict({"region": ["M 0 0"]})
             >>> geo.to_dict()
             {'_metadata': {}, 'region': ['M 0 0']}
 
             >>> # v1.x format (elements)
             >>> from shinymap.geometry import Circle
-            >>> geo = Geometry(regions={"r1": [Circle(cx=100, cy=100, r=50)]}, metadata={})
+            >>> geo = Outline(regions={"r1": [Circle(cx=100, cy=100, r=50)]}, metadata={})
             >>> geo.to_dict()
             {'_metadata': {}, 'r1': [{'type': 'circle', 'cx': 100, 'cy': 100, 'r': 50}]}
         """
@@ -633,7 +633,7 @@ class Geometry:
             output_path: Path to write JSON file
 
         Example:
-            >>> geo = Geometry.from_svg("map.svg")
+            >>> geo = Outline.from_svg("map.svg")
             >>> geo.to_json("output.json")
         """
         output_path = PathType(output_path).expanduser()
@@ -649,9 +649,9 @@ class Geometry:
         Uses global repr configuration from get_repr_config().
 
         Example:
-            >>> geo = Geometry.from_svg("map.svg")
+            >>> geo = Outline.from_svg("map.svg")
             >>> geo
-            Geometry(regions={47 regions}, metadata={'viewBox': '0 0 1000 1000'})
+            Outline(regions={47 regions}, metadata={'viewBox': '0 0 1000 1000'})
         """
         import reprlib
 
@@ -678,4 +678,4 @@ class Geometry:
         # Use reprlib for metadata
         metadata_repr = r.repr(self.metadata)
 
-        return f"Geometry(regions={regions_repr}, metadata={metadata_repr})"
+        return f"Outline(regions={regions_repr}, metadata={metadata_repr})"

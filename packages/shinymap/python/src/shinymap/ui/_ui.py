@@ -8,8 +8,7 @@ from htmltools import Tag, TagList, css
 from shiny import ui
 from shiny.session import Session, require_active_session
 
-from ._aesthetics import BaseAesthetic, ByGroup, ByState
-from ._base import (
+from .._base import (
     CountMap,
     TooltipMap,
     _camel_props,
@@ -17,11 +16,12 @@ from ._base import (
     _convert_aes_to_dict,
     _dependency,
     _merge_styles,
-    _normalize_geometry,
 )
+from .._map import MapBuilder
+from ..aes._core import BaseAesthetic, ByGroup, ByState
 
 if TYPE_CHECKING:
-    from .geometry import Geometry
+    from ..geometry import Outline
 
 Selection = str | list[str] | None
 AesType = ByGroup | ByState | BaseAesthetic | Mapping[str, Mapping[str, Any] | None] | None
@@ -30,208 +30,9 @@ AesType = ByGroup | ByState | BaseAesthetic | Mapping[str, Mapping[str, Any] | N
 _static_map_params: MutableMapping[str, Mapping[str, Any]] = {}
 
 
-def _viewbox_to_str(view_box: tuple[float, float, float, float] | str | None) -> str | None:
-    """Convert viewBox tuple to string format, or pass through string."""
-    if view_box is None:
-        return None
-    if isinstance(view_box, str):
-        return view_box
-    return f"{view_box[0]} {view_box[1]} {view_box[2]} {view_box[3]}"
-
-
-# Public input_map uses wash() with sensible defaults
+# Public input_map uses Wash() with sensible defaults
 # Defined at module level after all helper definitions
 # See end of file for: input_map = _default_wash.input_map
-
-
-class MapBuilder:
-    """Fluent builder for constructing map payloads with method chaining.
-
-    Parameters can be provided here or via output_map(). When both are provided,
-    builder parameters take precedence.
-
-    Example (traditional):
-        @render_map
-        def my_map():
-            return (
-                Map(geometry, tooltips=tooltips, view_box=viewbox)
-                .with_value(my_counts)
-                .with_active(active_ids)
-            )
-
-    Example (with static params in output_map()):
-        # UI layer
-        output_map("my_map", geometry=GEOMETRY, tooltips=TOOLTIPS, view_box=VIEWBOX)
-
-        # Server layer
-        @render_map
-        def my_map():
-            return Map().with_value(my_counts)
-    """
-
-    def __init__(
-        self,
-        regions: Mapping[str, Any] | None = None,
-        *,
-        tooltips: TooltipMap = None,
-        view_box: tuple[float, float, float, float] | None = None,
-    ):
-        """Internal constructor - use Map() function instead.
-
-        Args:
-            regions: Dict of main regions {regionId: [element1, ...]}
-            tooltips: Optional region tooltips
-            view_box: ViewBox as tuple (x, y, width, height)
-        """
-        self._regions: Mapping[str, Any] | None = regions
-        self._tooltips = tooltips
-        self._value: CountMap = None
-        self._active_ids: Selection = None
-        self._view_box = view_box
-        self._aes: AesType = None
-        self._layers: Mapping[str, list[str] | None] | None = None
-
-    def with_tooltips(self, tooltips: TooltipMap) -> MapBuilder:
-        """Set region tooltips."""
-        self._tooltips = tooltips
-        return self
-
-    def with_value(self, value: CountMap) -> MapBuilder:
-        """Set region values (counts, selection state)."""
-        self._value = value
-        return self
-
-    def with_active(self, active_ids: Selection) -> MapBuilder:
-        """Set active/highlighted region IDs."""
-        self._active_ids = active_ids
-        return self
-
-    def with_view_box(self, view_box: tuple[float, float, float, float]) -> MapBuilder:
-        """Set the SVG viewBox as tuple (x, y, width, height)."""
-        self._view_box = view_box
-        return self
-
-    def with_aes(self, aes: AesType) -> MapBuilder:
-        """Set aesthetic configuration.
-
-        Args:
-            aes: Aesthetic config (ByGroup, ByState, BaseAesthetic, or dict)
-        """
-        self._aes = aes
-        return self
-
-    def with_layers(self, layers: Mapping[str, list[str] | None]) -> MapBuilder:
-        """Set layer configuration.
-
-        Args:
-            layers: Nested dict with keys 'underlays', 'overlays', 'hidden'
-        """
-        self._layers = layers
-        return self
-
-    def with_geometry_metadata(self, metadata: Mapping[str, Any]) -> MapBuilder:
-        """Set geometry metadata (viewBox, groups)."""
-        self._geometry_metadata = metadata
-        return self
-
-    def as_json(self) -> Mapping[str, Any]:
-        """Convert to JSON dict for JavaScript consumption."""
-        data: dict[str, Any] = {}
-
-        if self._regions is not None:
-            data["geometry"] = _normalize_geometry(self._regions)
-        if self._tooltips is not None:
-            data["tooltips"] = self._tooltips
-        if self._value is not None:
-            data["value"] = self._value
-        if self._active_ids is not None:
-            data["active_ids"] = self._active_ids
-        if self._view_box is not None:
-            data["view_box"] = _viewbox_to_str(self._view_box)
-        if self._aes is not None:
-            # Convert ByGroup/ByState/BaseAesthetic to dict format
-            if isinstance(self._aes, (ByGroup, ByState, BaseAesthetic)):
-                data["aes"] = _convert_aes_to_dict(self._aes)
-            else:
-                data["aes"] = self._aes
-        if self._layers is not None:
-            data["layers"] = self._layers
-        if hasattr(self, "_geometry_metadata") and self._geometry_metadata is not None:
-            data["geometry_metadata"] = self._geometry_metadata
-
-        return _camel_props(data)
-
-
-def Map(
-    geometry: Geometry | None = None,
-    *,
-    view_box: tuple[float, float, float, float] | None = None,
-    tooltips: dict[str, str] | None = None,
-    value: dict[str, int] | None = None,
-    active: list[str] | None = None,
-    aes: AesType = None,
-    layers: Mapping[str, list[str] | None] | None = None,
-) -> MapBuilder:
-    """Create map from Geometry object.
-
-    When used with output_map() that provides static geometry, you can call Map()
-    without arguments. Otherwise, provide a Geometry object.
-
-    Args:
-        geometry: Geometry object with regions, viewBox, metadata.
-            Optional when used with output_map()
-        view_box: Override viewBox tuple (for zoom/pan).
-            If None, uses geometry.viewbox()
-        tooltips: Region tooltips
-        value: Region values (counts, selection state)
-        active: Active region IDs
-        aes: Aesthetic configuration (ByGroup, ByState, BaseAesthetic, or dict)
-        layers: Layer configuration (nested dict: underlays, overlays, hidden)
-
-    Example:
-        # Standalone usage
-        geo = Geometry.from_dict(data)
-        Map(geo, value=counts, active=["a", "b"])
-
-        # With output_map() providing static geometry
-        output_map("my_map", GEOMETRY, tooltips=TOOLTIPS)
-        @render_map
-        def my_map():
-            return Map().with_value(counts)
-
-    Returns:
-        MapBuilder instance for method chaining
-    """
-
-    if geometry is None:
-        # No geometry provided - will be merged from output_map() static params
-        builder = MapBuilder(
-            None,  # Will be filled by _apply_static_params
-            view_box=view_box,
-            tooltips=tooltips,
-        )
-    else:
-        # Extract regions using Geometry methods
-        main_regions = geometry.main_regions()
-
-        # Create MapBuilder with extracted data
-        builder = MapBuilder(
-            main_regions,
-            view_box=view_box or geometry.viewbox(),
-            tooltips=tooltips,
-        )
-
-    # Apply optional parameters
-    if value is not None:
-        builder = builder.with_value(value)
-    if active is not None:
-        builder = builder.with_active(active)
-    if aes is not None:
-        builder = builder.with_aes(aes)
-    if layers is not None:
-        builder = builder.with_layers(layers)
-
-    return builder
 
 
 def _render_map_ui(
@@ -264,7 +65,7 @@ def _render_map_ui(
     return div
 
 
-# Public output_map uses wash() with sensible defaults
+# Public output_map uses Wash() with sensible defaults
 # Defined at module level after all helper definitions
 # See end of file for: output_map = _default_wash.output_map
 
@@ -296,8 +97,6 @@ def _apply_static_params(builder: MapBuilder, output_id: str) -> MapBuilder:
     if builder._aes is not None and static_aes is not None:
         # Need to merge: static aes contains lines_as_path entries, builder aes is user-provided
         # Convert builder aes to dict and merge with static
-        from ._base import _convert_aes_to_dict
-
         builder_aes_dict = (
             _convert_aes_to_dict(builder._aes)
             if isinstance(builder._aes, (ByGroup, ByState, BaseAesthetic))
@@ -337,7 +136,7 @@ def _apply_static_params(builder: MapBuilder, output_id: str) -> MapBuilder:
     return merged
 
 
-# Public render_map uses wash() with sensible defaults
+# Public render_map uses Wash() with sensible defaults
 # Defined at module level after all helper definitions
 # See end of file for: render_map = _default_wash.render_map
 
@@ -345,54 +144,44 @@ def _apply_static_params(builder: MapBuilder, output_id: str) -> MapBuilder:
 def update_map(
     id: str,
     *,
-    # Aesthetics (both input_map and output_map)
-    fill_color: str | Mapping[str, str] | None = None,
-    stroke_width: float | Mapping[str, float] | None = None,
-    stroke_color: str | Mapping[str, str] | None = None,
-    fill_opacity: float | Mapping[str, float] | None = None,
-    aes_base: Mapping[str, Any] | None = None,
-    aes_hover: Mapping[str, Any] | None = None,
-    # Input-specific parameters
-    value: CountMap = None,  # Selection state (pass {} to clear all)
-    aes_select: Mapping[str, Any] | None = None,
-    cycle: int | None = None,
-    max_selection: int | None = None,
-    # Common
+    aes: AesType = None,
+    value: CountMap = None,
     tooltips: TooltipMap = None,
     session: Session | None = None,
 ) -> None:
     """Update an input_map or output_map without full re-render.
 
-    For input_map: Updates aesthetics, selection state, and input behavior parameters.
+    For input_map: Updates aesthetics and selection state.
     For output_map: Updates aesthetics only (use @render_map for data changes).
 
     Args:
         id: The map element ID
-        fill_color: Fill color (string for all regions, dict for per-region)
-        stroke_width: Stroke width (number for all, dict for per-region)
-        stroke_color: Stroke color (string for all, dict for per-region)
-        fill_opacity: Fill opacity (number for all, dict for per-region)
-        aes_base: Base aesthetic for all regions
-        aes_hover: Hover aesthetic
+        aes: Aesthetic configuration (ByGroup, ByState, or BaseAesthetic)
         value: (input_map only) Selection state; pass {} to clear all selections
-        aes_select: (input_map only) Aesthetic override for selected regions
-        cycle: (input_map only) Cycle count for click behavior
-        max_selection: (input_map only) Maximum number of selectable regions
         tooltips: Region tooltips
         session: A Session instance. If not provided, it is inferred via get_current_session()
 
     Example:
-        # Update aesthetics (works for both input_map and output_map)
-        update_map("my_map", fill_color=new_colors, stroke_width=2.0)
+        from shinymap import aes
+        from shinymap.ui import update_map
+
+        # Update aesthetics with ByGroup (per-region colors)
+        update_map("my_map", aes=aes.ByGroup(
+            region1=aes.Shape(fill_color="#ff0000"),
+            region2=aes.Shape(fill_color="#00ff00"),
+        ))
+
+        # Update with ByState (base/select/hover)
+        update_map("my_map", aes=aes.ByState(
+            base=aes.Shape(fill_color="#e2e8f0"),
+            select=aes.Shape(fill_color="#bfdbfe"),
+        ))
 
         # Clear all selections (input_map only)
         update_map("my_map", value={})
 
         # Set specific selections (input_map only)
         update_map("my_map", value={"region1": 1, "region2": 1})
-
-        # Change input behavior (input_map only)
-        update_map("my_map", max_selection=3, cycle=5)
 
     Note:
         - Uses shallow merge semantics: new properties override existing ones
@@ -404,26 +193,13 @@ def update_map(
     # Build update payload
     updates: dict[str, Any] = {}
 
-    if fill_color is not None:
-        updates["fill_color"] = fill_color
-    if stroke_width is not None:
-        updates["stroke_width"] = stroke_width
-    if stroke_color is not None:
-        updates["stroke_color"] = stroke_color
-    if fill_opacity is not None:
-        updates["fill_opacity"] = fill_opacity
-    if aes_base is not None:
-        updates["aes_base"] = aes_base
-    if aes_select is not None:
-        updates["aes_select"] = aes_select
-    if aes_hover is not None:
-        updates["aes_hover"] = aes_hover
+    if aes is not None:
+        if isinstance(aes, (ByGroup, ByState, BaseAesthetic)):
+            updates["aes"] = _convert_aes_to_dict(aes)
+        else:
+            updates["aes"] = aes
     if value is not None:
         updates["value"] = value
-    if cycle is not None:
-        updates["cycle"] = cycle
-    if max_selection is not None:
-        updates["max_selection"] = max_selection
     if tooltips is not None:
         updates["tooltips"] = tooltips
 
@@ -443,13 +219,13 @@ def update_map(
 # Import at module end to avoid circular dependency (_wash imports _base)
 # =============================================================================
 
-from . import aes  # noqa: E402
-from ._wash import wash  # noqa: E402
-from .relative import PARENT  # noqa: E402
+from .. import aes  # noqa: E402
+from .._wash import Wash  # noqa: E402
+from ..relative import PARENT  # noqa: E402
 
-# Create default wash instance with library defaults for base, select, hover.
+# Create default Wash instance with library defaults for base, select, hover.
 # These defaults are applied when using the library-supplied input_map/output_map.
-# Users who create their own wash() must define all aesthetics themselves.
+# Users who create their own Wash() must define all aesthetics themselves.
 #
 # Design notes:
 # - TypeScript has two sets of defaults:
@@ -457,7 +233,7 @@ from .relative import PARENT  # noqa: E402
 #   2. LIBRARY_AESTHETIC_DEFAULTS: complete defaults for React developers
 # - Library defaults here provide a complete, polished out-of-box experience
 # - No hardcoded fallbacks in shinymap-shiny.js - everything flows from Python
-_default_wash = wash(
+_default_wash = Wash(
     shape=aes.ByState(
         base=aes.Shape(
             fill_color="#e2e8f0",  # slate-200: neutral base
@@ -496,7 +272,7 @@ render_map = _default_wash.render_map
 
 def input_radio_buttons(
     id: str,
-    geometry: Geometry,
+    geometry: Outline,
     *,
     tooltips: dict[str, str] | None = None,
     selected: str | None = None,
@@ -515,7 +291,7 @@ def input_radio_buttons(
 
     Args:
         id: Input ID for Shiny
-        geometry: Geometry object with regions
+        geometry: Outline object with regions
         tooltips: Region tooltips as {region_id: tooltip_text}
         selected: Initially selected region ID
         view_box: Override viewBox tuple
@@ -529,9 +305,9 @@ def input_radio_buttons(
 
     Example:
         >>> from shinymap import input_radio_buttons
-        >>> from shinymap.geometry import Geometry
+        >>> from shinymap.geometry import Outline
         >>>
-        >>> geo = Geometry.from_dict(data)
+        >>> geo = Outline.from_dict(data)
         >>> input_radio_buttons("region", geo)
     """
     value = {selected: 1} if selected else None
@@ -551,7 +327,7 @@ def input_radio_buttons(
 
 def input_checkbox_group(
     id: str,
-    geometry: Geometry,
+    geometry: Outline,
     *,
     tooltips: dict[str, str] | None = None,
     selected: list[str] | None = None,
@@ -570,7 +346,7 @@ def input_checkbox_group(
 
     Args:
         id: Input ID for Shiny
-        geometry: Geometry object with regions
+        geometry: Outline object with regions
         tooltips: Region tooltips as {region_id: tooltip_text}
         selected: Initially selected region IDs
         view_box: Override viewBox tuple
@@ -584,9 +360,9 @@ def input_checkbox_group(
 
     Example:
         >>> from shinymap import input_checkbox_group
-        >>> from shinymap.geometry import Geometry
+        >>> from shinymap.geometry import Outline
         >>>
-        >>> geo = Geometry.from_dict(data)
+        >>> geo = Outline.from_dict(data)
         >>> input_checkbox_group("regions", geo, selected=["a", "b"])
     """
     value = {rid: 1 for rid in selected} if selected else None

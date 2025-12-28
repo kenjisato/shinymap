@@ -11,7 +11,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
 
-from shinymap._sentinel import MISSING, MissingType
+from shinymap.types import MISSING, MissingType
 
 
 @dataclass

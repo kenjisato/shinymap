@@ -11,7 +11,7 @@ from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from .geometry import Geometry
+    from .geometry import Outline
 
 # Element types that have no fill area
 NO_FILL_ELEMENT_TYPES = {"line"}
@@ -21,13 +21,13 @@ FILL_AESTHETIC_KEYS = {"fill_color", "fill_opacity", "fillColor", "fillOpacity"}
 
 
 def _collect_element_types(
-    geometry: Geometry | Mapping[str, Any],
+    geometry: Outline | Mapping[str, Any],
     region_id: str | None = None,
 ) -> set[str]:
     """Collect unique element types from geometry.
 
     Args:
-        geometry: Geometry object or dict
+        geometry: Outline object or dict
         region_id: Optional specific region to check. If None, checks all regions.
 
     Returns:
@@ -35,7 +35,7 @@ def _collect_element_types(
     """
     element_types: set[str] = set()
 
-    # Handle Geometry object (has .regions attribute that is dict-like)
+    # Handle Outline object (has .regions attribute that is dict-like)
     if hasattr(geometry, "regions"):
         regions_obj = geometry.regions
         # Regions object is dict-like, iterate over it
@@ -106,7 +106,7 @@ def validate_aesthetic_for_elements(
 
 
 def validate_geometry_aesthetics(
-    geometry: Geometry | Mapping[str, Any],
+    geometry: Outline | Mapping[str, Any],
     aes_group: Mapping[str, Mapping[str, Any]] | None = None,
     default_aesthetic: Mapping[str, Any] | None = None,
 ) -> None:
@@ -115,7 +115,7 @@ def validate_geometry_aesthetics(
     Warns if inappropriate aesthetics are detected.
 
     Args:
-        geometry: Geometry object or dict
+        geometry: Outline object or dict
         aes_group: Optional per-group aesthetics
         default_aesthetic: Optional default aesthetic
     """

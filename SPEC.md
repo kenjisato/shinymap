@@ -82,7 +82,7 @@ input_map("id", geometry, mode=Cycle(n=4, aes=aes.Indexed(fill_color=CYCLE_COLOR
 The aesthetic system uses a hierarchical structure with state-based and group-based configuration:
 
 ```python
-from shinymap import aes, linestyle
+from shinymap import aes
 
 # State-based aesthetics (base, hover, select states)
 style = aes.ByState(
@@ -556,13 +556,13 @@ geo = geo.path_as_line("_divider_lines", "_grid")
 **Type-safe Aesthetic Builders**:
 
 ```python
-from shinymap import aes, linestyle
+from shinymap import aes
 
 # IDE autocomplete for all aesthetic properties
 grid_style = aes.Line(
     stroke_color="#ddd",
     stroke_width=1,
-    stroke_dasharray=linestyle.DASHED,  # Predefined: SOLID, DASHED, DOTTED, DASH_DOT
+    stroke_dasharray=aes.line.dashed,  # Predefined: solid, dashed, dotted, dash_dot
 )
 
 shape_style = aes.Shape(

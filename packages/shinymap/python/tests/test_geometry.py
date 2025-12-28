@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from shinymap.geometry import compute_viewbox_from_dict, convert, from_json, from_svg
+from shinymap.geometry import convert, from_json, from_svg
 
 
 @pytest.fixture
@@ -708,121 +708,18 @@ def test_infer_relabel_no_changes(sample_intermediate_json):
 
 
 # ============================================================================
-# compute_viewbox_from_dict() tests
-# ============================================================================
-
-
-@pytest.mark.unit
-def test_compute_viewbox_from_dict_basic():
-    """Test basic viewBox computation from geometry dict."""
-    geometry = {
-        "a": "M 0 0 L 100 0 L 100 100 L 0 100 Z",
-        "b": "M 200 0 L 300 0 L 300 100 L 200 100 Z",
-    }
-
-    viewbox = compute_viewbox_from_dict(geometry)
-
-    # Should cover from (0, 0) to (300, 100)
-    assert viewbox == "0.0 0.0 300.0 100.0"
-
-
-@pytest.mark.unit
-def test_compute_viewbox_from_dict_with_padding():
-    """Test viewBox computation with padding."""
-    geometry = {
-        "a": "M 0 0 L 100 0 L 100 100 L 0 100 Z",
-    }
-
-    # 10% padding
-    viewbox = compute_viewbox_from_dict(geometry, padding=0.1)
-
-    # Original: 0 0 100 100
-    # With 10% padding: -10 -10 120 120
-    assert viewbox == "-10.0 -10.0 120.0 120.0"
-
-
-@pytest.mark.unit
-def test_compute_viewbox_from_dict_list_format():
-    """Test viewBox computation from dict with list values (intermediate JSON format)."""
-    # Intermediate JSON format uses lists
-    intermediate = {
-        "_metadata": {"viewBox": "ignored"},
-        "path_1": ["M 10 10 L 40 10 L 40 40 L 10 40 Z"],
-        "path_2": ["M 60 10 L 90 10 L 90 40 L 60 40 Z"],
-    }
-
-    viewbox = compute_viewbox_from_dict(intermediate)
-
-    # Should cover from (10, 10) to (90, 40)
-    assert viewbox == "10.0 10.0 80.0 30.0"
-
-
-@pytest.mark.unit
-def test_compute_viewbox_from_dict_merged_paths():
-    """Test viewBox computation with merged paths (multiple path strings in list)."""
-    geometry = {
-        "hokkaido": [
-            "M 0 0 L 50 0 L 50 50 Z",  # First island
-            "M 100 0 L 150 0 L 150 50 Z",  # Second island
-        ],
-    }
-
-    viewbox = compute_viewbox_from_dict(geometry)
-
-    # Should cover both islands: from (0, 0) to (150, 50)
-    assert viewbox == "0.0 0.0 150.0 50.0"
-
-
-@pytest.mark.unit
-def test_compute_viewbox_from_dict_negative_coords():
-    """Test viewBox computation with negative coordinates."""
-    geometry = {
-        "a": "M -50 -50 L 50 -50 L 50 50 L -50 50 Z",
-    }
-
-    viewbox = compute_viewbox_from_dict(geometry)
-
-    assert viewbox == "-50.0 -50.0 100.0 100.0"
-
-
-@pytest.mark.unit
-def test_compute_viewbox_from_dict_empty():
-    """Test viewBox computation with empty dict returns default."""
-    viewbox = compute_viewbox_from_dict({})
-
-    # Default fallback
-    assert viewbox == "0.0 0.0 100.0 100.0"
-
-
-@pytest.mark.unit
-def test_compute_viewbox_from_dict_skips_metadata():
-    """Test that _metadata and other non-path entries are skipped."""
-    geometry = {
-        "_metadata": {"viewBox": "0 0 500 500"},  # Should be ignored
-        "region": "M 0 0 L 100 0 L 100 100 Z",
-        "_overlay": "M 200 0 L 300 0 L 300 100 Z",  # Should be included
-    }
-
-    viewbox = compute_viewbox_from_dict(geometry)
-
-    # Should compute from actual geometry, not use metadata viewBox
-    # Covers "region" (0-100) and "_overlay" (200-300)
-    assert viewbox == "0.0 0.0 300.0 100.0"
-
-
-# ============================================================================
-# Geometry OOP API tests
+# Outline OOP API tests
 # ============================================================================
 
 
 @pytest.mark.unit
 def test_geometry_from_svg_class_method(sample_svg_file):
-    """Test Geometry.from_svg() class method."""
-    from shinymap.geometry import Geometry
+    """Test Outline.from_svg() class method."""
+    from shinymap.geometry import Outline
 
-    geo = Geometry.from_svg(sample_svg_file, extract_viewbox=True)
+    geo = Outline.from_svg(sample_svg_file, extract_viewbox=True)
 
-    assert isinstance(geo, Geometry)
+    assert isinstance(geo, Outline)
     assert len(geo.regions) == 3
     assert "viewBox" in geo.metadata
     assert geo.metadata["viewBox"] == "0 0 100 100"
@@ -833,17 +730,17 @@ def test_geometry_from_svg_class_method(sample_svg_file):
 
 @pytest.mark.unit
 def test_geometry_from_json_class_method(sample_intermediate_json):
-    """Test Geometry.from_json() class method."""
-    from shinymap.geometry import Geometry
+    """Test Outline.from_json() class method."""
+    from shinymap.geometry import Outline
 
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         json.dump(sample_intermediate_json, f)
         json_path = f.name
 
     try:
-        geo = Geometry.from_json(json_path)
+        geo = Outline.from_json(json_path)
 
-        assert isinstance(geo, Geometry)
+        assert isinstance(geo, Outline)
         assert len(geo.regions) == 3
         assert "viewBox" in geo.metadata
         assert "path_1" in geo.regions
@@ -855,12 +752,12 @@ def test_geometry_from_json_class_method(sample_intermediate_json):
 
 @pytest.mark.unit
 def test_geometry_from_dict_class_method(sample_intermediate_json):
-    """Test Geometry.from_dict() class method."""
-    from shinymap.geometry import Geometry
+    """Test Outline.from_dict() class method."""
+    from shinymap.geometry import Outline
 
-    geo = Geometry.from_dict(sample_intermediate_json)
+    geo = Outline.from_dict(sample_intermediate_json)
 
-    assert isinstance(geo, Geometry)
+    assert isinstance(geo, Outline)
     assert len(geo.regions) == 3
     assert "viewBox" in geo.metadata
     assert geo.metadata["viewBox"] == "0 0 100 100"
@@ -868,10 +765,10 @@ def test_geometry_from_dict_class_method(sample_intermediate_json):
 
 @pytest.mark.unit
 def test_geometry_relabel_rename_single(sample_intermediate_json):
-    """Test Geometry.relabel() with single region rename."""
-    from shinymap.geometry import Geometry
+    """Test Outline.relabel() with single region rename."""
+    from shinymap.geometry import Outline
 
-    geo = Geometry.from_dict(sample_intermediate_json)
+    geo = Outline.from_dict(sample_intermediate_json)
     geo_relabeled = geo.relabel({"top_left": "path_1"})
 
     # Check original unchanged (immutable)
@@ -887,10 +784,10 @@ def test_geometry_relabel_rename_single(sample_intermediate_json):
 
 @pytest.mark.unit
 def test_geometry_relabel_merge_multiple(sample_intermediate_json):
-    """Test Geometry.relabel() with region merge."""
-    from shinymap.geometry import Geometry
+    """Test Outline.relabel() with region merge."""
+    from shinymap.geometry import Outline
 
-    geo = Geometry.from_dict(sample_intermediate_json)
+    geo = Outline.from_dict(sample_intermediate_json)
     geo_merged = geo.relabel({"top_merged": ["path_1", "path_2"]})
 
     # Check original unchanged
@@ -911,10 +808,10 @@ def test_geometry_relabel_merge_multiple(sample_intermediate_json):
 
 @pytest.mark.unit
 def test_geometry_relabel_nonexistent_raises(sample_intermediate_json):
-    """Test Geometry.relabel() raises ValueError for nonexistent region."""
-    from shinymap.geometry import Geometry
+    """Test Outline.relabel() raises ValueError for nonexistent region."""
+    from shinymap.geometry import Outline
 
-    geo = Geometry.from_dict(sample_intermediate_json)
+    geo = Outline.from_dict(sample_intermediate_json)
 
     with pytest.raises(ValueError, match="Path 'nonexistent' not found"):
         geo.relabel({"new": "nonexistent"})
@@ -922,10 +819,10 @@ def test_geometry_relabel_nonexistent_raises(sample_intermediate_json):
 
 @pytest.mark.unit
 def test_geometry_set_overlays(sample_intermediate_json):
-    """Test Geometry.set_overlays() method."""
-    from shinymap.geometry import Geometry
+    """Test Outline.set_overlays() method."""
+    from shinymap.geometry import Outline
 
-    geo = Geometry.from_dict(sample_intermediate_json)
+    geo = Outline.from_dict(sample_intermediate_json)
     geo_overlays = geo.set_overlays(["bottom", "_border"])
 
     # Check original unchanged
@@ -939,10 +836,10 @@ def test_geometry_set_overlays(sample_intermediate_json):
 
 @pytest.mark.unit
 def test_geometry_update_metadata(sample_intermediate_json):
-    """Test Geometry.update_metadata() method."""
-    from shinymap.geometry import Geometry
+    """Test Outline.update_metadata() method."""
+    from shinymap.geometry import Outline
 
-    geo = Geometry.from_dict(sample_intermediate_json)
+    geo = Outline.from_dict(sample_intermediate_json)
     geo_updated = geo.update_metadata({"source": "Test", "license": "MIT"})
 
     # Check original unchanged
@@ -957,10 +854,10 @@ def test_geometry_update_metadata(sample_intermediate_json):
 
 @pytest.mark.unit
 def test_geometry_update_metadata_overwrites(sample_intermediate_json):
-    """Test Geometry.update_metadata() overwrites existing keys."""
-    from shinymap.geometry import Geometry
+    """Test Outline.update_metadata() overwrites existing keys."""
+    from shinymap.geometry import Outline
 
-    geo = Geometry.from_dict(sample_intermediate_json)
+    geo = Outline.from_dict(sample_intermediate_json)
     geo_updated = geo.update_metadata({"viewBox": "0 0 200 200"})
 
     # Check original unchanged
@@ -972,10 +869,10 @@ def test_geometry_update_metadata_overwrites(sample_intermediate_json):
 
 @pytest.mark.unit
 def test_geometry_to_dict(sample_intermediate_json):
-    """Test Geometry.to_dict() method."""
-    from shinymap.geometry import Geometry
+    """Test Outline.to_dict() method."""
+    from shinymap.geometry import Outline
 
-    geo = Geometry.from_dict(sample_intermediate_json)
+    geo = Outline.from_dict(sample_intermediate_json)
     output = geo.to_dict()
 
     assert "_metadata" in output
@@ -987,14 +884,14 @@ def test_geometry_to_dict(sample_intermediate_json):
 
 @pytest.mark.unit
 def test_geometry_to_json(sample_intermediate_json):
-    """Test Geometry.to_json() method."""
-    from shinymap.geometry import Geometry
+    """Test Outline.to_json() method."""
+    from shinymap.geometry import Outline
 
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         output_path = f.name
 
     try:
-        geo = Geometry.from_dict(sample_intermediate_json)
+        geo = Outline.from_dict(sample_intermediate_json)
         geo.to_json(output_path)
 
         # Verify file created
@@ -1011,12 +908,12 @@ def test_geometry_to_json(sample_intermediate_json):
 
 
 @pytest.mark.unit
-def test_geometry_method_chaining(sample_intermediate_json):
-    """Test Geometry fluent API with method chaining."""
-    from shinymap.geometry import Geometry
+def test_outline_method_chaining(sample_intermediate_json):
+    """Test Outline fluent API with method chaining."""
+    from shinymap.geometry import Outline
 
     geo = (
-        Geometry.from_dict(sample_intermediate_json)
+        Outline.from_dict(sample_intermediate_json)
         .relabel({"top_merged": ["path_1", "path_2"]})
         .set_overlays(["bottom"])
         .update_metadata({"source": "Test", "processed": "true"})
@@ -1033,11 +930,11 @@ def test_geometry_method_chaining(sample_intermediate_json):
 
 
 @pytest.mark.unit
-def test_geometry_immutability(sample_intermediate_json):
-    """Test that Geometry transformations are immutable."""
-    from shinymap.geometry import Geometry
+def test_outline_immutability(sample_intermediate_json):
+    """Test that Outline transformations are immutable."""
+    from shinymap.geometry import Outline
 
-    original = Geometry.from_dict(sample_intermediate_json)
+    original = Outline.from_dict(sample_intermediate_json)
     original_region_count = len(original.regions)
     original_metadata_keys = set(original.metadata.keys())
 
@@ -1064,14 +961,14 @@ def test_geometry_immutability(sample_intermediate_json):
 @pytest.mark.integration
 def test_geometry_oop_workflow(sample_svg_file):
     """Test complete OOP workflow: load -> transform -> export."""
-    from shinymap.geometry import Geometry
+    from shinymap.geometry import Outline
 
     with tempfile.TemporaryDirectory() as tmpdir:
         output_path = Path(tmpdir) / "output.json"
 
         # Complete workflow using OOP API
         geo = (
-            Geometry.from_svg(sample_svg_file, extract_viewbox=True)
+            Outline.from_svg(sample_svg_file, extract_viewbox=True)
             .relabel(
                 {
                     "top_merged": ["path_1", "path_2"],
@@ -1089,7 +986,7 @@ def test_geometry_oop_workflow(sample_svg_file):
         assert output_path.exists()
 
         # Load back and verify
-        geo_reloaded = Geometry.from_json(output_path)
+        geo_reloaded = Outline.from_json(output_path)
         assert "top_merged" in geo_reloaded.regions
         assert "_border" in geo_reloaded.regions
         assert geo_reloaded.metadata["overlays"] == ["_border"]
@@ -1097,15 +994,15 @@ def test_geometry_oop_workflow(sample_svg_file):
 
 
 @pytest.mark.integration
-def test_functional_api_uses_geometry_internally(sample_svg_file):
-    """Test that functional API delegates to Geometry class."""
-    from shinymap.geometry import Geometry
+def test_functional_api_uses_outline_internally(sample_svg_file):
+    """Test that functional API delegates to Outline class."""
+    from shinymap.geometry import Outline
 
     # Functional API
     result_functional = from_svg(sample_svg_file, output_path=None)
 
     # OOP API
-    geo = Geometry.from_svg(sample_svg_file, extract_viewbox=True)
+    geo = Outline.from_svg(sample_svg_file, extract_viewbox=True)
     result_oop = geo.to_dict()
 
     # Should produce identical results
@@ -1129,10 +1026,10 @@ def test_geometry_oop_equivalence_with_functional(sample_svg_file):
     )
 
     # OOP API
-    from shinymap.geometry import Geometry
+    from shinymap.geometry import Outline
 
     geo = (
-        Geometry.from_svg(sample_svg_file, extract_viewbox=True)
+        Outline.from_svg(sample_svg_file, extract_viewbox=True)
         .relabel(relabel)
         .set_overlays(overlay_ids)
         .update_metadata(metadata)

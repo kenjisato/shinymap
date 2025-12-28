@@ -121,7 +121,7 @@ User is responsible for computing the index values:
 
 ```python
 # Sequential scale example
-from shinymap.color import scale_sequential
+from shinymap.aes.color import scale_sequential
 
 # Option 1: Use helper to compute colors directly
 fills = scale_sequential(counts, region_ids)

@@ -181,39 +181,9 @@ class ParentProxy:
 PARENT = ParentProxy()
 
 # Runtime imports for aesthetic resolution (placed here to avoid circular imports)
-from ._aesthetics import BaseAesthetic, LineAesthetic, ShapeAesthetic, TextAesthetic  # noqa: E402
-from ._sentinel import MISSING, MissingType  # noqa: E402
-
-# Default aesthetic values by type (matches JavaScript DEFAULT_AESTHETIC_VALUES)
-DEFAULT_SHAPE_AESTHETIC = ShapeAesthetic(
-    fill_color="#e2e8f0",
-    fill_opacity=1.0,
-    stroke_color="#334155",
-    stroke_width=1.0,
-    stroke_dasharray="",
-    non_scaling_stroke=True,
-)
-
-DEFAULT_LINE_AESTHETIC = LineAesthetic(
-    stroke_color="#334155",
-    stroke_width=1.0,
-    stroke_dasharray="",
-    non_scaling_stroke=True,
-)
-
-DEFAULT_TEXT_AESTHETIC = TextAesthetic(
-    fill_color="#334155",
-    fill_opacity=1.0,
-    stroke_color=None,
-    stroke_width=None,
-    stroke_dasharray=None,
-    non_scaling_stroke=True,
-)
-
-# Default hover aesthetic (PARENT.stroke_width + 1)
-DEFAULT_HOVER_AESTHETIC = ShapeAesthetic(
-    stroke_width=RelativeExpr("stroke_width", "+", 1.0),
-)
+from .aes import _defaults as _aes_default  # noqa: E402
+from .aes._core import BaseAesthetic, LineAesthetic, ShapeAesthetic, TextAesthetic  # noqa: E402
+from .types import MISSING, MissingType  # noqa: E402
 
 
 @dataclass
@@ -261,10 +231,10 @@ class AestheticConfig:
 def _get_default_for_type(aes: BaseAesthetic) -> BaseAesthetic:
     """Get the appropriate default aesthetic for a given type."""
     if isinstance(aes, LineAesthetic):
-        return DEFAULT_LINE_AESTHETIC
+        return _aes_default.line
     if isinstance(aes, TextAesthetic):
-        return DEFAULT_TEXT_AESTHETIC
-    return DEFAULT_SHAPE_AESTHETIC
+        return _aes_default.text
+    return _aes_default.shape
 
 
 def _merge_aesthetic(
@@ -335,7 +305,7 @@ def resolve_region(
         4.0
     """
     # Layer 0: DEFAULT
-    current = DEFAULT_SHAPE_AESTHETIC
+    current = _aes_default.shape
 
     # Layer 1: BASE
     current = _merge_aesthetic(config.aes_base, current)
@@ -372,7 +342,7 @@ def resolve_region(
         hover_aes: BaseAesthetic | None
         if isinstance(config.aes_hover, MissingType):
             # Not specified: use default hover
-            hover_aes = DEFAULT_HOVER_AESTHETIC
+            hover_aes = _aes_default.hover
         elif config.aes_hover is None:
             # Explicitly disabled: no hover effect
             hover_aes = None
@@ -458,7 +428,7 @@ def preview_region(
         return result
 
     # Layer 0: DEFAULT
-    current = DEFAULT_SHAPE_AESTHETIC
+    current = _aes_default.shape
     lines.append("[0] DEFAULT")
     lines.extend(format_aes(current))
     lines.append("")
@@ -533,8 +503,8 @@ def preview_region(
         lines.append("[4] HOVER (is_hovered=True)")
         hover_aes_preview: BaseAesthetic | None
         if isinstance(config.aes_hover, MissingType):
-            hover_aes_preview = DEFAULT_HOVER_AESTHETIC
-            lines.append("  Input (using DEFAULT_HOVER_AESTHETIC):")
+            hover_aes_preview = _aes_default.hover
+            lines.append("  Input (using aes.default.hover):")
         elif config.aes_hover is None:
             hover_aes_preview = None
             lines.append("  Input: None (hover disabled)")
@@ -559,10 +529,6 @@ __all__ = [
     "PARENT",
     "ParentProperty",
     "RelativeExpr",
-    "DEFAULT_SHAPE_AESTHETIC",
-    "DEFAULT_LINE_AESTHETIC",
-    "DEFAULT_TEXT_AESTHETIC",
-    "DEFAULT_HOVER_AESTHETIC",
     "RegionState",
     "AestheticConfig",
     "resolve_region",

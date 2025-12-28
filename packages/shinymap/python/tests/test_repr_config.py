@@ -2,7 +2,7 @@
 
 from shinymap.geometry import (
     Circle,
-    Geometry,
+    Outline,
     Regions,
     get_repr_config,
     set_repr_options,
@@ -92,9 +92,9 @@ class TestReprConfig:
             # Note: reprlib will still show all 10 elements
             assert "r1" in repr_str
 
-    def test_geometry_repr_uses_config(self):
-        """Geometry repr respects config settings."""
-        geo = Geometry(
+    def test_outline_repr_uses_config(self):
+        """Outline repr respects config settings."""
+        geo = Outline(
             regions={f"r{i}": [Circle(cx=i, cy=i, r=5)] for i in range(20)},
             metadata={"viewBox": "0 0 500 500", "source": "test"},
         )
@@ -128,12 +128,12 @@ class TestSentinelPattern:
 
     def test_sentinel_repr(self):
         """MISSING sentinel has readable repr."""
-        from shinymap import MISSING
+        from shinymap.types import MISSING
 
-        assert repr(MISSING) == "shinymap.MISSING"
+        assert repr(MISSING) == "shinymap.types.MISSING"
 
     def test_missing_type_import(self):
         """MissingType can be imported for type hints."""
-        from shinymap import MissingType
+        from shinymap.types import MissingType
 
         assert MissingType is not None

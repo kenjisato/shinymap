@@ -7,7 +7,7 @@ from pathlib import Path
 from shiny import App, reactive, render, ui
 
 from ..._ui import Map, input_map, output_map, render_map, update_map
-from .._core import Geometry, convert, infer_relabel
+from .._core import Outline, convert, infer_relabel
 from ._tool import generate_code, load_file
 
 # Module-level variable for CLI-provided SVG/JSON file
@@ -40,11 +40,11 @@ def server_file_upload(input, file_name, extracted_data):
     def output_path_file():
         if _initial_file is not None:
             result = convert(_initial_file)
-            # Result is the final JSON - create Geometry object from it
-            geo = Geometry.from_dict(result)
+            # Result is the final JSON - create Outline object from it
+            geo = Outline.from_dict(result)
             return Map(geo)
         # Return empty map when no file loaded
-        empty_geo = Geometry.from_dict({"_metadata": {"viewBox": "0 0 100 100"}})
+        empty_geo = Outline.from_dict({"_metadata": {"viewBox": "0 0 100 100"}})
         return Map(empty_geo)
 
     @render.ui
@@ -127,7 +127,7 @@ def server_relabeling(input, extracted_data, relabel_rules, registered_ids, over
         if not data or "error" in data:
             return ui.p("Invalid data")
 
-        # Get Geometry object from loaded data
+        # Get Outline object from loaded data
         geo = data.get("geometry")
         if not geo:
             return ui.p("Invalid data")
@@ -423,7 +423,7 @@ def server(input, output, session):
 
     @reactive.calc
     def get_extracted_geo():
-        """Get extracted Geometry object."""
+        """Get extracted Outline object."""
         data = extracted_data()
         if not data or "error" in data:
             return None
@@ -437,7 +437,7 @@ def server(input, output, session):
             return None
 
         try:
-            # Apply transformations using Geometry methods
+            # Apply transformations using Outline methods
             geo = params["geometry"]
 
             # Apply relabeling if specified

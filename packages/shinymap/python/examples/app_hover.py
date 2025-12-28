@@ -2,7 +2,7 @@ from shiny import App, ui
 
 from shinymap import aes, input_map
 
-from shared import DEMO_GEOMETRY, TOOLTIPS
+from shared import DEMO_OUTLINE, TOOLTIPS
 
 # Default Hover -----
 
@@ -12,7 +12,7 @@ _ui_default = ui.card(
     ui.div(
         input_map(
             "default_hover",
-            DEMO_GEOMETRY,
+            DEMO_OUTLINE,
             mode="multiple",
             # aes not specified - uses library default
         ),
@@ -27,7 +27,7 @@ _ui_no_hover = ui.card(
     ui.div(
         input_map(
             "no_hover",
-            DEMO_GEOMETRY,
+            DEMO_OUTLINE,
             mode="multiple",
             aes=aes.ByState(hover=None),  # Explicitly disable hover
         ),
@@ -42,7 +42,7 @@ _ui_stroke_width = ui.card(
     ui.div(
         input_map(
             "stroke_width",
-            DEMO_GEOMETRY,
+            DEMO_OUTLINE,
             mode="multiple",
             aes=aes.ByState(hover=aes.Shape(stroke_width=3)),
         ),
@@ -57,7 +57,7 @@ _ui_stroke_and_fill = ui.card(
     ui.p("Changes both stroke width and fill color on hover."),
     input_map(
         "stroke_and_fill",
-        DEMO_GEOMETRY,
+        DEMO_OUTLINE,
         mode="multiple",
         aes=aes.ByState(hover=aes.Shape(stroke_width=2, fill_color="#bfdbfe")),
     ),
@@ -71,7 +71,7 @@ _ui_subtle = ui.card(
     ui.div(
         input_map(
             "subtle",
-            DEMO_GEOMETRY,
+            DEMO_OUTLINE,
             mode="multiple",
             aes=aes.ByState(hover=aes.Shape(stroke_color="#60a5fa", stroke_width=1)),
         ),
@@ -85,7 +85,7 @@ _ui_stroke_color = ui.card(
     ui.p("Changes stroke color to red on hover."),
     input_map(
         "stroke_color",
-        DEMO_GEOMETRY,
+        DEMO_OUTLINE,
         tooltips=TOOLTIPS,
         mode="multiple",
         aes=aes.ByState(hover=aes.Shape(stroke_color="#ef4444", stroke_width=2)),
@@ -99,7 +99,7 @@ _ui_fill_color = ui.card(
     ui.p("Changes fill color to yellow on hover."),
     input_map(
         "fill_color",
-        DEMO_GEOMETRY,
+        DEMO_OUTLINE,
         mode="multiple",
         aes=aes.ByState(hover=aes.Shape(fill_color="#fef08a")),
     ),
@@ -112,7 +112,7 @@ _ui_combined = ui.card(
     ui.p("Combines multiple effects: thicker stroke, and color change."),
     input_map(
         "combined",
-        DEMO_GEOMETRY,
+        DEMO_OUTLINE,
         mode="multiple",
         aes=aes.ByState(
             hover=aes.Shape(

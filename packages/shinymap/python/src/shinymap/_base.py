@@ -1,7 +1,7 @@
 """Base/skeletal map functions that take aesthetic objects.
 
 These functions are internal and should not be used directly.
-Use wash().input_map() or the public input_map() instead.
+Use Wash().input_map() or the public input_map() instead.
 """
 
 from __future__ import annotations
@@ -15,18 +15,18 @@ from htmltools import HTMLDependency, TagList, css
 from shiny import render, ui
 
 from . import __version__
-from ._aesthetics import (
+from .aes._core import (
     BaseAesthetic,
     ByGroup,
     ByState,
     PathAesthetic,
 )
-from ._sentinel import MISSING, MissingType
 from .mode import Count, Cycle, ModeType, Multiple, Single
+from .types import MISSING, MissingType
 
 if TYPE_CHECKING:
     from ._wash import WashConfig
-    from .geometry import Geometry
+    from .geometry import Outline
 
 GeometryMap = Mapping[str, str | list[str] | dict[str, Any] | list[dict[str, Any]]]
 TooltipMap = Mapping[str, str] | None
@@ -64,14 +64,14 @@ def _to_camel(snake_str: str) -> str:
     return components[0] + "".join(x.title() for x in components[1:])
 
 
-def _normalize_geometry(geometry: GeometryMap) -> Mapping[str, list[dict[str, Any]]]:
-    """Normalize geometry to Element list format for JavaScript."""
+def _normalize_outline(outline: GeometryMap) -> Mapping[str, list[dict[str, Any]]]:
+    """Normalize outline to Element list format for JavaScript."""
 
     def _to_camel_dict(d: dict[str, Any]) -> dict[str, Any]:
         return {_to_camel(k): v for k, v in d.items()}
 
     result: dict[str, list[dict[str, Any]]] = {}
-    for region_id, value in geometry.items():
+    for region_id, value in outline.items():
         if isinstance(value, str):
             result[region_id] = [{"type": "path", "d": value}]
         elif isinstance(value, list):
@@ -240,7 +240,7 @@ def _convert_aes_to_dict(
 
 def base_input_map(
     id: str,
-    geometry: Geometry,
+    geometry: Outline,
     mode: Literal["single", "multiple"] | ModeType,
     *,
     tooltips: TooltipMap = None,
@@ -256,12 +256,12 @@ def base_input_map(
 ) -> TagList:
     """Create an interactive map input component.
 
-    This is the internal base function. Use wash().input_map() or the
+    This is the internal base function. Use Wash().input_map() or the
     public input_map() for the full API with aesthetic container support.
 
     Args:
         id: The input ID.
-        geometry: Geometry object containing regions and metadata.
+        geometry: Outline object containing regions and metadata.
         mode: Selection mode (required).
               - "single": Single selection (radio button behavior)
               - "multiple": Multiple selection (checkbox behavior)
@@ -342,7 +342,7 @@ def base_input_map(
 
     # Build props with new nested structure
     props_dict: dict[str, Any] = {
-        "geometry": _normalize_geometry(all_regions),  # type: ignore[arg-type]
+        "geometry": _normalize_outline(all_regions),  # type: ignore[arg-type]
         "tooltips": tooltips,
         "view_box": vb_str,
         "geometry_metadata": geometry_metadata,
@@ -370,7 +370,7 @@ def base_input_map(
 
 def base_output_map(
     id: str,
-    geometry: Geometry | None = None,
+    geometry: Outline | None = None,
     *,
     tooltips: TooltipMap = None,
     view_box: tuple[float, float, float, float] | None = None,
@@ -384,12 +384,12 @@ def base_output_map(
 ) -> TagList:
     """Skeletal output_map UI placeholder.
 
-    This is the internal base function. Use wash().output_map() or the
+    This is the internal base function. Use Wash().output_map() or the
     public output_map() for the full API with aesthetic container support.
 
     Args:
         id: Output ID for Shiny
-        geometry: Geometry object with regions
+        geometry: Outline object with regions
         tooltips: Region tooltips as {region_id: tooltip_text}
         view_box: Override viewBox tuple (x, y, width, height)
         aes: Aesthetic configuration (ByGroup, ByState, or BaseAesthetic).
@@ -404,7 +404,7 @@ def base_output_map(
         style: Additional inline styles
     """
     # Module-level registry for static parameters
-    from ._ui import _static_map_params
+    from .ui._ui import _static_map_params
 
     processed_geometry = None
     processed_view_box = None
@@ -486,7 +486,8 @@ def base_output_map(
 def base_render_map(fn=None):
     """Base Shiny render decorator for map outputs."""
     # Import here to avoid circular dependency
-    from ._ui import MapBuilder, _apply_static_params, _render_map_ui
+    from ._map import MapBuilder
+    from .ui._ui import _apply_static_params, _render_map_ui
 
     def decorator(func):
         @render.ui

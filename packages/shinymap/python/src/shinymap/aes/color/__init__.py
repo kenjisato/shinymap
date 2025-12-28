@@ -18,8 +18,8 @@ Scale Functions:
     - lerp_hex: Interpolate between two hex colors
 
 Usage:
-    >>> from shinymap.color import SEQUENTIAL_BLUE, scale_sequential
-    >>> from shinymap.color import HUE_CYCLE_4, BINARY_TOGGLE
+    >>> from shinymap.aes.color import SEQUENTIAL_BLUE, scale_sequential
+    >>> from shinymap.aes.color import HUE_CYCLE_4, BINARY_TOGGLE
 """
 
 from __future__ import annotations

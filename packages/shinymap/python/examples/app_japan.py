@@ -14,24 +14,24 @@ from shinymap import (
     Map,
     aes,
     update_map,
-    wash,
+    Wash,
 )
 from shinymap.mode import Count
-from shinymap.geometry import Geometry
-from shinymap.color import SEQUENTIAL_ORANGE
+from shinymap.geometry import Outline
+from shinymap.aes.color import SEQUENTIAL_ORANGE
 
 from japan_prefectures import PREF_NAMES_JA, PREF_NAMES_ROMAJI
 from shared import code_sample
 
-# Load geometry using the Geometry class
-GEOMETRY_PATH = Path(__file__).parent / "data" / "japan_prefectures.json"
-GEOMETRY = Geometry.from_json(GEOMETRY_PATH).path_as_line("_divider_lines")
+# Load outline using the Outline class
+OUTLINE_PATH = Path(__file__).parent / "data" / "japan_prefectures.json"
+OUTLINE = Outline.from_json(OUTLINE_PATH).path_as_line("_divider_lines")
 
 TOOLTIPS = {code: f"{name} ({PREF_NAMES_ROMAJI[code]})" for code, name in PREF_NAMES_JA.items()}
 
-# Create wash with theme aesthetics
+# Create Wash with theme aesthetics
 # Note: stroke_width is in viewBox units (viewBox is ~1400x1450)
-wc = wash(
+wc = Wash(
     shape=aes.ByState(
         base=aes.Shape(
             fill_color="#ddd",
@@ -66,7 +66,7 @@ _ui_single = ui.card(
                 # UI
                 input_map(
                     "selected_pref",
-                    GEOMETRY,
+                    OUTLINE,
                     tooltips=TOOLTIPS,
                     mode="single",
                 )
@@ -75,7 +75,7 @@ _ui_single = ui.card(
                 def server(input):
                     ...
                     # input.selected_pref()
-                    # => Returns GEOMETRY's key: 01, 02, ...
+                    # => Returns OUTLINE's key: 01, 02, ...
                 """
             )
         ),
@@ -83,7 +83,7 @@ _ui_single = ui.card(
             ui.h4("Input Map"),
             wc.input_map(
                 "selected_pref",
-                GEOMETRY,
+                OUTLINE,
                 tooltips=TOOLTIPS,
                 mode="single",
             ),
@@ -129,7 +129,7 @@ _ui_multi = ui.card(
                 # UI
                 input_map(
                     "multi_pref",
-                    GEOMETRY,
+                    OUTLINE,
                     tooltips=TOOLTIPS,
                     mode="multiple",
                 ),
@@ -138,7 +138,7 @@ _ui_multi = ui.card(
                 def server(input):
                     ...
                     # input.multi_pref()
-                    # => Returns a tuple of GEOMETRY's keys
+                    # => Returns a tuple of OUTLINE's keys
                 """
             )
         ),
@@ -146,7 +146,7 @@ _ui_multi = ui.card(
             ui.h4("Input Map"),
             wc.input_map(
                 "multi_pref",
-                GEOMETRY,
+                OUTLINE,
                 tooltips=TOOLTIPS,
                 mode="multiple"
             ),
@@ -192,7 +192,7 @@ _ui_count = ui.card(
                 # UI
                 input_map(
                     "visit_counts",
-                    GEOMETRY,
+                    OUTLINE,
                     tooltips=TOOLTIPS,
                     mode="count",
                 ),
@@ -208,7 +208,7 @@ _ui_count = ui.card(
             ui.h4("Input Map"),
             wc.input_map(
                 "visit_counts",
-                GEOMETRY,
+                OUTLINE,
                 tooltips=TOOLTIPS,
                 mode=Count(aes=aes.Indexed(fill_color=["lightgray", *SEQUENTIAL_ORANGE])),
             ),
@@ -255,7 +255,7 @@ _ui_regions = ui.card(
                 # UI
                 output_map(
                     "categorical_map",
-                    GEOMETRY,
+                    OUTLINE,
                     tooltips=TOOLTIPS,
                 ),
 
@@ -280,7 +280,7 @@ _ui_regions = ui.card(
             ui.h4("Output Map"),
             wc.output_map(
                 "categorical_map",
-                GEOMETRY,
+                OUTLINE,
                 tooltips=TOOLTIPS,
             ),
         ),
@@ -308,7 +308,7 @@ def _server_regions(input, output, session):
     def _reset_values():
         _colors = list(COLORS.keys())
         pref_categories.set(
-            {k: v for k, v in zip(GEOMETRY.regions.keys(), random.choices(_colors, k=47))}
+            {k: v for k, v in zip(OUTLINE.regions.keys(), random.choices(_colors, k=47))}
         )
 
     @render.text

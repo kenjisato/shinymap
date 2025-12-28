@@ -1,13 +1,13 @@
 """Showcase of output_map with dynamic data from server."""
 
-from shared import DEMO_GEOMETRY, TOOLTIPS
+from shared import DEMO_OUTLINE, TOOLTIPS
 from shiny import App, ui
 
 from shinymap import Map, output_map, render_map
-from shinymap.color import scale_sequential, SEQUENTIAL_BLUE
+from shinymap.aes.color import scale_sequential, SEQUENTIAL_BLUE
 
 
-rids = list(DEMO_GEOMETRY.regions.keys())
+rids = list(DEMO_OUTLINE.regions.keys())
 
 # Single Select -------------------
 
@@ -18,7 +18,7 @@ _ui_single = ui.card(
         "Select a Region",
         rids
     ),
-    output_map("single_select_output", DEMO_GEOMETRY, tooltips=TOOLTIPS),
+    output_map("single_select_output", DEMO_OUTLINE, tooltips=TOOLTIPS),
 )
 
 _ui_multiple = ui.card(
@@ -29,7 +29,7 @@ _ui_multiple = ui.card(
         rids,
         multiple=True,
     ),
-    output_map("multiple_select_output", DEMO_GEOMETRY, tooltips=TOOLTIPS),
+    output_map("multiple_select_output", DEMO_OUTLINE, tooltips=TOOLTIPS),
 )
 
 def ui_input_numeric(rid):
@@ -41,7 +41,7 @@ _ui_count = ui.card(
         *[ui_input_numeric(rid) for rid in rids],
         width=1/3,
     ),
-    output_map("alpha_output", DEMO_GEOMETRY, tooltips=TOOLTIPS),
+    output_map("alpha_output", DEMO_OUTLINE, tooltips=TOOLTIPS),
 )
 
 

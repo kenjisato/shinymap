@@ -562,7 +562,7 @@ wheels = [
 
 [[package]]
 name = "shinymap"
-version = "0.2.1"
+version = "0.3.0.dev0"
 source = { editable = "packages/shinymap/python" }
 dependencies = [
     { name = "shiny" },

@@ -1,10 +1,10 @@
 from shiny import App, ui, render, reactive, Session
 
 from shinymap import Map, input_map, output_map, render_map
-from shinymap.color import QUALITATIVE, scale_qualitative
+from shinymap.aes.color import QUALITATIVE, scale_qualitative
 from shiny_querynav import querynav
 
-from shared import DEMO_GEOMETRY, TOOLTIPS, SHAPE_COLORS
+from shared import DEMO_OUTLINE, TOOLTIPS, SHAPE_COLORS
 from app_basic import ui_basic, server_basic
 from app_hover import ui_hover, server_hover
 from app_input_modes import ui_input_modes, server_input_modes

@@ -143,7 +143,7 @@ def categorical_map():
 ```python
 from shinymap import aes
 from shinymap.mode import Count
-from shinymap.color import SEQUENTIAL_ORANGE
+from shinymap.aes.color import SEQUENTIAL_ORANGE
 
 wc.input_map(
     "counts",
@@ -155,8 +155,8 @@ wc.input_map(
 ### Color Scale Functions
 
 ```python
-from shinymap.color import scale_sequential, scale_diverging, scale_qualitative
-from shinymap.color import SEQUENTIAL_BLUE, QUALITATIVE
+from shinymap.aes.color import scale_sequential, scale_diverging, scale_qualitative
+from shinymap.aes.color import SEQUENTIAL_BLUE, QUALITATIVE
 
 # Sequential (count data)
 fills = scale_sequential(counts, region_ids, palette=SEQUENTIAL_BLUE, max_count=10)

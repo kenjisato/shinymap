@@ -2,14 +2,15 @@
 
 import pytest
 
-from shinymap import Map, MapBuilder
-from shinymap.geometry import Geometry
+from shinymap import Map
+from shinymap.geometry import Outline
+from shinymap.types import MapBuilder
 
 
 @pytest.mark.unit
 def test_map_builder_basic():
     """Test basic Map builder functionality."""
-    geo = Geometry.from_dict(
+    geo = Outline.from_dict(
         {"a": ["M0 0 L10 0 L10 10 L0 10 Z"], "b": ["M20 0 L30 0 L30 10 L20 10 Z"]}
     )
 
@@ -26,7 +27,7 @@ def test_map_builder_basic():
 @pytest.mark.unit
 def test_map_builder_with_tooltips():
     """Test Map builder with tooltips."""
-    geo = Geometry.from_dict({"a": ["M0 0 L10 0 L10 10 L0 10 Z"]})
+    geo = Outline.from_dict({"a": ["M0 0 L10 0 L10 10 L0 10 Z"]})
     tooltips = {"a": "Region A"}
 
     builder = Map(geo, tooltips=tooltips)
@@ -37,7 +38,7 @@ def test_map_builder_with_tooltips():
 @pytest.mark.unit
 def test_map_builder_method_chaining():
     """Test Map builder method chaining."""
-    geo = Geometry.from_dict({"a": ["M0 0 L10 0 L10 10 L0 10 Z"]})
+    geo = Outline.from_dict({"a": ["M0 0 L10 0 L10 10 L0 10 Z"]})
     value = {"a": 5}
     active_ids = ["a"]
 
@@ -50,7 +51,7 @@ def test_map_builder_method_chaining():
 @pytest.mark.unit
 def test_map_builder_with_view_box():
     """Test Map builder with custom viewBox."""
-    geo = Geometry.from_dict({"a": ["M0 0 L10 0 L10 10 L0 10 Z"]})
+    geo = Outline.from_dict({"a": ["M0 0 L10 0 L10 10 L0 10 Z"]})
     view_box_tuple = (0.0, 0.0, 100.0, 100.0)
 
     builder = Map(geo).with_view_box(view_box_tuple)
@@ -62,7 +63,7 @@ def test_map_builder_with_view_box():
 @pytest.mark.unit
 def test_map_builder_with_aes():
     """Test Map builder with aesthetic configuration."""
-    geo = Geometry.from_dict({"a": ["M0 0 L10 0 L10 10 L0 10 Z"]})
+    geo = Outline.from_dict({"a": ["M0 0 L10 0 L10 10 L0 10 Z"]})
 
     aes_config = {
         "base": {"fillColor": "#e2e8f0"},
@@ -79,7 +80,7 @@ def test_map_builder_with_aes():
 @pytest.mark.unit
 def test_map_builder_with_layers():
     """Test Map builder with layer configuration."""
-    geo = Geometry.from_dict({"a": ["M0 0"], "b": ["M10 10"], "overlay": ["M0 0 L10 10"]})
+    geo = Outline.from_dict({"a": ["M0 0"], "b": ["M10 10"], "overlay": ["M0 0 L10 10"]})
 
     layers_config = {
         "overlays": ["overlay"],
@@ -96,7 +97,7 @@ def test_map_builder_with_layers():
 @pytest.mark.unit
 def test_map_as_json():
     """Test Map builder as_json() output."""
-    geo = Geometry.from_dict({"a": ["M0 0"], "b": ["M10 10"]})
+    geo = Outline.from_dict({"a": ["M0 0"], "b": ["M10 10"]})
 
     builder = Map(geo, value={"a": 1}, active=["a"])
     json_output = builder.as_json()
@@ -112,7 +113,8 @@ def test_map_as_json():
 @pytest.mark.unit
 def test_static_params_merging():
     """Test that _apply_static_params merges static params from output_map()."""
-    from shinymap._ui import MapBuilder, _apply_static_params, _static_map_params
+    from shinymap._map import MapBuilder
+    from shinymap.ui._ui import _apply_static_params, _static_map_params
 
     geometry = {"a": "M0 0", "b": "M10 10"}
     tooltips = {"a": "Region A", "b": "Region B"}
@@ -145,7 +147,8 @@ def test_static_params_merging():
 @pytest.mark.unit
 def test_static_params_builder_precedence():
     """Test that builder params take precedence over static params."""
-    from shinymap._ui import MapBuilder, _apply_static_params, _static_map_params
+    from shinymap._map import MapBuilder
+    from shinymap.ui._ui import _apply_static_params, _static_map_params
 
     static_geometry = {"a": "M0 0", "b": "M10 10"}
     builder_geometry = {"x": "M20 20", "y": "M30 30"}

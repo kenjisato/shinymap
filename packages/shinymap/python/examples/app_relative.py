@@ -4,7 +4,7 @@ from shiny import ui, App
 
 from shinymap import aes, input_map, PARENT
 
-from shared import DEMO_GEOMETRY
+from shared import DEMO_OUTLINE
 
 ui_relative = ui.page_fixed(
     ui.card(
@@ -15,7 +15,7 @@ ui_relative = ui.page_fixed(
         ),
         input_map(
             "base",
-            DEMO_GEOMETRY,
+            DEMO_OUTLINE,
             mode="multiple",
             aes=aes.ByState(
                 base=aes.Shape(stroke_width=1),

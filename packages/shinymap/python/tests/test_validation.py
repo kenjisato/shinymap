@@ -7,15 +7,15 @@ from shinymap._validation import (
     validate_aesthetic_for_elements,
     validate_geometry_aesthetics,
 )
-from shinymap.geometry import Geometry
+from shinymap.geometry import Outline
 
 
 class TestCollectElementTypes:
     """Tests for _collect_element_types()."""
 
     def test_collect_from_geometry_object(self):
-        """Collect element types from Geometry object."""
-        geo = Geometry.from_dict(
+        """Collect element types from Outline object."""
+        geo = Outline.from_dict(
             {
                 "region1": [{"type": "path", "d": "M 0 0 L 10 10"}],
                 "region2": [{"type": "circle", "cx": 5, "cy": 5, "r": 2}],
@@ -175,12 +175,12 @@ class TestValidateAestheticForElements:
             assert "fillColor" in str(w[0].message) or "fillOpacity" in str(w[0].message)
 
 
-class TestValidateGeometryAesthetics:
+class TestValidateOutlineAesthetics:
     """Tests for validate_geometry_aesthetics()."""
 
     def test_validates_default_aesthetic(self):
         """Validates default aesthetic against geometry."""
-        geo = Geometry.from_dict(
+        geo = Outline.from_dict(
             {
                 "lines": [{"type": "line", "x1": 0, "y1": 0, "x2": 10, "y2": 10}],
             }
@@ -195,7 +195,7 @@ class TestValidateGeometryAesthetics:
 
     def test_validates_group_aesthetics(self):
         """Validates per-group aesthetics."""
-        geo = Geometry.from_dict(
+        geo = Outline.from_dict(
             {
                 "_metadata": {"groups": {"grid": ["grid_h", "grid_v"]}},
                 "grid_h": [{"type": "line", "x1": 0, "y1": 50, "x2": 100, "y2": 50}],
@@ -213,7 +213,7 @@ class TestValidateGeometryAesthetics:
 
     def test_no_warning_for_valid_aesthetics(self):
         """No warning when aesthetics are appropriate."""
-        geo = Geometry.from_dict(
+        geo = Outline.from_dict(
             {
                 "_metadata": {"groups": {"grid": ["grid_h"]}},
                 "grid_h": [{"type": "line", "x1": 0, "y1": 50, "x2": 100, "y2": 50}],

@@ -421,7 +421,7 @@ class MapPayload:
 
 **Usage example 1: Layer assignment**:
 ```python
-from shinymap import output_map, aes, linestyle
+from shinymap import output_map, aes
 
 # Group-based layers with IDE-friendly aesthetic builders
 output_map(
@@ -430,7 +430,7 @@ output_map(
     underlays=["grid"],  # Grid group → underlay layer (EXCLUSIVE)
     overlays=["borders", "labels"],  # Border/label groups → overlay layer (EXCLUSIVE)
     aes_group={
-        "grid": aes.Line(stroke_color="#ddd", stroke_width=0.5, stroke_dasharray=linestyle.DASHED),
+        "grid": aes.Line(stroke_color="#ddd", stroke_width=0.5, stroke_dasharray=aes.line.dashed),
         "borders": aes.Line(stroke_color="#000", stroke_width=2),
         "labels": aes.Text(fill_color="#000"),
     }
@@ -491,8 +491,8 @@ highlight_aes = aes.Shape(stroke_color="#000", stroke_width=2)
 **API Design Benefits**:
 - **IDE-friendly**: `aes.` triggers autocomplete showing `Line()`, `Shape()`, `Text()`
 - **Consistent prefix**: All aesthetic builders share `aes.` namespace
-- **Expressive**: `linestyle.DASHED` clearly indicates what the constant represents
-- **Clean imports**: `from shinymap import aes, linestyle`
+- **Expressive**: `aes.line.dashed` clearly indicates what the constant represents
+- **Clean imports**: `from shinymap import aes`
 
 ---
 
@@ -751,7 +751,7 @@ def input_map(
 
 **Usage examples**:
 ```python
-from shinymap import input_map, aes, linestyle
+from shinymap import input_map, aes
 
 # Type-safe with IDE autocomplete
 input_map(
@@ -765,7 +765,7 @@ input_map(
     aes_hover=aes.Shape(
         stroke_color="#374151",
         stroke_width=2,
-        stroke_dasharray=linestyle.DASHED  # IDE suggests: SOLID, DASHED, DOTTED, DASH_DOT
+        stroke_dasharray=aes.line.dashed  # IDE suggests: solid, dashed, dotted, dash_dot
     ),
 )
 
@@ -1024,7 +1024,7 @@ class ShapeAesthetic:
 ### Example 1: Geographic Map with Grid
 
 ```python
-from shinymap import output_map, aes, linestyle
+from shinymap import output_map, aes
 from shinymap.geometry import Geometry
 
 # Load main geometry and grid
@@ -1041,7 +1041,7 @@ output_map(
         "grid": aes.Shape(
             stroke_color="#e0e0e0",
             stroke_width=0.5,
-            stroke_dasharray=linestyle.DOTTED,
+            stroke_dasharray=aes.line.dotted,
             fill_color="none"
         ),
     }
@@ -1051,7 +1051,7 @@ output_map(
 ### Example 2: Interactive Economics Diagram
 
 ```python
-from shinymap import input_map, aes, linestyle
+from shinymap import input_map, aes
 
 # Supply/demand curves as interactive lines
 input_map(

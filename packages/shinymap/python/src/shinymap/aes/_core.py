@@ -23,10 +23,10 @@ from __future__ import annotations
 from dataclasses import dataclass, fields, replace
 from typing import TYPE_CHECKING, Any, Literal
 
-from ._sentinel import MISSING, MissingType
+from ..types import MISSING, MissingType
 
 if TYPE_CHECKING:
-    from .relative import RelativeExpr
+    from ..relative import RelativeExpr
 
 PathKind = Literal["shape", "line", "text"]
 
@@ -51,7 +51,7 @@ class BaseAesthetic:
             {'fill_color': '#fff', 'stroke_color': None}
         """
         # Import here to avoid circular dependency
-        from .relative import RelativeExpr
+        from ..relative import RelativeExpr
 
         result = {}
         for f in fields(self):
@@ -122,8 +122,8 @@ class LineAesthetic(BaseAesthetic):
         non_scaling_stroke: If True, stroke width is in screen pixels (default: False)
 
     Example:
-        >>> from shinymap import aes, linestyle
-        >>> grid_aes = aes.Line(stroke_color="#ddd", stroke_dasharray=linestyle.DASHED)
+        >>> from shinymap import aes
+        >>> grid_aes = aes.Line(stroke_color="#ddd", stroke_dasharray=aes.line.dashed)
     """
 
     stroke_color: str | None | MissingType = MISSING
@@ -183,7 +183,7 @@ class PathAesthetic(BaseAesthetic):
 
     Args:
         kind: Semantic type for default aesthetic resolution ("shape", "line", "text").
-              When set, wash() applies the corresponding type's defaults.
+              When set, Wash() applies the corresponding type's defaults.
               Default is MISSING (no type hint, treated as shape).
         fill_color: Fill color. None means "none" (no fill, stroke-only).
         fill_opacity: Fill opacity (0.0 to 1.0), or RelativeExpr for parent-relative
@@ -269,7 +269,7 @@ class ByState[T: BaseAesthetic]:
 class ByType:
     """Container for aesthetics by element type (shape, line, text).
 
-    Used by wash() to configure element-type defaults. Does not know about groups.
+    Used by Wash() to configure element-type defaults. Does not know about groups.
 
     Args:
         shape: Aesthetics for shape elements (Circle, Rect, Path, Polygon, Ellipse).

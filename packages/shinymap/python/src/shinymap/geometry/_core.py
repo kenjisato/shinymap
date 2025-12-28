@@ -1,13 +1,13 @@
-"""Utilities for loading and converting SVG geometry.
+"""Utilities for loading and converting SVG outlines.
 
-This module provides tools for working with SVG geometry in shinymap:
+This module provides tools for working with SVG outlines in shinymap:
 
 1. **SVG to JSON converter**: Extract path data from SVG files into shinymap JSON format
-2. **JSON loader**: Load geometry from JSON with automatic viewBox calculation
+2. **JSON loader**: Load outline from JSON with automatic viewBox calculation
 
-## Shinymap JSON Geometry Format
+## Shinymap JSON Outline Format
 
-The shinymap geometry format is designed for simplicity and transparency:
+The shinymap outline format is designed for simplicity and transparency:
 
 **Structure:**
 ```json
@@ -26,7 +26,7 @@ The shinymap geometry format is designed for simplicity and transparency:
 ```
 
 **Rules:**
-1. **String values** = SVG path data (geometry)
+1. **String values** = SVG path data (outline)
 2. **Dict/list values** = metadata (ignored by loader)
 3. **Keys starting with underscore** = typically overlays or metadata
 4. **_metadata.viewBox** (optional) = preferred viewBox string
@@ -35,7 +35,7 @@ The shinymap geometry format is designed for simplicity and transparency:
 **Why this format?**
 - **Flat and transparent**: Easy to inspect, edit, version control
 - **SVG-native**: Path strings are valid SVG without transformation
-- **Extensible**: Metadata coexists with geometry without conflicts
+- **Extensible**: Metadata coexists with outline without conflicts
 - **Geometry-agnostic**: Works for maps, diagrams, floor plans, etc.
 
 **Comparison to GeoJSON/TopoJSON:**
@@ -47,14 +47,6 @@ The shinymap geometry format is designed for simplicity and transparency:
 
 from __future__ import annotations
 
-# Re-export BoundsCalculator type alias
-# Re-export viewbox calculation utilities (public API)
-from ._bounds import (
-    BoundsCalculator,
-    calculate_viewbox,
-    compute_viewbox_from_dict,
-)
-
 # Re-export conversion functions
 from ._conversion import (
     convert,
@@ -63,34 +55,15 @@ from ._conversion import (
     infer_relabel,
 )
 
-# Re-export Geometry class
-from ._geometry import Geometry
-
-# Re-export loader function
-from ._loader import load_geometry
-
-# Note: Internal helper functions from _bounds are not re-exported:
-# - _parse_svg_dimension
-# - _has_complex_commands
-# - _find_complex_commands
-# - _compute_bounds_accurate
-# - _parse_svg_path_bounds
-# - _normalize_geometry_dict
-# These remain private to the geometry package.
+# Re-export Outline class
+from ._geometry import Outline
 
 __all__ = [
-    # Type alias
-    "BoundsCalculator",
     # Main class
-    "Geometry",
+    "Outline",
     # Conversion functions
     "from_svg",
     "from_json",
     "convert",
     "infer_relabel",
-    # Loader function
-    "load_geometry",
-    # ViewBox utilities
-    "calculate_viewbox",
-    "compute_viewbox_from_dict",
 ]

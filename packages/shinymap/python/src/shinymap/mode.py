@@ -48,7 +48,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from ._aesthetics import ByGroup, IndexedAesthetic
+    from .aes._core import ByGroup, IndexedAesthetic
 
 
 @dataclass
@@ -270,7 +270,7 @@ class Count:
 
 def _serialize_aes(aes: Any) -> dict[str, Any]:
     """Serialize aes.Indexed or aes.ByGroup to dict for JavaScript."""
-    from ._aesthetics import ByGroup, IndexedAesthetic
+    from .aes._core import ByGroup, IndexedAesthetic
 
     if isinstance(aes, IndexedAesthetic):
         return {"type": "indexed", "value": aes.to_dict()}

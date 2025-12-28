@@ -1,6 +1,6 @@
 """Wash factory for creating configured map functions with custom default aesthetics.
 
-The wash() function is like preparing a watercolor canvas - it sets the foundational
+Wash() is like preparing a watercolor canvas - it sets the foundational
 layer that all maps in your app will build upon.
 """
 
@@ -11,7 +11,7 @@ from collections.abc import Callable, MutableMapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal
 
-from ._aesthetics import (
+from .aes._core import (
     BaseAesthetic,
     ByGroup,
     ByState,
@@ -20,15 +20,15 @@ from ._aesthetics import (
     ShapeAesthetic,
     TextAesthetic,
 )
-from ._sentinel import MISSING, MissingType
 from .mode import ModeType
+from .types import MISSING, MissingType
 
 if TYPE_CHECKING:
     from htmltools import TagList
 
-    from .geometry import Geometry
+    from .geometry import Outline
 
-# Type alias for wash() aesthetic parameters
+# Type alias for Wash() aesthetic parameters
 # Accepts ByState, single aesthetic, dict shorthand, None, or MISSING
 WashAestheticParam = ByState | BaseAesthetic | dict[str, Any] | None | MissingType
 
@@ -130,7 +130,7 @@ def _normalize_to_by_state[T: BaseAesthetic](
 
 @dataclass
 class WashConfig:
-    """Configuration created by wash() for use by map functions.
+    """Configuration created by Wash() for use by map functions.
 
     Stores normalized ByState for each element type.
     """
@@ -141,10 +141,10 @@ class WashConfig:
 
 
 class WashResult:
-    """Functions configured by wash().
+    """Functions configured by Wash().
 
     Provides configured versions of input_map, output_map, and render_map
-    that use the wash's default aesthetics.
+    that use the Wash's default aesthetics.
     """
 
     def __init__(self, config: WashConfig) -> None:
@@ -153,7 +153,7 @@ class WashResult:
     def input_map(
         self,
         id: str,
-        geometry: Geometry,
+        geometry: Outline,
         mode: Literal["single", "multiple"] | ModeType,
         *,
         tooltips: dict[str, str] | None = None,
@@ -166,15 +166,15 @@ class WashResult:
         class_: str | None = None,
         style: MutableMapping[str, str] | None = None,
     ) -> TagList:
-        """Create interactive map with wash aesthetics applied.
+        """Create interactive map with Wash aesthetics applied.
 
         Args:
             id: Input ID for Shiny
-            geometry: Geometry object
+            geometry: Outline object
             mode: Interaction mode ("single", "multiple", or Mode class instance)
             tooltips: Region tooltips as {region_id: tooltip_text}
             aes: Aesthetic overrides (ByGroup, ByState, or BaseAesthetic).
-                Merged with wash defaults.
+                Merged with Wash defaults.
             value: Initial selection state
             view_box: Override viewBox tuple
             layers: Layer configuration {underlays: [...], overlays: [...], hidden: [...]}
@@ -207,7 +207,7 @@ class WashResult:
     def output_map(
         self,
         id: str,
-        geometry: Geometry | None = None,
+        geometry: Outline | None = None,
         *,
         aes: AesParam = MISSING,
         tooltips: dict[str, str] | None = None,
@@ -218,11 +218,11 @@ class WashResult:
         class_: str | None = None,
         style: MutableMapping[str, str] | None = None,
     ) -> TagList:
-        """UI placeholder for a @render_map output with wash aesthetics.
+        """UI placeholder for a @render_map output with Wash aesthetics.
 
         Args:
             id: Output ID (must match @render_map function name)
-            geometry: Geometry object
+            geometry: Outline object
             aes: Group-wise aesthetic overrides
             tooltips: Optional static tooltips
             view_box: Optional viewBox tuple
@@ -252,7 +252,7 @@ class WashResult:
         )
 
     def render_map(self, fn: Callable | None = None) -> Callable:
-        """Shiny render decorator with wash aesthetics.
+        """Shiny render decorator with Wash aesthetics.
 
         Works exactly like the base render_map decorator.
         Wash aesthetics are applied via output_map().
@@ -428,7 +428,7 @@ def _convert_to_aes_dict(config: WashConfig, aes: AesParam) -> dict[str, Any] | 
     return result if result else None
 
 
-def wash(
+def Wash(
     *,
     shape: ByState[ShapeAesthetic] | ShapeAesthetic | dict[str, Any] | None | MissingType = MISSING,
     line: ByState[LineAesthetic] | LineAesthetic | dict[str, Any] | None | MissingType = MISSING,
@@ -436,8 +436,8 @@ def wash(
 ) -> WashResult:
     """Create configured map functions with custom default aesthetics.
 
-    The wash() function is like preparing a watercolor canvas - it sets
-    the foundational layer that all maps in your app will build upon.
+    Wash() is like preparing a watercolor canvas - it sets the foundational
+    layer that all maps in your app will build upon.
 
     Parameters
     ----------
@@ -462,16 +462,17 @@ def wash(
 
     Notes
     -----
-    wash() only understands element types (shape, line, text). Group-specific
+    Wash() only understands element types (shape, line, text). Group-specific
     aesthetics (like "coastal", "mountain") should be specified in input_map/output_map
     using the aes parameter with ByGroup.
 
     Examples
     --------
-    >>> from shinymap import wash, aes, PARENT
+    >>> from shinymap import Wash, aes
+    >>> from shinymap.relative import PARENT
     >>>
     >>> # Full form with ByState for each element type
-    >>> wc = wash(
+    >>> wc = Wash(
     ...     shape=aes.ByState(
     ...         base=aes.Shape(fill_color="#f0f9ff", stroke_color="#0369a1"),
     ...         select=aes.Shape(fill_color="#7dd3fc"),
@@ -485,7 +486,7 @@ def wash(
     ... )
     >>>
     >>> # Dict shorthand for simple base-only configuration
-    >>> wc = wash(
+    >>> wc = Wash(
     ...     shape={"fill_color": "#f0f9ff", "stroke_color": "#0369a1"},
     ...     line={"stroke_color": "#0369a1"},
     ... )
@@ -506,4 +507,4 @@ def wash(
     return WashResult(config)
 
 
-__all__ = ["wash", "WashResult", "WashConfig"]
+__all__ = ["Wash", "WashResult", "WashConfig"]

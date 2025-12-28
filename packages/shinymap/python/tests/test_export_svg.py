@@ -1,6 +1,6 @@
 """Integration tests for export_svg() function."""
 
-from shinymap.geometry import Circle, Geometry, Path, Rect, Text, export_svg
+from shinymap.geometry import Circle, Outline, Path, Rect, Text, export_svg
 
 
 class TestExportSvgBasic:
@@ -8,7 +8,7 @@ class TestExportSvgBasic:
 
     def test_export_basic(self, tmp_path):
         """Export geometry with basic elements."""
-        geom = Geometry(
+        geom = Outline(
             regions={
                 "circle_region": [Circle(cx=50, cy=50, r=30, fill="#ff0000")],
                 "rect_region": [Rect(x=100, y=100, width=50, height=30, fill="#00ff00")],
@@ -36,7 +36,7 @@ class TestExportSvgBasic:
 
     def test_export_with_path_elements(self, tmp_path):
         """Export geometry with path elements."""
-        geom = Geometry(
+        geom = Outline(
             regions={
                 "path1": [Path(d="M 0 0 L 100 0 L 100 100 Z", fill="#0000ff")],
             },
@@ -52,7 +52,7 @@ class TestExportSvgBasic:
 
     def test_export_with_text_elements(self, tmp_path):
         """Export geometry with text elements."""
-        geom = Geometry(
+        geom = Outline(
             regions={
                 "label": [Text(x=100, y=100, text="Test Label", font_size=14)],
             },
@@ -72,7 +72,7 @@ class TestExportSvgViewBox:
 
     def test_export_uses_metadata_viewbox(self, tmp_path):
         """export_svg uses viewBox from geometry.metadata."""
-        geom = Geometry(
+        geom = Outline(
             regions={"region": [Circle(cx=50, cy=50, r=30)]},
             metadata={"viewBox": "10 20 300 400"},
         )
@@ -85,7 +85,7 @@ class TestExportSvgViewBox:
 
     def test_export_custom_viewbox(self, tmp_path):
         """export_svg accepts custom viewBox parameter."""
-        geom = Geometry(
+        geom = Outline(
             regions={"region": [Circle(cx=50, cy=50, r=30)]},
             metadata={"viewBox": "0 0 100 100"},
         )
@@ -98,7 +98,7 @@ class TestExportSvgViewBox:
 
     def test_export_auto_calculate_viewbox(self, tmp_path):
         """export_svg auto-calculates viewBox if not in metadata."""
-        geom = Geometry(
+        geom = Outline(
             regions={"region": [Circle(cx=50, cy=50, r=30)]},
             metadata={},  # No viewBox
         )
@@ -117,7 +117,7 @@ class TestExportSvgWidthHeight:
 
     def test_export_width_height_from_viewbox(self, tmp_path):
         """export_svg extracts width/height from viewBox."""
-        geom = Geometry(
+        geom = Outline(
             regions={"region": [Circle(cx=50, cy=50, r=30)]},
             metadata={"viewBox": "0 0 800 600"},
         )
@@ -131,7 +131,7 @@ class TestExportSvgWidthHeight:
 
     def test_export_custom_width_height(self, tmp_path):
         """export_svg accepts custom width/height parameters."""
-        geom = Geometry(
+        geom = Outline(
             regions={"region": [Circle(cx=50, cy=50, r=30)]},
             metadata={"viewBox": "0 0 100 100"},
         )
@@ -149,7 +149,7 @@ class TestExportSvgIds:
 
     def test_export_with_ids(self, tmp_path):
         """export_svg adds id attributes by default."""
-        geom = Geometry(
+        geom = Outline(
             regions={
                 "region_01": [Circle(cx=50, cy=50, r=30)],
                 "region_02": [Rect(x=100, y=100, width=50, height=30)],
@@ -166,7 +166,7 @@ class TestExportSvgIds:
 
     def test_export_without_ids(self, tmp_path):
         """export_svg can omit id attributes."""
-        geom = Geometry(
+        geom = Outline(
             regions={
                 "region_01": [Circle(cx=50, cy=50, r=30)],
                 "region_02": [Rect(x=100, y=100, width=50, height=30)],
@@ -187,7 +187,7 @@ class TestExportSvgAesthetics:
 
     def test_export_preserves_fill(self, tmp_path):
         """export_svg preserves fill attributes."""
-        geom = Geometry(
+        geom = Outline(
             regions={"region": [Circle(cx=50, cy=50, r=30, fill="#ff0000")]},
             metadata={"viewBox": "0 0 100 100"},
         )
@@ -200,7 +200,7 @@ class TestExportSvgAesthetics:
 
     def test_export_preserves_stroke(self, tmp_path):
         """export_svg preserves stroke attributes."""
-        geom = Geometry(
+        geom = Outline(
             regions={
                 "region": [
                     Circle(
@@ -224,7 +224,7 @@ class TestExportSvgAesthetics:
 
 
 class TestExportSvgRoundTrip:
-    """Test SVG round-tripping: SVG → Geometry → SVG."""
+    """Test SVG round-tripping: SVG → Outline → SVG."""
 
     def test_roundtrip_preserves_structure(self, tmp_path):
         """Round-trip preserves basic structure."""
@@ -237,8 +237,8 @@ class TestExportSvgRoundTrip:
         </svg>"""
         )
 
-        # Convert to Geometry
-        geom = Geometry.from_svg(original_svg)
+        # Convert to Outline
+        geom = Outline.from_svg(original_svg)
 
         # Export back to SVG
         exported_svg = tmp_path / "exported.svg"
@@ -263,7 +263,7 @@ class TestExportSvgRoundTrip:
         )
 
         # Round-trip
-        geom = Geometry.from_svg(original_svg)
+        geom = Outline.from_svg(original_svg)
         exported_svg = tmp_path / "exported.svg"
         export_svg(geom, exported_svg)
 
@@ -280,7 +280,7 @@ class TestExportSvgMergedRegions:
 
     def test_export_merged_region(self, tmp_path):
         """Export region with multiple elements."""
-        geom = Geometry(
+        geom = Outline(
             regions={
                 "merged": [
                     Circle(cx=50, cy=50, r=30),
