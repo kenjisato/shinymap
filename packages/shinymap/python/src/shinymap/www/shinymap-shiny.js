@@ -47,12 +47,16 @@
       }
       const props = parseJson(el, "shinymapProps") || parseJson(el, "shinymap_props") || {};
       const inputId = el.dataset.shinymapInputId || el.dataset.shinymap_input_id || el.id;
-      const mode = el.dataset.shinymapInputMode || el.dataset.shinymap_input_mode || props.mode;
+
+      // Extract mode type from nested mode config (Python normalizes to { type, cycle, ... })
+      const modeConfig = props.mode || {};
+      const modeType = modeConfig.type || el.dataset.shinymapInputMode || el.dataset.shinymap_input_mode;
 
       // Transform count map to appropriate format based on mode
       const transformValue = (countMap) => {
-        if (mode === "count") {
-          // Count mode: return the count map as-is
+        if (modeType === "count" || modeType === "cycle") {
+          // Count and Cycle modes: return the count map as-is
+          // Cycle mode needs full counts so Python can determine current state
           return countMap;
         }
         // For single/multiple modes: extract selected IDs (count > 0)
@@ -60,7 +64,7 @@
           .filter(([_, count]) => count > 0)
           .map(([id, _]) => id);
 
-        if (mode === "single") {
+        if (modeType === "single") {
           // Single mode: return single ID or null
           return selected.length > 0 ? selected[0] : null;
         }
@@ -86,22 +90,13 @@
       delete props.fillOpacity;
 
       // Add default resolveAesthetic if not provided
+      // This only applies per-region aesthetics from update_map; all other styling
+      // (selection, hover, count mode colors) is handled by Python via aes config
       if (!props.resolveAesthetic) {
-        // Use cycle as fixed max if available, otherwise default to 10
-        const countCeiling = props.cycle && Number.isFinite(props.cycle) ? props.cycle - 1 : 10;
-
-        // Hue cycle colors (matches Python HUE_CYCLE_COLORS)
-        const hueCycleColors = [
-          "#e2e8f0", // 0: neutral gray (NEUTRALS["fill"])
-          "#ef4444", // 1: red
-          "#eab308", // 2: yellow
-          "#22c55e", // 3: green
-        ];
-
-        props.resolveAesthetic = ({ id, mode, isSelected, count, baseAesthetic }) => {
+        props.resolveAesthetic = ({ id, baseAesthetic }) => {
           const next = { ...baseAesthetic };
 
-          // Apply per-region aesthetics first (from update_map)
+          // Apply per-region aesthetics (from update_map)
           if (strokeWidths && typeof strokeWidths === "object" && strokeWidths[id] !== undefined) {
             next.strokeWidth = strokeWidths[id];
           }
@@ -112,48 +107,11 @@
             next.fillOpacity = fillOpacities[id];
           }
 
-          // For single/multiple modes: highlight selected regions
-          // BUT: skip if selectedAesthetic is explicitly provided (it takes precedence)
-          if ((mode === "single" || mode === "multiple") && isSelected && !props.selectedAesthetic) {
-            next.fillOpacity = 0.8;
-            next.strokeWidth = 2;
-            next.strokeColor = "#1e40af"; // blue-800
-          }
-
-          // For count mode with cycle=4: use hue cycling
-          if (mode === "count" && props.cycle === 4 && !props.fillColor) {
-            const colorIndex = count % hueCycleColors.length;
-            next.fillColor = hueCycleColors[colorIndex];
-            next.fillOpacity = 1;
-          }
-          // For count mode (general): use saturated color with fixed opacity calculation
-          else if (mode === "count" && count > 0 && !props.fillColor) {
-            const alpha = countCeiling > 0 ? Math.min(1, count / countCeiling) : 0;
-            next.fillColor = "#f97316"; // orange-500
-            next.fillOpacity = 0.3 + alpha * 0.65;
-          }
-
-          // NOTE: Hover highlighting is now handled by hoverHighlight prop
-          // and rendered as a separate overlay layer in the React component
-
           return next;
         };
       }
 
-      // Merge hoverHighlight with defaults (allow partial overrides)
-      if (!props.hoverHighlight) {
-        props.hoverHighlight = {
-          strokeWidth: 2,
-          strokeColor: "#1e40af", // blue-800
-        };
-      } else {
-        // Merge user-provided partial hoverHighlight with defaults
-        props.hoverHighlight = {
-          strokeWidth: 2,
-          strokeColor: "#1e40af",
-          ...props.hoverHighlight, // User values override defaults
-        };
-      }
+      // No hoverHighlight fallback - aesHover from Python is used directly
 
       renderInputMap(el, props, onChange);
 
@@ -317,7 +275,10 @@
             // Re-render using existing root (preserves React state)
             if (el.__shinymapRoot && window.shinymap && window.shinymap.renderInputMap) {
               const inputId = el.dataset.shinymapInputId || el.dataset.shinymap_input_id || el.id;
-              const mode = el.dataset.shinymapInputMode || el.dataset.shinymap_input_mode || newProps.mode;
+
+              // Extract mode type from nested mode config
+              const modeConfig = newProps.mode || {};
+              const modeType = modeConfig.type || el.dataset.shinymapInputMode || el.dataset.shinymap_input_mode;
 
               // Extract per-region aesthetics
               const strokeWidths = newProps.strokeWidth;
@@ -330,14 +291,13 @@
               delete newProps.fillOpacity;
 
               // Add default resolveAesthetic if not provided (same logic as mountInput)
+              // This only applies per-region aesthetics from update_map; all other styling
+              // is handled by Python via aes config
               if (!newProps.resolveAesthetic) {
-                const countCeiling = newProps.cycle && Number.isFinite(newProps.cycle) ? newProps.cycle - 1 : 10;
-                const hueCycleColors = ["#e2e8f0", "#ef4444", "#eab308", "#22c55e"];
-
-                newProps.resolveAesthetic = ({ id, mode, isSelected, count, baseAesthetic }) => {
+                newProps.resolveAesthetic = ({ id, baseAesthetic }) => {
                   const next = { ...baseAesthetic };
 
-                  // Apply per-region aesthetics first
+                  // Apply per-region aesthetics
                   if (strokeWidths && typeof strokeWidths === "object" && strokeWidths[id] !== undefined) {
                     next.strokeWidth = strokeWidths[id];
                   }
@@ -348,50 +308,17 @@
                     next.fillOpacity = fillOpacities[id];
                   }
 
-                  // Selection styling (skip if selectedAesthetic provided)
-                  if ((mode === "single" || mode === "multiple") && isSelected && !newProps.selectedAesthetic) {
-                    next.fillOpacity = 0.8;
-                    next.strokeWidth = 2;
-                    next.strokeColor = "#1e40af";
-                  }
-
-                  // Count mode coloring (skip if fillColor provided)
-                  if (mode === "count" && newProps.cycle === 4 && !newProps.fillColor) {
-                    const colorIndex = count % hueCycleColors.length;
-                    next.fillColor = hueCycleColors[colorIndex];
-                    next.fillOpacity = 1;
-                  } else if (mode === "count" && count > 0 && !newProps.fillColor) {
-                    const alpha = countCeiling > 0 ? Math.min(1, count / countCeiling) : 0;
-                    next.fillColor = "#f97316";
-                    next.fillOpacity = 0.3 + alpha * 0.65;
-                  }
-
                   return next;
-                };
-              }
-
-              // Merge hoverHighlight with defaults (allow partial overrides)
-              if (!newProps.hoverHighlight) {
-                newProps.hoverHighlight = {
-                  strokeWidth: 2,
-                  strokeColor: "#1e40af",
-                };
-              } else {
-                // Merge user-provided partial hoverHighlight with defaults
-                newProps.hoverHighlight = {
-                  strokeWidth: 2,
-                  strokeColor: "#1e40af",
-                  ...newProps.hoverHighlight, // User values override defaults
                 };
               }
 
               // Re-create onChange handler
               const transformValue = (countMap) => {
-                if (mode === "count") return countMap;
+                if (modeType === "count" || modeType === "cycle") return countMap;
                 const selected = Object.entries(countMap)
                   .filter(([_, count]) => count > 0)
                   .map(([id, _]) => id);
-                if (mode === "single") {
+                if (modeType === "single") {
                   return selected.length > 0 ? selected[0] : null;
                 }
                 return selected;

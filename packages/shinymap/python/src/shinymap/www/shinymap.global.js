@@ -21741,6 +21741,108 @@ var shinymap = (() => {
   // src/components/InputMap.tsx
   var import_react = __toESM(require_react(), 1);
 
+  // src/types.ts
+  function getIndexedValue(value, index, wrap) {
+    if (value === void 0) return void 0;
+    if (!Array.isArray(value)) return value;
+    if (value.length === 0) return void 0;
+    const effectiveIndex = wrap ? index % value.length : Math.min(index, value.length - 1);
+    return value[effectiveIndex];
+  }
+  function resolveIndexedAesthetic(data, count, cycle) {
+    const wrap = cycle !== void 0;
+    const index = wrap && cycle > 0 ? count % cycle : count;
+    return {
+      fillColor: getIndexedValue(data.fillColor, index, wrap),
+      fillOpacity: getIndexedValue(data.fillOpacity, index, wrap),
+      strokeColor: getIndexedValue(data.strokeColor, index, wrap),
+      strokeWidth: getIndexedValue(data.strokeWidth, index, wrap),
+      strokeDasharray: getIndexedValue(data.strokeDasharray, index, wrap)
+    };
+  }
+  function getIndexedDataForRegion(config, regionId, geometryMetadata) {
+    if (!config) return void 0;
+    if (config.type === "indexed") {
+      return config.value;
+    }
+    if (config.groups[regionId]) {
+      return config.groups[regionId];
+    }
+    if (geometryMetadata?.groups) {
+      for (const [groupName, regionIds] of Object.entries(geometryMetadata.groups)) {
+        if (regionIds.includes(regionId) && config.groups[groupName]) {
+          return config.groups[groupName];
+        }
+      }
+    }
+    return void 0;
+  }
+  function isRelativeExpr(value) {
+    return typeof value === "object" && value !== null && "__relative__" in value && value.__relative__ === true;
+  }
+  function resolveRelativeExpr(expr, parentValue) {
+    switch (expr.operator) {
+      case "+":
+        return parentValue + expr.operand;
+      case "-":
+        return parentValue - expr.operand;
+      case "*":
+        return parentValue * expr.operand;
+      case "/":
+        return expr.operand !== 0 ? parentValue / expr.operand : parentValue;
+      default:
+        return parentValue;
+    }
+  }
+  var DEFAULT_AESTHETIC_VALUES = {
+    fillColor: "#f1f5f9",
+    // slate-100: subtle, reserved default
+    fillOpacity: 1,
+    strokeColor: "#94a3b8",
+    // slate-400: subtle border
+    strokeWidth: 0.5,
+    strokeDasharray: "",
+    nonScalingStroke: false
+  };
+  var DEFAULT_HOVER_AESTHETIC = {
+    strokeWidth: {
+      __relative__: true,
+      property: "strokeWidth",
+      operator: "+",
+      operand: 1
+    }
+  };
+  function resolveNumericProperty(value, parent, key, fallback) {
+    if (value === void 0) {
+      return parent?.aesthetic[key] ?? fallback;
+    }
+    if (isRelativeExpr(value)) {
+      const parentValue = parent?.aesthetic[key] ?? fallback;
+      return resolveRelativeExpr(value, parentValue);
+    }
+    return value;
+  }
+  function resolveStringProperty(value, parent, key, fallback) {
+    if (value === null) {
+      return "none";
+    }
+    if (value === void 0) {
+      return parent?.aesthetic[key] ?? fallback;
+    }
+    return value;
+  }
+  function createRenderedRegion(id, aes, parent) {
+    const resolved = {
+      fillColor: resolveStringProperty(aes.fillColor, parent, "fillColor", DEFAULT_AESTHETIC_VALUES.fillColor),
+      fillOpacity: resolveNumericProperty(aes.fillOpacity, parent, "fillOpacity", DEFAULT_AESTHETIC_VALUES.fillOpacity),
+      strokeColor: resolveStringProperty(aes.strokeColor, parent, "strokeColor", DEFAULT_AESTHETIC_VALUES.strokeColor),
+      strokeWidth: resolveNumericProperty(aes.strokeWidth, parent, "strokeWidth", DEFAULT_AESTHETIC_VALUES.strokeWidth),
+      strokeDasharray: resolveStringProperty(aes.strokeDasharray, parent, "strokeDasharray", DEFAULT_AESTHETIC_VALUES.strokeDasharray),
+      nonScalingStroke: aes.nonScalingStroke ?? parent?.aesthetic.nonScalingStroke ?? DEFAULT_AESTHETIC_VALUES.nonScalingStroke
+    };
+    return { id, aesthetic: resolved, parent };
+  }
+
   // src/utils/geometry.ts
   function normalizeRegion(value) {
     if (typeof value === "object" && "type" in value) {
@@ -21768,6 +21870,63 @@ var shinymap = (() => {
     return result;
   }
 
+  // src/utils/layers.ts
+  function resolveGroups(groupNames, geometry, metadata) {
+    const result = /* @__PURE__ */ new Set();
+    if (!groupNames) return result;
+    const groups = metadata?.groups ?? {};
+    for (const name of groupNames) {
+      if (groups[name]) {
+        for (const id of groups[name]) {
+          result.add(id);
+        }
+      } else if (geometry[name]) {
+        result.add(name);
+      }
+    }
+    return result;
+  }
+  function assignLayers(geometry, underlays, overlays, hidden, metadata) {
+    const underlayRegions = resolveGroups(underlays, geometry, metadata);
+    const overlayRegions = resolveGroups(overlays, geometry, metadata);
+    const hiddenRegions = resolveGroups(hidden, geometry, metadata);
+    const result = {
+      underlay: /* @__PURE__ */ new Set(),
+      base: /* @__PURE__ */ new Set(),
+      overlay: /* @__PURE__ */ new Set(),
+      hidden: /* @__PURE__ */ new Set()
+    };
+    for (const id of Object.keys(geometry)) {
+      if (hiddenRegions.has(id)) {
+        result.hidden.add(id);
+      } else if (overlayRegions.has(id)) {
+        result.overlay.add(id);
+      } else if (underlayRegions.has(id)) {
+        result.underlay.add(id);
+      } else {
+        result.base.add(id);
+      }
+    }
+    return result;
+  }
+  function resolveGroupAesthetic(id, aesGroup, metadata) {
+    if (!aesGroup) return void 0;
+    const groups = metadata?.groups ?? {};
+    let result;
+    for (const [groupName, aesthetic] of Object.entries(aesGroup)) {
+      const groupMembers = groups[groupName];
+      const isMember = groupMembers ? groupMembers.includes(id) : groupName === id;
+      if (isMember) {
+        if (!result) {
+          result = { ...aesthetic };
+        } else {
+          result = { ...result, ...aesthetic };
+        }
+      }
+    }
+    return result;
+  }
+
   // src/utils/renderElement.tsx
   var import_jsx_runtime = __toESM(require_jsx_runtime(), 1);
   function renderElement(props) {
@@ -21778,6 +21937,8 @@ var shinymap = (() => {
       fillOpacity,
       stroke,
       strokeWidth,
+      strokeDasharray,
+      nonScalingStroke,
       cursor,
       pointerEvents,
       onClick,
@@ -21788,11 +21949,14 @@ var shinymap = (() => {
       tooltip,
       extraProps
     } = props;
+    const vectorEffect = nonScalingStroke !== false ? "non-scaling-stroke" : void 0;
     const commonProps = {
       fill,
       fillOpacity,
       stroke,
       strokeWidth,
+      strokeDasharray,
+      vectorEffect,
       style: cursor ? { cursor } : void 0,
       pointerEvents,
       onClick,
@@ -21870,12 +22034,6 @@ var shinymap = (() => {
   // src/components/InputMap.tsx
   var import_jsx_runtime2 = __toESM(require_jsx_runtime(), 1);
   var DEFAULT_VIEWBOX = "0 0 100 100";
-  var DEFAULT_AESTHETIC = {
-    fillColor: "#e2e8f0",
-    fillOpacity: 1,
-    strokeColor: "#334155",
-    strokeWidth: 1
-  };
   function buildSelected(value) {
     const set = /* @__PURE__ */ new Set();
     if (!value) return set;
@@ -21899,22 +22057,37 @@ var shinymap = (() => {
       className,
       containerStyle,
       viewBox = DEFAULT_VIEWBOX,
-      defaultAesthetic = DEFAULT_AESTHETIC,
-      resolveAesthetic,
-      regionProps,
+      mode: modeConfig,
+      aes,
+      layers,
+      geometryMetadata,
       value,
       onChange,
-      cycle,
-      maxSelection,
+      resolveAesthetic,
+      regionProps,
+      // Deprecated props (for backward compatibility)
       overlayGeometry,
-      overlayAesthetic,
-      hoverHighlight,
-      selectedAesthetic
+      overlayAesthetic
     } = props;
+    const aesBase = aes?.base ?? DEFAULT_AESTHETIC_VALUES;
+    const aesHover = aes?.hover;
+    const aesSelect = aes?.select;
+    const aesGroup = aes?.group;
+    const underlays = layers?.underlays;
+    const overlays = layers?.overlays;
+    const hidden = layers?.hidden;
+    const modeType = modeConfig?.type ?? "multiple";
+    const cycle = modeConfig?.n;
+    const maxSelection = modeConfig?.maxSelection;
+    const aesIndexed = modeConfig?.aesIndexed;
     const normalizedGeometry = (0, import_react.useMemo)(() => normalizeGeometry(geometry), [geometry]);
     const normalizedOverlayGeometry = (0, import_react.useMemo)(
       () => overlayGeometry ? normalizeGeometry(overlayGeometry) : void 0,
       [overlayGeometry]
+    );
+    const layerAssignment = (0, import_react.useMemo)(
+      () => assignLayers(normalizedGeometry, underlays, overlays, hidden, geometryMetadata),
+      [normalizedGeometry, underlays, overlays, hidden, geometryMetadata]
     );
     const normalizedFillColor = (0, import_react.useMemo)(() => normalizeFillColor(fillColor, normalizedGeometry), [fillColor, normalizedGeometry]);
     const [hovered, setHovered] = (0, import_react.useState)(null);
@@ -21926,9 +22099,11 @@ var shinymap = (() => {
         onChange?.(value);
       }
     }, [value, onChange]);
-    const mode = props.mode ?? (cycle ? "count" : "multiple");
-    const effectiveCycle = cycle ?? (mode === "single" ? 2 : mode === "multiple" ? 2 : mode === "count" ? Infinity : 2);
-    const effectiveMax = maxSelection ?? (mode === "single" ? 1 : mode === "multiple" ? Infinity : mode === "count" ? Infinity : Infinity);
+    if (modeType === "cycle" && (cycle === void 0 || cycle < 2)) {
+      throw new Error("Cycle mode requires n >= 2");
+    }
+    const effectiveCycle = cycle ?? (modeType === "single" ? 2 : modeType === "multiple" ? 2 : modeType === "count" ? Infinity : 2);
+    const effectiveMax = maxSelection ?? (modeType === "single" ? 1 : modeType === "multiple" ? Infinity : modeType === "count" ? Infinity : Infinity);
     const handleClick = (id) => {
       const current = counts[id] ?? 0;
       const nextCount = effectiveCycle && Number.isFinite(effectiveCycle) && effectiveCycle > 0 ? (current + 1) % effectiveCycle : current + 1;
@@ -21949,6 +22124,31 @@ var shinymap = (() => {
       setCounts(next);
       onChange?.(next);
     };
+    const renderNonInteractiveLayer = (regionIds, keyPrefix) => {
+      return Array.from(regionIds).flatMap((id) => {
+        const elements = normalizedGeometry[id];
+        if (!elements) return [];
+        let layerAes = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
+        const groupAes = resolveGroupAesthetic(id, aesGroup, geometryMetadata);
+        if (groupAes) {
+          layerAes = { ...layerAes, ...groupAes };
+        }
+        const region = createRenderedRegion(id, layerAes);
+        return elements.map(
+          (element, index) => renderElement({
+            element,
+            key: `${keyPrefix}-${id}-${index}`,
+            fill: region.aesthetic.fillColor,
+            fillOpacity: region.aesthetic.fillOpacity,
+            stroke: region.aesthetic.strokeColor,
+            strokeWidth: region.aesthetic.strokeWidth,
+            strokeDasharray: region.aesthetic.strokeDasharray,
+            nonScalingStroke: region.aesthetic.nonScalingStroke,
+            pointerEvents: "none"
+          })
+        );
+      });
+    };
     return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(
       "svg",
       {
@@ -21957,123 +22157,175 @@ var shinymap = (() => {
         style: { width: "100%", height: "100%", ...containerStyle },
         viewBox,
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("g", { children: [
-            Object.entries(normalizedGeometry).flatMap(([id, elements]) => {
-              const tooltip = tooltips?.[id];
-              const isHovered = hovered === id;
-              const isSelected = selected.has(id);
-              const count = counts[id] ?? 0;
-              let resolved = { ...DEFAULT_AESTHETIC, ...defaultAesthetic };
-              if (normalizedFillColor && normalizedFillColor[id]) {
-                resolved.fillColor = normalizedFillColor[id];
-              }
-              if (resolveAesthetic) {
-                const overrides = resolveAesthetic({
-                  id,
-                  mode,
-                  isHovered: false,
-                  isSelected: false,
-                  count,
-                  baseAesthetic: resolved
-                });
-                if (overrides) {
-                  resolved = { ...resolved, ...overrides };
-                }
-              }
-              const extraProps = regionProps?.({
-                id,
-                mode,
-                isHovered,
-                isSelected,
-                count,
-                baseAesthetic: resolved
-              });
-              const handleMouseEnter = () => setHovered(id);
-              const handleMouseLeave = () => setHovered((current) => current === id ? null : current);
-              return elements.map(
-                (element, index) => renderElement({
-                  element,
-                  key: `${id}-${index}`,
-                  fill: resolved.fillColor,
-                  fillOpacity: resolved.fillOpacity,
-                  stroke: resolved.strokeColor,
-                  strokeWidth: resolved.strokeWidth,
-                  cursor: "pointer",
-                  onMouseEnter: handleMouseEnter,
-                  onMouseLeave: handleMouseLeave,
-                  onFocus: handleMouseEnter,
-                  onBlur: handleMouseLeave,
-                  onClick: () => handleClick(id),
-                  tooltip,
-                  extraProps
-                })
-              );
-            }),
-            normalizedOverlayGeometry && Object.entries(normalizedOverlayGeometry).flatMap(([id, elements]) => {
-              const overlayStyle = {
-                ...DEFAULT_AESTHETIC,
-                ...overlayAesthetic
-              };
-              return elements.map(
-                (element, index) => renderElement({
-                  element,
-                  key: `overlay-${id}-${index}`,
-                  fill: overlayStyle.fillColor,
-                  fillOpacity: overlayStyle.fillOpacity,
-                  stroke: overlayStyle.strokeColor,
-                  strokeWidth: overlayStyle.strokeWidth,
-                  pointerEvents: "none"
-                })
-              );
-            })
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("g", { children: Array.from(selected).flatMap((id) => {
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("g", { children: renderNonInteractiveLayer(layerAssignment.underlay, "underlay") }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("g", { children: Array.from(layerAssignment.base).flatMap((id) => {
             const elements = normalizedGeometry[id];
             if (!elements) return [];
+            const tooltip = tooltips?.[id];
+            const isHovered = hovered === id;
+            const isSelected = selected.has(id);
             const count = counts[id] ?? 0;
-            let resolved = { ...DEFAULT_AESTHETIC, ...defaultAesthetic };
-            if (normalizedFillColor && normalizedFillColor[id]) {
-              resolved.fillColor = normalizedFillColor[id];
+            let baseAes = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
+            const groupAes = resolveGroupAesthetic(id, aesGroup, geometryMetadata);
+            if (groupAes) {
+              baseAes = { ...baseAes, ...groupAes };
             }
-            if (selectedAesthetic) {
-              resolved = { ...resolved, ...selectedAesthetic };
+            const indexedData = getIndexedDataForRegion(aesIndexed, id, geometryMetadata);
+            if (indexedData) {
+              const indexedAes = resolveIndexedAesthetic(indexedData, count, cycle);
+              baseAes = {
+                ...baseAes,
+                ...indexedAes.fillColor !== void 0 ? { fillColor: indexedAes.fillColor } : {},
+                ...indexedAes.fillOpacity !== void 0 ? { fillOpacity: indexedAes.fillOpacity } : {},
+                ...indexedAes.strokeColor !== void 0 ? { strokeColor: indexedAes.strokeColor } : {},
+                ...indexedAes.strokeWidth !== void 0 ? { strokeWidth: indexedAes.strokeWidth } : {},
+                ...indexedAes.strokeDasharray !== void 0 ? { strokeDasharray: indexedAes.strokeDasharray } : {}
+              };
+            }
+            if (normalizedFillColor && normalizedFillColor[id]) {
+              baseAes.fillColor = normalizedFillColor[id];
             }
             if (resolveAesthetic) {
               const overrides = resolveAesthetic({
                 id,
-                mode,
+                mode: modeType,
                 isHovered: false,
-                isSelected: true,
+                isSelected: false,
                 count,
-                baseAesthetic: resolved
+                baseAesthetic: baseAes
               });
               if (overrides) {
-                resolved = { ...resolved, ...overrides };
+                baseAes = { ...baseAes, ...overrides };
               }
             }
+            const region = createRenderedRegion(id, baseAes);
+            const extraProps = regionProps?.({
+              id,
+              mode: modeType,
+              isHovered,
+              isSelected,
+              count,
+              baseAesthetic: baseAes
+            });
+            const handleMouseEnter = () => setHovered(id);
+            const handleMouseLeave = () => setHovered((current) => current === id ? null : current);
             return elements.map(
               (element, index) => renderElement({
                 element,
-                key: `selection-overlay-${id}-${index}`,
-                fill: resolved.fillColor,
-                fillOpacity: resolved.fillOpacity,
-                stroke: resolved.strokeColor,
-                strokeWidth: resolved.strokeWidth,
+                key: `${id}-${index}`,
+                fill: region.aesthetic.fillColor,
+                fillOpacity: region.aesthetic.fillOpacity,
+                stroke: region.aesthetic.strokeColor,
+                strokeWidth: region.aesthetic.strokeWidth,
+                strokeDasharray: region.aesthetic.strokeDasharray,
+                nonScalingStroke: region.aesthetic.nonScalingStroke,
+                cursor: "pointer",
+                onMouseEnter: handleMouseEnter,
+                onMouseLeave: handleMouseLeave,
+                onFocus: handleMouseEnter,
+                onBlur: handleMouseLeave,
+                onClick: () => handleClick(id),
+                tooltip,
+                extraProps
+              })
+            );
+          }) }),
+          normalizedOverlayGeometry && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("g", { children: Object.entries(normalizedOverlayGeometry).flatMap(([id, elements]) => {
+            const overlayAes = {
+              ...DEFAULT_AESTHETIC_VALUES,
+              ...overlayAesthetic
+            };
+            const region = createRenderedRegion(id, overlayAes);
+            return elements.map(
+              (element, index) => renderElement({
+                element,
+                key: `legacy-overlay-${id}-${index}`,
+                fill: region.aesthetic.fillColor,
+                fillOpacity: region.aesthetic.fillOpacity,
+                stroke: region.aesthetic.strokeColor,
+                strokeWidth: region.aesthetic.strokeWidth,
+                strokeDasharray: region.aesthetic.strokeDasharray,
+                nonScalingStroke: region.aesthetic.nonScalingStroke,
                 pointerEvents: "none"
               })
             );
           }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("g", { children: hovered && hoverHighlight && normalizedGeometry[hovered]?.map(
-            (element, index) => renderElement({
-              element,
-              key: `hover-overlay-${hovered}-${index}`,
-              fill: hoverHighlight.fillColor ?? "none",
-              fillOpacity: hoverHighlight.fillOpacity ?? (hoverHighlight.fillColor ? 1 : 0),
-              stroke: hoverHighlight.strokeColor ?? "#1e40af",
-              strokeWidth: hoverHighlight.strokeWidth ?? 2,
-              pointerEvents: "none"
-            })
-          ) })
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("g", { children: renderNonInteractiveLayer(layerAssignment.overlay, "overlay") }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("g", { children: !aesIndexed && Array.from(selected).flatMap((id) => {
+            if (!layerAssignment.base.has(id)) return [];
+            const elements = normalizedGeometry[id];
+            if (!elements) return [];
+            let baseAes = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
+            const groupAes = resolveGroupAesthetic(id, aesGroup, geometryMetadata);
+            if (groupAes) {
+              baseAes = { ...baseAes, ...groupAes };
+            }
+            if (normalizedFillColor && normalizedFillColor[id]) {
+              baseAes.fillColor = normalizedFillColor[id];
+            }
+            const baseRegion = createRenderedRegion(id, baseAes);
+            let selectAes = {};
+            if (aesSelect) {
+              selectAes = { ...aesSelect };
+            }
+            const selectRegion = createRenderedRegion(id, selectAes, baseRegion);
+            return elements.map(
+              (element, index) => renderElement({
+                element,
+                key: `selection-overlay-${id}-${index}`,
+                fill: selectRegion.aesthetic.fillColor,
+                fillOpacity: selectRegion.aesthetic.fillOpacity,
+                stroke: selectRegion.aesthetic.strokeColor,
+                strokeWidth: selectRegion.aesthetic.strokeWidth,
+                strokeDasharray: selectRegion.aesthetic.strokeDasharray,
+                nonScalingStroke: selectRegion.aesthetic.nonScalingStroke,
+                pointerEvents: "none"
+              })
+            );
+          }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("g", { children: hovered && aesHover !== null && layerAssignment.base.has(hovered) && (() => {
+            const effectiveHover = aesHover ?? DEFAULT_HOVER_AESTHETIC;
+            let baseAes = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
+            const groupAes = resolveGroupAesthetic(hovered, aesGroup, geometryMetadata);
+            if (groupAes) {
+              baseAes = { ...baseAes, ...groupAes };
+            }
+            const count = counts[hovered] ?? 0;
+            const indexedData = getIndexedDataForRegion(aesIndexed, hovered, geometryMetadata);
+            if (indexedData) {
+              const indexedAes = resolveIndexedAesthetic(indexedData, count, cycle);
+              baseAes = {
+                ...baseAes,
+                ...indexedAes.fillColor !== void 0 ? { fillColor: indexedAes.fillColor } : {},
+                ...indexedAes.fillOpacity !== void 0 ? { fillOpacity: indexedAes.fillOpacity } : {},
+                ...indexedAes.strokeColor !== void 0 ? { strokeColor: indexedAes.strokeColor } : {},
+                ...indexedAes.strokeWidth !== void 0 ? { strokeWidth: indexedAes.strokeWidth } : {},
+                ...indexedAes.strokeDasharray !== void 0 ? { strokeDasharray: indexedAes.strokeDasharray } : {}
+              };
+            }
+            if (normalizedFillColor && normalizedFillColor[hovered]) {
+              baseAes.fillColor = normalizedFillColor[hovered];
+            }
+            const baseRegion = createRenderedRegion(hovered, baseAes);
+            let parentRegion = baseRegion;
+            if (!aesIndexed && selected.has(hovered) && aesSelect) {
+              parentRegion = createRenderedRegion(hovered, aesSelect, baseRegion);
+            }
+            const hoverRegion = createRenderedRegion(hovered, effectiveHover, parentRegion);
+            return normalizedGeometry[hovered]?.map(
+              (element, index) => renderElement({
+                element,
+                key: `hover-overlay-${hovered}-${index}`,
+                fill: hoverRegion.aesthetic.fillColor ?? "none",
+                fillOpacity: hoverRegion.aesthetic.fillOpacity ?? (hoverRegion.aesthetic.fillColor ? 1 : 0),
+                stroke: hoverRegion.aesthetic.strokeColor,
+                strokeWidth: hoverRegion.aesthetic.strokeWidth,
+                strokeDasharray: hoverRegion.aesthetic.strokeDasharray,
+                nonScalingStroke: hoverRegion.aesthetic.nonScalingStroke,
+                pointerEvents: "none"
+              })
+            );
+          })() })
         ]
       }
     );
@@ -22083,12 +22335,6 @@ var shinymap = (() => {
   var import_react2 = __toESM(require_react(), 1);
   var import_jsx_runtime3 = __toESM(require_jsx_runtime(), 1);
   var DEFAULT_VIEWBOX2 = "0 0 100 100";
-  var DEFAULT_AESTHETIC2 = {
-    fillColor: "#e2e8f0",
-    fillOpacity: 1,
-    strokeColor: "#334155",
-    strokeWidth: 1
-  };
   function normalizeActive(active) {
     if (!active) return /* @__PURE__ */ new Set();
     if (Array.isArray(active)) return new Set(active);
@@ -22108,32 +22354,40 @@ var shinymap = (() => {
       className,
       containerStyle,
       viewBox = DEFAULT_VIEWBOX2,
-      defaultAesthetic = DEFAULT_AESTHETIC2,
+      aes,
+      layers,
+      geometryMetadata,
       fillColor,
-      // RENAMED from fills
       strokeWidth: strokeWidthProp,
-      // NEW
       strokeColor: strokeColorProp,
-      // NEW
       fillOpacity: fillOpacityProp,
-      // NEW
-      counts,
+      value,
       activeIds,
       onRegionClick,
       resolveAesthetic,
       regionProps,
-      fillColorSelected,
-      // RENAMED from selectionAesthetic
-      fillColorNotSelected,
-      // RENAMED from notSelectionAesthetic
+      // Deprecated props (for backward compatibility)
       overlayGeometry,
-      overlayAesthetic,
-      hoverHighlight
+      overlayAesthetic
     } = props;
+    const aesBaseRaw = aes?.base ?? DEFAULT_AESTHETIC_VALUES;
+    const aesBase = aesBaseRaw;
+    const aesHover = aes?.hover;
+    const aesSelect = aes?.select;
+    const aesNotSelect = aes?.notSelect;
+    const aesGroup = aes?.group;
+    const aesBaseFillColorDict = typeof aesBaseRaw.fillColor === "object" && aesBaseRaw.fillColor !== null ? aesBaseRaw.fillColor : void 0;
+    const underlays = layers?.underlays;
+    const overlays = layers?.overlays;
+    const hidden = layers?.hidden;
     const normalizedGeometry = (0, import_react2.useMemo)(() => normalizeGeometry(geometry), [geometry]);
     const normalizedOverlayGeometry = (0, import_react2.useMemo)(
       () => overlayGeometry ? normalizeGeometry(overlayGeometry) : void 0,
       [overlayGeometry]
+    );
+    const layerAssignment = (0, import_react2.useMemo)(
+      () => assignLayers(normalizedGeometry, underlays, overlays, hidden, geometryMetadata),
+      [normalizedGeometry, underlays, overlays, hidden, geometryMetadata]
     );
     const [hovered, setHovered] = (0, import_react2.useState)(null);
     const activeSet = normalizeActive(activeIds);
@@ -22141,47 +22395,89 @@ var shinymap = (() => {
     const normalizedStrokeWidth = normalize(strokeWidthProp, normalizedGeometry);
     const normalizedStrokeColor = normalize(strokeColorProp, normalizedGeometry);
     const normalizedFillOpacity = normalize(fillOpacityProp, normalizedGeometry);
-    const countMap = counts ?? {};
-    return /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+    const countMap = value ?? {};
+    const renderNonInteractiveLayer = (regionIds, keyPrefix) => {
+      return Array.from(regionIds).flatMap((id) => {
+        const elements = normalizedGeometry[id];
+        if (!elements) return [];
+        let layerAes = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
+        if (aesBaseFillColorDict?.[id]) {
+          layerAes = { ...layerAes, fillColor: aesBaseFillColorDict[id] };
+        }
+        const groupAes = resolveGroupAesthetic(id, aesGroup, geometryMetadata);
+        if (groupAes) {
+          layerAes = { ...layerAes, ...groupAes };
+        }
+        const region = createRenderedRegion(id, layerAes);
+        return elements.map(
+          (element, index) => renderElement({
+            element,
+            key: `${keyPrefix}-${id}-${index}`,
+            fill: region.aesthetic.fillColor,
+            fillOpacity: region.aesthetic.fillOpacity,
+            stroke: region.aesthetic.strokeColor,
+            strokeWidth: region.aesthetic.strokeWidth,
+            strokeDasharray: region.aesthetic.strokeDasharray,
+            nonScalingStroke: region.aesthetic.nonScalingStroke,
+            pointerEvents: "none"
+          })
+        );
+      });
+    };
+    return /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(
       "svg",
       {
         role: "img",
         className,
         style: { width: "100%", height: "100%", ...containerStyle },
         viewBox,
-        children: /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("g", { children: [
-          Object.entries(normalizedGeometry).flatMap(([id, elements]) => {
+        children: [
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("g", { children: renderNonInteractiveLayer(layerAssignment.underlay, "underlay") }),
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("g", { children: Array.from(layerAssignment.base).flatMap((id) => {
+            const elements = normalizedGeometry[id];
+            if (!elements) return [];
             const tooltip = tooltips?.[id];
             const isActive = activeSet.has(id);
             const count = countMap[id] ?? 0;
-            let resolved = {
-              ...DEFAULT_AESTHETIC2,
-              ...defaultAesthetic,
+            let baseAes = {
+              ...DEFAULT_AESTHETIC_VALUES,
+              ...aesBase
+            };
+            if (aesBaseFillColorDict?.[id]) {
+              baseAes = { ...baseAes, fillColor: aesBaseFillColorDict[id] };
+            }
+            const groupAes = resolveGroupAesthetic(id, aesGroup, geometryMetadata);
+            if (groupAes) {
+              baseAes = { ...baseAes, ...groupAes };
+            }
+            baseAes = {
+              ...baseAes,
               ...normalizedFillColor?.[id] ? { fillColor: normalizedFillColor[id] } : {},
               ...normalizedStrokeWidth?.[id] !== void 0 ? { strokeWidth: normalizedStrokeWidth[id] } : {},
               ...normalizedStrokeColor?.[id] ? { strokeColor: normalizedStrokeColor[id] } : {},
               ...normalizedFillOpacity?.[id] !== void 0 ? { fillOpacity: normalizedFillOpacity[id] } : {}
             };
-            if (isActive && fillColorSelected) {
-              resolved = { ...resolved, ...fillColorSelected };
-            } else if (!isActive && fillColorNotSelected) {
-              resolved = { ...resolved, ...fillColorNotSelected };
+            if (isActive && aesSelect) {
+              baseAes = { ...baseAes, ...aesSelect };
+            } else if (!isActive && aesNotSelect) {
+              baseAes = { ...baseAes, ...aesNotSelect };
             }
             if (resolveAesthetic) {
               const overrides = resolveAesthetic({
                 id,
                 isActive,
                 count,
-                baseAesthetic: resolved,
+                baseAesthetic: baseAes,
                 tooltip
               });
-              if (overrides) resolved = { ...resolved, ...overrides };
+              if (overrides) baseAes = { ...baseAes, ...overrides };
             }
+            const region = createRenderedRegion(id, baseAes);
             const regionOverrides = regionProps?.({
               id,
               isActive,
               count,
-              baseAesthetic: resolved,
+              baseAesthetic: baseAes,
               tooltip
             });
             const handleMouseEnter = () => setHovered(id);
@@ -22190,10 +22486,12 @@ var shinymap = (() => {
               (element, index) => renderElement({
                 element,
                 key: `${id}-${index}`,
-                fill: resolved.fillColor,
-                fillOpacity: resolved.fillOpacity,
-                stroke: resolved.strokeColor,
-                strokeWidth: resolved.strokeWidth,
+                fill: region.aesthetic.fillColor,
+                fillOpacity: region.aesthetic.fillOpacity,
+                stroke: region.aesthetic.strokeColor,
+                strokeWidth: region.aesthetic.strokeWidth,
+                strokeDasharray: region.aesthetic.strokeDasharray,
+                nonScalingStroke: region.aesthetic.nonScalingStroke,
                 cursor: onRegionClick ? "pointer" : void 0,
                 onClick: onRegionClick ? () => onRegionClick(id) : void 0,
                 onMouseEnter: handleMouseEnter,
@@ -22204,73 +22502,119 @@ var shinymap = (() => {
                 extraProps: regionOverrides
               })
             );
-          }),
-          normalizedOverlayGeometry && Object.entries(normalizedOverlayGeometry).flatMap(([id, elements]) => {
-            const overlayStyle = {
-              ...DEFAULT_AESTHETIC2,
+          }) }),
+          normalizedOverlayGeometry && /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("g", { children: Object.entries(normalizedOverlayGeometry).flatMap(([id, elements]) => {
+            const overlayAes = {
+              ...DEFAULT_AESTHETIC_VALUES,
               ...overlayAesthetic
             };
+            const region = createRenderedRegion(id, overlayAes);
             return elements.map(
               (element, index) => renderElement({
                 element,
-                key: `overlay-${id}-${index}`,
-                fill: overlayStyle.fillColor,
-                fillOpacity: overlayStyle.fillOpacity,
-                stroke: overlayStyle.strokeColor,
-                strokeWidth: overlayStyle.strokeWidth,
+                key: `legacy-overlay-${id}-${index}`,
+                fill: region.aesthetic.fillColor,
+                fillOpacity: region.aesthetic.fillOpacity,
+                stroke: region.aesthetic.strokeColor,
+                strokeWidth: region.aesthetic.strokeWidth,
+                strokeDasharray: region.aesthetic.strokeDasharray,
+                nonScalingStroke: region.aesthetic.nonScalingStroke,
                 pointerEvents: "none"
               })
             );
-          }),
-          Array.from(activeSet).flatMap((id) => {
+          }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("g", { children: renderNonInteractiveLayer(layerAssignment.overlay, "overlay") }),
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("g", { children: Array.from(activeSet).flatMap((id) => {
+            if (!layerAssignment.base.has(id)) return [];
             const elements = normalizedGeometry[id];
             if (!elements) return [];
             const count = countMap[id] ?? 0;
-            let resolved = {
-              ...DEFAULT_AESTHETIC2,
-              ...defaultAesthetic,
+            let baseAes = {
+              ...DEFAULT_AESTHETIC_VALUES,
+              ...aesBase
+            };
+            if (aesBaseFillColorDict?.[id]) {
+              baseAes = { ...baseAes, fillColor: aesBaseFillColorDict[id] };
+            }
+            const groupAes = resolveGroupAesthetic(id, aesGroup, geometryMetadata);
+            if (groupAes) {
+              baseAes = { ...baseAes, ...groupAes };
+            }
+            baseAes = {
+              ...baseAes,
               ...normalizedFillColor?.[id] ? { fillColor: normalizedFillColor[id] } : {},
               ...normalizedStrokeWidth?.[id] !== void 0 ? { strokeWidth: normalizedStrokeWidth[id] } : {},
               ...normalizedStrokeColor?.[id] ? { strokeColor: normalizedStrokeColor[id] } : {},
               ...normalizedFillOpacity?.[id] !== void 0 ? { fillOpacity: normalizedFillOpacity[id] } : {}
             };
-            if (fillColorSelected) {
-              resolved = { ...resolved, ...fillColorSelected };
+            const baseRegion = createRenderedRegion(id, baseAes);
+            let selectAes = {};
+            if (aesSelect) {
+              selectAes = { ...aesSelect };
             }
             if (resolveAesthetic) {
               const overrides = resolveAesthetic({
                 id,
                 isActive: true,
                 count,
-                baseAesthetic: resolved,
+                baseAesthetic: baseAes,
                 tooltip: tooltips?.[id]
               });
-              if (overrides) resolved = { ...resolved, ...overrides };
+              if (overrides) selectAes = { ...selectAes, ...overrides };
             }
+            const selectRegion = createRenderedRegion(id, selectAes, baseRegion);
             return elements.map(
               (element, index) => renderElement({
                 element,
                 key: `selection-overlay-${id}-${index}`,
-                fill: resolved.fillColor,
-                fillOpacity: resolved.fillOpacity,
-                stroke: resolved.strokeColor,
-                strokeWidth: resolved.strokeWidth,
+                fill: selectRegion.aesthetic.fillColor,
+                fillOpacity: selectRegion.aesthetic.fillOpacity,
+                stroke: selectRegion.aesthetic.strokeColor,
+                strokeWidth: selectRegion.aesthetic.strokeWidth,
+                strokeDasharray: selectRegion.aesthetic.strokeDasharray,
+                nonScalingStroke: selectRegion.aesthetic.nonScalingStroke,
                 pointerEvents: "none"
               })
             );
-          }),
-          hovered && hoverHighlight && normalizedGeometry[hovered]?.map(
-            (element, index) => renderElement({
-              element,
-              key: `hover-overlay-${hovered}-${index}`,
-              fill: hoverHighlight.fillColor ?? "none",
-              fillOpacity: hoverHighlight.fillOpacity ?? 0,
-              stroke: hoverHighlight.strokeColor ?? "#1e40af",
-              strokeWidth: hoverHighlight.strokeWidth ?? 2,
-              pointerEvents: "none"
-            })
-          )
-        ] })
+          }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("g", { children: hovered && aesHover !== null && layerAssignment.base.has(hovered) && (() => {
+            const effectiveHover = aesHover ?? DEFAULT_HOVER_AESTHETIC;
+            let baseAes = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
+            if (aesBaseFillColorDict?.[hovered]) {
+              baseAes = { ...baseAes, fillColor: aesBaseFillColorDict[hovered] };
+            }
+            const groupAes = resolveGroupAesthetic(hovered, aesGroup, geometryMetadata);
+            if (groupAes) {
+              baseAes = { ...baseAes, ...groupAes };
+            }
+            baseAes = {
+              ...baseAes,
+              ...normalizedFillColor?.[hovered] ? { fillColor: normalizedFillColor[hovered] } : {},
+              ...normalizedStrokeWidth?.[hovered] !== void 0 ? { strokeWidth: normalizedStrokeWidth[hovered] } : {},
+              ...normalizedStrokeColor?.[hovered] ? { strokeColor: normalizedStrokeColor[hovered] } : {},
+              ...normalizedFillOpacity?.[hovered] !== void 0 ? { fillOpacity: normalizedFillOpacity[hovered] } : {}
+            };
+            const baseRegion = createRenderedRegion(hovered, baseAes);
+            let parentRegion = baseRegion;
+            if (activeSet.has(hovered) && aesSelect) {
+              parentRegion = createRenderedRegion(hovered, aesSelect, baseRegion);
+            }
+            const hoverRegion = createRenderedRegion(hovered, effectiveHover, parentRegion);
+            return normalizedGeometry[hovered]?.map(
+              (element, index) => renderElement({
+                element,
+                key: `hover-overlay-${hovered}-${index}`,
+                fill: hoverRegion.aesthetic.fillColor ?? "none",
+                fillOpacity: hoverRegion.aesthetic.fillOpacity ?? (hoverRegion.aesthetic.fillColor ? 1 : 0),
+                stroke: hoverRegion.aesthetic.strokeColor,
+                strokeWidth: hoverRegion.aesthetic.strokeWidth,
+                strokeDasharray: hoverRegion.aesthetic.strokeDasharray,
+                nonScalingStroke: hoverRegion.aesthetic.nonScalingStroke,
+                pointerEvents: "none"
+              })
+            );
+          })() })
+        ]
       }
     );
   }
