@@ -2,7 +2,7 @@ name: Python CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
     paths:
       - 'packages/shinymap/python/**'
       - '.github/workflows/python-ci.yml'

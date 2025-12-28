@@ -1,0 +1,58 @@
+name: Tag on Merge to Main
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  tag:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get version from pyproject.toml
+        id: get_version
+        run: |
+          VERSION=$(grep '^version = ' packages/shinymap/python/pyproject.toml | sed 's/version = "\(.*\)"/\1/')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Detected version: $VERSION"
+
+      - name: Check if version is release (not dev)
+        id: check_release
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+          if [[ "$VERSION" == *"-dev"* ]] || [[ "$VERSION" == *"-alpha"* ]] || [[ "$VERSION" == *"-beta"* ]]; then
+            echo "is_release=false" >> $GITHUB_OUTPUT
+            echo "Skipping tag: $VERSION is a pre-release version"
+          else
+            echo "is_release=true" >> $GITHUB_OUTPUT
+            echo "Will create tag for release version: $VERSION"
+          fi
+
+      - name: Check if tag already exists
+        id: check_tag
+        if: steps.check_release.outputs.is_release == 'true'
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+          if git ls-remote --tags origin | grep -q "refs/tags/v$VERSION"; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Tag v$VERSION already exists"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Tag v$VERSION does not exist yet"
+          fi
+
+      - name: Create and push tag
+        if: steps.check_release.outputs.is_release == 'true' && steps.check_tag.outputs.exists == 'false'
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "v$VERSION" -m "Release v$VERSION"
+          git push origin "v$VERSION"
+          echo "Created and pushed tag v$VERSION"
