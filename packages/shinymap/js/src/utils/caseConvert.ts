@@ -34,6 +34,16 @@ const REGION_ID_CONTAINERS = new Set([
 ]);
 
 /**
+ * Keys that should NOT be converted (preserve exactly).
+ * These are special v0.3 payload keys that start with underscore.
+ */
+function shouldPreserveKey(key: string): boolean {
+  // Preserve keys starting with __ (like __all, __shape, __line, __text)
+  // Preserve keys starting with _ (like _metadata)
+  return key.startsWith("_");
+}
+
+/**
  * Check if a key contains region IDs that shouldn't have case conversion.
  */
 function isRegionIdContainer(key: string): boolean {
@@ -92,7 +102,8 @@ export function snakeToCamelDeep<T>(obj: T): T {
   const result: Record<string, unknown> = {};
 
   for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
-    const newKey = snakeToCamel(key);
+    // Preserve keys starting with underscore (v0.3 payload special keys)
+    const newKey = shouldPreserveKey(key) ? key : snakeToCamel(key);
 
     // For geometry, tooltips, value, etc. - preserve region ID keys
     if (isRegionIdContainer(key)) {
