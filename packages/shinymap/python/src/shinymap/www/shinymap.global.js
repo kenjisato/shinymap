@@ -21833,11 +21833,36 @@ var shinymap = (() => {
   }
   function createRenderedRegion(id, aes, parent) {
     const resolved = {
-      fillColor: resolveStringProperty(aes.fillColor, parent, "fillColor", DEFAULT_AESTHETIC_VALUES.fillColor),
-      fillOpacity: resolveNumericProperty(aes.fillOpacity, parent, "fillOpacity", DEFAULT_AESTHETIC_VALUES.fillOpacity),
-      strokeColor: resolveStringProperty(aes.strokeColor, parent, "strokeColor", DEFAULT_AESTHETIC_VALUES.strokeColor),
-      strokeWidth: resolveNumericProperty(aes.strokeWidth, parent, "strokeWidth", DEFAULT_AESTHETIC_VALUES.strokeWidth),
-      strokeDasharray: resolveStringProperty(aes.strokeDasharray, parent, "strokeDasharray", DEFAULT_AESTHETIC_VALUES.strokeDasharray),
+      fillColor: resolveStringProperty(
+        aes.fillColor,
+        parent,
+        "fillColor",
+        DEFAULT_AESTHETIC_VALUES.fillColor
+      ),
+      fillOpacity: resolveNumericProperty(
+        aes.fillOpacity,
+        parent,
+        "fillOpacity",
+        DEFAULT_AESTHETIC_VALUES.fillOpacity
+      ),
+      strokeColor: resolveStringProperty(
+        aes.strokeColor,
+        parent,
+        "strokeColor",
+        DEFAULT_AESTHETIC_VALUES.strokeColor
+      ),
+      strokeWidth: resolveNumericProperty(
+        aes.strokeWidth,
+        parent,
+        "strokeWidth",
+        DEFAULT_AESTHETIC_VALUES.strokeWidth
+      ),
+      strokeDasharray: resolveStringProperty(
+        aes.strokeDasharray,
+        parent,
+        "strokeDasharray",
+        DEFAULT_AESTHETIC_VALUES.strokeDasharray
+      ),
       nonScalingStroke: aes.nonScalingStroke ?? parent?.aesthetic.nonScalingStroke ?? DEFAULT_AESTHETIC_VALUES.nonScalingStroke
     };
     return { id, aesthetic: resolved, parent };
@@ -21990,7 +22015,18 @@ var shinymap = (() => {
       case "polygon":
         return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("polygon", { points: element.points, ...commonProps, children: titleElement }, key);
       case "ellipse":
-        return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ellipse", { cx: element.cx, cy: element.cy, rx: element.rx, ry: element.ry, ...commonProps, children: titleElement }, key);
+        return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+          "ellipse",
+          {
+            cx: element.cx,
+            cy: element.cy,
+            rx: element.rx,
+            ry: element.ry,
+            ...commonProps,
+            children: titleElement
+          },
+          key
+        );
       case "line":
         return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
           "line",
@@ -22089,7 +22125,10 @@ var shinymap = (() => {
       () => assignLayers(normalizedGeometry, underlays, overlays, hidden, geometryMetadata),
       [normalizedGeometry, underlays, overlays, hidden, geometryMetadata]
     );
-    const normalizedFillColor = (0, import_react.useMemo)(() => normalizeFillColor(fillColor, normalizedGeometry), [fillColor, normalizedGeometry]);
+    const normalizedFillColor = (0, import_react.useMemo)(
+      () => normalizeFillColor(fillColor, normalizedGeometry),
+      [fillColor, normalizedGeometry]
+    );
     const [hovered, setHovered] = (0, import_react.useState)(null);
     const [counts, setCounts] = (0, import_react.useState)(value ?? {});
     const selected = (0, import_react.useMemo)(() => buildSelected(counts), [counts]);
