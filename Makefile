@@ -1,12 +1,13 @@
-.PHONY: help build build-js build-bundle clean test lint format install
+.PHONY: help build build-js build-bundle build-shiny clean test lint format install
 
 # Default target
 help:
 	@echo "Shinymap Build Commands"
 	@echo ""
-	@echo "  make build        - Full build (TypeScript + bundle for Python)"
+	@echo "  make build        - Full build (TypeScript + bundles for Python)"
 	@echo "  make build-js     - Build TypeScript only"
-	@echo "  make build-bundle - Bundle JS for Python package only"
+	@echo "  make build-bundle - Bundle React components for Python package"
+	@echo "  make build-shiny  - Build Shiny bridge for Python package"
 	@echo "  make clean        - Remove build artifacts"
 	@echo "  make test         - Run tests"
 	@echo "  make lint         - Run linters"
@@ -14,7 +15,7 @@ help:
 	@echo "  make install      - Install dependencies"
 
 # Full build: TypeScript compilation + bundling for Python
-build: build-js build-bundle
+build: build-js build-bundle build-shiny
 	@echo "✓ Full build complete"
 
 # Build TypeScript
@@ -23,17 +24,25 @@ build-js:
 	cd packages/shinymap/js && npm run build
 	@echo "✓ TypeScript compilation complete"
 
-# Bundle for Python package
+# Bundle React components for Python package
 build-bundle:
-	@echo "Bundling for Python package..."
+	@echo "Bundling React components for Python package..."
 	cd packages/shinymap/js && node build-global.js
 	@echo "✓ Bundle created at packages/shinymap/python/src/shinymap/www/shinymap.global.js"
+
+# Build and copy Shiny bridge for Python package
+build-shiny:
+	@echo "Building Shiny bridge..."
+	cd packages/shinymap/js && npm run build:shiny
+	cp packages/shinymap/js/dist/shinymap-shiny.js packages/shinymap/python/src/shinymap/www/shinymap-shiny.js
+	@echo "✓ Shiny bridge copied to packages/shinymap/python/src/shinymap/www/shinymap-shiny.js"
 
 # Clean build artifacts
 clean:
 	@echo "Cleaning build artifacts..."
 	rm -rf packages/shinymap/js/dist
 	rm -f packages/shinymap/python/src/shinymap/www/shinymap.global.js
+	rm -f packages/shinymap/python/src/shinymap/www/shinymap-shiny.js
 	@echo "✓ Clean complete"
 
 # Run tests

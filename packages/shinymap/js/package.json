@@ -9,6 +9,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
+    "build:shiny": "esbuild src/shinyBridge.ts --bundle --format=iife --outfile=dist/shinymap-shiny.js --minify",
+    "build:all": "npm run build && npm run build:shiny",
     "lint": "eslint \"src/**/*.ts\" \"src/**/*.tsx\"",
     "lint:fix": "eslint \"src/**/*.ts\" \"src/**/*.tsx\" --fix",
     "format": "prettier --write \"src/**/*.ts\" \"src/**/*.tsx\"",
