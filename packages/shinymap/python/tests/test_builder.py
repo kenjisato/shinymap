@@ -57,7 +57,8 @@ def test_map_builder_with_view_box():
     builder = Map(geo).with_view_box(view_box_tuple)
     json_output = builder.as_json()
 
-    assert json_output["viewBox"] == "0.0 0.0 100.0 100.0"
+    # as_json() returns snake_case; JS handles camelCase conversion
+    assert json_output["view_box"] == "0.0 0.0 100.0 100.0"
 
 
 @pytest.mark.unit
@@ -106,15 +107,16 @@ def test_map_as_json():
     assert "geometry" in json_output
     # Check that value is included
     assert json_output["value"] == {"a": 1}
-    # Check that active_ids is camelCase
-    assert json_output["activeIds"] == ["a"]
+    # as_json() returns snake_case; JS handles camelCase conversion
+    assert json_output["active_ids"] == ["a"]
 
 
 @pytest.mark.unit
 def test_static_params_merging():
     """Test that _apply_static_params merges static params from output_map()."""
     from shinymap._map import MapBuilder
-    from shinymap.ui._ui import _apply_static_params, _static_map_params
+    from shinymap.uicore._registry import _static_map_params
+    from shinymap.uicore._render_map import _apply_static_params
 
     geometry = {"a": "M0 0", "b": "M10 10"}
     tooltips = {"a": "Region A", "b": "Region B"}
@@ -148,7 +150,8 @@ def test_static_params_merging():
 def test_static_params_builder_precedence():
     """Test that builder params take precedence over static params."""
     from shinymap._map import MapBuilder
-    from shinymap.ui._ui import _apply_static_params, _static_map_params
+    from shinymap.uicore._registry import _static_map_params
+    from shinymap.uicore._render_map import _apply_static_params
 
     static_geometry = {"a": "M0 0", "b": "M10 10"}
     builder_geometry = {"x": "M20 20", "y": "M30 30"}
