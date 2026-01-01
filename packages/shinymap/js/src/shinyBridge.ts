@@ -67,7 +67,8 @@ declare global {
     shinymapScan?: (root?: HTMLElement | Document) => void;
     localStorage?: Storage;
   }
-  let shinymap: ShinyMapAPI | undefined;
+  // eslint-disable-next-line no-var
+  var shinymap: ShinyMapAPI | undefined;
 }
 
 const RETRY_MS = 50;
