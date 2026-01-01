@@ -2,74 +2,75 @@
 
 This directory contains detailed implementation plans, technical decisions, and design explorations for shinymap features.
 
-## Purpose
+## Table of Contents
 
-Design documents serve as:
-- **Implementation references**: Detailed code proposals with examples and rationale
-- **Decision records**: Why certain approaches were chosen over alternatives
-- **Future roadmap**: Ideas and features not yet implemented but worth preserving
-- **Knowledge transfer**: Context for contributors and future maintainers
+### Current Architecture
 
-## Document Types
+Documents describing the current system. **Read these to understand how things work.**
 
-### Implementation Plans
-Detailed technical proposals for features mentioned in [SPEC.md](../SPEC.md) but not yet implemented. These include:
-- API design with code examples
-- Implementation complexity assessment
-- Use cases and benefits
-- Testing checklists
+| Document | Description |
+|----------|-------------|
+| [aes-protocol.md](aes-protocol.md) | Dict serialization protocol (`to_dict()`/`from_dict()`) |
+| [aes-resolution.md](aes-resolution.md) | Runtime aesthetic resolution architecture (two-dimensional: group ↑ and layer ←) |
+| [aes-payload-v03.md](aes-payload-v03.md) | v0.3 payload format for JavaScript (three-phase: resolution → payload → lookup) |
+| [restructuring-toward-v0.3.md](restructuring-toward-v0.3.md) | Long-term goal: eliminate circular dependencies |
 
-Example: [update_map_implementation.md](update_map_implementation.md)
+### Planned Work
 
-### Technical Decisions
-Records of significant architectural choices, including:
-- Problem statement
-- Alternatives considered
-- Decision made and rationale
-- Consequences and trade-offs
+Documents describing future features or improvements. **Read these if you're implementing them.**
 
-### Performance Investigations
-Analysis of performance characteristics:
-- Profiling results
-- Optimization strategies
-- Benchmarks and comparisons
+| Document | Description |
+|----------|-------------|
+| (none currently) | |
 
-### UI/UX Explorations
-Design explorations for user-facing features:
-- API ergonomics discussions
-- Naming conventions
-- Default behaviors
+### Implemented (Historical Reference)
+
+Documents describing features that have been implemented. **You don't need to read these** unless you want historical context or design rationale.
+
+| Document | Description | Notes |
+|----------|-------------|-------|
+| [aesthetic-hierarchy-system.md](aesthetic-hierarchy-system.md) | wash(), ByState/ByType/ByGroup | Implemented in v0.2.0 |
+| [count-aesthetic-design.md](count-aesthetic-design.md) | Mode classes, aes.Indexed | Implemented in v0.2.0 |
+| [underlay-and-aesthetics.md](underlay-and-aesthetics.md) | Underlays, non-scaling stroke | Implemented in v0.2.0 |
+| [props-structure.md](props-structure.md) | Nested props (mode, aes, layers) | Implemented in v0.2.0 |
+| [geometry-class-refactoring.md](geometry-class-refactoring.md) | Geometry OOP, Map() function | Implemented in v0.2.0 |
+| [update_map_implementation.md](update_map_implementation.md) | Partial update API | Implemented in v0.2.0; may need alignment check |
+
+### Partially Implemented
+
+| Document | Description | Notes |
+|----------|-------------|-------|
+| [polymorphic-elements-svgpy.md](polymorphic-elements-svgpy.md) | svg.py integration | Phase 1-2 done; Phase 3-4 (TypeScript, export_svg) pending |
+
+### Abandoned / Superseded
+
+| Document | Description | Notes |
+|----------|-------------|-------|
+| (none currently) | | |
+
+## Future Topics
+
+These topics are mentioned in SPEC.md but don't yet have detailed design documents:
+
+- **Hover events**: Whether/how to emit hover data to the server
+- **Keyboard navigation**: Tab order, focus management, Enter/Space selection
+- **ARIA roles**: Mapping spatial layouts to form control semantics
+- **Delta-based updates**: Sending only changed regions for large maps
+- **Canvas fallback**: Alternative rendering for 1000+ regions
+- **Geographic extension** (`shinymap-geo`): GeoJSON/TopoJSON, projections
+
+## Near-term TODOs
+
+- **Converter app**: Needs functionality improvements
+- **`static_map()` function**: Python-only SVG rendering
+- **`export_svg()` function**: From [polymorphic-elements-svgpy.md](polymorphic-elements-svgpy.md)
 
 ## Contributing
 
 When adding a new design document:
 
-1. **Use descriptive filenames**: `feature_name_implementation.md`, `decision_unified_count_model.md`
-2. **Include context**: Why this document exists and what problem it addresses
-3. **Show examples**: Code samples are more valuable than abstract descriptions
-4. **Assess complexity**: Implementation effort vs. benefit analysis
-5. **Link to SPEC**: Reference the relevant section in [SPEC.md](../SPEC.md)
-6. **Date decisions**: Include when major decisions were made (helps understand evolution)
-
-## Index
-
-### Implementation Plans
-- [update_map_implementation.md](update_map_implementation.md) - Partial update API following Shiny's `update_*()` pattern
-
-### Future Topics
-These topics are mentioned in SPEC.md but don't yet have detailed design documents:
-
-- **Hover events**: Whether/how to emit hover data to the server
-- **Keyboard navigation**: Tab order, focus management, Enter/Space selection for accessibility
-- **ARIA roles**: Mapping spatial layouts to traditional form control semantics
-- **Delta-based updates**: Sending only changed regions for large maps (performance optimization)
-- **Canvas fallback**: Alternative rendering for very large maps (1000+ regions)
-- **Geographic extension** (`shinymap-geo`): GeoJSON/TopoJSON loading, coordinate projections, `sf`/`geopandas` integration
-
-### Near-term TODOs (from v0.2.0 development)
-
-- **Converter app**: The SVG-to-Geometry converter app needs functionality to be useful. Currently a placeholder.
-- **`static_map()` function**: Python-only function to render a map as a static SVG string (no JavaScript/React). Useful for:
-  - Conversion workflow: preview geometry before saving
-  - Export: generate SVG files for documents/presentations
-  - Testing: visual regression tests without browser
+1. **Use descriptive filenames**: `feature-name.md`
+2. **Include context**: Problem statement and rationale
+3. **Show examples**: Code samples over abstract descriptions
+4. **Link to SPEC**: Reference relevant [SPEC.md](../SPEC.md) sections
+5. **Update this README**: Add to appropriate section with status

@@ -1,5 +1,11 @@
 # Geometry Class Refactoring
 
+**Status**: IMPLEMENTED (v0.2.0)
+
+> **Note**: This document is kept for historical reference. The Outline class,
+> Map() function, and OOP geometry API are implemented. The class was renamed
+> from `Geometry` to `Outline`.
+
 ## Problem Statement
 
 Current geometry handling has issues:

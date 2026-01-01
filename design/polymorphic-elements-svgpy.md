@@ -1,7 +1,12 @@
 # Polymorphic Elements Refactor Using svg.py
 
-**Status**: Draft
+**Status**: PARTIALLY IMPLEMENTED (v0.2.0)
 **Created**: 2025-12-20
+
+> **Note**: Phase 1-2 (Python backend) are complete. Phase 3-4 (TypeScript
+> frontend, export_svg) are pending. Currently, JavaScript receives simplified
+> path strings via `load_geometry()` as a temporary measure.
+
 **Objective**: Support all SVG element types (circle, rect, polygon, ellipse, line, **text**) in shinymap by leveraging svg.py as a dependency and extending it with mixins for shinymap-specific functionality.
 
 ## Background

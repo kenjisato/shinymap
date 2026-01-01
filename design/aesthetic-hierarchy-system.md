@@ -1,8 +1,11 @@
 # Aesthetic Hierarchy System: The Watercolor Model
 
-**Status**: Proposed
+**Status**: IMPLEMENTED (v0.2.0)
 **Created**: 2025-12-25
-**Target Version**: 0.2.0
+
+> **Note**: This document is kept for historical reference. The wash() factory,
+> ByState/ByType/ByGroup containers, and PARENT proxy are all implemented.
+> For current architecture, see [aes-resolution.md](aes-resolution.md).
 
 ## Table of Contents
 

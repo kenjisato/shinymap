@@ -1,8 +1,10 @@
 # Underlay Layer, Non-Scaling Stroke, and Enhanced Aesthetics
 
-**Status**: In Progress
+**Status**: IMPLEMENTED (v0.2.0)
 **Created**: 2025-12-22
-**Target Version**: 1.0.0
+
+> **Note**: This document is kept for historical reference. Underlay layer,
+> non-scaling stroke, stroke-dasharray, and aesthetic builders are implemented.
 
 ## Table of Contents
 

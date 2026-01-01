@@ -1,7 +1,12 @@
 # Mode Classes and Indexed Aesthetic Design
 
+**Status**: IMPLEMENTED (v0.2.0)
 **Created**: 2025-12-26
-**Status**: Draft proposal
+
+> **Note**: This document is kept for historical reference. Mode classes
+> (Single, Multiple, Cycle, Count) and aes.Indexed are implemented.
+> See [aes-resolution.md](aes-resolution.md) for IndexedAesthetic's special
+> rendering behavior.
 
 ## Problem Statement
 

@@ -1,5 +1,10 @@
 # `update_map()` Implementation Reference
 
+**Status**: IMPLEMENTED (v0.2.0)
+
+> **Note**: `update_map()` is implemented in `ui/_ui.py`. This document is
+> kept for historical reference.
+
 This document contains detailed implementation guidance for the `update_map()` function following Shiny's `update_*()` pattern.
 
 ## Cost Assessment

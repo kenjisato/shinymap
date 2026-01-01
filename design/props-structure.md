@@ -1,7 +1,11 @@
 # Props Structure Redesign
 
+**Status**: IMPLEMENTED (v0.2.0)
 **Created**: 2025-12-27
-**Status**: Draft proposal
+
+> **Note**: This document is kept for historical reference. The nested props
+> structure (geometry, value, mode, aes, layers) is implemented in
+> `wash/_input_map.py` and `wash/_output_map.py`.
 
 ## Problem Statement
 
