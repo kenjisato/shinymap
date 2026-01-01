@@ -40,6 +40,8 @@ Additionally, `output_map` provides simplified statistical visualizations (choro
 
 5. **Avoid over-engineering**: Only make changes directly requested or clearly necessary. Keep solutions simple and focused.
 
+6. **Late serialization**: Keep data as typed Python objects as long as possible. Serialization to dict/JSON should only happen at the JavaScript boundary (when sending data to the frontend). This separation keeps business logic testable and maintains type safety throughout the Python layer. See [design/aes-resolution.md](design/aes-resolution.md) for the aesthetic resolution architecture.
+
 ## Development Environment
 
 - **Python**: Minimum 3.12, use `uv` for dependency management, `hatch` for builds
