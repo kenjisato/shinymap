@@ -2,7 +2,7 @@
 
 **Status**: In Progress
 **Created**: 2025-12-30
-**Updated**: 2025-12-31
+**Updated**: 2026-01-01
 
 This document describes the aesthetic resolution system in shinymap.
 
@@ -351,14 +351,19 @@ The following issues need investigation in future iterations:
    - `shinyBridge.ts` (TypeScript) with `snakeToCamelDeep()`
    - Python sends snake_case keys
    - JavaScript converts to camelCase on receive
+   - Preserves underscore-prefixed keys (`__all`, `_metadata`, etc.)
    - Built with esbuild, minified to ~6KB
 
-4. **Update JavaScript components** (TODO)
-   - Add `getAesForRegion()` lookup function
-   - Keep `isRelativeExpr()`, `resolveRelativeValue()` for runtime resolution
-   - Update `InputMap.tsx` and `OutputMap.tsx` to use new lookup + RelativeExpr resolution
+4. ~~**Update JavaScript components**~~ ✅ DONE
+   - `getAesForRegion()` lookup function added to `types.ts`
+   - `isAesPayload()` type guard for v0.3 format detection
+   - `isRelativeExpr()` preserved for runtime resolution
+   - `InputMap.tsx` and `OutputMap.tsx` updated to handle v0.3 format
+   - Select highlight working correctly
 
-5. **Update design document** with final implementation status (in progress)
+5. ~~**Integration testing**~~ ✅ DONE
+   - Playwright set up for browser integration tests
+   - 9 integration tests for input_map behavior
 
 ### Compatibility
 

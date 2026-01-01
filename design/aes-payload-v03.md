@@ -1,7 +1,8 @@
 # Aesthetic Payload Format v0.3
 
-**Status**: Proposed
+**Status**: In Progress
 **Created**: 2025-12-30
+**Updated**: 2026-01-01
 **Supersedes**: Parts of [props-structure.md](props-structure.md), [aesthetic-hierarchy-system.md](aesthetic-hierarchy-system.md)
 
 This document describes the new aesthetic payload format for v0.3, designed to simplify JavaScript code by moving all resolution logic to Python.
@@ -315,22 +316,27 @@ Note: `hover.stroke_width` is a RelativeExpr, not a resolved value. JavaScript r
 
 ### Python Backend
 1. [x] Create `shinymap/payload/` module with `_build_aes_payload()` function
-2. [ ] Remove old `_convert_aes_to_dict()` from Python (after JS migration)
+2. [x] Remove old `_convert_aes_to_dict()` from Python (removed - was never used)
 3. [ ] Add tests for payload generation
 
 ### JavaScript Bridge
 4. [x] Move camelCase conversion to JavaScript (`shinyBridge.ts`)
    - `snakeToCamelDeep()` utility in `utils/caseConvert.ts`
    - Preserves region ID keys while converting structural keys
+   - Preserves `__all`, `_metadata`, etc. (underscore-prefixed keys)
    - Shiny bridge built with esbuild, minified to ~6KB
 
-### JavaScript Components (TODO)
-5. [ ] Add JS `getAesForRegion()` lookup function to `types.ts`
-6. [ ] Keep `RelativeExpr` handling in JS (for runtime resolution)
+### JavaScript Components
+5. [x] Add JS `getAesForRegion()` lookup function to `types.ts`
+6. [x] Keep `RelativeExpr` handling in JS (`isRelativeExpr()` in `types.ts`)
 7. [ ] Add `resolveAesForState()` to resolve RelativeExpr at render time
-8. [ ] Update `InputMap.tsx` to use new lookup + resolution
-9. [ ] Update `OutputMap.tsx` to use new lookup + resolution
+8. [x] Update `InputMap.tsx` to detect v0.3 format and use `__all.base/select/hover`
+9. [x] Update `OutputMap.tsx` to detect v0.3 format and use `__all.base/select/hover`
 10. [ ] Add tests for JS lookup and RelativeExpr resolution
+
+### Integration Testing
+11. [x] Set up Playwright for browser integration tests
+12. [x] Add 9 integration tests verifying input_map behavior
 
 ## Related Documents
 
