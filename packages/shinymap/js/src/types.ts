@@ -529,11 +529,83 @@ export type GeometryMetadata = {
 };
 
 /**
- * Nested aesthetic configuration (new API).
+ * ByState entry containing base/select/hover aesthetics.
  *
- * Groups all aesthetic settings under a single `aes` prop.
+ * Part of v0.3 payload format from Python.
  */
-export type AesConfig = {
+export type ByStateEntry = {
+  base?: AestheticStyle;
+  select?: AestheticStyle | null;
+  hover?: AestheticStyle | null;
+};
+
+/**
+ * v0.3 Aesthetic payload from Python.
+ *
+ * Keys can be:
+ * - `__all`: Global default for all regions
+ * - `__shape`, `__line`, `__text`: Type-specific defaults
+ * - Group names: Named group defaults
+ * - Region IDs: Individual region overrides
+ * - `_metadata`: Maps group/type names to region IDs
+ */
+export type AesPayload = {
+  __all?: ByStateEntry;
+  __shape?: ByStateEntry;
+  __line?: ByStateEntry;
+  __text?: ByStateEntry;
+  _metadata?: Record<string, RegionId[]>;
+  [key: string]: ByStateEntry | Record<string, RegionId[]> | undefined;
+};
+
+/**
+ * Look up the ByState aesthetic for a region from the v0.3 payload.
+ *
+ * Priority (first match wins):
+ *   region_id → group_name → __shape/__line/__text → __all
+ *
+ * @param regionId The region ID to look up
+ * @param elementType The element type ("shape", "line", or "text")
+ * @param aes The v0.3 aesthetic payload
+ * @returns The ByState entry for this region, or undefined
+ */
+export function getAesForRegion(
+  regionId: RegionId,
+  elementType: "shape" | "line" | "text",
+  aes: AesPayload | undefined
+): ByStateEntry | undefined {
+  if (!aes) return undefined;
+
+  // 1. Check explicit region entry
+  if (aes[regionId] && !regionId.startsWith("_")) {
+    return aes[regionId] as ByStateEntry;
+  }
+
+  // 2. Check named groups (from _metadata)
+  const metadata = aes._metadata;
+  if (metadata) {
+    for (const [groupName, members] of Object.entries(metadata)) {
+      if (groupName.startsWith("__")) continue; // Skip type defaults
+      if (Array.isArray(members) && members.includes(regionId) && aes[groupName]) {
+        return aes[groupName] as ByStateEntry;
+      }
+    }
+  }
+
+  // 3. Check element type default
+  const typeKey = `__${elementType}` as const;
+  if (aes[typeKey]) return aes[typeKey] as ByStateEntry;
+
+  // 4. Check global default
+  if (aes.__all) return aes.__all;
+
+  return undefined;
+}
+
+/**
+ * Legacy aesthetic configuration (for backward compatibility with pure React usage).
+ */
+export type LegacyAesConfig = {
   /** Base aesthetic for all regions (not selected, not hovered). */
   base?: AestheticStyle;
   /** Aesthetic override for hovered regions. null disables hover effect. */
@@ -545,6 +617,23 @@ export type AesConfig = {
   /** Per-group aesthetic overrides. Group name → aesthetic style. */
   group?: Record<string, AestheticStyle>;
 };
+
+/**
+ * Check if an aes config is in v0.3 payload format.
+ */
+export function isAesPayload(aes: unknown): aes is AesPayload {
+  if (!aes || typeof aes !== "object") return false;
+  return "__all" in aes || "_metadata" in aes;
+}
+
+/**
+ * Nested aesthetic configuration (new API).
+ *
+ * Accepts either:
+ * - LegacyAesConfig: flat base/select/hover/group structure (React developers)
+ * - AesPayload: v0.3 format from Python with __all/_metadata (Shiny apps)
+ */
+export type AesConfig = LegacyAesConfig | AesPayload;
 
 /**
  * Nested layer configuration (new API).

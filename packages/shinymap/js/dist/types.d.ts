@@ -282,11 +282,49 @@ export type GeometryMetadata = {
     groups?: Record<string, RegionId[]>;
 };
 /**
- * Nested aesthetic configuration (new API).
+ * ByState entry containing base/select/hover aesthetics.
  *
- * Groups all aesthetic settings under a single `aes` prop.
+ * Part of v0.3 payload format from Python.
  */
-export type AesConfig = {
+export type ByStateEntry = {
+    base?: AestheticStyle;
+    select?: AestheticStyle | null;
+    hover?: AestheticStyle | null;
+};
+/**
+ * v0.3 Aesthetic payload from Python.
+ *
+ * Keys can be:
+ * - `__all`: Global default for all regions
+ * - `__shape`, `__line`, `__text`: Type-specific defaults
+ * - Group names: Named group defaults
+ * - Region IDs: Individual region overrides
+ * - `_metadata`: Maps group/type names to region IDs
+ */
+export type AesPayload = {
+    __all?: ByStateEntry;
+    __shape?: ByStateEntry;
+    __line?: ByStateEntry;
+    __text?: ByStateEntry;
+    _metadata?: Record<string, RegionId[]>;
+    [key: string]: ByStateEntry | Record<string, RegionId[]> | undefined;
+};
+/**
+ * Look up the ByState aesthetic for a region from the v0.3 payload.
+ *
+ * Priority (first match wins):
+ *   region_id → group_name → __shape/__line/__text → __all
+ *
+ * @param regionId The region ID to look up
+ * @param elementType The element type ("shape", "line", or "text")
+ * @param aes The v0.3 aesthetic payload
+ * @returns The ByState entry for this region, or undefined
+ */
+export declare function getAesForRegion(regionId: RegionId, elementType: "shape" | "line" | "text", aes: AesPayload | undefined): ByStateEntry | undefined;
+/**
+ * Legacy aesthetic configuration (for backward compatibility with pure React usage).
+ */
+export type LegacyAesConfig = {
     /** Base aesthetic for all regions (not selected, not hovered). */
     base?: AestheticStyle;
     /** Aesthetic override for hovered regions. null disables hover effect. */
@@ -298,6 +336,18 @@ export type AesConfig = {
     /** Per-group aesthetic overrides. Group name → aesthetic style. */
     group?: Record<string, AestheticStyle>;
 };
+/**
+ * Check if an aes config is in v0.3 payload format.
+ */
+export declare function isAesPayload(aes: unknown): aes is AesPayload;
+/**
+ * Nested aesthetic configuration (new API).
+ *
+ * Accepts either:
+ * - LegacyAesConfig: flat base/select/hover/group structure (React developers)
+ * - AesPayload: v0.3 format from Python with __all/_metadata (Shiny apps)
+ */
+export type AesConfig = LegacyAesConfig | AesPayload;
 /**
  * Nested layer configuration (new API).
  *

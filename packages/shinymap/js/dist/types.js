@@ -217,3 +217,49 @@ export function createRenderedRegion(id, aes, parent) {
     };
     return { id, aesthetic: resolved, parent };
 }
+/**
+ * Look up the ByState aesthetic for a region from the v0.3 payload.
+ *
+ * Priority (first match wins):
+ *   region_id → group_name → __shape/__line/__text → __all
+ *
+ * @param regionId The region ID to look up
+ * @param elementType The element type ("shape", "line", or "text")
+ * @param aes The v0.3 aesthetic payload
+ * @returns The ByState entry for this region, or undefined
+ */
+export function getAesForRegion(regionId, elementType, aes) {
+    if (!aes)
+        return undefined;
+    // 1. Check explicit region entry
+    if (aes[regionId] && !regionId.startsWith("_")) {
+        return aes[regionId];
+    }
+    // 2. Check named groups (from _metadata)
+    const metadata = aes._metadata;
+    if (metadata) {
+        for (const [groupName, members] of Object.entries(metadata)) {
+            if (groupName.startsWith("__"))
+                continue; // Skip type defaults
+            if (Array.isArray(members) && members.includes(regionId) && aes[groupName]) {
+                return aes[groupName];
+            }
+        }
+    }
+    // 3. Check element type default
+    const typeKey = `__${elementType}`;
+    if (aes[typeKey])
+        return aes[typeKey];
+    // 4. Check global default
+    if (aes.__all)
+        return aes.__all;
+    return undefined;
+}
+/**
+ * Check if an aes config is in v0.3 payload format.
+ */
+export function isAesPayload(aes) {
+    if (!aes || typeof aes !== "object")
+        return false;
+    return "__all" in aes || "_metadata" in aes;
+}
