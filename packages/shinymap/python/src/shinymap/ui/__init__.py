@@ -27,12 +27,14 @@ from ._ui import (
     input_map,
     input_radio_buttons,
     output_map,
+    render_map,
     update_map,
 )
 
 __all__ = [
     "input_map",
     "output_map",
+    "render_map",
     "update_map",
     "input_radio_buttons",
     "input_checkbox_group",
