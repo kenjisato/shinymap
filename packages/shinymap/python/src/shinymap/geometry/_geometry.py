@@ -586,6 +586,166 @@ class Outline:
         new_metadata = {**self.metadata, "lines_as_path": existing}
         return Outline(regions=Regions(dict(self.regions)), metadata=new_metadata)
 
+    def region_types(self) -> dict[str, str]:
+        """Get aesthetic element type for each region.
+
+        Returns a mapping of region_id -> element_type where element_type is
+        one of "shape", "line", or "text" for aesthetic resolution purposes.
+
+        Priority:
+        1. metadata["lines_as_path"] - explicit line override for path elements
+        2. Element's element_name:
+           - "line" → "line"
+           - "text" → "text"
+           - All others → "shape"
+
+        Returns:
+            Dict mapping region IDs to their aesthetic element types
+
+        Example:
+            >>> # v1.x format with mixed elements
+            >>> from shinymap.geometry import Circle, Line, Text, Path
+            >>> geo = Outline(regions={
+            ...     "region": [Circle(cx=50, cy=50, r=30)],
+            ...     "_divider": [Line(x1=0, y1=50, x2=100, y2=50)],
+            ...     "label": [Text(x=50, y=50, text="A")],
+            ... }, metadata={})
+            >>> geo.region_types()
+            {'region': 'shape', '_divider': 'line', 'label': 'text'}
+
+            >>> # Path marked as line via path_as_line()
+            >>> geo = Outline(regions={
+            ...     "_border": [Path(d="M 0 0 L 100 0")],
+            ... }, metadata={}).path_as_line("_border")
+            >>> geo.region_types()
+            {'_border': 'line'}
+        """
+        lines_as_path = set(self.metadata.get("lines_as_path", []))
+        result: dict[str, str] = {}
+
+        for region_id, elements in self.regions.items():
+            # Check explicit line override first
+            if region_id in lines_as_path:
+                result[region_id] = "line"
+                continue
+
+            if not elements:
+                result[region_id] = "shape"
+                continue
+
+            first_elem = elements[0]
+            if isinstance(first_elem, str):
+                # v0.x format: string path → shape (unless in lines_as_path, checked above)
+                result[region_id] = "shape"
+            else:
+                # v1.x format: check element_name
+                elem_name = getattr(first_elem, "element_name", "path")
+                if elem_name == "line":
+                    result[region_id] = "line"
+                elif elem_name == "text":
+                    result[region_id] = "text"
+                else:
+                    result[region_id] = "shape"
+
+        return result
+
+    def groups(self) -> dict[str, list[str]]:
+        """Get group membership from metadata.
+
+        Returns:
+            Dict mapping group names to lists of region IDs
+
+        Example:
+            >>> geo = Outline.from_dict({
+            ...     "region1": ["M 0 0"],
+            ...     "region2": ["M 10 0"],
+            ...     "_metadata": {"groups": {"coastal": ["region1", "region2"]}}
+            ... })
+            >>> geo.groups()
+            {'coastal': ['region1', 'region2']}
+        """
+        return dict(self.metadata.get("groups", {}))
+
+    def metadata_dict(
+        self, view_box: tuple[float, float, float, float] | None = None
+    ) -> dict[str, Any] | None:
+        """Build outline metadata dict for JavaScript props.
+
+        Creates the outlineMetadata object sent to React components,
+        containing viewBox and groups information.
+
+        Args:
+            view_box: Optional override viewBox tuple. If None, uses self.viewbox()
+
+        Returns:
+            Dict with viewBox and groups, or None if no metadata
+
+        Example:
+            >>> outline = Outline.from_dict({
+            ...     "region1": ["M 0 0"],
+            ...     "_metadata": {"groups": {"coastal": ["region1"]}}
+            ... })
+            >>> outline.metadata_dict()
+            {'viewBox': '-2.0 -2.0 104.0 104.0', 'groups': {'coastal': ['region1']}}
+        """
+        if not self.metadata:
+            return None
+
+        vb_tuple = view_box if view_box else self.viewbox()
+        vb_str = f"{vb_tuple[0]} {vb_tuple[1]} {vb_tuple[2]} {vb_tuple[3]}"
+
+        result: dict[str, Any] = {"viewBox": vb_str}
+
+        groups = self.metadata.get("groups")
+        if groups:
+            result["groups"] = groups
+
+        return result if result else None
+
+    def merge_layers(self, layers: dict[str, list[str]] | None) -> Outline:
+        """Merge provided layers with outline's metadata overlays.
+
+        Returns a new Outline with updated metadata containing the merged
+        layers configuration. Explicit layers take priority over metadata overlays.
+
+        This method follows the immutable pattern - the original Outline is
+        unchanged and a new Outline is returned.
+
+        Args:
+            layers: Optional explicit layer configuration with keys:
+                    underlays, overlays, hidden
+
+        Returns:
+            New Outline with merged layers in metadata
+
+        Example:
+            >>> outline = Outline.from_dict({
+            ...     "region": ["M 0 0"],
+            ...     "_border": ["M 0 0 L 100 0"],
+            ...     "_metadata": {"overlays": ["_border"]}
+            ... })
+            >>> merged = outline.merge_layers({"underlays": ["_bg"]})
+            >>> merged.metadata
+            {'overlays': ['_border'], 'underlays': ['_bg']}
+            >>> merged = outline.merge_layers({"overlays": ["_custom"]})
+            >>> merged.metadata
+            {'overlays': ['_custom']}
+        """
+        if layers is None:
+            return self
+
+        new_metadata = dict(self.metadata)
+
+        # Merge layers: explicit layers override metadata
+        if layers.get("underlays"):
+            new_metadata["underlays"] = layers["underlays"]
+        if layers.get("overlays"):
+            new_metadata["overlays"] = layers["overlays"]
+        if layers.get("hidden"):
+            new_metadata["hidden"] = layers["hidden"]
+
+        return Outline(regions=Regions(dict(self.regions)), metadata=new_metadata)
+
     def to_dict(self) -> dict[str, Any]:
         """Export to dict in shinymap JSON format.
 

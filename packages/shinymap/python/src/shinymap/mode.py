@@ -45,7 +45,7 @@ Usage:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
     from .aes._core import ByGroup, IndexedAesthetic
@@ -290,6 +290,78 @@ def _serialize_aes(aes: Any) -> dict[str, Any]:
 
 
 # Type alias for mode parameter
-ModeType = str | Single | Multiple | Cycle | Count
+ModeType = Literal["single", "multiple"] | Single | Multiple | Cycle | Count
 
-__all__ = ["Single", "Multiple", "Cycle", "Count", "ModeType"]
+
+def normalize_mode(mode: ModeType) -> Single | Multiple | Cycle | Count:
+    """Normalize mode parameter to Mode class instance.
+
+    Converts string modes ("single", "multiple") to their class equivalents.
+
+    Args:
+        mode: Mode string or Mode class instance
+
+    Returns:
+        Mode class instance (Single, Multiple, Cycle, or Count)
+
+    Raises:
+        ValueError: If mode is not a valid string or Mode class instance
+
+    Example:
+        >>> normalize_mode("single")
+        Single(selected=None, allow_deselect=True, aes=None)
+        >>> normalize_mode(Multiple(max_selection=3))
+        Multiple(selected=None, max_selection=3, aes=None)
+    """
+    if mode == "single":
+        return Single()
+    elif mode == "multiple":
+        return Multiple()
+    elif isinstance(mode, (Single, Multiple, Cycle, Count)):
+        return mode
+    else:
+        raise ValueError(
+            'mode must be "single", "multiple", or a Mode class instance '
+            "(Single, Multiple, Cycle, Count)"
+        )
+
+
+def initial_value_from_mode(
+    mode: Single | Multiple | Cycle | Count,
+) -> dict[str, int] | None:
+    """Extract initial value from Mode class instance.
+
+    Gets the initial selection/value state from the mode configuration.
+
+    Args:
+        mode: Mode class instance
+
+    Returns:
+        Initial value dict {region_id: count}, or None if no initial value
+
+    Example:
+        >>> initial_value_from_mode(Single(selected="region1"))
+        {'region1': 1}
+        >>> initial_value_from_mode(Multiple(selected=["a", "b"]))
+        {'a': 1, 'b': 1}
+        >>> initial_value_from_mode(Count(values={"r1": 3}))
+        {'r1': 3}
+    """
+    if isinstance(mode, Single) and mode.selected is not None:
+        return {mode.selected: 1}
+    elif isinstance(mode, Multiple) and mode.selected is not None:
+        return {s: 1 for s in mode.selected}
+    elif isinstance(mode, (Cycle, Count)) and mode.values is not None:
+        return mode.values
+    return None
+
+
+__all__ = [
+    "Single",
+    "Multiple",
+    "Cycle",
+    "Count",
+    "ModeType",
+    "normalize_mode",
+    "initial_value_from_mode",
+]

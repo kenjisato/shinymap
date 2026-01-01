@@ -8,7 +8,8 @@ Usage:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any
 
 
 class MissingType:
@@ -42,6 +43,16 @@ class MissingType:
 MISSING = MissingType()
 
 
+# Type Aliases
+OutlineMap = Mapping[str, str | list[str] | dict[str, Any] | list[dict[str, Any]]]
+
+TooltipMap = Mapping[str, str] | None
+
+FillMap = str | Mapping[str, str] | None
+
+CountMap = Mapping[str, int] | None
+
+
 def __getattr__(name: str):
     """Lazy import for types that have circular dependencies."""
     if name == "BaseAesthetic":
@@ -53,11 +64,11 @@ def __getattr__(name: str):
 
         return MapBuilder
     if name == "WashConfig":
-        from ._wash import WashConfig
+        from .uicore._wash import WashConfig
 
         return WashConfig
     if name == "WashResult":
-        from ._wash import WashResult
+        from .uicore._wash import WashResult
 
         return WashResult
     msg = f"module {__name__!r} has no attribute {name!r}"
@@ -66,8 +77,8 @@ def __getattr__(name: str):
 
 if TYPE_CHECKING:
     from ._map import MapBuilder
-    from ._wash import WashConfig, WashResult
     from .aes._core import BaseAesthetic
+    from .uicore._wash import WashConfig, WashResult
 
 __all__ = [
     "BaseAesthetic",
@@ -76,4 +87,8 @@ __all__ = [
     "MissingType",
     "WashConfig",
     "WashResult",
+    "OutlineMap",
+    "TooltipMap",
+    "FillMap",
+    "CountMap"
 ]

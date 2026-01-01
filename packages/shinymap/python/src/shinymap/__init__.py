@@ -6,7 +6,6 @@ __version__ = "0.3.0-dev"
 
 from . import aes, geometry, types, ui, utils
 from ._map import Map
-from ._wash import Wash
 from .geometry import Outline
 from .relative import (
     PARENT,
@@ -25,7 +24,8 @@ from .ui import (
     output_map,
     update_map,
 )
-from .ui._ui import render_map
+from .ui import render_map
+from .uicore import Wash
 
 __all__ = [
     "__version__",

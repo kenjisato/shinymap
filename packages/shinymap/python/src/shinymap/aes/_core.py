@@ -24,6 +24,7 @@ from dataclasses import dataclass, fields, replace
 from typing import TYPE_CHECKING, Any, Literal
 
 from ..types import MISSING, MissingType
+from ..utils._dict import _warn_invalid_keys
 
 if TYPE_CHECKING:
     from ..relative import RelativeExpr
@@ -78,6 +79,60 @@ class BaseAesthetic:
             '#fff'
         """
         return replace(self, **kwargs)
+    
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> BaseAesthetic:
+        """Convert a dict to Aesthetic. Subclasses must override."""
+        raise NotImplementedError("Subclasses must implement from_dict()")
+
+    def resolve(self, parent: BaseAesthetic) -> BaseAesthetic:
+        """Resolve this aesthetic against a parent.
+
+        MISSING values inherit from parent.
+        RelativeExpr values compute relative to parent.
+        Explicit values (including None) override parent.
+
+        Args:
+            parent: The resolved parent aesthetic to inherit from
+
+        Returns:
+            A new aesthetic with all values resolved
+
+        Example:
+            >>> from shinymap import aes, PARENT
+            >>> parent = aes.Shape(fill_color="#fff", stroke_width=1.0)
+            >>> child = aes.Shape(stroke_width=PARENT.stroke_width + 1)
+            >>> resolved = child.resolve(parent)
+            >>> resolved.fill_color  # inherited from parent
+            '#fff'
+            >>> resolved.stroke_width  # resolved: 1.0 + 1 = 2.0
+            2.0
+        """
+        # Import here to avoid circular dependency
+        from ..relative import RelativeExpr
+
+        resolved_values: dict[str, Any] = {}
+
+        for f in fields(self):
+            key = f.name
+            child_value = getattr(self, key)
+            parent_value = getattr(parent, key, MISSING)
+
+            if isinstance(child_value, MissingType):
+                # Not specified in child, inherit from parent
+                resolved_values[key] = parent_value
+            elif isinstance(child_value, RelativeExpr):
+                # Resolve against parent
+                if isinstance(parent_value, (int, float)):
+                    resolved_values[key] = child_value.resolve(parent_value)
+                else:
+                    # Parent value not numeric, keep the expression (edge case)
+                    resolved_values[key] = child_value
+            else:
+                # Explicit value (including None) overrides parent
+                resolved_values[key] = child_value
+
+        return self.__class__(**resolved_values)
 
 
 @dataclass
@@ -106,6 +161,35 @@ class ShapeAesthetic(BaseAesthetic):
     stroke_dasharray: str | None | MissingType = MISSING
     non_scaling_stroke: bool | MissingType = MISSING
 
+    _valid_keys = {
+        "type",
+        "fill_color",
+        "fill_opacity",
+        "stroke_color",
+        "stroke_width",
+        "stroke_dasharray",
+        "non_scaling_stroke",
+    }
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dict with type key."""
+        result = super().to_dict()
+        result["type"] = "shape"
+        return result
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> ShapeAesthetic:
+        """Convert a dict to ShapeAesthetic."""
+        _warn_invalid_keys(d, cls._valid_keys, "Shape")
+        return ShapeAesthetic(
+            fill_color=d.get("fill_color", MISSING),
+            fill_opacity=d.get("fill_opacity", MISSING),
+            stroke_color=d.get("stroke_color", MISSING),
+            stroke_width=d.get("stroke_width", MISSING),
+            stroke_dasharray=d.get("stroke_dasharray", MISSING),
+            non_scaling_stroke=d.get("non_scaling_stroke", MISSING),
+        )
+
 
 @dataclass
 class LineAesthetic(BaseAesthetic):
@@ -131,16 +215,35 @@ class LineAesthetic(BaseAesthetic):
     stroke_dasharray: str | None | MissingType = MISSING
     non_scaling_stroke: bool | MissingType = MISSING
 
+    _valid_keys = {
+        "type",
+        "stroke_color",
+        "stroke_width",
+        "stroke_dasharray",
+        "non_scaling_stroke"
+    }
+
     def to_dict(self) -> dict[str, Any]:
-        """Convert to dict, always including fill_color=None.
+        """Convert to dict with type key and fill_color=None.
 
         Lines are stroke-only by definition, so fill_color is always None.
         """
         result = super().to_dict()
+        result["type"] = "line"
         # Lines have no fill by definition
         result["fill_color"] = None
         return result
 
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> LineAesthetic:
+        """Convert a dict to LineAesthetic."""
+        _warn_invalid_keys(d, cls._valid_keys, "Line")
+        return LineAesthetic(
+            stroke_color=d.get("stroke_color", MISSING),
+            stroke_width=d.get("stroke_width", MISSING),
+            stroke_dasharray=d.get("stroke_dasharray", MISSING),
+            non_scaling_stroke=d.get("non_scaling_stroke", MISSING),
+        )
 
 @dataclass
 class TextAesthetic(BaseAesthetic):
@@ -167,6 +270,35 @@ class TextAesthetic(BaseAesthetic):
     stroke_width: float | RelativeExpr | None | MissingType = MISSING
     stroke_dasharray: str | None | MissingType = MISSING
     non_scaling_stroke: bool | MissingType = MISSING
+
+    _valid_keys = {
+        "type",
+        "fill_color",
+        "fill_opacity",
+        "stroke_color",
+        "stroke_width",
+        "stroke_dasharray",
+        "non_scaling_stroke",
+    }
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dict with type key."""
+        result = super().to_dict()
+        result["type"] = "text"
+        return result
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> TextAesthetic:
+        """Convert a dict to TextAesthetic."""
+        _warn_invalid_keys(d, cls._valid_keys, "Text")
+        return TextAesthetic(
+            fill_color=d.get("fill_color", MISSING),
+            fill_opacity=d.get("fill_opacity", MISSING),
+            stroke_color=d.get("stroke_color", MISSING),
+            stroke_width=d.get("stroke_width", MISSING),
+            stroke_dasharray=d.get("stroke_dasharray", MISSING),
+            non_scaling_stroke=d.get("non_scaling_stroke", MISSING),
+        )
 
 
 @dataclass
@@ -209,6 +341,65 @@ class PathAesthetic(BaseAesthetic):
     stroke_width: float | RelativeExpr | None | MissingType = MISSING
     stroke_dasharray: str | None | MissingType = MISSING
     non_scaling_stroke: bool | MissingType = MISSING
+
+    _valid_keys = {
+        "type",
+        "kind",
+        "fill_color",
+        "fill_opacity",
+        "stroke_color",
+        "stroke_width",
+        "stroke_dasharray",
+        "non_scaling_stroke",
+    }
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dict with type key."""
+        result = super().to_dict()
+        result["type"] = "path"
+        return result
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> PathAesthetic:
+        """Convert a dict to PathAesthetic."""
+        _warn_invalid_keys(d, cls._valid_keys, "Path")
+        return PathAesthetic(
+            kind=d.get("kind", MISSING),
+            fill_color=d.get("fill_color", MISSING),
+            fill_opacity=d.get("fill_opacity", MISSING),
+            stroke_color=d.get("stroke_color", MISSING),
+            stroke_width=d.get("stroke_width", MISSING),
+            stroke_dasharray=d.get("stroke_dasharray", MISSING),
+            non_scaling_stroke=d.get("non_scaling_stroke", MISSING),
+        )
+
+
+# Type alias for leaf aesthetic types only
+LeafAesthetic = ShapeAesthetic | LineAesthetic | TextAesthetic | PathAesthetic
+
+
+def _leaf_from_dict(d: dict[str, Any]) -> LeafAesthetic:
+    """Deserialize dict to leaf aesthetic type only.
+
+    Used by container types (ByState, ByType) that expect leaf aesthetics.
+    Raises ValueError if type is a container type.
+    """
+    leaf_types: dict[str, type[LeafAesthetic]] = {
+        "shape": ShapeAesthetic,
+        "line": LineAesthetic,
+        "text": TextAesthetic,
+        "path": PathAesthetic,
+    }
+
+    aes_type = d.get("type")
+    if aes_type is None:
+        raise ValueError("Dict must have 'type' key for deserialization")
+    if aes_type not in leaf_types:
+        raise ValueError(
+            f"Expected leaf aesthetic type (shape, line, text, path), got: {aes_type!r}"
+        )
+
+    return leaf_types[aes_type].from_dict(d)
 
 
 class ByState[T: BaseAesthetic]:
@@ -265,6 +456,144 @@ class ByState[T: BaseAesthetic]:
             return "ByState()"
         return f"ByState({', '.join(parts)})"
 
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dict with type key, recursively converting nested aesthetics."""
+        result: dict[str, Any] = {"type": "bystate"}
+        if not isinstance(self.base, MissingType):
+            if self.base is None:
+                result["base"] = None
+            else:
+                result["base"] = self.base.to_dict()
+        if not isinstance(self.select, MissingType):
+            if self.select is None:
+                result["select"] = None
+            else:
+                result["select"] = self.select.to_dict()
+        if not isinstance(self.hover, MissingType):
+            if self.hover is None:
+                result["hover"] = None
+            else:
+                result["hover"] = self.hover.to_dict()
+        return result
+
+    def to_js_dict(self) -> dict[str, Any]:
+        """Convert to dict format for JavaScript consumption.
+
+        Unlike to_dict(), this produces a simplified format without type
+        discriminators, suitable for direct use by React components.
+
+        Returns:
+            Dict with keys: base, select, hover
+            Each value is a dict of aesthetic properties (snake_case keys).
+        """
+
+        def _leaf_to_js(aes: BaseAesthetic) -> dict[str, Any]:
+            """Convert leaf aesthetic to JS dict, stripping metadata."""
+            d = aes.to_dict()
+            d.pop("type", None)  # Remove type discriminator
+            d.pop("kind", None)  # Remove PathAesthetic.kind
+            return d
+
+        result: dict[str, Any] = {}
+        if not isinstance(self.base, MissingType) and self.base is not None:
+            result["base"] = _leaf_to_js(self.base)
+        if not isinstance(self.select, MissingType):
+            if self.select is None:
+                result["select"] = None
+            else:
+                result["select"] = _leaf_to_js(self.select)
+        if not isinstance(self.hover, MissingType):
+            if self.hover is None:
+                result["hover"] = None
+            else:
+                result["hover"] = _leaf_to_js(self.hover)
+        return result
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> ByState:
+        """Convert dict with base/select/hover keys to ByState.
+
+        Recursively deserializes nested aesthetic dicts using _leaf_from_dict().
+        """
+        base: BaseAesthetic | None | MissingType = MISSING
+        select: BaseAesthetic | None | MissingType = MISSING
+        hover: BaseAesthetic | None | MissingType = MISSING
+
+        if "base" in d:
+            if d["base"] is None:
+                base = None
+            else:
+                base = _leaf_from_dict(d["base"])
+        if "select" in d:
+            if d["select"] is None:
+                select = None
+            else:
+                select = _leaf_from_dict(d["select"])
+        if "hover" in d:
+            if d["hover"] is None:
+                hover = None
+            else:
+                hover = _leaf_from_dict(d["hover"])
+
+        return ByState(base=base, select=select, hover=hover)
+
+    def resolve_for_region(
+        self,
+        wash_default: BaseAesthetic,
+        is_selected: bool = False,
+        is_hovered: bool = False,
+    ) -> BaseAesthetic:
+        """Resolve the final aesthetic for a region given its state.
+
+        Chain: wash_default → base → select (if selected) → hover (if hovered)
+
+        Args:
+            wash_default: The wash config default aesthetic for this element type
+            is_selected: Whether the region is currently selected
+            is_hovered: Whether the region is currently hovered
+
+        Returns:
+            A fully resolved aesthetic
+
+        Example:
+            >>> from shinymap import aes, PARENT
+            >>> default = aes.Shape(fill_color="#e5e7eb", stroke_width=1.0)
+            >>> states = aes.ByState(
+            ...     base=aes.Shape(fill_color="#3b82f6"),
+            ...     select=aes.Shape(fill_color="#1e40af"),
+            ...     hover=aes.Shape(stroke_width=PARENT.stroke_width + 1),
+            ... )
+            >>> # Not selected, not hovered
+            >>> resolved = states.resolve_for_region(default)
+            >>> resolved.fill_color
+            '#3b82f6'
+            >>> resolved.stroke_width  # inherited from default
+            1.0
+            >>> # Selected and hovered
+            >>> resolved = states.resolve_for_region(default, is_selected=True, is_hovered=True)
+            >>> resolved.fill_color  # from select
+            '#1e40af'
+            >>> resolved.stroke_width  # 1.0 + 1 from hover
+            2.0
+        """
+        # Layer 1: base resolves against wash default
+        if isinstance(self.base, MissingType) or self.base is None:
+            current = wash_default
+        else:
+            current = self.base.resolve(wash_default)
+
+        # Layer 2: select resolves against base (if selected)
+        if is_selected and not isinstance(self.select, MissingType):
+            if self.select is not None:
+                current = self.select.resolve(current)
+
+        # Layer 3: hover resolves against current (if hovered)
+        if is_hovered and not isinstance(self.hover, MissingType):
+            if self.hover is not None:
+                current = self.hover.resolve(current)
+
+        return current
+
 
 class ByType:
     """Container for aesthetics by element type (shape, line, text).
@@ -315,6 +644,54 @@ class ByType:
         if not parts:
             return "ByType()"
         return f"ByType({', '.join(parts)})"
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dict with type key, recursively converting nested aesthetics."""
+        result: dict[str, Any] = {"type": "bytype"}
+
+        def _convert_value(v: ByState | BaseAesthetic | None) -> dict[str, Any] | None:
+            if v is None:
+                return None
+            return v.to_dict()
+
+        if not isinstance(self.shape, MissingType):
+            result["shape"] = _convert_value(self.shape)
+        if not isinstance(self.line, MissingType):
+            result["line"] = _convert_value(self.line)
+        if not isinstance(self.text, MissingType):
+            result["text"] = _convert_value(self.text)
+        return result
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> ByType:
+        """Convert dict with shape/line/text keys to ByType.
+
+        Values can be ByState dicts or leaf aesthetic dicts.
+        """
+
+        def _parse_value(
+            v: dict[str, Any] | None, expected_leaf: type[LeafAesthetic]
+        ) -> ByState | LeafAesthetic | None | MissingType:
+            if v is None:
+                return None
+            aes_type = v.get("type")
+            if aes_type == "bystate":
+                return ByState.from_dict(v)
+            # Leaf aesthetic - use expected type
+            return expected_leaf.from_dict(v)
+
+        shape: ByState[ShapeAesthetic] | ShapeAesthetic | None | MissingType = MISSING
+        line: ByState[LineAesthetic] | LineAesthetic | None | MissingType = MISSING
+        text: ByState[TextAesthetic] | TextAesthetic | None | MissingType = MISSING
+
+        if "shape" in d:
+            shape = _parse_value(d["shape"], ShapeAesthetic)  # type: ignore[assignment]
+        if "line" in d:
+            line = _parse_value(d["line"], LineAesthetic)  # type: ignore[assignment]
+        if "text" in d:
+            text = _parse_value(d["text"], TextAesthetic)  # type: ignore[assignment]
+
+        return ByType(shape=shape, line=line, text=text)
 
 
 class ByGroup:
@@ -388,6 +765,41 @@ class ByGroup:
         parts = [f"{k}={v!r}" for k, v in self._groups.items()]
         return f"ByGroup({', '.join(parts)})"
 
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dict with type key, recursively converting nested aesthetics."""
+        result: dict[str, Any] = {"type": "bygroup"}
+        for key, value in self._groups.items():
+            if isinstance(value, MissingType):
+                continue
+            if value is None:
+                result[key] = None
+            else:
+                result[key] = value.to_dict()
+        return result
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> ByGroup:
+        """Convert dict to ByGroup.
+
+        Values can be ByState dicts or leaf aesthetic dicts.
+        """
+        groups: dict[str, ByState | BaseAesthetic | None | MissingType] = {}
+
+        for key, value in d.items():
+            if key == "type":
+                continue  # Skip the type key
+            if value is None:
+                groups[key] = None
+            elif isinstance(value, dict):
+                aes_type = value.get("type")
+                if aes_type == "bystate":
+                    groups[key] = ByState.from_dict(value)
+                else:
+                    # Leaf aesthetic
+                    groups[key] = _leaf_from_dict(value)
+
+        return ByGroup(**groups)
+
 
 @dataclass
 class IndexedAesthetic:
@@ -430,19 +842,30 @@ class IndexedAesthetic:
     stroke_dasharray: str | list[str] | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        """Convert to dict for serialization to JavaScript."""
-        result: dict[str, Any] = {}
+        """Convert to dict with type key (snake_case)."""
+        result: dict[str, Any] = {"type": "indexed"}
         if self.fill_color is not None:
-            result["fillColor"] = self.fill_color
+            result["fill_color"] = self.fill_color
         if self.fill_opacity is not None:
-            result["fillOpacity"] = self.fill_opacity
+            result["fill_opacity"] = self.fill_opacity
         if self.stroke_color is not None:
-            result["strokeColor"] = self.stroke_color
+            result["stroke_color"] = self.stroke_color
         if self.stroke_width is not None:
-            result["strokeWidth"] = self.stroke_width
+            result["stroke_width"] = self.stroke_width
         if self.stroke_dasharray is not None:
-            result["strokeDasharray"] = self.stroke_dasharray
+            result["stroke_dasharray"] = self.stroke_dasharray
         return result
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> IndexedAesthetic:
+        """Convert a dict to IndexedAesthetic."""
+        return IndexedAesthetic(
+            fill_color=d.get("fill_color"),
+            fill_opacity=d.get("fill_opacity"),
+            stroke_color=d.get("stroke_color"),
+            stroke_width=d.get("stroke_width"),
+            stroke_dasharray=d.get("stroke_dasharray"),
+        )
 
     def __repr__(self) -> str:
         parts = []
@@ -459,6 +882,70 @@ class IndexedAesthetic:
         return f"Indexed({', '.join(parts)})"
 
 
+# Type alias for any aesthetic type
+AnyAesthetic = (
+    ShapeAesthetic
+    | LineAesthetic
+    | TextAesthetic
+    | PathAesthetic
+    | IndexedAesthetic
+    | ByState
+    | ByType
+    | ByGroup
+)
+
+
+def from_dict(d: dict[str, Any]) -> AnyAesthetic:
+    """Deserialize dict to appropriate aesthetic type based on 'type' key.
+
+    This is the top-level dispatcher for aesthetic deserialization.
+    Container types (ByState, ByGroup, ByType) call this recursively
+    to deserialize nested aesthetics.
+
+    Args:
+        d: Dict with 'type' key indicating the aesthetic type
+
+    Returns:
+        Appropriate aesthetic object
+
+    Raises:
+        ValueError: If 'type' key is missing or unknown
+
+    Example:
+        >>> from_dict({"type": "shape", "fill_color": "#fff"})
+        ShapeAesthetic(fill_color='#fff')
+
+        >>> from_dict({
+        ...     "type": "bystate",
+        ...     "base": {"type": "shape", "fill_color": "#fff"},
+        ... })
+        ByState(base=ShapeAesthetic(fill_color='#fff'))
+    """
+    aes_type = d.get("type")
+    if aes_type is None:
+        raise ValueError("Dict must have 'type' key for deserialization")
+
+    # Dispatch based on type
+    if aes_type == "shape":
+        return ShapeAesthetic.from_dict(d)
+    elif aes_type == "line":
+        return LineAesthetic.from_dict(d)
+    elif aes_type == "text":
+        return TextAesthetic.from_dict(d)
+    elif aes_type == "path":
+        return PathAesthetic.from_dict(d)
+    elif aes_type == "indexed":
+        return IndexedAesthetic.from_dict(d)
+    elif aes_type == "bystate":
+        return ByState.from_dict(d)
+    elif aes_type == "bygroup":
+        return ByGroup.from_dict(d)
+    elif aes_type == "bytype":
+        return ByType.from_dict(d)
+    else:
+        raise ValueError(f"Unknown aesthetic type: {aes_type!r}")
+
+
 __all__ = [
     "BaseAesthetic",
     "ShapeAesthetic",
@@ -469,4 +956,5 @@ __all__ = [
     "ByType",
     "ByGroup",
     "IndexedAesthetic",
+    "from_dict",
 ]

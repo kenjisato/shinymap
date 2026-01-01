@@ -9,14 +9,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 
-from ._base import (
-    CountMap,
-    TooltipMap,
-    _camel_props,
-    _convert_aes_to_dict,
-    _normalize_outline,
-)
 from .aes._core import BaseAesthetic, ByGroup, ByState
+from .types import CountMap, TooltipMap
+from .uicore._util import _normalize_outline, _strip_none
 
 if TYPE_CHECKING:
     from .geometry import Outline
@@ -126,7 +121,11 @@ class MapBuilder:
         return self
 
     def as_json(self) -> Mapping[str, Any]:
-        """Convert to JSON dict for JavaScript consumption."""
+        """Convert to JSON dict for JavaScript consumption.
+
+        Returns snake_case keys. JavaScript (shinymap-shiny.js) handles
+        conversion to camelCase.
+        """
         data: dict[str, Any] = {}
 
         if self._regions is not None:
@@ -140,9 +139,11 @@ class MapBuilder:
         if self._view_box is not None:
             data["view_box"] = _viewbox_to_str(self._view_box)
         if self._aes is not None:
-            # Convert ByGroup/ByState/BaseAesthetic to dict format
-            if isinstance(self._aes, (ByGroup, ByState, BaseAesthetic)):
-                data["aes"] = _convert_aes_to_dict(self._aes)
+            # Use to_js_dict() for aes objects, pass through dicts
+            if hasattr(self._aes, "to_js_dict"):
+                data["aes"] = self._aes.to_js_dict()
+            elif hasattr(self._aes, "to_dict"):
+                data["aes"] = self._aes.to_dict()
             else:
                 data["aes"] = self._aes
         if self._layers is not None:
@@ -150,7 +151,7 @@ class MapBuilder:
         if hasattr(self, "_geometry_metadata") and self._geometry_metadata is not None:
             data["geometry_metadata"] = self._geometry_metadata
 
-        return _camel_props(data)
+        return _strip_none(data)
 
 
 def Map(
