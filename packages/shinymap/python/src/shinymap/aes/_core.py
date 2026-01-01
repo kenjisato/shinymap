@@ -79,7 +79,7 @@ class BaseAesthetic:
             '#fff'
         """
         return replace(self, **kwargs)
-    
+
     @classmethod
     def from_dict(cls, d: dict[str, Any]) -> BaseAesthetic:
         """Convert a dict to Aesthetic. Subclasses must override."""
@@ -215,13 +215,7 @@ class LineAesthetic(BaseAesthetic):
     stroke_dasharray: str | None | MissingType = MISSING
     non_scaling_stroke: bool | MissingType = MISSING
 
-    _valid_keys = {
-        "type",
-        "stroke_color",
-        "stroke_width",
-        "stroke_dasharray",
-        "non_scaling_stroke"
-    }
+    _valid_keys = {"type", "stroke_color", "stroke_width", "stroke_dasharray", "non_scaling_stroke"}
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dict with type key and fill_color=None.
@@ -244,6 +238,7 @@ class LineAesthetic(BaseAesthetic):
             stroke_dasharray=d.get("stroke_dasharray", MISSING),
             non_scaling_stroke=d.get("non_scaling_stroke", MISSING),
         )
+
 
 @dataclass
 class TextAesthetic(BaseAesthetic):

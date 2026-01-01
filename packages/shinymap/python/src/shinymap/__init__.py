@@ -22,9 +22,9 @@ from .ui import (
     input_map,
     input_radio_buttons,
     output_map,
+    render_map,
     update_map,
 )
-from .ui import render_map
 from .uicore import Wash
 
 __all__ = [

@@ -74,7 +74,9 @@ def update_map(
         if isinstance(aes, (ByGroup, ByState, BaseAesthetic)):
             # Convert to dict for JSON serialization
             if isinstance(aes, ByGroup):
-                updates["aes"] = {k: v.to_js_dict() if hasattr(v, "to_js_dict") else v for k, v in aes.items()}
+                updates["aes"] = {
+                    k: v.to_js_dict() if hasattr(v, "to_js_dict") else v for k, v in aes.items()
+                }
             elif isinstance(aes, ByState):
                 updates["aes"] = aes.to_js_dict()
             else:

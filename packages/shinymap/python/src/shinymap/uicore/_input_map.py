@@ -6,7 +6,6 @@ interactive map input components.
 
 import json
 from collections.abc import MutableMapping
-from typing import Any
 
 from htmltools import TagList, css, div
 
@@ -75,16 +74,18 @@ def _input_map(
     aes_dict = build_aes_payload(resolved_aes, outline)
 
     # Build props (JS will convert snake_case to camelCase)
-    props = _strip_none({
-        "geometry": _normalize_outline(outline.regions),
-        "tooltips": tooltips,
-        "view_box": vb_str,
-        "geometry_metadata": outline.metadata_dict(vb_tuple),
-        "value": effective_value,
-        "mode": mode_obj.to_dict(),
-        "aes": aes_dict,
-        "layers": outline.overlays() or None,
-    })
+    props = _strip_none(
+        {
+            "geometry": _normalize_outline(outline.regions),
+            "tooltips": tooltips,
+            "view_box": vb_str,
+            "geometry_metadata": outline.metadata_dict(vb_tuple),
+            "value": effective_value,
+            "mode": mode_obj.to_dict(),
+            "aes": aes_dict,
+            "layers": outline.overlays() or None,
+        }
+    )
 
     container = div(
         id=id,

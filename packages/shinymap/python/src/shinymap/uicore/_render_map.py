@@ -12,7 +12,6 @@ from shiny import render
 
 from ..types import MapBuilder
 from ._registry import _static_map_params
-from ._util import _dependency
 
 
 def _apply_static_params(builder: MapBuilder, output_id: str) -> MapBuilder:

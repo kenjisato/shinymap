@@ -1,12 +1,10 @@
 import warnings
 from typing import Any
 
+
 def _warn_invalid_keys(
-        d: dict[str, Any], 
-        valid_keys: set[str], 
-        context: str | None = None, 
-        stacklevel: int = 4
-    ):
+    d: dict[str, Any], valid_keys: set[str], context: str | None = None, stacklevel: int = 4
+):
     """Warn if dict contains invalid keys"""
     unknown = set(d.keys()) - valid_keys
 

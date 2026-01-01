@@ -57,7 +57,8 @@ def build_aes_payload(
         >>> from shinymap import Wash, aes
         >>> from shinymap.payload import build_aes_payload
         >>> wc = Wash(shape=aes.Shape(fill_color="#e5e7eb"))
-        >>> resolved = wc.config.apply(aes.ByGroup(coastal=aes.Shape(fill_color="#3b82f6")), geometry)
+        >>> coastal_aes = aes.ByGroup(coastal=aes.Shape(fill_color="#3b82f6"))
+        >>> resolved = wc.config.apply(coastal_aes, geometry)
         >>> payload = build_aes_payload(resolved, geometry)
         >>> payload["coastal"]["base"]["fill_color"]
         '#3b82f6'

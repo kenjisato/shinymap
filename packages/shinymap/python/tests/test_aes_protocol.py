@@ -11,7 +11,6 @@ import pytest
 
 from shinymap import aes
 from shinymap.aes._core import (
-    BaseAesthetic,
     ByGroup,
     ByState,
     ByType,
@@ -354,10 +353,12 @@ class TestErrorHandling:
     def test_bystate_with_container_type_raises(self):
         """ByState nested values must be leaf types."""
         with pytest.raises(ValueError, match="Expected leaf aesthetic type"):
-            from_dict({
-                "type": "bystate",
-                "base": {"type": "bygroup", "region_a": {"type": "shape"}},
-            })
+            from_dict(
+                {
+                    "type": "bystate",
+                    "base": {"type": "bygroup", "region_a": {"type": "shape"}},
+                }
+            )
 
 
 class TestFromDictDirectly:
@@ -365,33 +366,39 @@ class TestFromDictDirectly:
 
     def test_shape_from_dict(self):
         """Create ShapeAesthetic from dict."""
-        result = from_dict({
-            "type": "shape",
-            "fill_color": "#3b82f6",
-            "stroke_width": 1.0,
-        })
+        result = from_dict(
+            {
+                "type": "shape",
+                "fill_color": "#3b82f6",
+                "stroke_width": 1.0,
+            }
+        )
         assert isinstance(result, ShapeAesthetic)
         assert result.fill_color == "#3b82f6"
         assert result.stroke_width == 1.0
 
     def test_bystate_from_dict(self):
         """Create ByState from dict."""
-        result = from_dict({
-            "type": "bystate",
-            "base": {"type": "shape", "fill_color": "#fff"},
-            "hover": {"type": "shape", "stroke_width": 2.0},
-        })
+        result = from_dict(
+            {
+                "type": "bystate",
+                "base": {"type": "shape", "fill_color": "#fff"},
+                "hover": {"type": "shape", "stroke_width": 2.0},
+            }
+        )
         assert isinstance(result, ByState)
         assert isinstance(result.base, ShapeAesthetic)
         assert result.base.fill_color == "#fff"
 
     def test_bygroup_from_dict(self):
         """Create ByGroup from dict."""
-        result = from_dict({
-            "type": "bygroup",
-            "__all": {"type": "shape", "fill_color": "#e2e8f0"},
-            "region_a": {"type": "shape", "fill_color": "#3b82f6"},
-        })
+        result = from_dict(
+            {
+                "type": "bygroup",
+                "__all": {"type": "shape", "fill_color": "#e2e8f0"},
+                "region_a": {"type": "shape", "fill_color": "#3b82f6"},
+            }
+        )
         assert isinstance(result, ByGroup)
         assert result["__all"].fill_color == "#e2e8f0"
         assert result["region_a"].fill_color == "#3b82f6"
@@ -489,11 +496,14 @@ class TestWashConfigApply:
 
         wc = Wash(shape=ShapeAesthetic(fill_color="#e5e7eb", stroke_width=1.0))
         geo = Outline.from_dict({"a": ["M0 0 L10 0 L10 10 Z"]})
-        resolved = wc.config.apply(ByState(
-            base=ShapeAesthetic(fill_color="#3b82f6"),
-            select=ShapeAesthetic(fill_color="#1e40af"),
-            hover=ShapeAesthetic(stroke_width=2.0),
-        ), geo)
+        resolved = wc.config.apply(
+            ByState(
+                base=ShapeAesthetic(fill_color="#3b82f6"),
+                select=ShapeAesthetic(fill_color="#1e40af"),
+                hover=ShapeAesthetic(stroke_width=2.0),
+            ),
+            geo,
+        )
 
         all_state = resolved["__all"]
         assert all_state.base.fill_color == "#3b82f6"
@@ -506,10 +516,12 @@ class TestWashConfigApply:
         from shinymap.relative import PARENT, RelativeExpr
         from shinymap.uicore import Wash
 
-        wc = Wash(shape=aes.ByState(
-            base=ShapeAesthetic(fill_color="#e5e7eb", stroke_width=1.0),
-            hover=ShapeAesthetic(stroke_width=PARENT.stroke_width + 1),
-        ))
+        wc = Wash(
+            shape=aes.ByState(
+                base=ShapeAesthetic(fill_color="#e5e7eb", stroke_width=1.0),
+                hover=ShapeAesthetic(stroke_width=PARENT.stroke_width + 1),
+            )
+        )
         geo = Outline.from_dict({"a": ["M0 0 L10 0 L10 10 Z"]})
         resolved = wc.config.apply(ShapeAesthetic(stroke_width=2.0), geo)
 
@@ -601,9 +613,7 @@ class TestByStateResolveForRegion:
             hover=ShapeAesthetic(stroke_width=PARENT.stroke_width + 0.5),
         )
 
-        resolved = states.resolve_for_region(
-            default, is_selected=True, is_hovered=True
-        )
+        resolved = states.resolve_for_region(default, is_selected=True, is_hovered=True)
 
         assert resolved.fill_color == "#1e40af"  # From select
         assert resolved.fill_opacity == 1.0  # From default

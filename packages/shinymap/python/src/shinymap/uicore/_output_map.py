@@ -69,21 +69,25 @@ def _output_map(
         aes_dict = build_aes_payload(resolved_aes, outline)
 
         # Store static params (JS will convert snake_case to camelCase)
-        static_params = _strip_none({
-            "geometry": outline.regions,
-            "tooltips": tooltips,
-            "view_box": vb_str,
-            "aes": aes_dict,
-            "layers": outline.overlays() or None,
-            "geometry_metadata": outline.metadata_dict(vb_tuple),
-        })
+        static_params = _strip_none(
+            {
+                "geometry": outline.regions,
+                "tooltips": tooltips,
+                "view_box": vb_str,
+                "aes": aes_dict,
+                "layers": outline.overlays() or None,
+                "geometry_metadata": outline.metadata_dict(vb_tuple),
+            }
+        )
     elif view_box is not None:
         # No outline but view_box provided
         vb_str = f"{view_box[0]} {view_box[1]} {view_box[2]} {view_box[3]}"
-        static_params = _strip_none({
-            "tooltips": tooltips,
-            "view_box": vb_str,
-        })
+        static_params = _strip_none(
+            {
+                "tooltips": tooltips,
+                "view_box": vb_str,
+            }
+        )
 
     if static_params:
         _static_map_params[id] = static_params

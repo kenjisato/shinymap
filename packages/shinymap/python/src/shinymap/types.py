@@ -90,5 +90,5 @@ __all__ = [
     "OutlineMap",
     "TooltipMap",
     "FillMap",
-    "CountMap"
+    "CountMap",
 ]
