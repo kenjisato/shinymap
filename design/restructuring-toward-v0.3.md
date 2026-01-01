@@ -97,20 +97,31 @@ Clear layering with unidirectional dependencies:
 
 1. ✅ Add `to_dict()`/`from_dict()` to aes classes
 2. ✅ Document late serialization philosophy in CLAUDE.md
+3. ✅ Create `shinymap/payload/` module for payload building
+   - `_build_aes_payload()` function created
+   - Serialization separated from resolution
+4. ✅ Reorganize modules into `uicore/` (core) and `ui/` (defaults wrapper)
+   - `uicore/` contains pure logic without external dependencies
+   - `ui/` wraps `uicore/` with default values from `wash._defaults`
+   - Eliminated circular dependencies between these modules
+5. ✅ Move camelCase conversion to JavaScript (`shinyBridge.ts`)
+   - Python sends snake_case keys
+   - JavaScript converts to camelCase on receive via `snakeToCamelDeep()`
+   - Simplifies R package development
 
 ### In Progress
 
-3. ⬜ Separate resolution from serialization (see [aes-resolution.md](aes-resolution.md))
+6. ⬜ Separate resolution from serialization (see [aes-resolution.md](aes-resolution.md))
    - Add `resolve()` method to BaseAesthetic
    - Refactor `_convert_to_aes_dict()` in `wash/_core.py`
 
 ### Future
 
-4. ⬜ Move resolution algorithms from `relative.py` to appropriate layer
-5. ⬜ Eliminate late imports in `wash/_output_map.py` and `wash/_render_map.py`
-6. ⬜ Review and fix `geometry/` module dependencies
-7. ⬜ Remove `TYPE_CHECKING` guards one by one
-8. ⬜ Final cleanup and verification
+7. ⬜ Move resolution algorithms from `relative.py` to appropriate layer
+8. ⬜ Eliminate late imports in `wash/_output_map.py` and `wash/_render_map.py`
+9. ⬜ Review and fix `geometry/` module dependencies
+10. ⬜ Remove `TYPE_CHECKING` guards one by one
+11. ⬜ Final cleanup and verification
 
 ## Tracking Progress
 

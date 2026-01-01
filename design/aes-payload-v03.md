@@ -313,15 +313,24 @@ Note: `hover.stroke_width` is a RelativeExpr, not a resolved value. JavaScript r
 
 ## Implementation Plan
 
-1. [ ] Create `shinymap/payload/` module with `_build_aes_payload()` function
-2. [ ] Add JS `getAesForRegion()` lookup function to `types.ts`
-3. [ ] Keep `RelativeExpr` handling in JS (for runtime resolution)
-4. [ ] Add `resolveAesForState()` to resolve RelativeExpr at render time
-5. [ ] Update `InputMap.tsx` to use new lookup + resolution
-6. [ ] Update `OutputMap.tsx` to use new lookup + resolution
-7. [ ] Remove old `_convert_aes_to_dict()` from Python
-8. [ ] Add tests for payload generation
-9. [ ] Add tests for JS lookup and RelativeExpr resolution
+### Python Backend
+1. [x] Create `shinymap/payload/` module with `_build_aes_payload()` function
+2. [ ] Remove old `_convert_aes_to_dict()` from Python (after JS migration)
+3. [ ] Add tests for payload generation
+
+### JavaScript Bridge
+4. [x] Move camelCase conversion to JavaScript (`shinyBridge.ts`)
+   - `snakeToCamelDeep()` utility in `utils/caseConvert.ts`
+   - Preserves region ID keys while converting structural keys
+   - Shiny bridge built with esbuild, minified to ~6KB
+
+### JavaScript Components (TODO)
+5. [ ] Add JS `getAesForRegion()` lookup function to `types.ts`
+6. [ ] Keep `RelativeExpr` handling in JS (for runtime resolution)
+7. [ ] Add `resolveAesForState()` to resolve RelativeExpr at render time
+8. [ ] Update `InputMap.tsx` to use new lookup + resolution
+9. [ ] Update `OutputMap.tsx` to use new lookup + resolution
+10. [ ] Add tests for JS lookup and RelativeExpr resolution
 
 ## Related Documents
 

@@ -338,26 +338,27 @@ The following issues need investigation in future iterations:
 
 ### Remaining Work
 
-1. **Create `shinymap/payload/` module** for payload building
-   - New `_build_aes_payload()` function that takes resolved aesthetics
-   - Serializes to v0.3 payload format (see [aes-payload-v03.md](aes-payload-v03.md))
+1. ~~**Create `shinymap/payload/` module** for payload building~~ ✅ DONE
+   - `_build_aes_payload()` function created in `payload/_aes.py`
+   - Serializes to v0.3 payload format
    - RelativeExpr serialized as `{"__relative__": true, "field": "...", "offset": N}`
 
-2. **Update `_input_map.py` and `_output_map.py`**
-   - Use new payload builder from `shinymap/payload/`
-   - Remove old `_convert_aes_to_dict()` calls
+2. ~~**Update `_input_map.py` and `_output_map.py`**~~ ✅ DONE
+   - Uses new payload builder from `shinymap.payload`
+   - Old conversion code removed
 
-3. **Move camelCase conversion to JavaScript** (`shinymap-shiny.js`)
+3. ~~**Move camelCase conversion to JavaScript**~~ ✅ DONE
+   - `shinyBridge.ts` (TypeScript) with `snakeToCamelDeep()`
    - Python sends snake_case keys
    - JavaScript converts to camelCase on receive
-   - Simplifies R package development (same Python code works)
+   - Built with esbuild, minified to ~6KB
 
-4. **Update JavaScript components**
+4. **Update JavaScript components** (TODO)
    - Add `getAesForRegion()` lookup function
    - Keep `isRelativeExpr()`, `resolveRelativeValue()` for runtime resolution
    - Update `InputMap.tsx` and `OutputMap.tsx` to use new lookup + RelativeExpr resolution
 
-5. **Update design document** with final implementation status
+5. **Update design document** with final implementation status (in progress)
 
 ### Compatibility
 
