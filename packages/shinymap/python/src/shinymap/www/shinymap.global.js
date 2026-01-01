@@ -21867,6 +21867,10 @@ var shinymap = (() => {
     };
     return { id, aesthetic: resolved, parent };
   }
+  function isAesPayload(aes) {
+    if (!aes || typeof aes !== "object") return false;
+    return "__all" in aes || "_metadata" in aes;
+  }
 
   // src/utils/geometry.ts
   function normalizeRegion(value) {
@@ -22105,10 +22109,13 @@ var shinymap = (() => {
       overlayGeometry,
       overlayAesthetic
     } = props;
-    const aesBase = aes?.base ?? DEFAULT_AESTHETIC_VALUES;
-    const aesHover = aes?.hover;
-    const aesSelect = aes?.select;
-    const aesGroup = aes?.group;
+    const isV03Format = isAesPayload(aes);
+    const aesPayload = isV03Format ? aes : void 0;
+    const legacyAes = !isV03Format ? aes : void 0;
+    const aesBase = isV03Format ? aesPayload?.__all?.base ?? DEFAULT_AESTHETIC_VALUES : legacyAes?.base ?? DEFAULT_AESTHETIC_VALUES;
+    const aesHover = isV03Format ? aesPayload?.__all?.hover : legacyAes?.hover;
+    const aesSelect = isV03Format ? aesPayload?.__all?.select : legacyAes?.select;
+    const aesGroup = isV03Format ? void 0 : legacyAes?.group;
     const underlays = layers?.underlays;
     const overlays = layers?.overlays;
     const hidden = layers?.hidden;
@@ -22409,13 +22416,16 @@ var shinymap = (() => {
       overlayGeometry,
       overlayAesthetic
     } = props;
-    const aesBaseRaw = aes?.base ?? DEFAULT_AESTHETIC_VALUES;
+    const isV03Format = isAesPayload(aes);
+    const aesPayload = isV03Format ? aes : void 0;
+    const legacyAes = !isV03Format ? aes : void 0;
+    const aesBaseRaw = isV03Format ? aesPayload?.__all?.base ?? DEFAULT_AESTHETIC_VALUES : legacyAes?.base ?? DEFAULT_AESTHETIC_VALUES;
     const aesBase = aesBaseRaw;
-    const aesHover = aes?.hover;
-    const aesSelect = aes?.select;
-    const aesNotSelect = aes?.notSelect;
-    const aesGroup = aes?.group;
-    const aesBaseFillColorDict = typeof aesBaseRaw.fillColor === "object" && aesBaseRaw.fillColor !== null ? aesBaseRaw.fillColor : void 0;
+    const aesHover = isV03Format ? aesPayload?.__all?.hover : legacyAes?.hover;
+    const aesSelect = isV03Format ? aesPayload?.__all?.select : legacyAes?.select;
+    const aesNotSelect = legacyAes?.notSelect;
+    const aesGroup = isV03Format ? void 0 : legacyAes?.group;
+    const aesBaseFillColorDict = typeof aesBaseRaw?.fillColor === "object" && aesBaseRaw.fillColor !== null ? aesBaseRaw.fillColor : void 0;
     const underlays = layers?.underlays;
     const overlays = layers?.overlays;
     const hidden = layers?.hidden;
