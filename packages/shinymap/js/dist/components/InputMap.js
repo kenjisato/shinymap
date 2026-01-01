@@ -1,6 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useEffect, useMemo, useState } from "react";
-import { createRenderedRegion, DEFAULT_AESTHETIC_VALUES, DEFAULT_HOVER_AESTHETIC, getIndexedDataForRegion, resolveIndexedAesthetic, } from "../types";
+import { createRenderedRegion, DEFAULT_AESTHETIC_VALUES, DEFAULT_HOVER_AESTHETIC, getIndexedDataForRegion, isAesPayload, resolveIndexedAesthetic, } from "../types";
 import { normalizeGeometry } from "../utils/geometry";
 import { assignLayers, resolveGroupAesthetic } from "../utils/layers";
 import { renderElement } from "../utils/renderElement";
@@ -24,21 +24,36 @@ function normalizeFillColor(fillColor, geometry) {
     return fillColor;
 }
 export function InputMap(props) {
-    var _a, _b;
+    var _a, _b, _c, _d, _e, _f;
     const { geometry, tooltips, fillColor, className, containerStyle, viewBox = DEFAULT_VIEWBOX, mode: modeConfig, aes, layers, geometryMetadata, value, onChange, resolveAesthetic, regionProps, 
     // Deprecated props (for backward compatibility)
     overlayGeometry, overlayAesthetic, } = props;
-    // Extract from nested aes config
-    const aesBase = (_a = aes === null || aes === void 0 ? void 0 : aes.base) !== null && _a !== void 0 ? _a : DEFAULT_AESTHETIC_VALUES;
-    const aesHover = aes === null || aes === void 0 ? void 0 : aes.hover;
-    const aesSelect = aes === null || aes === void 0 ? void 0 : aes.select;
-    const aesGroup = aes === null || aes === void 0 ? void 0 : aes.group;
+    // Detect v0.3 payload format (has __all or _metadata at top level)
+    const isV03Format = isAesPayload(aes);
+    const aesPayload = isV03Format ? aes : undefined;
+    // Extract from nested aes config (handles both old and v0.3 formats)
+    // For v0.3: use __all.base/select/hover
+    // For old format: use aes.base/select/hover directly
+    const legacyAes = !isV03Format ? aes : undefined;
+    const aesBase = isV03Format
+        ? ((_b = (_a = aesPayload === null || aesPayload === void 0 ? void 0 : aesPayload.__all) === null || _a === void 0 ? void 0 : _a.base) !== null && _b !== void 0 ? _b : DEFAULT_AESTHETIC_VALUES)
+        : ((_c = legacyAes === null || legacyAes === void 0 ? void 0 : legacyAes.base) !== null && _c !== void 0 ? _c : DEFAULT_AESTHETIC_VALUES);
+    const aesHover = isV03Format
+        ? (_d = aesPayload === null || aesPayload === void 0 ? void 0 : aesPayload.__all) === null || _d === void 0 ? void 0 : _d.hover
+        : legacyAes === null || legacyAes === void 0 ? void 0 : legacyAes.hover;
+    const aesSelect = isV03Format
+        ? (_e = aesPayload === null || aesPayload === void 0 ? void 0 : aesPayload.__all) === null || _e === void 0 ? void 0 : _e.select
+        : legacyAes === null || legacyAes === void 0 ? void 0 : legacyAes.select;
+    // For v0.3, group aesthetics are in the payload directly (not under .group)
+    const aesGroup = isV03Format
+        ? undefined // v0.3 uses getAesForRegion instead
+        : legacyAes === null || legacyAes === void 0 ? void 0 : legacyAes.group;
     // Extract from nested layers config
     const underlays = layers === null || layers === void 0 ? void 0 : layers.underlays;
     const overlays = layers === null || layers === void 0 ? void 0 : layers.overlays;
     const hidden = layers === null || layers === void 0 ? void 0 : layers.hidden;
     // Extract from nested mode config
-    const modeType = (_b = modeConfig === null || modeConfig === void 0 ? void 0 : modeConfig.type) !== null && _b !== void 0 ? _b : "multiple";
+    const modeType = (_f = modeConfig === null || modeConfig === void 0 ? void 0 : modeConfig.type) !== null && _f !== void 0 ? _f : "multiple";
     const cycle = modeConfig === null || modeConfig === void 0 ? void 0 : modeConfig.n;
     const maxSelection = modeConfig === null || modeConfig === void 0 ? void 0 : modeConfig.maxSelection;
     const aesIndexed = modeConfig === null || modeConfig === void 0 ? void 0 : modeConfig.aesIndexed;

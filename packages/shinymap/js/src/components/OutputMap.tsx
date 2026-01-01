@@ -1,7 +1,19 @@
 import React, { useMemo, useState } from "react";
 
-import type { AestheticStyle, Element, OutputMapProps, RegionId, RenderedRegion } from "../types";
-import { createRenderedRegion, DEFAULT_AESTHETIC_VALUES, DEFAULT_HOVER_AESTHETIC } from "../types";
+import type {
+  AestheticStyle,
+  Element,
+  LegacyAesConfig,
+  OutputMapProps,
+  RegionId,
+  RenderedRegion,
+} from "../types";
+import {
+  createRenderedRegion,
+  DEFAULT_AESTHETIC_VALUES,
+  DEFAULT_HOVER_AESTHETIC,
+  isAesPayload,
+} from "../types";
 import { normalizeGeometry } from "../utils/geometry";
 import { assignLayers, resolveGroupAesthetic } from "../utils/layers";
 import { renderElement } from "../utils/renderElement";
@@ -51,18 +63,27 @@ export function OutputMap(props: OutputMapProps) {
     overlayAesthetic,
   } = props;
 
-  // Extract from nested aes config
-  // Note: aes.base.fillColor can be a single color or a per-region dict
-  const aesBaseRaw = aes?.base ?? DEFAULT_AESTHETIC_VALUES;
+  // Detect v0.3 payload format (has __all or _metadata at top level)
+  const isV03Format = isAesPayload(aes);
+  const aesPayload = isV03Format ? aes : undefined;
+
+  // Extract from nested aes config (handles both old and v0.3 formats)
+  // For v0.3: use __all.base/select/hover
+  // For old format: use aes.base/select/hover directly
+  const legacyAes = !isV03Format ? (aes as LegacyAesConfig | undefined) : undefined;
+  const aesBaseRaw = isV03Format
+    ? (aesPayload?.__all?.base ?? DEFAULT_AESTHETIC_VALUES)
+    : (legacyAes?.base ?? DEFAULT_AESTHETIC_VALUES);
   const aesBase = aesBaseRaw;
-  const aesHover = aes?.hover;
-  const aesSelect = aes?.select;
-  const aesNotSelect = aes?.notSelect;
-  const aesGroup = aes?.group;
+  const aesHover = isV03Format ? aesPayload?.__all?.hover : legacyAes?.hover;
+  const aesSelect = isV03Format ? aesPayload?.__all?.select : legacyAes?.select;
+  const aesNotSelect = legacyAes?.notSelect; // Only in legacy format
+  // For v0.3, group aesthetics are in the payload directly (not under .group)
+  const aesGroup = isV03Format ? undefined : legacyAes?.group;
 
   // Extract per-region fill colors from aes.base if it's a dict
   const aesBaseFillColorDict =
-    typeof aesBaseRaw.fillColor === "object" && aesBaseRaw.fillColor !== null
+    typeof aesBaseRaw?.fillColor === "object" && aesBaseRaw.fillColor !== null
       ? (aesBaseRaw.fillColor as Record<RegionId, string>)
       : undefined;
 

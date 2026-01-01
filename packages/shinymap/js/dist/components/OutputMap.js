@@ -1,6 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useMemo, useState } from "react";
-import { createRenderedRegion, DEFAULT_AESTHETIC_VALUES, DEFAULT_HOVER_AESTHETIC } from "../types";
+import { createRenderedRegion, DEFAULT_AESTHETIC_VALUES, DEFAULT_HOVER_AESTHETIC, isAesPayload, } from "../types";
 import { normalizeGeometry } from "../utils/geometry";
 import { assignLayers, resolveGroupAesthetic } from "../utils/layers";
 import { renderElement } from "../utils/renderElement";
@@ -23,20 +23,28 @@ function normalize(value, geometry) {
     return Object.fromEntries(Object.keys(geometry).map((id) => [id, value]));
 }
 export function OutputMap(props) {
-    var _a;
+    var _a, _b, _c, _d, _e;
     const { geometry, tooltips, className, containerStyle, viewBox = DEFAULT_VIEWBOX, aes, layers, geometryMetadata, fillColor, strokeWidth: strokeWidthProp, strokeColor: strokeColorProp, fillOpacity: fillOpacityProp, value, activeIds, onRegionClick, resolveAesthetic, regionProps, 
     // Deprecated props (for backward compatibility)
     overlayGeometry, overlayAesthetic, } = props;
-    // Extract from nested aes config
-    // Note: aes.base.fillColor can be a single color or a per-region dict
-    const aesBaseRaw = (_a = aes === null || aes === void 0 ? void 0 : aes.base) !== null && _a !== void 0 ? _a : DEFAULT_AESTHETIC_VALUES;
+    // Detect v0.3 payload format (has __all or _metadata at top level)
+    const isV03Format = isAesPayload(aes);
+    const aesPayload = isV03Format ? aes : undefined;
+    // Extract from nested aes config (handles both old and v0.3 formats)
+    // For v0.3: use __all.base/select/hover
+    // For old format: use aes.base/select/hover directly
+    const legacyAes = !isV03Format ? aes : undefined;
+    const aesBaseRaw = isV03Format
+        ? ((_b = (_a = aesPayload === null || aesPayload === void 0 ? void 0 : aesPayload.__all) === null || _a === void 0 ? void 0 : _a.base) !== null && _b !== void 0 ? _b : DEFAULT_AESTHETIC_VALUES)
+        : ((_c = legacyAes === null || legacyAes === void 0 ? void 0 : legacyAes.base) !== null && _c !== void 0 ? _c : DEFAULT_AESTHETIC_VALUES);
     const aesBase = aesBaseRaw;
-    const aesHover = aes === null || aes === void 0 ? void 0 : aes.hover;
-    const aesSelect = aes === null || aes === void 0 ? void 0 : aes.select;
-    const aesNotSelect = aes === null || aes === void 0 ? void 0 : aes.notSelect;
-    const aesGroup = aes === null || aes === void 0 ? void 0 : aes.group;
+    const aesHover = isV03Format ? (_d = aesPayload === null || aesPayload === void 0 ? void 0 : aesPayload.__all) === null || _d === void 0 ? void 0 : _d.hover : legacyAes === null || legacyAes === void 0 ? void 0 : legacyAes.hover;
+    const aesSelect = isV03Format ? (_e = aesPayload === null || aesPayload === void 0 ? void 0 : aesPayload.__all) === null || _e === void 0 ? void 0 : _e.select : legacyAes === null || legacyAes === void 0 ? void 0 : legacyAes.select;
+    const aesNotSelect = legacyAes === null || legacyAes === void 0 ? void 0 : legacyAes.notSelect; // Only in legacy format
+    // For v0.3, group aesthetics are in the payload directly (not under .group)
+    const aesGroup = isV03Format ? undefined : legacyAes === null || legacyAes === void 0 ? void 0 : legacyAes.group;
     // Extract per-region fill colors from aes.base if it's a dict
-    const aesBaseFillColorDict = typeof aesBaseRaw.fillColor === "object" && aesBaseRaw.fillColor !== null
+    const aesBaseFillColorDict = typeof (aesBaseRaw === null || aesBaseRaw === void 0 ? void 0 : aesBaseRaw.fillColor) === "object" && aesBaseRaw.fillColor !== null
         ? aesBaseRaw.fillColor
         : undefined;
     // Extract from nested layers config

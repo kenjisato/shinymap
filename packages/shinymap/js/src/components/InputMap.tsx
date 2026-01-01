@@ -4,6 +4,7 @@ import type {
   AestheticStyle,
   Element,
   InputMapProps,
+  LegacyAesConfig,
   MapModeType,
   RegionId,
   RenderedRegion,
@@ -13,6 +14,7 @@ import {
   DEFAULT_AESTHETIC_VALUES,
   DEFAULT_HOVER_AESTHETIC,
   getIndexedDataForRegion,
+  isAesPayload,
   resolveIndexedAesthetic,
 } from "../types";
 import { normalizeGeometry } from "../utils/geometry";
@@ -62,11 +64,27 @@ export function InputMap(props: InputMapProps) {
     overlayAesthetic,
   } = props;
 
-  // Extract from nested aes config
-  const aesBase = aes?.base ?? DEFAULT_AESTHETIC_VALUES;
-  const aesHover = aes?.hover;
-  const aesSelect = aes?.select;
-  const aesGroup = aes?.group;
+  // Detect v0.3 payload format (has __all or _metadata at top level)
+  const isV03Format = isAesPayload(aes);
+  const aesPayload = isV03Format ? aes : undefined;
+
+  // Extract from nested aes config (handles both old and v0.3 formats)
+  // For v0.3: use __all.base/select/hover
+  // For old format: use aes.base/select/hover directly
+  const legacyAes = !isV03Format ? (aes as LegacyAesConfig | undefined) : undefined;
+  const aesBase = isV03Format
+    ? (aesPayload?.__all?.base ?? DEFAULT_AESTHETIC_VALUES)
+    : (legacyAes?.base ?? DEFAULT_AESTHETIC_VALUES);
+  const aesHover = isV03Format
+    ? aesPayload?.__all?.hover
+    : legacyAes?.hover;
+  const aesSelect = isV03Format
+    ? aesPayload?.__all?.select
+    : legacyAes?.select;
+  // For v0.3, group aesthetics are in the payload directly (not under .group)
+  const aesGroup = isV03Format
+    ? undefined  // v0.3 uses getAesForRegion instead
+    : legacyAes?.group;
 
   // Extract from nested layers config
   const underlays = layers?.underlays;
