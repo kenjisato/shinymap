@@ -89,15 +89,15 @@ class Single:
     aes: IndexedAesthetic | ByGroup | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        """Serialize for JavaScript."""
+        """Serialize for JavaScript (snake_case, JS converts to camelCase)."""
         result: dict[str, Any] = {
             "type": "single",
-            "allowDeselect": self.allow_deselect,
+            "allow_deselect": self.allow_deselect,
         }
         if self.selected is not None:
             result["selected"] = self.selected
         if self.aes is not None:
-            result["aesIndexed"] = _serialize_aes(self.aes)
+            result["aes_indexed"] = _serialize_aes(self.aes)
         return result
 
 
@@ -140,16 +140,16 @@ class Multiple:
     aes: IndexedAesthetic | ByGroup | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        """Serialize for JavaScript."""
+        """Serialize for JavaScript (snake_case, JS converts to camelCase)."""
         result: dict[str, Any] = {
             "type": "multiple",
         }
         if self.selected is not None:
             result["selected"] = self.selected
         if self.max_selection is not None:
-            result["maxSelection"] = self.max_selection
+            result["max_selection"] = self.max_selection
         if self.aes is not None:
-            result["aesIndexed"] = _serialize_aes(self.aes)
+            result["aes_indexed"] = _serialize_aes(self.aes)
         return result
 
 
@@ -197,7 +197,7 @@ class Cycle:
             raise ValueError("Cycle.n must be at least 2")
 
     def to_dict(self) -> dict[str, Any]:
-        """Serialize for JavaScript."""
+        """Serialize for JavaScript (snake_case, JS converts to camelCase)."""
         result: dict[str, Any] = {
             "type": "cycle",
             "n": self.n,
@@ -205,7 +205,7 @@ class Cycle:
         if self.values is not None:
             result["values"] = self.values
         if self.aes is not None:
-            result["aesIndexed"] = _serialize_aes(self.aes)
+            result["aes_indexed"] = _serialize_aes(self.aes)
         return result
 
 
@@ -255,31 +255,138 @@ class Count:
     aes: IndexedAesthetic | ByGroup | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        """Serialize for JavaScript."""
+        """Serialize for JavaScript (snake_case, JS converts to camelCase)."""
         result: dict[str, Any] = {
             "type": "count",
         }
         if self.values is not None:
             result["values"] = self.values
         if self.max_count is not None:
-            result["maxCount"] = self.max_count
+            result["max_count"] = self.max_count
         if self.aes is not None:
-            result["aesIndexed"] = _serialize_aes(self.aes)
+            result["aes_indexed"] = _serialize_aes(self.aes)
         return result
 
 
+@dataclass
+class Display:
+    """Display-only mode for output_map.
+
+    Regions respond to hover but not click by default. Value determines which
+    indexed aesthetic to use, enabling declarative value-to-color mapping.
+
+    This mode is specifically for output_map, allowing you to prepopulate
+    the color scale in the UI declaration rather than computing it in
+    the render function.
+
+    Args:
+        aes: Indexed aesthetic mapping values to colors.
+             Can be aes.Indexed (global) or aes.ByGroup wrapping aes.Indexed.
+             Index is computed as: min(value, len(list) - 1) (clamping).
+        clickable: If True, clicking a region emits an input event with the
+                   region ID. Use with @reactive.event to trigger actions
+                   like showing modals. Default is False.
+        input_id: Custom input ID for click events. If None (default),
+                  uses "{output_map_id}_click". Only used when clickable=True.
+
+    Example:
+        >>> from shinymap.mode import Display
+        >>> from shinymap import aes, output_map
+        >>>
+        >>> # Traffic light colors for status values
+        >>> output_map(
+        ...     "status_map",
+        ...     geometry,
+        ...     mode=Display(aes=aes.Indexed(
+        ...         fill_color=["#f3f4f6", "#22c55e", "#f59e0b", "#ef4444"]
+        ...     ))
+        ... )
+        >>>
+        >>> @render_map
+        >>> def status_map():
+        ...     # value 0=unknown, 1=good, 2=warning, 3=error
+        ...     return Map(geometry, value=status_values)
+        >>>
+        >>> # Clickable display map for triggering actions
+        >>> output_map(
+        ...     "clickable_map",
+        ...     geometry,
+        ...     mode=Display(clickable=True)
+        ... )
+        >>>
+        >>> @reactive.effect
+        >>> @reactive.event(input.clickable_map_click)
+        >>> def show_region_modal():
+        ...     region_id = input.clickable_map_click()
+        ...     # Show modal with region details
+        >>>
+        >>> # Custom input ID
+        >>> output_map(
+        ...     "my_map",
+        ...     geometry,
+        ...     mode=Display(clickable=True, input_id="region_clicked")
+        ... )
+        >>> # Access via input.region_clicked()
+    """
+
+    aes: IndexedAesthetic | ByGroup | None = None
+    clickable: bool = False
+    input_id: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize for JavaScript (snake_case, JS converts to camelCase)."""
+        result: dict[str, Any] = {
+            "type": "display",
+        }
+        if self.aes is not None:
+            result["aes_indexed"] = _serialize_aes(self.aes)
+        if self.clickable:
+            result["clickable"] = True
+        # Note: input_id is handled by _output_map, not serialized to JS
+        return result
+
+    def get_click_input_id(self, output_id: str) -> str | None:
+        """Get the click input ID for this mode.
+
+        Args:
+            output_id: The output map's ID
+
+        Returns:
+            The input ID for click events, or None if not clickable
+        """
+        if not self.clickable:
+            return None
+        return self.input_id if self.input_id else f"{output_id}_click"
+
+
 def _serialize_aes(aes: Any) -> dict[str, Any]:
-    """Serialize aes.Indexed or aes.ByGroup to dict for JavaScript."""
+    """Serialize aes.Indexed or aes.ByGroup to dict for JavaScript.
+
+    For IndexedAesthetic (global), produces the data directly:
+        {fill_color: [...], ...}
+
+    For ByGroup wrapping IndexedAesthetic (per-group), produces:
+        {type: "byGroup", groups: {group_name: {fill_color: [...], ...}, ...}}
+
+    JS distinguishes: if aesIndexed has a "type" key, it's ByGroup. Otherwise direct data.
+    """
     from .aes._core import ByGroup, IndexedAesthetic
 
+    def _indexed_to_data(indexed: IndexedAesthetic) -> dict[str, Any]:
+        """Extract just the aesthetic values (no type key) for JS IndexedAestheticData."""
+        d = indexed.to_dict()
+        d.pop("type", None)  # Remove the "type" key - JS doesn't need it
+        return d
+
     if isinstance(aes, IndexedAesthetic):
-        return {"type": "indexed", "value": aes.to_dict()}
+        # Direct IndexedAestheticData (no wrapper)
+        return _indexed_to_data(aes)
     elif isinstance(aes, ByGroup):
         # ByGroup wrapping IndexedAesthetic
         groups = {}
         for key, value in aes.items():
             if isinstance(value, IndexedAesthetic):
-                groups[key] = value.to_dict()
+                groups[key] = _indexed_to_data(value)
             elif hasattr(value, "to_dict"):
                 groups[key] = value.to_dict()
         return {"type": "byGroup", "groups": groups}
@@ -289,8 +396,11 @@ def _serialize_aes(aes: Any) -> dict[str, Any]:
         return aes  # type: ignore[no-any-return]
 
 
-# Type alias for mode parameter
+# Type alias for mode parameter (input_map modes)
 ModeType = Literal["single", "multiple"] | Single | Multiple | Cycle | Count
+
+# Type alias for output_map mode parameter (includes Display)
+OutputModeType = Display | None
 
 
 def normalize_mode(mode: ModeType) -> Single | Multiple | Cycle | Count:
@@ -361,7 +471,9 @@ __all__ = [
     "Multiple",
     "Cycle",
     "Count",
+    "Display",
     "ModeType",
+    "OutputModeType",
     "normalize_mode",
     "initial_value_from_mode",
 ]
