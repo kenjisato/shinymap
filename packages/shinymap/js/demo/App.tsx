@@ -213,14 +213,14 @@ function DemoCountsAlpha({ geometry, tooltips }: DemoCountsAlphaProps) {
 // --- Count mode demo (hue mapping)
 function DemoHueCounts({ geometry, tooltips }: DemoHueCountsProps) {
   const [counts, setCounts] = useState<Record<string, number>>({});
-  const maxValue = 10;
-
   const hues = palette.qualitative;
+  const maxValue = hues.length;
+
   const resolveAesthetic = ({ count, isHovered, baseAesthetic }: ResolveAestheticArgs) => {
     const next: AestheticStyle = { ...baseAesthetic };
     if (count > 0) {
-      const ratio = Math.min(1, Math.max(0, count / maxValue));
-      const idx = Math.min(hues.length - 1, Math.floor(ratio * (hues.length - 1)));
+      // Direct index: count 1 → hues[0], count 2 → hues[1], etc.
+      const idx = Math.min(hues.length - 1, count - 1);
       next.fillColor = hues[idx] ?? hues[0];
     }
     if (isHovered) {
