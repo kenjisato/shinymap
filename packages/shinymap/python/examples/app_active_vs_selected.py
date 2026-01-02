@@ -1,8 +1,8 @@
-"""Demonstrates the difference between active (highlight) and user selection.
+"""Demonstrates value-based highlighting vs programmatic styling.
 
-Key distinction:
-- active: For programmatic highlighting based on computed logic
-- User selection: Tracked via input_map → server, visualized with aes.select
+Key concepts:
+- value > 0: Regions with value > 0 are "selected/highlighted" (apply aes.select)
+- Programmatic styling: Per-region aesthetics via aes={"base": {"fillColor": {...}}}
 """
 
 from shiny import App, render, ui
@@ -19,7 +19,7 @@ _ui_user_selection = ui.card(
     ui.card_header("User Selection Tracking"),
     ui.p(
         "User selection from input_map is displayed in the output map. "
-        "The 'active' parameter highlights the selected regions."
+        "Regions with value > 0 are highlighted using the selection aesthetic."
     ),
     ui.layout_columns(
         input_map("user_selected", DEMO_OUTLINE, tooltips=TOOLTIPS, mode="multiple"),
@@ -33,9 +33,10 @@ def _server_user_selection(input, output, session):
 
     @render_map
     def user_selection_display():
-        # Display user's selection with active highlighting
+        # Display user's selection with value-based highlighting
         selected = input.user_selected() or []
-        return Map(active=list(selected))
+        # value > 0 means the region is selected (highlighted)
+        return Map(value={s: 1 for s in selected})
 
     @render.text
     def user_selection_text():
@@ -130,8 +131,11 @@ def _server_combined(input, output, session):
             else:
                 fill_colors[rid] = "#e2e8f0"  # Base: gray
 
+        # Use value to mark the selected region as "highlighted"
+        value = {selected: 1} if selected else {}
+
         return Map(
-            active=[selected] if selected else [],
+            value=value,
             aes={"base": {"fillColor": fill_colors}}
         )
 
@@ -146,23 +150,24 @@ def _server_combined(input, output, session):
 
 # Put it all together
 ui_active_vs_selected = ui.page_fluid(
-    ui.h2("User Selection vs Programmatic Highlighting"),
+    ui.h2("Value-Based Highlighting vs Programmatic Styling"),
     ui.markdown("""
-**Key Distinction:**
+**Key Concepts:**
 
-- **`Map(active=[...])`**: Use to **highlight regions** based on computed logic or user selection.
+- **`Map(value={...})`**: Regions with `value > 0` are "selected/highlighted".
+  The selection aesthetic (`aes.select`) is applied automatically.
 
 - **Programmatic styling**: Use `aes={"base": {"fillColor": {...}, "strokeWidth": {...}}}`
   to apply **computed styles** based on data, thresholds, or relationships.
 
 **When to use each:**
-- User clicks -> show their selection? -> `Map(active=input.my_map())`
-- Computing which regions to highlight based on data/logic? -> Use conditional styling with dicts
+- User clicks -> show their selection? -> `Map(value={region: 1 for region in selected})`
+- Computing which regions to style based on data/logic? -> Use conditional styling with dicts
     """),
     _ui_user_selection,
     _ui_programmatic,
     _ui_combined,
-    title="Active vs Selected",
+    title="Highlighting Demo",
 )
 
 

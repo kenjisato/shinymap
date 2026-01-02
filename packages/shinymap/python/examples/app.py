@@ -11,6 +11,7 @@ from app_input_modes import ui_input_modes, server_input_modes
 from app_output import ui_output, server_output
 from app_patterns import ui_patterns, server_patterns
 from app_active_vs_selected import ui_active_vs_selected, server_active_vs_selected
+from app_output_clickable import ui_output_clickable, server_output_clickable
 
 def app_ui(request):
     _ui = ui.page_fluid(
@@ -23,6 +24,7 @@ def app_ui(request):
             ui.nav_panel("Output Maps", ui_output, value="output"),
             ui.nav_panel("Advanced Patterns", ui_patterns, value="patterns"),
             ui.nav_panel("Active vs Selected", ui_active_vs_selected, value="active"),
+            ui.nav_panel("Clickable Output Maps", ui_output_clickable, value="output_clickable"),
 
             well=False,
             widths=(2, 10),
@@ -40,5 +42,6 @@ def server(input, output, session: Session):
     server_output(input, output, session)
     server_patterns(input, output, session)
     server_active_vs_selected(input, output, session)
+    server_output_clickable(input, output, session)
 
 app = App(app_ui, server)

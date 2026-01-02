@@ -10,11 +10,6 @@ from shared import DEMO_OUTLINE, SHAPE_COLORS, TOOLTIPS
 
 
 # Helper functions --------
-def selected_ids(counts: dict[str, int] | None) -> list[str]:
-    """Return IDs of regions with count > 0."""
-    return [id for id, count in (counts or {}).items() if count > 0]
-
-
 def fills_for_qualitative(counts: dict[str, int] | None) -> dict[str, str]:
     """Active regions get their assigned color; inactive regions are neutral gray."""
     counts = counts or {}
@@ -54,9 +49,9 @@ def _server_qualitative(input, output, session):
         counts = {selected: 1} if selected else {}
         fills = fills_for_qualitative(counts)
 
+        # value > 0 means selected (highlighted)
         return Map(
             value=counts,
-            active=selected_ids(counts),
             aes={"base": {"fillColor": fills, "strokeWidth": 1.5}}
         )
 
@@ -101,10 +96,6 @@ _code_examples = ui.card(
         ui.tags.code(
             '''from shinymap.aes.color import scale_qualitative
 
-def selected_ids(counts: dict[str, int] | None) -> list[str]:
-    """Return IDs of regions with count > 0."""
-    return [id for id, count in (counts or {}).items() if count > 0]
-
 def fills_for_qualitative(counts: dict[str, int] | None) -> dict[str, str]:
     """Active regions get their assigned color; inactive regions are neutral gray."""
     counts = counts or {}
@@ -120,9 +111,9 @@ def qualitative_output():
     counts = {selected: 1} if selected else {}
     fills = fills_for_qualitative(counts)
 
+    # value > 0 means selected (highlighted)
     return Map(
         value=counts,
-        active=selected_ids(counts),
         aes={"base": {"fillColor": fills}}
     )'''
         )

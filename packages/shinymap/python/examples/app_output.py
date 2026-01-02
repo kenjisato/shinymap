@@ -62,12 +62,14 @@ def server_output(input, output, session):
     @render_map
     def single_select_output():
         selected = input.single_select_input()
-        return Map(active=[selected] if selected else [])
+        # value > 0 means selected (highlighted)
+        return Map(value={selected: 1} if selected else {})
 
     @render_map
     def multiple_select_output():
         selected = input.multiple_select_input() or []
-        return Map(active=list(selected))
+        # value > 0 means selected (highlighted)
+        return Map(value={s: 1 for s in selected})
 
     @render_map
     def alpha_output():
