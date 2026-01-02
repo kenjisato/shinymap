@@ -47,7 +47,8 @@ function DemoSingle({ geometry, tooltips }: DemoSingleProps) {
       next.fillColor = palette.qualitative[0];
     }
     if (isHovered) {
-      next.strokeWidth = (next.strokeWidth ?? 1) + 1;
+      const sw = typeof next.strokeWidth === "number" ? next.strokeWidth : 1;
+      next.strokeWidth = sw + 1;
     }
     return next;
   };
@@ -64,7 +65,7 @@ function DemoSingle({ geometry, tooltips }: DemoSingleProps) {
           tooltips={tooltips}
           value={counts}
           onChange={setCounts}
-          defaultAesthetic={{ fillColor: palette.neutrals.fill, strokeColor: palette.neutrals.stroke }}
+          aes={{ base: { fillColor: palette.neutrals.fill, strokeColor: palette.neutrals.stroke } }}
           resolveAesthetic={resolveAesthetic}
         />
       </div>
@@ -96,7 +97,8 @@ function DemoMultiple({ geometry, tooltips }: DemoMultipleProps) {
       next.fillColor = palette.qualitative[1];
     }
     if (isHovered) {
-      next.strokeWidth = (next.strokeWidth ?? 1) + 1;
+      const sw = typeof next.strokeWidth === "number" ? next.strokeWidth : 1;
+      next.strokeWidth = sw + 1;
     }
     return next;
   };
@@ -113,7 +115,7 @@ function DemoMultiple({ geometry, tooltips }: DemoMultipleProps) {
           tooltips={tooltips}
           value={counts}
           onChange={setCounts}
-          defaultAesthetic={{ fillColor: palette.neutrals.fill, strokeColor: palette.neutrals.stroke }}
+          aes={{ base: { fillColor: palette.neutrals.fill, strokeColor: palette.neutrals.stroke } }}
           resolveAesthetic={resolveAesthetic}
         />
       </div>
@@ -153,7 +155,8 @@ function DemoCountsAlpha({ geometry, tooltips }: DemoCountsAlphaProps) {
       next.fillOpacity = 0.2 + alpha * 0.8;
     }
     if (isHovered) {
-      next.strokeWidth = (next.strokeWidth ?? 1) + 1;
+      const sw = typeof next.strokeWidth === "number" ? next.strokeWidth : 1;
+      next.strokeWidth = sw + 1;
     }
     return next;
   };
@@ -178,7 +181,7 @@ function DemoCountsAlpha({ geometry, tooltips }: DemoCountsAlphaProps) {
           tooltips={tooltips}
           value={counts}
           onChange={setCounts}
-          defaultAesthetic={{ fillColor: palette.neutrals.fill, strokeColor: palette.neutrals.stroke }}
+          aes={{ base: { fillColor: palette.neutrals.fill, strokeColor: palette.neutrals.stroke } }}
           resolveAesthetic={resolveAesthetic}
         />
       </div>
@@ -221,7 +224,8 @@ function DemoHueCounts({ geometry, tooltips }: DemoHueCountsProps) {
       next.fillColor = hues[idx] ?? hues[0];
     }
     if (isHovered) {
-      next.strokeWidth = (next.strokeWidth ?? 1) + 1;
+      const sw = typeof next.strokeWidth === "number" ? next.strokeWidth : 1;
+      next.strokeWidth = sw + 1;
     }
     return next;
   };
@@ -238,7 +242,7 @@ function DemoHueCounts({ geometry, tooltips }: DemoHueCountsProps) {
           tooltips={tooltips}
           value={counts}
           onChange={setCounts}
-          defaultAesthetic={{ fillColor: palette.neutrals.fill, strokeColor: palette.neutrals.stroke }}
+          aes={{ base: { fillColor: palette.neutrals.fill, strokeColor: palette.neutrals.stroke } }}
           resolveAesthetic={resolveAesthetic}
         />
       </div>
@@ -347,7 +351,7 @@ function DemoOutput({ geometry, tooltips }: DemoOutputProps) {
           geometry={geometry}
           tooltips={tooltips}
           fillColor={fills}
-          counts={values}
+          value={values}
           resolveAesthetic={({ id, baseAesthetic }) => styleForRegion({ id, baseAesthetic })}
         />
       </div>
