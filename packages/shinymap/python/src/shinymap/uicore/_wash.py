@@ -19,7 +19,7 @@ from ..aes._core import (
     ShapeAesthetic,
     TextAesthetic,
 )
-from ..mode import ModeType
+from ..mode import Display, ModeType, OutputModeType
 from ..types import MISSING, MissingType
 
 if TYPE_CHECKING:
@@ -284,6 +284,7 @@ class WashResult:
         value: dict[str, int] | None = None,
         view_box: tuple[float, float, float, float] | None = None,
         layers: dict[str, list[str]] | None = None,
+        raw: bool = False,
         width: str | None = "100%",
         height: str | None = "320px",
         class_: str | None = None,
@@ -301,6 +302,9 @@ class WashResult:
             value: Initial selection state
             view_box: Override viewBox tuple
             layers: Layer configuration {underlays: [...], overlays: [...], hidden: [...]}
+            raw: If True, return raw dict[str, int] value instead of transformed
+                types (str for single, list for multiple). Useful when you need
+                consistent dict format regardless of mode.
             width: Container width (CSS)
             height: Container height (CSS)
             class_: Additional CSS classes
@@ -323,6 +327,7 @@ class WashResult:
             value,
             view_box,
             layers,
+            raw,
             width,
             height,
             class_,
@@ -334,6 +339,7 @@ class WashResult:
         id: str,
         geometry: Outline | None = None,
         *,
+        mode: Display = Display(),
         aes: AesParam = MISSING,
         tooltips: dict[str, str] | None = None,
         view_box: tuple[float, float, float, float] | None = None,
@@ -348,6 +354,9 @@ class WashResult:
         Args:
             id: Output ID (must match @render_map function name)
             geometry: Outline object
+            mode: Display mode with optional indexed aesthetics.
+                  Use Display(aes=aes.Indexed(...)) to prepopulate the
+                  value-to-color mapping in the UI declaration.
             aes: Group-wise aesthetic overrides
             tooltips: Optional static tooltips
             view_box: Optional viewBox tuple
@@ -359,6 +368,19 @@ class WashResult:
 
         Returns:
             TagList with the output container
+
+        Example:
+            >>> from shinymap import output_map, aes
+            >>> from shinymap.mode import Display
+            >>>
+            >>> # Prepopulate color scale in UI declaration
+            >>> output_map(
+            ...     "status_map",
+            ...     geometry,
+            ...     mode=Display(aes=aes.Indexed(
+            ...         fill_color=["#f3f4f6", "#22c55e", "#f59e0b", "#ef4444"]
+            ...     ))
+            ... )
         """
         from ._output_map import _output_map
 
@@ -372,6 +394,7 @@ class WashResult:
         return _output_map(
             id,
             geometry,
+            mode,
             resolved_aes,
             tooltips,
             view_box,

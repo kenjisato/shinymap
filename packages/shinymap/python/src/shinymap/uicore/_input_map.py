@@ -32,6 +32,7 @@ def _input_map(
     value: CountMap,
     view_box: tuple[float, float, float, float] | None,
     layers: dict[str, list[str]] | None,
+    raw: bool,
     width: str | None,
     height: str | None,
     class_: str | None,
@@ -51,6 +52,7 @@ def _input_map(
         value: Initial values per region {region_id: count}.
         view_box: SVG viewBox override (x, y, width, height).
         layers: Layer configuration dict with keys: underlays, overlays, hidden.
+        raw: If True, return raw dict[str, int] value instead of transformed types.
         width: CSS width.
         height: CSS height.
         class_: Additional CSS classes.
@@ -84,6 +86,7 @@ def _input_map(
             "mode": mode_obj.to_dict(),
             "aes": aes_dict,
             "layers": outline.overlays() or None,
+            "raw": raw if raw else None,  # Only include if True
         }
     )
 
