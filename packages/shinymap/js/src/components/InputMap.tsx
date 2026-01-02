@@ -13,6 +13,7 @@ import {
   createRenderedRegion,
   DEFAULT_AESTHETIC_VALUES,
   DEFAULT_HOVER_AESTHETIC,
+  getAesForRegion,
   getIndexedDataForRegion,
   isAesPayload,
   resolveIndexedAesthetic,
@@ -164,17 +165,39 @@ export function InputMap(props: InputMapProps) {
     onChange?.(next);
   };
 
+  // Helper to determine element type for a region from _metadata
+  const getElementType = (regionId: RegionId): "shape" | "line" | "text" => {
+    const metadata = aesPayload?._metadata;
+    if (metadata) {
+      if (metadata.__line?.includes(regionId)) return "line";
+      if (metadata.__text?.includes(regionId)) return "text";
+    }
+    return "shape";
+  };
+
   // Helper to render a non-interactive layer (underlay or overlay)
   const renderNonInteractiveLayer = (regionIds: Set<RegionId>, keyPrefix: string) => {
     return Array.from(regionIds).flatMap((id) => {
       const elements = normalizedRegions[id];
       if (!elements) return [];
 
-      // Build aesthetic chain: default -> aesBase -> groupAes
-      let layerAes: AestheticStyle = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
-      const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
-      if (groupAes) {
-        layerAes = { ...layerAes, ...groupAes };
+      // Build aesthetic chain
+      let layerAes: AestheticStyle = { ...DEFAULT_AESTHETIC_VALUES };
+
+      if (isV03Format && aesPayload) {
+        // v0.3 format: use getAesForRegion for proper type-based lookup
+        const elementType = getElementType(id);
+        const byState = getAesForRegion(id, elementType, aesPayload);
+        if (byState?.base) {
+          layerAes = { ...layerAes, ...byState.base };
+        }
+      } else {
+        // Legacy format: use aesBase + groupAes
+        layerAes = { ...layerAes, ...aesBase };
+        const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
+        if (groupAes) {
+          layerAes = { ...layerAes, ...groupAes };
+        }
       }
 
       // Create RenderedRegion to resolve any RelativeExpr
@@ -217,12 +240,22 @@ export function InputMap(props: InputMapProps) {
           const isSelected = selected.has(id);
           const count = counts[id] ?? 0;
 
-          let baseAes: AestheticStyle = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
+          let baseAes: AestheticStyle = { ...DEFAULT_AESTHETIC_VALUES };
 
-          // Apply group aesthetic if available
-          const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
-          if (groupAes) {
-            baseAes = { ...baseAes, ...groupAes };
+          if (isV03Format && aesPayload) {
+            // v0.3 format: use getAesForRegion for proper type-based lookup
+            const elementType = getElementType(id);
+            const byState = getAesForRegion(id, elementType, aesPayload);
+            if (byState?.base) {
+              baseAes = { ...baseAes, ...byState.base };
+            }
+          } else {
+            // Legacy format: use aesBase + groupAes
+            baseAes = { ...baseAes, ...aesBase };
+            const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
+            if (groupAes) {
+              baseAes = { ...baseAes, ...groupAes };
+            }
           }
 
           // Apply indexed aesthetic if available (for Cycle/Count modes)

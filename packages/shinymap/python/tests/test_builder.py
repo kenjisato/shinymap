@@ -109,72 +109,66 @@ def test_map_as_json():
 
 
 @pytest.mark.unit
-def test_static_params_merging():
-    """Test that _apply_static_params merges static params from output_map()."""
+def test_build_payload_with_static_outline():
+    """Test that _build_payload uses static outline from output_map()."""
     from shinymap._map import MapBuilder
-    from shinymap.uicore._registry import _static_map_params
-    from shinymap.uicore._render_map import _apply_static_params
+    from shinymap.outline import Outline
+    from shinymap.uicore._render_map import _build_payload
 
-    geometry = {"a": "M0 0", "b": "M10 10"}
+    outline = Outline.from_dict({"a": ["M0 0"], "b": ["M10 10"]})
     tooltips = {"a": "Region A", "b": "Region B"}
-    viewbox = (0, 0, 100, 100)
 
-    # Simulate output_map() storing static params
-    _static_map_params["test_map"] = {
-        "regions": geometry,
+    # Simulate static params from output_map()
+    static_params = {
+        "outline": outline,
         "tooltips": tooltips,
-        "view_box": viewbox,
-        "aes": {"base": {"fillColor": "#ccc"}},
+        "view_box": (0, 0, 100, 100),
     }
 
     # Create builder without geometry (simulating Map() with no args)
     builder = MapBuilder(None)
 
-    # Apply static params
-    merged = _apply_static_params(builder, "test_map")
+    # Build payload
+    payload = _build_payload(builder, static_params)
 
-    # Verify static params were applied
-    assert merged._regions == geometry
-    assert merged._tooltips == tooltips
-    assert merged._view_box == viewbox
-    assert merged._aes == {"base": {"fillColor": "#ccc"}}
-
-    # Cleanup
-    del _static_map_params["test_map"]
+    # Verify static params were used
+    assert "regions" in payload
+    assert "a" in payload["regions"]
+    assert "b" in payload["regions"]
+    assert payload["tooltips"] == tooltips
+    assert payload["view_box"] == "0 0 100 100"
 
 
 @pytest.mark.unit
-def test_static_params_builder_precedence():
+def test_build_payload_builder_precedence():
     """Test that builder params take precedence over static params."""
     from shinymap._map import MapBuilder
-    from shinymap.uicore._registry import _static_map_params
-    from shinymap.uicore._render_map import _apply_static_params
+    from shinymap.outline import Outline
+    from shinymap.uicore._render_map import _build_payload
 
-    static_geometry = {"a": "M0 0", "b": "M10 10"}
-    builder_geometry = {"x": "M20 20", "y": "M30 30"}
+    static_outline = Outline.from_dict({"a": ["M0 0"], "b": ["M10 10"]})
+    builder_regions = {"x": "M20 20", "y": "M30 30"}
 
-    # Simulate output_map() storing static params
-    _static_map_params["test_map2"] = {
-        "regions": static_geometry,
+    # Simulate static params from output_map()
+    static_params = {
+        "outline": static_outline,
         "view_box": (0, 0, 100, 100),
         "tooltips": {"a": "Static tooltip"},
     }
 
     # Create builder with geometry (should override static)
-    builder = MapBuilder(builder_geometry, tooltips={"x": "Builder tooltip"})
+    builder = MapBuilder(builder_regions, tooltips={"x": "Builder tooltip"})
 
-    # Apply static params
-    merged = _apply_static_params(builder, "test_map2")
+    # Build payload
+    payload = _build_payload(builder, static_params)
 
-    # Builder geometry should win
-    assert merged._regions == builder_geometry
+    # Builder regions should win
+    assert "x" in payload["regions"]
+    assert "y" in payload["regions"]
     # Builder tooltips should win
-    assert merged._tooltips == {"x": "Builder tooltip"}
+    assert payload["tooltips"] == {"x": "Builder tooltip"}
     # Static view_box should be used (not set in builder)
-    assert merged._view_box == (0, 0, 100, 100)
-
-    # Cleanup
-    del _static_map_params["test_map2"]
+    assert payload["view_box"] == "0 0 100 100"
 
 
 class TestValueValidation:

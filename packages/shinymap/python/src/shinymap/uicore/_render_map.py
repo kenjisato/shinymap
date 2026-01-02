@@ -6,80 +6,138 @@ map outputs.
 
 import json
 from functools import wraps
+from typing import Any
 
 from htmltools import Tag, TagList, div
 from shiny import render
 
+from ..aes._core import ByGroup
+from ..payload import build_aes_payload
 from ..types import MapBuilder
 from ._registry import _static_map_params
+from ._util import _normalize_outline
 
 
-def _apply_static_params(builder: MapBuilder, output_id: str) -> MapBuilder:
-    """Apply static parameters from output_map() to builder.
+def _merge_bygroup(a: ByGroup, b: ByGroup) -> ByGroup:
+    """Merge two ByGroup objects. Keys in b take precedence over a."""
+    merged_groups = dict(a._groups)
+    merged_groups.update(b._groups)
+    return ByGroup(**merged_groups)
 
-    Builder parameters take precedence over static parameters.
-    Static params use v0.3 aes payload format (flat with _metadata).
+
+def _build_payload(
+    builder: MapBuilder,
+    static_params: dict[str, Any],
+) -> dict[str, Any]:
+    """Build the final payload dict for JavaScript.
+
+    Handles merging of builder params with static params from output_map(),
+    and converts all objects to dicts.
     """
-    from .._map import MapBuilder
+    # Get outline from static params or builder
+    outline = static_params.get("outline")
 
-    static_params = _static_map_params.get(output_id)
-    if not static_params:
-        return builder
-
-    # Create new builder with merged parameters
-    # Builder values (if set) override static values
-    regions = builder._regions if builder._regions is not None else static_params.get("regions")
-    tooltips = builder._tooltips if builder._tooltips is not None else static_params.get("tooltips")
+    # Get view_box
     view_box = builder._view_box if builder._view_box is not None else static_params.get("view_box")
-    merged = MapBuilder(regions=regions, tooltips=tooltips, view_box=view_box)
+    if view_box is None and outline is not None:
+        view_box = outline.viewbox()
 
-    # Copy over builder-set values
-    if builder._value is not None:
-        merged._value = builder._value
+    # Format view_box as string
+    vb_str = None
+    if view_box is not None:
+        if isinstance(view_box, str):
+            vb_str = view_box
+        else:
+            vb_str = f"{view_box[0]} {view_box[1]} {view_box[2]} {view_box[3]}"
 
-    # Merge aes: builder aes overrides static
-    # v0.3 format: flat dict with region/group keys, each containing {base, select, hover}
-    static_aes = static_params.get("aes")
-    if builder._aes is not None:
-        merged._aes = builder._aes
+    # Get regions
+    regions = builder._regions
+    if regions is None and outline is not None:
+        regions = outline.regions
+
+    # Merge aes: static from output_map, builder from Map()
+    static_aes = static_params.get("resolved_aes")  # ByGroup object
+    builder_aes = builder._aes
+    merged_aes: Any = None
+
+    if static_aes is not None and builder_aes is not None:
+        # Both exist: merge (builder keys take precedence)
+        if isinstance(builder_aes, ByGroup):
+            merged_aes = _merge_bygroup(static_aes, builder_aes)
+        else:
+            # Builder aes is not ByGroup, use as-is
+            merged_aes = builder_aes
+    elif builder_aes is not None:
+        merged_aes = builder_aes
     elif static_aes is not None:
-        merged._aes = static_aes
+        merged_aes = static_aes
 
-    # Merge layers: builder values override static
-    static_layers = static_params.get("layers")
-    if builder._layers is not None:
-        merged._layers = builder._layers
-    elif static_layers is not None:
-        merged._layers = static_layers
+    # Build aes payload dict
+    aes_dict = None
+    if merged_aes is not None and outline is not None:
+        aes_dict = build_aes_payload(merged_aes, outline)
+    elif merged_aes is not None:
+        # No outline, use to_js_dict or to_dict
+        if hasattr(merged_aes, "to_js_dict"):
+            aes_dict = merged_aes.to_js_dict()
+        elif hasattr(merged_aes, "to_dict"):
+            aes_dict = merged_aes.to_dict()
+        else:
+            aes_dict = merged_aes
 
-    # Outline metadata
-    static_metadata = static_params.get("outline_metadata")
+    # Get layers
+    layers = builder._layers
+    if layers is None and outline is not None:
+        layers = outline.layers_dict()
+
+    # Get outline metadata
+    outline_metadata = None
     if hasattr(builder, "_outline_metadata") and builder._outline_metadata is not None:
-        merged._outline_metadata = builder._outline_metadata
-    elif static_metadata is not None:
-        merged._outline_metadata = static_metadata
+        outline_metadata = builder._outline_metadata
+    elif outline is not None:
+        outline_metadata = outline.metadata_dict(
+            view_box if not isinstance(view_box, str) else None
+        )
 
-    return merged
+    # Build payload
+    payload: dict[str, Any] = {}
+
+    if regions is not None:
+        payload["regions"] = _normalize_outline(regions)
+    if builder._tooltips is not None:
+        payload["tooltips"] = builder._tooltips
+    elif static_params.get("tooltips") is not None:
+        payload["tooltips"] = static_params["tooltips"]
+    if builder._value is not None:
+        payload["value"] = builder._value
+    if vb_str is not None:
+        payload["view_box"] = vb_str
+    if aes_dict is not None:
+        payload["aes"] = aes_dict
+    if layers is not None:
+        payload["layers"] = layers
+    if outline_metadata is not None:
+        payload["outline_metadata"] = outline_metadata
+
+    return payload
 
 
-def _render_map_ui(builder: MapBuilder, click_input_id: str | None = None) -> Tag | TagList:
-    """Internal: Render a map builder to HTML.
+def _render_map_ui(
+    payload_dict: dict[str, Any],
+    click_input_id: str | None = None,
+) -> Tag:
+    """Internal: Render a payload dict to HTML.
 
     Used by @render_map decorator. This creates the inner content
     that goes inside the output_map container.
 
     Args:
-        builder: MapBuilder with data to render
+        payload_dict: The payload dict to send to JavaScript
         click_input_id: Optional input ID for click events (from Display(clickable=True))
 
     Returns:
         Tag with map payload data attribute
     """
-    if isinstance(builder, (Tag, TagList)):
-        return builder
-
-    payload_dict = builder.as_json()
-
     # Build attributes dict
     attrs: dict[str, str] = {
         "class_": "shinymap-output",
@@ -105,6 +163,10 @@ def _render_map(fn=None):
         def wrapper():
             val = func()
 
+            # Pass through raw Tag/TagList
+            if isinstance(val, (Tag, TagList)):
+                return val
+
             # Ensure we have a MapBuilder
             if isinstance(val, MapBuilder):
                 builder = val
@@ -112,17 +174,22 @@ def _render_map(fn=None):
                 # Duck typing: anything with as_json() works
                 builder = val
             else:
-                # Pass through raw Tag/TagList
-                return _render_map_ui(val)
+                raise TypeError(f"Expected MapBuilder, got {type(val)}")
 
             output_id = func.__name__
-            builder = _apply_static_params(builder, output_id)
-
-            # Get click_input_id from static params if set
             static_params = _static_map_params.get(output_id, {})
+
+            # Build payload with merged params
+            payload_dict = _build_payload(builder, static_params)
+
+            # Add mode to payload (convert to dict here)
+            mode = static_params.get("mode")
+            payload_dict["mode"] = mode.to_dict()
+
+            # Get click_input_id from static params
             click_input_id = static_params.get("click_input_id")
 
-            return _render_map_ui(builder, click_input_id)
+            return _render_map_ui(payload_dict, click_input_id)
 
         return wrapper
 

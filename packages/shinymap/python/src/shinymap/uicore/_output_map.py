@@ -13,7 +13,6 @@ from shiny import ui
 from ..aes._core import ByGroup
 from ..mode import Display
 from ..outline._core import Outline
-from ..payload import build_aes_payload
 from ..types import TooltipMap
 from ._registry import _static_map_params
 from ._util import (
@@ -60,9 +59,6 @@ def _output_map(
     """
     static_params: dict[str, Any] = {}
 
-    # Serialize mode for JavaScript
-    mode_dict = mode.to_dict()
-
     # Get click input ID if clickable
     click_input_id = mode.get_click_input_id(id)
 
@@ -70,34 +66,24 @@ def _output_map(
         # Merge layers into outline metadata
         outline = outline.merge_layers(layers)
 
-        # Geometry
-        vb_tuple = view_box if view_box else outline.viewbox()
-        vb_str = f"{vb_tuple[0]} {vb_tuple[1]} {vb_tuple[2]} {vb_tuple[3]}"
-
-        # Build aes payload from pre-resolved ByGroup
-        aes_dict = build_aes_payload(resolved_aes, outline)
-
-        # Store static params (JS will convert snake_case to camelCase)
+        # Store static params as objects (dict conversion happens in _render_map)
         static_params = _strip_none(
             {
-                "regions": outline.regions,
+                "outline": outline,
                 "tooltips": tooltips,
-                "view_box": vb_str,
-                "mode": mode_dict,
-                "aes": aes_dict,
-                "layers": outline.overlays() or None,
-                "outline_metadata": outline.metadata_dict(vb_tuple),
+                "view_box": view_box,
+                "mode": mode,
+                "resolved_aes": resolved_aes,
                 "click_input_id": click_input_id,
             }
         )
     elif view_box is not None:
         # No outline but view_box provided
-        vb_str = f"{view_box[0]} {view_box[1]} {view_box[2]} {view_box[3]}"
         static_params = _strip_none(
             {
                 "tooltips": tooltips,
-                "view_box": vb_str,
-                "mode": mode_dict,
+                "view_box": view_box,
+                "mode": mode,
                 "click_input_id": click_input_id,
             }
         )

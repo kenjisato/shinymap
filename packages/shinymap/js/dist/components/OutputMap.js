@@ -1,6 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useMemo, useState } from "react";
-import { createRenderedRegion, DEFAULT_AESTHETIC_VALUES, DEFAULT_HOVER_AESTHETIC, getIndexedDataForRegion, isAesPayload, resolveIndexedAesthetic, } from "../types";
+import { createRenderedRegion, DEFAULT_AESTHETIC_VALUES, DEFAULT_HOVER_AESTHETIC, getAesForRegion, getIndexedDataForRegion, isAesPayload, resolveIndexedAesthetic, } from "../types";
 import { normalizeRegions } from "../utils/regions";
 import { assignLayers, resolveGroupAesthetic } from "../utils/layers";
 import { renderElement } from "../utils/renderElement";
@@ -73,20 +73,44 @@ export function OutputMap(props) {
     const normalizedStrokeColor = normalize(strokeColorProp, normalizedRegions);
     const normalizedFillOpacity = normalize(fillOpacityProp, normalizedRegions);
     const countMap = value !== null && value !== void 0 ? value : {};
+    // Helper to determine element type for a region from _metadata
+    const getElementType = (regionId) => {
+        var _a, _b;
+        const metadata = aesPayload === null || aesPayload === void 0 ? void 0 : aesPayload._metadata;
+        if (metadata) {
+            if ((_a = metadata.__line) === null || _a === void 0 ? void 0 : _a.includes(regionId))
+                return "line";
+            if ((_b = metadata.__text) === null || _b === void 0 ? void 0 : _b.includes(regionId))
+                return "text";
+        }
+        return "shape";
+    };
     // Helper to render a non-interactive layer (underlay or overlay)
     const renderNonInteractiveLayer = (regionIds, keyPrefix) => {
         return Array.from(regionIds).flatMap((id) => {
             const elements = normalizedRegions[id];
             if (!elements)
                 return [];
-            // Build aesthetic chain: default -> aesBase -> per-region fillColor -> groupAes
-            let layerAes = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
-            if (aesBaseFillColorDict === null || aesBaseFillColorDict === void 0 ? void 0 : aesBaseFillColorDict[id]) {
-                layerAes = { ...layerAes, fillColor: aesBaseFillColorDict[id] };
+            // Build aesthetic chain
+            let layerAes = { ...DEFAULT_AESTHETIC_VALUES };
+            if (isV03Format && aesPayload) {
+                // v0.3 format: use getAesForRegion for proper type-based lookup
+                const elementType = getElementType(id);
+                const byState = getAesForRegion(id, elementType, aesPayload);
+                if (byState === null || byState === void 0 ? void 0 : byState.base) {
+                    layerAes = { ...layerAes, ...byState.base };
+                }
             }
-            const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
-            if (groupAes) {
-                layerAes = { ...layerAes, ...groupAes };
+            else {
+                // Legacy format: use aesBase + groupAes
+                layerAes = { ...layerAes, ...aesBase };
+                if (aesBaseFillColorDict === null || aesBaseFillColorDict === void 0 ? void 0 : aesBaseFillColorDict[id]) {
+                    layerAes = { ...layerAes, fillColor: aesBaseFillColorDict[id] };
+                }
+                const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
+                if (groupAes) {
+                    layerAes = { ...layerAes, ...groupAes };
+                }
             }
             // Create RenderedRegion to resolve any RelativeExpr
             const region = createRenderedRegion(id, layerAes);
@@ -111,18 +135,27 @@ export function OutputMap(props) {
                     const tooltip = tooltips === null || tooltips === void 0 ? void 0 : tooltips[id];
                     const isActive = activeSet.has(id);
                     const count = (_a = countMap[id]) !== null && _a !== void 0 ? _a : 0;
-                    let baseAes = {
-                        ...DEFAULT_AESTHETIC_VALUES,
-                        ...aesBase,
-                    };
-                    // Apply per-region fill color from aes.base.fillColor if it's a dict
-                    if (aesBaseFillColorDict === null || aesBaseFillColorDict === void 0 ? void 0 : aesBaseFillColorDict[id]) {
-                        baseAes = { ...baseAes, fillColor: aesBaseFillColorDict[id] };
+                    let baseAes = { ...DEFAULT_AESTHETIC_VALUES };
+                    if (isV03Format && aesPayload) {
+                        // v0.3 format: use getAesForRegion for proper type-based lookup
+                        const elementType = getElementType(id);
+                        const byState = getAesForRegion(id, elementType, aesPayload);
+                        if (byState === null || byState === void 0 ? void 0 : byState.base) {
+                            baseAes = { ...baseAes, ...byState.base };
+                        }
                     }
-                    // Apply group aesthetic if available
-                    const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
-                    if (groupAes) {
-                        baseAes = { ...baseAes, ...groupAes };
+                    else {
+                        // Legacy format: use aesBase + groupAes
+                        baseAes = { ...baseAes, ...aesBase };
+                        // Apply per-region fill color from aes.base.fillColor if it's a dict
+                        if (aesBaseFillColorDict === null || aesBaseFillColorDict === void 0 ? void 0 : aesBaseFillColorDict[id]) {
+                            baseAes = { ...baseAes, fillColor: aesBaseFillColorDict[id] };
+                        }
+                        // Apply group aesthetic if available
+                        const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
+                        if (groupAes) {
+                            baseAes = { ...baseAes, ...groupAes };
+                        }
                     }
                     // Apply indexed aesthetic if available (for Display mode with aesIndexed)
                     const indexedData = getIndexedDataForRegion(aesIndexed, id, outlineMetadata);

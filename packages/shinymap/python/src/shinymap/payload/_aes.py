@@ -112,8 +112,8 @@ def build_aes_payload(
     if "__text" in resolved or "__all" in resolved:
         metadata["__text"] = text_regions
 
-    if metadata:
-        result["_metadata"] = metadata
+    # Always include _metadata so JS recognizes this as v0.3 payload format
+    result["_metadata"] = metadata
 
     return result
 

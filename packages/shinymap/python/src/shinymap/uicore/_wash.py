@@ -259,11 +259,21 @@ class WashConfig:
         user_all = user_by_group.get("__all", MISSING)
         result_entries["__all"] = resolve_by_state(user_all, "shape")
 
-        # 2. Add type defaults if user provided them
-        for type_key in ["__shape", "__line", "__text"]:
+        # 2. Add type defaults
+        # Always add if wash config defines the type OR if user explicitly provides it
+        # This ensures Wash(line=...) gets applied to __line elements
+        for type_key, wash_attr in [
+            ("__shape", self.shape),
+            ("__line", self.line),
+            ("__text", self.text),
+        ]:
             user_type = user_by_group.get(type_key, MISSING)
-            if not isinstance(user_type, MissingType):
-                elem_type = type_key[2:]  # Remove "__" prefix
+            elem_type = type_key[2:]  # Remove "__" prefix
+
+            # Add entry if:
+            # - user explicitly provided it, OR
+            # - wash config has a non-MISSING value for this type
+            if not isinstance(user_type, MissingType) or not isinstance(wash_attr, MissingType):
                 result_entries[type_key] = resolve_by_state(user_type, elem_type)
 
         # 3. Add group entries

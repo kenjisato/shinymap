@@ -89,7 +89,7 @@ def _input_map(
             "value": effective_value,
             "mode": mode_obj.to_dict(),
             "aes": aes_dict,
-            "layers": outline.overlays() or None,
+            "layers": outline.layers_dict(),
             "raw": raw if raw else None,  # Only include if True
         }
     )

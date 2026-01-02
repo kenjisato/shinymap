@@ -21870,6 +21870,25 @@ var shinymap = (() => {
     };
     return { id, aesthetic: resolved, parent };
   }
+  function getAesForRegion(regionId, elementType, aes) {
+    if (!aes) return void 0;
+    if (aes[regionId] && !regionId.startsWith("_")) {
+      return aes[regionId];
+    }
+    const metadata = aes._metadata;
+    if (metadata) {
+      for (const [groupName, members] of Object.entries(metadata)) {
+        if (groupName.startsWith("__")) continue;
+        if (Array.isArray(members) && members.includes(regionId) && aes[groupName]) {
+          return aes[groupName];
+        }
+      }
+    }
+    const typeKey = `__${elementType}`;
+    if (aes[typeKey]) return aes[typeKey];
+    if (aes.__all) return aes.__all;
+    return void 0;
+  }
   function isAesPayload(aes) {
     if (!aes || typeof aes !== "object") return false;
     return "__all" in aes || "_metadata" in aes;
@@ -22167,14 +22186,31 @@ var shinymap = (() => {
       setCounts(next);
       onChange?.(next);
     };
+    const getElementType = (regionId) => {
+      const metadata = aesPayload?._metadata;
+      if (metadata) {
+        if (metadata.__line?.includes(regionId)) return "line";
+        if (metadata.__text?.includes(regionId)) return "text";
+      }
+      return "shape";
+    };
     const renderNonInteractiveLayer = (regionIds, keyPrefix) => {
       return Array.from(regionIds).flatMap((id) => {
         const elements = normalizedRegions[id];
         if (!elements) return [];
-        let layerAes = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
-        const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
-        if (groupAes) {
-          layerAes = { ...layerAes, ...groupAes };
+        let layerAes = { ...DEFAULT_AESTHETIC_VALUES };
+        if (isV03Format && aesPayload) {
+          const elementType = getElementType(id);
+          const byState = getAesForRegion(id, elementType, aesPayload);
+          if (byState?.base) {
+            layerAes = { ...layerAes, ...byState.base };
+          }
+        } else {
+          layerAes = { ...layerAes, ...aesBase };
+          const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
+          if (groupAes) {
+            layerAes = { ...layerAes, ...groupAes };
+          }
         }
         const region = createRenderedRegion(id, layerAes);
         return elements.map(
@@ -22208,10 +22244,19 @@ var shinymap = (() => {
             const isHovered = hovered === id;
             const isSelected = selected.has(id);
             const count = counts[id] ?? 0;
-            let baseAes = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
-            const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
-            if (groupAes) {
-              baseAes = { ...baseAes, ...groupAes };
+            let baseAes = { ...DEFAULT_AESTHETIC_VALUES };
+            if (isV03Format && aesPayload) {
+              const elementType = getElementType(id);
+              const byState = getAesForRegion(id, elementType, aesPayload);
+              if (byState?.base) {
+                baseAes = { ...baseAes, ...byState.base };
+              }
+            } else {
+              baseAes = { ...baseAes, ...aesBase };
+              const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
+              if (groupAes) {
+                baseAes = { ...baseAes, ...groupAes };
+              }
             }
             const indexedData = getIndexedDataForRegion(aesIndexed, id, outlineMetadata);
             if (indexedData) {
@@ -22446,17 +22491,34 @@ var shinymap = (() => {
     const normalizedStrokeColor = normalize(strokeColorProp, normalizedRegions);
     const normalizedFillOpacity = normalize(fillOpacityProp, normalizedRegions);
     const countMap = value ?? {};
+    const getElementType = (regionId) => {
+      const metadata = aesPayload?._metadata;
+      if (metadata) {
+        if (metadata.__line?.includes(regionId)) return "line";
+        if (metadata.__text?.includes(regionId)) return "text";
+      }
+      return "shape";
+    };
     const renderNonInteractiveLayer = (regionIds, keyPrefix) => {
       return Array.from(regionIds).flatMap((id) => {
         const elements = normalizedRegions[id];
         if (!elements) return [];
-        let layerAes = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
-        if (aesBaseFillColorDict?.[id]) {
-          layerAes = { ...layerAes, fillColor: aesBaseFillColorDict[id] };
-        }
-        const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
-        if (groupAes) {
-          layerAes = { ...layerAes, ...groupAes };
+        let layerAes = { ...DEFAULT_AESTHETIC_VALUES };
+        if (isV03Format && aesPayload) {
+          const elementType = getElementType(id);
+          const byState = getAesForRegion(id, elementType, aesPayload);
+          if (byState?.base) {
+            layerAes = { ...layerAes, ...byState.base };
+          }
+        } else {
+          layerAes = { ...layerAes, ...aesBase };
+          if (aesBaseFillColorDict?.[id]) {
+            layerAes = { ...layerAes, fillColor: aesBaseFillColorDict[id] };
+          }
+          const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
+          if (groupAes) {
+            layerAes = { ...layerAes, ...groupAes };
+          }
         }
         const region = createRenderedRegion(id, layerAes);
         return elements.map(
@@ -22489,16 +22551,22 @@ var shinymap = (() => {
             const tooltip = tooltips?.[id];
             const isActive = activeSet.has(id);
             const count = countMap[id] ?? 0;
-            let baseAes = {
-              ...DEFAULT_AESTHETIC_VALUES,
-              ...aesBase
-            };
-            if (aesBaseFillColorDict?.[id]) {
-              baseAes = { ...baseAes, fillColor: aesBaseFillColorDict[id] };
-            }
-            const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
-            if (groupAes) {
-              baseAes = { ...baseAes, ...groupAes };
+            let baseAes = { ...DEFAULT_AESTHETIC_VALUES };
+            if (isV03Format && aesPayload) {
+              const elementType = getElementType(id);
+              const byState = getAesForRegion(id, elementType, aesPayload);
+              if (byState?.base) {
+                baseAes = { ...baseAes, ...byState.base };
+              }
+            } else {
+              baseAes = { ...baseAes, ...aesBase };
+              if (aesBaseFillColorDict?.[id]) {
+                baseAes = { ...baseAes, fillColor: aesBaseFillColorDict[id] };
+              }
+              const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
+              if (groupAes) {
+                baseAes = { ...baseAes, ...groupAes };
+              }
             }
             const indexedData = getIndexedDataForRegion(aesIndexed, id, outlineMetadata);
             if (indexedData) {

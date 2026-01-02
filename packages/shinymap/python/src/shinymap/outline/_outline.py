@@ -412,6 +412,78 @@ class Outline:
         overlays = self.metadata.get("overlays", [])
         return list(overlays) if isinstance(overlays, list) else []
 
+    def underlays(self) -> list[str]:
+        """Get underlay region IDs from metadata.
+
+        Returns:
+            List of region IDs marked as underlays
+
+        Example:
+            >>> geo = Outline.from_dict({
+            ...     "region": ["M 0 0"],
+            ...     "_bg": ["M 0 0 L 100 0 L 100 100 L 0 100 Z"],
+            ...     "_metadata": {"underlays": ["_bg"]}
+            ... })
+            >>> geo.underlays()
+            ['_bg']
+        """
+        underlays = self.metadata.get("underlays", [])
+        return list(underlays) if isinstance(underlays, list) else []
+
+    def hidden(self) -> list[str]:
+        """Get hidden region IDs from metadata.
+
+        Returns:
+            List of region IDs marked as hidden
+
+        Example:
+            >>> geo = Outline.from_dict({
+            ...     "region": ["M 0 0"],
+            ...     "_temp": ["M 0 0 L 100 0"],
+            ...     "_metadata": {"hidden": ["_temp"]}
+            ... })
+            >>> geo.hidden()
+            ['_temp']
+        """
+        hidden = self.metadata.get("hidden", [])
+        return list(hidden) if isinstance(hidden, list) else []
+
+    def layers_dict(self) -> dict[str, list[str]] | None:
+        """Get layers configuration dict for JavaScript props.
+
+        Returns a dict with overlays, underlays, and hidden keys if any
+        layer configuration is present in metadata. Returns None if no
+        layer configuration exists.
+
+        Returns:
+            Dict with layer configuration or None
+
+        Example:
+            >>> geo = Outline.from_dict({
+            ...     "region": ["M 0 0"],
+            ...     "_border": ["M 0 0 L 100 0"],
+            ...     "_metadata": {"overlays": ["_border"], "underlays": ["_bg"]}
+            ... })
+            >>> geo.layers_dict()
+            {'overlays': ['_border'], 'underlays': ['_bg']}
+        """
+        overlays = self.overlays()
+        underlays = self.underlays()
+        hidden = self.hidden()
+
+        if not overlays and not underlays and not hidden:
+            return None
+
+        result: dict[str, list[str]] = {}
+        if overlays:
+            result["overlays"] = overlays
+        if underlays:
+            result["underlays"] = underlays
+        if hidden:
+            result["hidden"] = hidden
+
+        return result
+
     def main_regions(self) -> Regions:
         """Get main regions (excluding overlays).
 

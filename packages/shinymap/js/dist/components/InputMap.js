@@ -1,6 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useEffect, useMemo, useState } from "react";
-import { createRenderedRegion, DEFAULT_AESTHETIC_VALUES, DEFAULT_HOVER_AESTHETIC, getIndexedDataForRegion, isAesPayload, resolveIndexedAesthetic, } from "../types";
+import { createRenderedRegion, DEFAULT_AESTHETIC_VALUES, DEFAULT_HOVER_AESTHETIC, getAesForRegion, getIndexedDataForRegion, isAesPayload, resolveIndexedAesthetic, } from "../types";
 import { normalizeRegions } from "../utils/regions";
 import { assignLayers, resolveGroupAesthetic } from "../utils/layers";
 import { renderElement } from "../utils/renderElement";
@@ -105,17 +105,41 @@ export function InputMap(props) {
         setCounts(next);
         onChange === null || onChange === void 0 ? void 0 : onChange(next);
     };
+    // Helper to determine element type for a region from _metadata
+    const getElementType = (regionId) => {
+        var _a, _b;
+        const metadata = aesPayload === null || aesPayload === void 0 ? void 0 : aesPayload._metadata;
+        if (metadata) {
+            if ((_a = metadata.__line) === null || _a === void 0 ? void 0 : _a.includes(regionId))
+                return "line";
+            if ((_b = metadata.__text) === null || _b === void 0 ? void 0 : _b.includes(regionId))
+                return "text";
+        }
+        return "shape";
+    };
     // Helper to render a non-interactive layer (underlay or overlay)
     const renderNonInteractiveLayer = (regionIds, keyPrefix) => {
         return Array.from(regionIds).flatMap((id) => {
             const elements = normalizedRegions[id];
             if (!elements)
                 return [];
-            // Build aesthetic chain: default -> aesBase -> groupAes
-            let layerAes = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
-            const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
-            if (groupAes) {
-                layerAes = { ...layerAes, ...groupAes };
+            // Build aesthetic chain
+            let layerAes = { ...DEFAULT_AESTHETIC_VALUES };
+            if (isV03Format && aesPayload) {
+                // v0.3 format: use getAesForRegion for proper type-based lookup
+                const elementType = getElementType(id);
+                const byState = getAesForRegion(id, elementType, aesPayload);
+                if (byState === null || byState === void 0 ? void 0 : byState.base) {
+                    layerAes = { ...layerAes, ...byState.base };
+                }
+            }
+            else {
+                // Legacy format: use aesBase + groupAes
+                layerAes = { ...layerAes, ...aesBase };
+                const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
+                if (groupAes) {
+                    layerAes = { ...layerAes, ...groupAes };
+                }
             }
             // Create RenderedRegion to resolve any RelativeExpr
             const region = createRenderedRegion(id, layerAes);
@@ -141,11 +165,22 @@ export function InputMap(props) {
                     const isHovered = hovered === id;
                     const isSelected = selected.has(id);
                     const count = (_a = counts[id]) !== null && _a !== void 0 ? _a : 0;
-                    let baseAes = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
-                    // Apply group aesthetic if available
-                    const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
-                    if (groupAes) {
-                        baseAes = { ...baseAes, ...groupAes };
+                    let baseAes = { ...DEFAULT_AESTHETIC_VALUES };
+                    if (isV03Format && aesPayload) {
+                        // v0.3 format: use getAesForRegion for proper type-based lookup
+                        const elementType = getElementType(id);
+                        const byState = getAesForRegion(id, elementType, aesPayload);
+                        if (byState === null || byState === void 0 ? void 0 : byState.base) {
+                            baseAes = { ...baseAes, ...byState.base };
+                        }
+                    }
+                    else {
+                        // Legacy format: use aesBase + groupAes
+                        baseAes = { ...baseAes, ...aesBase };
+                        const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
+                        if (groupAes) {
+                            baseAes = { ...baseAes, ...groupAes };
+                        }
                     }
                     // Apply indexed aesthetic if available (for Cycle/Count modes)
                     const indexedData = getIndexedDataForRegion(aesIndexed, id, outlineMetadata);

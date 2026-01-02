@@ -25,7 +25,12 @@ from shared import code_sample
 
 # Load outline using the Outline class
 OUTLINE_PATH = Path(__file__).parent / "data" / "japan_prefectures.json"
-OUTLINE = Outline.from_json(OUTLINE_PATH).path_as_line("_divider_lines")
+OUTLINE = (
+    Outline
+    .from_json(OUTLINE_PATH)
+    .path_as_line("_divider_lines")
+    .set_overlays(["_divider_lines"])
+)
 
 TOOLTIPS = {code: f"{name} ({PREF_NAMES_ROMAJI[code]})" for code, name in PREF_NAMES_JA.items()}
 
