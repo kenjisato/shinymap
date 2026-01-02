@@ -36,8 +36,6 @@ def _apply_static_params(builder: MapBuilder, output_id: str) -> MapBuilder:
     # Copy over builder-set values
     if builder._value is not None:
         merged._value = builder._value
-    if builder._active_ids is not None:
-        merged._active_ids = builder._active_ids
 
     # Merge aes: builder aes overrides static
     # v0.3 format: flat dict with region/group keys, each containing {base, select, hover}
@@ -64,7 +62,9 @@ def _apply_static_params(builder: MapBuilder, output_id: str) -> MapBuilder:
     return merged
 
 
-def _render_map_ui(builder: MapBuilder) -> Tag | TagList:
+def _render_map_ui(
+    builder: MapBuilder, click_input_id: str | None = None
+) -> Tag | TagList:
     """Internal: Render a map builder to HTML.
 
     Used by @render_map decorator. This creates the inner content
@@ -72,6 +72,7 @@ def _render_map_ui(builder: MapBuilder) -> Tag | TagList:
 
     Args:
         builder: MapBuilder with data to render
+        click_input_id: Optional input ID for click events (from Display(clickable=True))
 
     Returns:
         Tag with map payload data attribute
@@ -80,11 +81,20 @@ def _render_map_ui(builder: MapBuilder) -> Tag | TagList:
         return builder
 
     payload_dict = builder.as_json()
-    return div(
-        class_="shinymap-output",
-        data_shinymap_output="1",
-        data_shinymap_payload=json.dumps(payload_dict),
-    )
+
+    # Build attributes dict
+    attrs: dict[str, str] = {
+        "class_": "shinymap-output",
+        "data_shinymap_output": "1",
+        "data_shinymap_payload": json.dumps(payload_dict),
+        "style": "width: 100%; height: 100%;",
+    }
+
+    # Add click input ID if provided
+    if click_input_id:
+        attrs["data_shinymap_click_input_id"] = click_input_id
+
+    return div(**attrs)
 
 
 def _render_map(fn=None):
@@ -110,7 +120,11 @@ def _render_map(fn=None):
             output_id = func.__name__
             builder = _apply_static_params(builder, output_id)
 
-            return _render_map_ui(builder)
+            # Get click_input_id from static params if set
+            static_params = _static_map_params.get(output_id, {})
+            click_input_id = static_params.get("click_input_id")
+
+            return _render_map_ui(builder, click_input_id)
 
         return wrapper
 

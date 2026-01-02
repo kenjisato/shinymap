@@ -68,8 +68,14 @@ function bootstrap(start = performance.now()) {
             el.dataset.shinymapInputMode ||
             el.dataset.shinymap_input_mode ||
             "multiple";
+        // Check if raw mode is enabled (skip value transformation)
+        const rawMode = props.raw === true;
         // Transform count map to appropriate format based on mode
         const transformValue = (countMap) => {
+            // If raw mode, always return the count map as-is
+            if (rawMode) {
+                return countMap;
+            }
             if (modeType === "count" || modeType === "cycle") {
                 return countMap;
             }
@@ -245,7 +251,12 @@ function bootstrap(start = performance.now()) {
                             el.dataset.shinymapInputMode ||
                             el.dataset.shinymap_input_mode ||
                             "multiple";
+                        // Check if raw mode is enabled (skip value transformation)
+                        const rawMode = newProps.raw === true;
                         const transformValue = (countMap) => {
+                            // If raw mode, always return the count map as-is
+                            if (rawMode)
+                                return countMap;
                             if (modeType === "count" || modeType === "cycle")
                                 return countMap;
                             const selected = Object.entries(countMap)

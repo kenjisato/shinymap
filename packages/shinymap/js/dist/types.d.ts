@@ -128,11 +128,14 @@ export type IndexedAestheticData = {
 };
 /**
  * Serialized aesIndexed from Python mode.to_dict().
+ *
+ * Two formats:
+ * - Direct IndexedAestheticData (global): {fillColor: [...], ...}
+ * - ByGroup wrapper (per-group): {type: "byGroup", groups: {...}}
+ *
+ * JS distinguishes: if it has a "type" key, it's ByGroup. Otherwise direct data.
  */
-export type AesIndexedConfig = {
-    type: "indexed";
-    value: IndexedAestheticData;
-} | {
+export type AesIndexedConfig = IndexedAestheticData | {
     type: "byGroup";
     groups: Record<string, IndexedAestheticData>;
 };
@@ -147,6 +150,10 @@ export declare function resolveIndexedAesthetic(data: IndexedAestheticData, coun
 /**
  * Get the IndexedAestheticData for a region from an AesIndexedConfig.
  * Returns undefined if no indexed aesthetic applies to this region.
+ *
+ * Handles two formats:
+ * - Direct IndexedAestheticData: {fillColor: [...], ...}
+ * - ByGroup wrapper: {type: "byGroup", groups: {...}}
  */
 export declare function getIndexedDataForRegion(config: AesIndexedConfig | undefined, regionId: RegionId, geometryMetadata?: GeometryMetadata): IndexedAestheticData | undefined;
 /**
@@ -164,6 +171,8 @@ export type ModeConfig = {
     n?: number;
     /** Indexed aesthetic for multi-state visual feedback (Cycle, Count modes) */
     aesIndexed?: AesIndexedConfig;
+    /** Enable click events in display mode. Default is false. */
+    clickable?: boolean;
 };
 /**
  * Relative expression for parent-relative aesthetic values.
@@ -377,9 +386,10 @@ export type InputMapProps = {
     className?: string;
     containerStyle?: React.CSSProperties;
     /**
-     * Mode configuration (normalized by Python to full ModeConfig).
+     * Mode configuration. Can be a string shorthand ("single", "multiple", "count", "cycle")
+     * or a full ModeConfig object for advanced options.
      */
-    mode?: ModeConfig;
+    mode?: MapModeType | ModeConfig;
     /**
      * Nested aesthetic configuration.
      */
@@ -396,6 +406,12 @@ export type InputMapProps = {
     onChange?: (value: Record<RegionId, number>) => void;
     resolveAesthetic?: (args: ResolveAestheticArgs) => AestheticStyle | undefined;
     regionProps?: (args: ResolveAestheticArgs) => React.SVGProps<SVGPathElement>;
+    /**
+     * If true, return raw dict value to Shiny instead of transformed types.
+     * When false (default), single mode returns string|null, multiple returns string[].
+     * When true, all modes return Record<RegionId, number>.
+     */
+    raw?: boolean;
     /**
      * Non-interactive overlay geometry (dividers, borders, grids).
      * @deprecated Use layers.overlays + aes.group instead
@@ -421,6 +437,12 @@ export type OutputMapProps = {
     className?: string;
     containerStyle?: React.CSSProperties;
     /**
+     * Mode configuration. For output maps, typically "display" mode.
+     * Display mode enables hover but disables click, and uses indexed
+     * aesthetics to map values to visual styles.
+     */
+    mode?: MapModeType | ModeConfig;
+    /**
      * Nested aesthetic configuration.
      */
     aes?: AesConfig;
@@ -436,8 +458,11 @@ export type OutputMapProps = {
     strokeWidth?: number | Record<RegionId, number>;
     strokeColor?: string | Record<RegionId, string>;
     fillOpacity?: number | Record<RegionId, number>;
+    /**
+     * Region values (counts). Selection is derived from value > 0.
+     * For display mode, values index into the aesIndexed arrays.
+     */
     value?: Record<RegionId, number>;
-    activeIds?: RegionId | RegionId[] | null;
     onRegionClick?: (id: RegionId) => void;
     resolveAesthetic?: (args: ResolveOutputAestheticArgs) => AestheticStyle | undefined;
     regionProps?: (args: ResolveOutputAestheticArgs) => React.SVGProps<SVGPathElement>;

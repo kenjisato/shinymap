@@ -32,29 +32,43 @@ export function resolveIndexedAesthetic(data, count, cycle) {
     };
 }
 /**
+ * Check if an AesIndexedConfig is a ByGroup wrapper (has type: "byGroup").
+ */
+function isAesIndexedByGroup(config) {
+    return (typeof config === "object" &&
+        config !== null &&
+        "type" in config &&
+        config.type === "byGroup");
+}
+/**
  * Get the IndexedAestheticData for a region from an AesIndexedConfig.
  * Returns undefined if no indexed aesthetic applies to this region.
+ *
+ * Handles two formats:
+ * - Direct IndexedAestheticData: {fillColor: [...], ...}
+ * - ByGroup wrapper: {type: "byGroup", groups: {...}}
  */
 export function getIndexedDataForRegion(config, regionId, geometryMetadata) {
     if (!config)
         return undefined;
-    if (config.type === "indexed") {
-        return config.value;
-    }
-    // type === "byGroup"
-    // First check if region ID matches directly
-    if (config.groups[regionId]) {
-        return config.groups[regionId];
-    }
-    // Check if region belongs to a group that has indexed aesthetic
-    if (geometryMetadata === null || geometryMetadata === void 0 ? void 0 : geometryMetadata.groups) {
-        for (const [groupName, regionIds] of Object.entries(geometryMetadata.groups)) {
-            if (regionIds.includes(regionId) && config.groups[groupName]) {
-                return config.groups[groupName];
+    // Check if it's a ByGroup wrapper
+    if (isAesIndexedByGroup(config)) {
+        // First check if region ID matches directly
+        if (config.groups[regionId]) {
+            return config.groups[regionId];
+        }
+        // Check if region belongs to a group that has indexed aesthetic
+        if (geometryMetadata === null || geometryMetadata === void 0 ? void 0 : geometryMetadata.groups) {
+            for (const [groupName, regionIds] of Object.entries(geometryMetadata.groups)) {
+                if (regionIds.includes(regionId) && config.groups[groupName]) {
+                    return config.groups[groupName];
+                }
             }
         }
+        return undefined;
     }
-    return undefined;
+    // Direct IndexedAestheticData (global applies to all regions)
+    return config;
 }
 /**
  * Check if a value is a RelativeExpr object.

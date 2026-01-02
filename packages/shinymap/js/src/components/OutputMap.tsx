@@ -4,6 +4,7 @@ import type {
   AestheticStyle,
   Element,
   LegacyAesConfig,
+  MapModeType,
   OutputMapProps,
   RegionId,
   RenderedRegion,
@@ -12,7 +13,9 @@ import {
   createRenderedRegion,
   DEFAULT_AESTHETIC_VALUES,
   DEFAULT_HOVER_AESTHETIC,
+  getIndexedDataForRegion,
   isAesPayload,
+  resolveIndexedAesthetic,
 } from "../types";
 import { normalizeGeometry } from "../utils/geometry";
 import { assignLayers, resolveGroupAesthetic } from "../utils/layers";
@@ -20,10 +23,17 @@ import { renderElement } from "../utils/renderElement";
 
 const DEFAULT_VIEWBOX = "0 0 100 100";
 
-function normalizeActive(active: OutputMapProps["activeIds"]): Set<RegionId> {
-  if (!active) return new Set();
-  if (Array.isArray(active)) return new Set(active);
-  return new Set([active]);
+/**
+ * Derive active (selected) regions from value map.
+ * A region is considered active/selected if its value > 0.
+ */
+function deriveActiveFromValue(value: Record<RegionId, number> | undefined): Set<RegionId> {
+  if (!value) return new Set();
+  const active = new Set<RegionId>();
+  for (const [id, count] of Object.entries(value)) {
+    if (count > 0) active.add(id);
+  }
+  return active;
 }
 
 function normalize<T>(
@@ -46,6 +56,7 @@ export function OutputMap(props: OutputMapProps) {
     className,
     containerStyle,
     viewBox = DEFAULT_VIEWBOX,
+    mode: modeConfig,
     aes,
     layers,
     geometryMetadata,
@@ -54,7 +65,6 @@ export function OutputMap(props: OutputMapProps) {
     strokeColor: strokeColorProp,
     fillOpacity: fillOpacityProp,
     value,
-    activeIds,
     onRegionClick,
     resolveAesthetic,
     regionProps,
@@ -62,6 +72,13 @@ export function OutputMap(props: OutputMapProps) {
     overlayGeometry,
     overlayAesthetic,
   } = props;
+
+  // Extract from nested mode config (supports both string shorthand and full config)
+  const normalizedMode = typeof modeConfig === "string" ? { type: modeConfig } : modeConfig;
+  const modeType: MapModeType = normalizedMode?.type ?? "display";
+  const aesIndexed = normalizedMode?.aesIndexed;
+  // Display mode: clicks only enabled if clickable=true
+  const isClickable = normalizedMode?.clickable ?? false;
 
   // Detect v0.3 payload format (has __all or _metadata at top level)
   const isV03Format = isAesPayload(aes);
@@ -108,7 +125,8 @@ export function OutputMap(props: OutputMapProps) {
   );
 
   const [hovered, setHovered] = useState<RegionId | null>(null);
-  const activeSet = normalizeActive(activeIds);
+  // Derive active/selected regions from value (value > 0 means selected)
+  const activeSet = deriveActiveFromValue(value);
   const normalizedFillColor = normalize(fillColor, normalizedGeometry);
   const normalizedStrokeWidth = normalize(strokeWidthProp, normalizedGeometry);
   const normalizedStrokeColor = normalize(strokeColorProp, normalizedGeometry);
@@ -186,6 +204,30 @@ export function OutputMap(props: OutputMapProps) {
             baseAes = { ...baseAes, ...groupAes };
           }
 
+          // Apply indexed aesthetic if available (for Display mode with aesIndexed)
+          const indexedData = getIndexedDataForRegion(aesIndexed, id, geometryMetadata);
+          if (indexedData) {
+            // For display mode, use clamping (no wrapping)
+            const indexedAes = resolveIndexedAesthetic(indexedData, count, undefined);
+            // Merge indexed aesthetic - only override properties that are defined
+            baseAes = {
+              ...baseAes,
+              ...(indexedAes.fillColor !== undefined ? { fillColor: indexedAes.fillColor } : {}),
+              ...(indexedAes.fillOpacity !== undefined
+                ? { fillOpacity: indexedAes.fillOpacity }
+                : {}),
+              ...(indexedAes.strokeColor !== undefined
+                ? { strokeColor: indexedAes.strokeColor }
+                : {}),
+              ...(indexedAes.strokeWidth !== undefined
+                ? { strokeWidth: indexedAes.strokeWidth }
+                : {}),
+              ...(indexedAes.strokeDasharray !== undefined
+                ? { strokeDasharray: indexedAes.strokeDasharray }
+                : {}),
+            };
+          }
+
           // Apply per-region overrides from top-level props
           baseAes = {
             ...baseAes,
@@ -232,6 +274,9 @@ export function OutputMap(props: OutputMapProps) {
           const handleMouseEnter = () => setHovered(id);
           const handleMouseLeave = () => setHovered((current) => (current === id ? null : current));
 
+          // For display mode, only enable clicks if clickable=true
+          const effectiveOnClick = isClickable && onRegionClick ? () => onRegionClick(id) : undefined;
+
           // Render each element in the region
           return elements.map((element, index) =>
             renderElement({
@@ -243,8 +288,8 @@ export function OutputMap(props: OutputMapProps) {
               strokeWidth: region.aesthetic.strokeWidth,
               strokeDasharray: region.aesthetic.strokeDasharray,
               nonScalingStroke: region.aesthetic.nonScalingStroke,
-              cursor: onRegionClick ? "pointer" : undefined,
-              onClick: onRegionClick ? () => onRegionClick(id) : undefined,
+              cursor: effectiveOnClick ? "pointer" : undefined,
+              onClick: effectiveOnClick,
               onMouseEnter: handleMouseEnter,
               onMouseLeave: handleMouseLeave,
               onFocus: handleMouseEnter,
@@ -286,8 +331,10 @@ export function OutputMap(props: OutputMapProps) {
       <g>{renderNonInteractiveLayer(layerAssignment.overlay, "overlay")}</g>
 
       {/* Layer 4: Selection overlay - render active regions on top to ensure borders are visible */}
+      {/* Skip when no aesSelect is defined - no point rendering duplicate paths */}
       <g>
-        {Array.from(activeSet).flatMap((id) => {
+        {aesSelect &&
+          Array.from(activeSet).flatMap((id) => {
           // Only render selection overlay for regions in base layer
           if (!layerAssignment.base.has(id)) return [];
 

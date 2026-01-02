@@ -147,10 +147,17 @@ function bootstrap(start = performance.now()): void {
       (el.dataset.shinymap_input_mode as MapModeType) ||
       "multiple";
 
+    // Check if raw mode is enabled (skip value transformation)
+    const rawMode = (props as { raw?: boolean }).raw === true;
+
     // Transform count map to appropriate format based on mode
     const transformValue = (
       countMap: Record<RegionId, number>
     ): string | string[] | Record<RegionId, number> | null => {
+      // If raw mode, always return the count map as-is
+      if (rawMode) {
+        return countMap;
+      }
       if (modeType === "count" || modeType === "cycle") {
         return countMap;
       }
@@ -390,9 +397,14 @@ function bootstrap(start = performance.now()): void {
                 (el.dataset.shinymap_input_mode as MapModeType) ||
                 "multiple";
 
+              // Check if raw mode is enabled (skip value transformation)
+              const rawMode = (newProps as { raw?: boolean }).raw === true;
+
               const transformValue = (
                 countMap: Record<RegionId, number>
               ): string | string[] | Record<RegionId, number> | null => {
+                // If raw mode, always return the count map as-is
+                if (rawMode) return countMap;
                 if (modeType === "count" || modeType === "cycle") return countMap;
                 const selected = Object.entries(countMap)
                   .filter(([, count]) => count > 0)

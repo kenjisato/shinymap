@@ -152,9 +152,15 @@ export type IndexedAestheticData = {
 
 /**
  * Serialized aesIndexed from Python mode.to_dict().
+ *
+ * Two formats:
+ * - Direct IndexedAestheticData (global): {fillColor: [...], ...}
+ * - ByGroup wrapper (per-group): {type: "byGroup", groups: {...}}
+ *
+ * JS distinguishes: if it has a "type" key, it's ByGroup. Otherwise direct data.
  */
 export type AesIndexedConfig =
-  | { type: "indexed"; value: IndexedAestheticData }
+  | IndexedAestheticData // Direct (no wrapper, for global aes.Indexed)
   | { type: "byGroup"; groups: Record<string, IndexedAestheticData> };
 
 /**
@@ -199,8 +205,26 @@ export function resolveIndexedAesthetic(
 }
 
 /**
+ * Check if an AesIndexedConfig is a ByGroup wrapper (has type: "byGroup").
+ */
+function isAesIndexedByGroup(
+  config: AesIndexedConfig
+): config is { type: "byGroup"; groups: Record<string, IndexedAestheticData> } {
+  return (
+    typeof config === "object" &&
+    config !== null &&
+    "type" in config &&
+    config.type === "byGroup"
+  );
+}
+
+/**
  * Get the IndexedAestheticData for a region from an AesIndexedConfig.
  * Returns undefined if no indexed aesthetic applies to this region.
+ *
+ * Handles two formats:
+ * - Direct IndexedAestheticData: {fillColor: [...], ...}
+ * - ByGroup wrapper: {type: "byGroup", groups: {...}}
  */
 export function getIndexedDataForRegion(
   config: AesIndexedConfig | undefined,
@@ -209,26 +233,27 @@ export function getIndexedDataForRegion(
 ): IndexedAestheticData | undefined {
   if (!config) return undefined;
 
-  if (config.type === "indexed") {
-    return config.value;
-  }
+  // Check if it's a ByGroup wrapper
+  if (isAesIndexedByGroup(config)) {
+    // First check if region ID matches directly
+    if (config.groups[regionId]) {
+      return config.groups[regionId];
+    }
 
-  // type === "byGroup"
-  // First check if region ID matches directly
-  if (config.groups[regionId]) {
-    return config.groups[regionId];
-  }
-
-  // Check if region belongs to a group that has indexed aesthetic
-  if (geometryMetadata?.groups) {
-    for (const [groupName, regionIds] of Object.entries(geometryMetadata.groups)) {
-      if (regionIds.includes(regionId) && config.groups[groupName]) {
-        return config.groups[groupName];
+    // Check if region belongs to a group that has indexed aesthetic
+    if (geometryMetadata?.groups) {
+      for (const [groupName, regionIds] of Object.entries(geometryMetadata.groups)) {
+        if (regionIds.includes(regionId) && config.groups[groupName]) {
+          return config.groups[groupName];
+        }
       }
     }
+
+    return undefined;
   }
 
-  return undefined;
+  // Direct IndexedAestheticData (global applies to all regions)
+  return config;
 }
 
 /**
@@ -246,6 +271,8 @@ export type ModeConfig = {
   n?: number;
   /** Indexed aesthetic for multi-state visual feedback (Cycle, Count modes) */
   aesIndexed?: AesIndexedConfig;
+  /** Enable click events in display mode. Default is false. */
+  clickable?: boolean;
 };
 
 /**
@@ -666,9 +693,10 @@ export type InputMapProps = {
   className?: string;
   containerStyle?: React.CSSProperties;
   /**
-   * Mode configuration (normalized by Python to full ModeConfig).
+   * Mode configuration. Can be a string shorthand ("single", "multiple", "count", "cycle")
+   * or a full ModeConfig object for advanced options.
    */
-  mode?: ModeConfig;
+  mode?: MapModeType | ModeConfig;
   /**
    * Nested aesthetic configuration.
    */
@@ -685,6 +713,12 @@ export type InputMapProps = {
   onChange?: (value: Record<RegionId, number>) => void;
   resolveAesthetic?: (args: ResolveAestheticArgs) => AestheticStyle | undefined;
   regionProps?: (args: ResolveAestheticArgs) => React.SVGProps<SVGPathElement>;
+  /**
+   * If true, return raw dict value to Shiny instead of transformed types.
+   * When false (default), single mode returns string|null, multiple returns string[].
+   * When true, all modes return Record<RegionId, number>.
+   */
+  raw?: boolean;
   /**
    * Non-interactive overlay geometry (dividers, borders, grids).
    * @deprecated Use layers.overlays + aes.group instead
@@ -712,6 +746,12 @@ export type OutputMapProps = {
   className?: string;
   containerStyle?: React.CSSProperties;
   /**
+   * Mode configuration. For output maps, typically "display" mode.
+   * Display mode enables hover but disables click, and uses indexed
+   * aesthetics to map values to visual styles.
+   */
+  mode?: MapModeType | ModeConfig;
+  /**
    * Nested aesthetic configuration.
    */
   aes?: AesConfig;
@@ -727,8 +767,11 @@ export type OutputMapProps = {
   strokeWidth?: number | Record<RegionId, number>;
   strokeColor?: string | Record<RegionId, string>;
   fillOpacity?: number | Record<RegionId, number>;
+  /**
+   * Region values (counts). Selection is derived from value > 0.
+   * For display mode, values index into the aesIndexed arrays.
+   */
   value?: Record<RegionId, number>;
-  activeIds?: RegionId | RegionId[] | null;
   onRegionClick?: (id: RegionId) => void;
   resolveAesthetic?: (args: ResolveOutputAestheticArgs) => AestheticStyle | undefined;
   regionProps?: (args: ResolveOutputAestheticArgs) => React.SVGProps<SVGPathElement>;

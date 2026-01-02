@@ -52,11 +52,12 @@ export function InputMap(props) {
     const underlays = layers === null || layers === void 0 ? void 0 : layers.underlays;
     const overlays = layers === null || layers === void 0 ? void 0 : layers.overlays;
     const hidden = layers === null || layers === void 0 ? void 0 : layers.hidden;
-    // Extract from nested mode config
-    const modeType = (_f = modeConfig === null || modeConfig === void 0 ? void 0 : modeConfig.type) !== null && _f !== void 0 ? _f : "multiple";
-    const cycle = modeConfig === null || modeConfig === void 0 ? void 0 : modeConfig.n;
-    const maxSelection = modeConfig === null || modeConfig === void 0 ? void 0 : modeConfig.maxSelection;
-    const aesIndexed = modeConfig === null || modeConfig === void 0 ? void 0 : modeConfig.aesIndexed;
+    // Extract from nested mode config (supports both string shorthand and full config)
+    const normalizedMode = typeof modeConfig === "string" ? { type: modeConfig } : modeConfig;
+    const modeType = (_f = normalizedMode === null || normalizedMode === void 0 ? void 0 : normalizedMode.type) !== null && _f !== void 0 ? _f : "multiple";
+    const cycle = normalizedMode === null || normalizedMode === void 0 ? void 0 : normalizedMode.n;
+    const maxSelection = normalizedMode === null || normalizedMode === void 0 ? void 0 : normalizedMode.maxSelection;
+    const aesIndexed = normalizedMode === null || normalizedMode === void 0 ? void 0 : normalizedMode.aesIndexed;
     // Normalize geometry to Element[] format (handles both v0.x strings and v1.x polymorphic elements)
     const normalizedGeometry = useMemo(() => normalizeGeometry(geometry), [geometry]);
     // Legacy overlay support (deprecated)
@@ -244,13 +245,16 @@ export function InputMap(props) {
                         pointerEvents: "none",
                     }));
                 }) })), _jsx("g", { children: renderNonInteractiveLayer(layerAssignment.overlay, "overlay") }), _jsx("g", { children: !aesIndexed &&
+                    aesSelect &&
                     Array.from(selected).flatMap((id) => {
+                        var _a;
                         // Only render selection overlay for regions in base layer
                         if (!layerAssignment.base.has(id))
                             return [];
                         const elements = normalizedGeometry[id];
                         if (!elements)
                             return [];
+                        const count = (_a = counts[id]) !== null && _a !== void 0 ? _a : 0;
                         // Build base aesthetic
                         let baseAes = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
                         const groupAes = resolveGroupAesthetic(id, aesGroup, geometryMetadata);
@@ -260,14 +264,24 @@ export function InputMap(props) {
                         if (normalizedFillColor && normalizedFillColor[id]) {
                             baseAes.fillColor = normalizedFillColor[id];
                         }
+                        // Apply resolveAesthetic to base (without selection state)
+                        if (resolveAesthetic) {
+                            const overrides = resolveAesthetic({
+                                id,
+                                mode: modeType,
+                                isHovered: false,
+                                isSelected: false,
+                                count,
+                                baseAesthetic: baseAes,
+                            });
+                            if (overrides) {
+                                baseAes = { ...baseAes, ...overrides };
+                            }
+                        }
                         // Create base RenderedRegion
                         const baseRegion = createRenderedRegion(id, baseAes);
                         // Build selection aesthetic on top of base
-                        // Note: aesSelect takes precedence - resolveAesthetic is for base layer styling only
-                        let selectAes = {};
-                        if (aesSelect) {
-                            selectAes = { ...aesSelect };
-                        }
+                        const selectAes = { ...aesSelect };
                         // Create selection RenderedRegion with base as parent
                         const selectRegion = createRenderedRegion(id, selectAes, baseRegion);
                         return elements.map((element, index) => renderElement({
@@ -319,6 +333,20 @@ export function InputMap(props) {
                         }
                         if (normalizedFillColor && normalizedFillColor[hovered]) {
                             baseAes.fillColor = normalizedFillColor[hovered];
+                        }
+                        // Apply resolveAesthetic to get proper styling (including selection colors)
+                        if (resolveAesthetic) {
+                            const overrides = resolveAesthetic({
+                                id: hovered,
+                                mode: modeType,
+                                isHovered: false, // We're building the parent, not hover state
+                                isSelected: selected.has(hovered),
+                                count,
+                                baseAesthetic: baseAes,
+                            });
+                            if (overrides) {
+                                baseAes = { ...baseAes, ...overrides };
+                            }
                         }
                         const baseRegion = createRenderedRegion(hovered, baseAes);
                         // Step 2: If selected and not using indexed aesthetics, create selection RenderedRegion
