@@ -649,7 +649,7 @@ export type LegacyAesConfig = {
   hover?: AestheticStyle | null;
   /** Aesthetic override for selected regions. */
   select?: AestheticStyle;
-  /** Aesthetic for non-selected regions when activeIds is set. */
+  /** Aesthetic for non-selected regions (when some regions have value > 0). */
   notSelect?: AestheticStyle;
   /** Per-group aesthetic overrides. Group name → aesthetic style. */
   group?: Record<string, AestheticStyle>;

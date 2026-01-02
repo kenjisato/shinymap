@@ -15,10 +15,18 @@ const SWATCHES: Array<{ name: string; colors: string[] }> = [
 ];
 
 function PaletteDemo() {
-  const fills = {
+  // Per-region fill colors
+  const fillColor = {
     circle: palette.sequential.blue[3],
     square: palette.sequential.green[3],
     triangle: palette.sequential.orange[3],
+  };
+
+  // Values determine selection state (value > 0 = selected)
+  const value = {
+    circle: 1, // selected
+    square: 0,
+    triangle: 0,
   };
 
   return (
@@ -45,9 +53,9 @@ function PaletteDemo() {
         <div style={{ aspectRatio: "1", border: "1px solid #cbd5f5", borderRadius: 6, overflow: "hidden" }}>
           <OutputMap
             geometry={demoGeometry}
-            fills={fills}
+            fillColor={fillColor}
+            value={value}
             containerStyle={{ width: "100%", height: "100%" }}
-            activeIds={"circle"}
           />
         </div>
       </section>
