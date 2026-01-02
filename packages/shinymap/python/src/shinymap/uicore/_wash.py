@@ -25,7 +25,7 @@ from ..types import MISSING, MissingType
 if TYPE_CHECKING:
     from htmltools import TagList
 
-    from ..geometry import Outline
+    from ..outline import Outline
 
 # Type alias for Wash() aesthetic parameters
 # Accepts ByState, single aesthetic, dict shorthand, None, or MISSING

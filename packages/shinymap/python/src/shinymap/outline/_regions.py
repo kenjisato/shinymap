@@ -15,7 +15,7 @@ class Regions(dict[str, list["str | Element"]]):
     repr output while maintaining full dictionary compatibility.
 
     Example:
-        >>> from shinymap.geometry import Circle
+        >>> from shinymap.outline import Circle
         >>> regions = Regions({"r1": [Circle(cx=100, cy=100, r=50)]})
         >>> regions
         Regions({

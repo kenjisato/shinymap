@@ -8,8 +8,8 @@ Usage:
     from shinymap import render_map  # decorator, at top-level
 
     # UI layer
-    input_map("region", geometry, mode="single")
-    output_map("my_map", geometry)
+    input_map("region", outline, mode="single")
+    output_map("my_map", outline)
 
     # Server layer
     @render_map

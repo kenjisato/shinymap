@@ -3,7 +3,7 @@
 import pytest
 
 from shinymap import Map
-from shinymap.geometry import Outline
+from shinymap.outline import Outline
 from shinymap.types import MapBuilder
 
 
@@ -102,8 +102,8 @@ def test_map_as_json():
     builder = Map(geo, value={"a": 1, "b": 0})
     json_output = builder.as_json()
 
-    # Check that geometry is normalized
-    assert "geometry" in json_output
+    # Check that regions is normalized
+    assert "regions" in json_output
     # Check that value is included (value > 0 means selected)
     assert json_output["value"] == {"a": 1, "b": 0}
 
@@ -121,7 +121,7 @@ def test_static_params_merging():
 
     # Simulate output_map() storing static params
     _static_map_params["test_map"] = {
-        "geometry": geometry,
+        "regions": geometry,
         "tooltips": tooltips,
         "view_box": viewbox,
         "aes": {"base": {"fillColor": "#ccc"}},
@@ -155,7 +155,7 @@ def test_static_params_builder_precedence():
 
     # Simulate output_map() storing static params
     _static_map_params["test_map2"] = {
-        "geometry": static_geometry,
+        "regions": static_geometry,
         "view_box": (0, 0, 100, 100),
         "tooltips": {"a": "Static tooltip"},
     }

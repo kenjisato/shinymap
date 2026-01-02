@@ -1,6 +1,6 @@
 """Tests for repr configuration context manager."""
 
-from shinymap.geometry import (
+from shinymap.outline import (
     Circle,
     Outline,
     Regions,

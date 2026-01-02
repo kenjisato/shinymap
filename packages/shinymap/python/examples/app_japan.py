@@ -17,7 +17,7 @@ from shinymap import (
     Wash,
 )
 from shinymap.mode import Count
-from shinymap.geometry import Outline
+from shinymap.outline import Outline
 from shinymap.aes.color import SEQUENTIAL_ORANGE
 
 from japan_prefectures import PREF_NAMES_JA, PREF_NAMES_ROMAJI

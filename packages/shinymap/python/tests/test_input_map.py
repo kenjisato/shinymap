@@ -10,7 +10,7 @@ import json
 import pytest
 
 from shinymap import input_map
-from shinymap.geometry import Outline
+from shinymap.outline import Outline
 
 # Test geometry
 GEOMETRY = Outline.from_dict(

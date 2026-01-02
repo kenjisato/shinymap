@@ -1,7 +1,7 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useMemo, useState } from "react";
 import { createRenderedRegion, DEFAULT_AESTHETIC_VALUES, DEFAULT_HOVER_AESTHETIC, getIndexedDataForRegion, isAesPayload, resolveIndexedAesthetic, } from "../types";
-import { normalizeGeometry } from "../utils/geometry";
+import { normalizeRegions } from "../utils/regions";
 import { assignLayers, resolveGroupAesthetic } from "../utils/layers";
 import { renderElement } from "../utils/renderElement";
 const DEFAULT_VIEWBOX = "0 0 100 100";
@@ -19,7 +19,7 @@ function deriveActiveFromValue(value) {
     }
     return active;
 }
-function normalize(value, geometry) {
+function normalize(value, regions) {
     if (!value)
         return undefined;
     if (typeof value === "object" && !Array.isArray(value)) {
@@ -27,13 +27,11 @@ function normalize(value, geometry) {
         return value;
     }
     // Scalar value - apply to all regions
-    return Object.fromEntries(Object.keys(geometry).map((id) => [id, value]));
+    return Object.fromEntries(Object.keys(regions).map((id) => [id, value]));
 }
 export function OutputMap(props) {
     var _a, _b, _c, _d, _e, _f;
-    const { geometry, tooltips, className, containerStyle, viewBox = DEFAULT_VIEWBOX, mode: modeConfig, aes, layers, geometryMetadata, fillColor, strokeWidth: strokeWidthProp, strokeColor: strokeColorProp, fillOpacity: fillOpacityProp, value, onRegionClick, resolveAesthetic, regionProps, 
-    // Deprecated props (for backward compatibility)
-    overlayGeometry, overlayAesthetic, } = props;
+    const { regions, tooltips, className, containerStyle, viewBox = DEFAULT_VIEWBOX, mode: modeConfig, aes, layers, outlineMetadata, fillColor, strokeWidth: strokeWidthProp, strokeColor: strokeColorProp, fillOpacity: fillOpacityProp, value, onRegionClick, resolveAesthetic, regionProps, } = props;
     // Extract from nested mode config (supports both string shorthand and full config)
     const normalizedMode = typeof modeConfig === "string" ? { type: modeConfig } : modeConfig;
     const aesIndexed = normalizedMode === null || normalizedMode === void 0 ? void 0 : normalizedMode.aesIndexed;
@@ -63,24 +61,22 @@ export function OutputMap(props) {
     const underlays = layers === null || layers === void 0 ? void 0 : layers.underlays;
     const overlays = layers === null || layers === void 0 ? void 0 : layers.overlays;
     const hidden = layers === null || layers === void 0 ? void 0 : layers.hidden;
-    // Normalize geometry to Element[] format (handles both v0.x strings and v1.x polymorphic elements)
-    const normalizedGeometry = useMemo(() => normalizeGeometry(geometry), [geometry]);
-    // Legacy overlay support (deprecated)
-    const normalizedOverlayGeometry = useMemo(() => (overlayGeometry ? normalizeGeometry(overlayGeometry) : undefined), [overlayGeometry]);
+    // Normalize regions to Element[] format (handles both v0.x strings and v1.x polymorphic elements)
+    const normalizedRegions = useMemo(() => normalizeRegions(regions), [regions]);
     // New layer system: assign regions to layers
-    const layerAssignment = useMemo(() => assignLayers(normalizedGeometry, underlays, overlays, hidden, geometryMetadata), [normalizedGeometry, underlays, overlays, hidden, geometryMetadata]);
+    const layerAssignment = useMemo(() => assignLayers(normalizedRegions, underlays, overlays, hidden, outlineMetadata), [normalizedRegions, underlays, overlays, hidden, outlineMetadata]);
     const [hovered, setHovered] = useState(null);
     // Derive active/selected regions from value (value > 0 means selected)
     const activeSet = deriveActiveFromValue(value);
-    const normalizedFillColor = normalize(fillColor, normalizedGeometry);
-    const normalizedStrokeWidth = normalize(strokeWidthProp, normalizedGeometry);
-    const normalizedStrokeColor = normalize(strokeColorProp, normalizedGeometry);
-    const normalizedFillOpacity = normalize(fillOpacityProp, normalizedGeometry);
+    const normalizedFillColor = normalize(fillColor, normalizedRegions);
+    const normalizedStrokeWidth = normalize(strokeWidthProp, normalizedRegions);
+    const normalizedStrokeColor = normalize(strokeColorProp, normalizedRegions);
+    const normalizedFillOpacity = normalize(fillOpacityProp, normalizedRegions);
     const countMap = value !== null && value !== void 0 ? value : {};
     // Helper to render a non-interactive layer (underlay or overlay)
     const renderNonInteractiveLayer = (regionIds, keyPrefix) => {
         return Array.from(regionIds).flatMap((id) => {
-            const elements = normalizedGeometry[id];
+            const elements = normalizedRegions[id];
             if (!elements)
                 return [];
             // Build aesthetic chain: default -> aesBase -> per-region fillColor -> groupAes
@@ -88,7 +84,7 @@ export function OutputMap(props) {
             if (aesBaseFillColorDict === null || aesBaseFillColorDict === void 0 ? void 0 : aesBaseFillColorDict[id]) {
                 layerAes = { ...layerAes, fillColor: aesBaseFillColorDict[id] };
             }
-            const groupAes = resolveGroupAesthetic(id, aesGroup, geometryMetadata);
+            const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
             if (groupAes) {
                 layerAes = { ...layerAes, ...groupAes };
             }
@@ -109,7 +105,7 @@ export function OutputMap(props) {
     };
     return (_jsxs("svg", { role: "img", className: className, style: { width: "100%", height: "100%", ...containerStyle }, viewBox: viewBox, children: [_jsx("g", { children: renderNonInteractiveLayer(layerAssignment.underlay, "underlay") }), _jsx("g", { children: Array.from(layerAssignment.base).flatMap((id) => {
                     var _a;
-                    const elements = normalizedGeometry[id];
+                    const elements = normalizedRegions[id];
                     if (!elements)
                         return [];
                     const tooltip = tooltips === null || tooltips === void 0 ? void 0 : tooltips[id];
@@ -124,12 +120,12 @@ export function OutputMap(props) {
                         baseAes = { ...baseAes, fillColor: aesBaseFillColorDict[id] };
                     }
                     // Apply group aesthetic if available
-                    const groupAes = resolveGroupAesthetic(id, aesGroup, geometryMetadata);
+                    const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
                     if (groupAes) {
                         baseAes = { ...baseAes, ...groupAes };
                     }
                     // Apply indexed aesthetic if available (for Display mode with aesIndexed)
-                    const indexedData = getIndexedDataForRegion(aesIndexed, id, geometryMetadata);
+                    const indexedData = getIndexedDataForRegion(aesIndexed, id, outlineMetadata);
                     if (indexedData) {
                         // For display mode, use clamping (no wrapping)
                         const indexedAes = resolveIndexedAesthetic(indexedData, count, undefined);
@@ -214,30 +210,13 @@ export function OutputMap(props) {
                         tooltip,
                         extraProps: regionOverrides,
                     }));
-                }) }), normalizedOverlayGeometry && (_jsx("g", { children: Object.entries(normalizedOverlayGeometry).flatMap(([id, elements]) => {
-                    const overlayAes = {
-                        ...DEFAULT_AESTHETIC_VALUES,
-                        ...overlayAesthetic,
-                    };
-                    const region = createRenderedRegion(id, overlayAes);
-                    return elements.map((element, index) => renderElement({
-                        element,
-                        key: `legacy-overlay-${id}-${index}`,
-                        fill: region.aesthetic.fillColor,
-                        fillOpacity: region.aesthetic.fillOpacity,
-                        stroke: region.aesthetic.strokeColor,
-                        strokeWidth: region.aesthetic.strokeWidth,
-                        strokeDasharray: region.aesthetic.strokeDasharray,
-                        nonScalingStroke: region.aesthetic.nonScalingStroke,
-                        pointerEvents: "none",
-                    }));
-                }) })), _jsx("g", { children: renderNonInteractiveLayer(layerAssignment.overlay, "overlay") }), _jsx("g", { children: aesSelect &&
+                }) }), _jsx("g", { children: renderNonInteractiveLayer(layerAssignment.overlay, "overlay") }), _jsx("g", { children: aesSelect &&
                     Array.from(activeSet).flatMap((id) => {
                         var _a;
                         // Only render selection overlay for regions in base layer
                         if (!layerAssignment.base.has(id))
                             return [];
-                        const elements = normalizedGeometry[id];
+                        const elements = normalizedRegions[id];
                         if (!elements)
                             return [];
                         const count = (_a = countMap[id]) !== null && _a !== void 0 ? _a : 0;
@@ -249,7 +228,7 @@ export function OutputMap(props) {
                         if (aesBaseFillColorDict === null || aesBaseFillColorDict === void 0 ? void 0 : aesBaseFillColorDict[id]) {
                             baseAes = { ...baseAes, fillColor: aesBaseFillColorDict[id] };
                         }
-                        const groupAes = resolveGroupAesthetic(id, aesGroup, geometryMetadata);
+                        const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
                         if (groupAes) {
                             baseAes = { ...baseAes, ...groupAes };
                         }
@@ -309,7 +288,7 @@ export function OutputMap(props) {
                         if (aesBaseFillColorDict === null || aesBaseFillColorDict === void 0 ? void 0 : aesBaseFillColorDict[hovered]) {
                             baseAes = { ...baseAes, fillColor: aesBaseFillColorDict[hovered] };
                         }
-                        const groupAes = resolveGroupAesthetic(hovered, aesGroup, geometryMetadata);
+                        const groupAes = resolveGroupAesthetic(hovered, aesGroup, outlineMetadata);
                         if (groupAes) {
                             baseAes = { ...baseAes, ...groupAes };
                         }
@@ -337,7 +316,7 @@ export function OutputMap(props) {
                         // Step 3: Create hover RenderedRegion with parent chain
                         const hoverRegion = createRenderedRegion(hovered, effectiveHover, parentRegion);
                         // Render using resolved aesthetics
-                        return (_a = normalizedGeometry[hovered]) === null || _a === void 0 ? void 0 : _a.map((element, index) => {
+                        return (_a = normalizedRegions[hovered]) === null || _a === void 0 ? void 0 : _a.map((element, index) => {
                             var _a, _b;
                             return renderElement({
                                 element,

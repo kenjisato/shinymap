@@ -19,7 +19,7 @@ import svg
 from shinymap.types import MISSING, MissingType
 
 if TYPE_CHECKING:
-    from ._geometry import Outline
+    from ._outline import Outline
 
 # Type alias for backward compatibility in type hints
 Geometry = "Outline"
@@ -48,17 +48,17 @@ def export_svg(
         include_ids: Add id attributes to elements (default: True)
 
     Example:
-        >>> from shinymap.geometry import Geometry, export_svg
-        >>> geom = Geometry.from_svg("input.svg")
+        >>> from shinymap.outline import Outline, export_svg
+        >>> outline = Outline.from_svg("input.svg")
         >>>
         >>> # Basic export preserving original aesthetics
-        >>> export_svg(geom, "output.svg")
+        >>> export_svg(outline, "output.svg")
         >>>
         >>> # Export with custom viewBox
-        >>> export_svg(geom, "custom.svg", viewbox="0 0 1000 1000")
+        >>> export_svg(outline, "custom.svg", viewbox="0 0 1000 1000")
         >>>
         >>> # Export without id attributes
-        >>> export_svg(geom, "no_ids.svg", include_ids=False)
+        >>> export_svg(outline, "no_ids.svg", include_ids=False)
 
     Note:
         Exported SVG preserves aesthetic attributes (fill, stroke, etc.)

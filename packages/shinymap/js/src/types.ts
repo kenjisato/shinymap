@@ -124,7 +124,7 @@ export type Element =
   | TextElement;
 
 /**
- * Geometry map supports both v0.x (string paths) and v1.x (polymorphic elements):
+ * Regions map supports both v0.x (string paths) and v1.x (polymorphic elements):
  * - v0.x: string | string[] (treated as path elements)
  * - v1.x: Element | Element[] (any SVG element type)
  *
@@ -134,7 +134,7 @@ export type Element =
  *   v1.x: { "region1": { type: "circle", cx: 50, cy: 50, r: 30 } }
  *   v1.x: { "region1": [{ type: "circle", ... }, { type: "rect", ... }] }
  */
-export type GeometryMap = Record<RegionId, string | string[] | Element | Element[]>;
+export type RegionsMap = Record<RegionId, string | string[] | Element | Element[]>;
 
 export type TooltipMap = Record<RegionId, string>;
 
@@ -239,7 +239,7 @@ function isAesIndexedByGroup(
 export function getIndexedDataForRegion(
   config: AesIndexedConfig | undefined,
   regionId: RegionId,
-  geometryMetadata?: GeometryMetadata
+  outlineMetadata?: OutlineMetadata
 ): IndexedAestheticData | undefined {
   if (!config) return undefined;
 
@@ -251,8 +251,8 @@ export function getIndexedDataForRegion(
     }
 
     // Check if region belongs to a group that has indexed aesthetic
-    if (geometryMetadata?.groups) {
-      for (const [groupName, regionIds] of Object.entries(geometryMetadata.groups)) {
+    if (outlineMetadata?.groups) {
+      for (const [groupName, regionIds] of Object.entries(outlineMetadata.groups)) {
         if (regionIds.includes(regionId) && config.groups[groupName]) {
           return config.groups[groupName];
         }
@@ -557,10 +557,10 @@ export function createRenderedRegion(
 }
 
 /**
- * Geometry metadata with optional group definitions.
+ * Outline metadata with optional group definitions.
  * Groups allow regions to be assigned to layers (underlay/overlay) and aesthetic groups.
  */
-export type GeometryMetadata = {
+export type OutlineMetadata = {
   viewBox?: string;
   groups?: Record<string, RegionId[]>; // Group name → region IDs
 };
@@ -696,7 +696,7 @@ export type ResolveAestheticArgs = {
 };
 
 export type InputMapProps = {
-  geometry: GeometryMap;
+  regions: RegionsMap;
   tooltips?: TooltipMap;
   fillColor?: FillMap;
   viewBox?: string;
@@ -716,9 +716,9 @@ export type InputMapProps = {
    */
   layers?: LayersConfig;
   /**
-   * Geometry metadata containing group definitions.
+   * Outline metadata containing group definitions.
    */
-  geometryMetadata?: GeometryMetadata;
+  outlineMetadata?: OutlineMetadata;
   value?: Record<RegionId, number>;
   onChange?: (value: Record<RegionId, number>) => void;
   resolveAesthetic?: (args: ResolveAestheticArgs) => AestheticStyle | undefined;
@@ -729,16 +729,6 @@ export type InputMapProps = {
    * When true, all modes return Record<RegionId, number>.
    */
   raw?: boolean;
-  /**
-   * Non-interactive overlay geometry (dividers, borders, grids).
-   * @deprecated Use layers.overlays + aes.group instead
-   */
-  overlayGeometry?: GeometryMap;
-  /**
-   * Default aesthetic for overlay regions.
-   * @deprecated Use aes.group instead
-   */
-  overlayAesthetic?: AestheticStyle;
 };
 
 export type ResolveOutputAestheticArgs = {
@@ -750,7 +740,7 @@ export type ResolveOutputAestheticArgs = {
 };
 
 export type OutputMapProps = {
-  geometry: GeometryMap;
+  regions: RegionsMap;
   tooltips?: TooltipMap;
   viewBox?: string;
   className?: string;
@@ -770,9 +760,9 @@ export type OutputMapProps = {
    */
   layers?: LayersConfig;
   /**
-   * Geometry metadata containing group definitions.
+   * Outline metadata containing group definitions.
    */
-  geometryMetadata?: GeometryMetadata;
+  outlineMetadata?: OutlineMetadata;
   fillColor?: string | Record<RegionId, string>;
   strokeWidth?: number | Record<RegionId, number>;
   strokeColor?: string | Record<RegionId, string>;
@@ -785,8 +775,4 @@ export type OutputMapProps = {
   onRegionClick?: (id: RegionId) => void;
   resolveAesthetic?: (args: ResolveOutputAestheticArgs) => AestheticStyle | undefined;
   regionProps?: (args: ResolveOutputAestheticArgs) => React.SVGProps<SVGPathElement>;
-  /** @deprecated Use layers.overlays + aes.group instead */
-  overlayGeometry?: GeometryMap;
-  /** @deprecated Use aes.group instead */
-  overlayAesthetic?: AestheticStyle;
 };

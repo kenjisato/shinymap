@@ -1,4 +1,4 @@
-import type { Element, GeometryMap, PathElement, RegionId } from "../types";
+import type { Element, PathElement, RegionId, RegionsMap } from "../types";
 
 /**
  * Normalize a single region value to Element array format.
@@ -43,17 +43,17 @@ export function normalizeRegion(value: string | string[] | Element | Element[]):
 }
 
 /**
- * Normalize entire geometry map to Element array format.
+ * Normalize entire regions map to Element array format.
  *
  * Converts all region values to Element[] format, handling both v0.x
  * (string paths) and v1.x (polymorphic elements) formats.
  *
- * @param geometry - Geometry map in any supported format
- * @returns Normalized geometry map with Element[] values
+ * @param regions - Regions map in any supported format
+ * @returns Normalized regions map with Element[] values
  */
-export function normalizeGeometry(geometry: GeometryMap): Record<RegionId, Element[]> {
+export function normalizeRegions(regions: RegionsMap): Record<RegionId, Element[]> {
   const result: Record<string, Element[]> = {};
-  for (const [regionId, value] of Object.entries(geometry)) {
+  for (const [regionId, value] of Object.entries(regions)) {
     result[regionId] = normalizeRegion(value);
   }
   return result;

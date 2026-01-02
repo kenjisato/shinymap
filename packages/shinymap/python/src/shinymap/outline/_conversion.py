@@ -13,7 +13,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from ._geometry import Outline
+from ._outline import Outline
 
 
 def from_svg(

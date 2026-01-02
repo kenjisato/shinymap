@@ -56,7 +56,7 @@ from ._conversion import (
 )
 
 # Re-export Outline class
-from ._geometry import Outline
+from ._outline import Outline
 
 __all__ = [
     # Main class

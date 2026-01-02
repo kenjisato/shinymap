@@ -10,8 +10,8 @@ from collections.abc import MutableMapping
 from htmltools import TagList, css, div
 
 from ..aes._core import ByGroup
-from ..geometry._core import Outline
 from ..mode import ModeType, initial_value_from_mode, normalize_mode
+from ..outline._core import Outline
 from ..payload import build_aes_payload
 from ..types import CountMap, TooltipMap
 from ._util import (
@@ -82,10 +82,10 @@ def _input_map(
     # Build props (JS will convert snake_case to camelCase)
     props = _strip_none(
         {
-            "geometry": _normalize_outline(outline.regions),
+            "regions": _normalize_outline(outline.regions),
             "tooltips": tooltips,
             "view_box": vb_str,
-            "geometry_metadata": outline.metadata_dict(vb_tuple),
+            "outline_metadata": outline.metadata_dict(vb_tuple),
             "value": effective_value,
             "mode": mode_obj.to_dict(),
             "aes": aes_dict,

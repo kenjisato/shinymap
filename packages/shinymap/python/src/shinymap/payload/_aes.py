@@ -31,12 +31,12 @@ from ..aes._core import BaseAesthetic, ByGroup, ByState
 from ..types import MissingType
 
 if TYPE_CHECKING:
-    from ..geometry import Outline
+    from ..outline import Outline
 
 
 def build_aes_payload(
     resolved: ByGroup,
-    geometry: Outline,
+    outline: Outline,
 ) -> dict[str, Any]:
     """Build v0.3 aesthetic payload from resolved ByGroup.
 
@@ -48,7 +48,7 @@ def build_aes_payload(
 
     Args:
         resolved: Resolved ByGroup from WashConfig.apply()
-        geometry: Outline object with region/group information
+        outline: Outline object with region/group information
 
     Returns:
         Dict in v0.3 payload format with entries and _metadata
@@ -58,16 +58,16 @@ def build_aes_payload(
         >>> from shinymap.payload import build_aes_payload
         >>> wc = Wash(shape=aes.Shape(fill_color="#e5e7eb"))
         >>> coastal_aes = aes.ByGroup(coastal=aes.Shape(fill_color="#3b82f6"))
-        >>> resolved = wc.config.apply(coastal_aes, geometry)
-        >>> payload = build_aes_payload(resolved, geometry)
+        >>> resolved = wc.config.apply(coastal_aes, outline)
+        >>> payload = build_aes_payload(resolved, outline)
         >>> payload["coastal"]["base"]["fill_color"]
         '#3b82f6'
     """
     result: dict[str, Any] = {}
     metadata: dict[str, list[str]] = {}
 
-    region_types = geometry.region_types()
-    geo_groups = geometry.groups()
+    region_types = outline.region_types()
+    outline_groups = outline.groups()
 
     # Convert each entry in resolved ByGroup to payload format
     for key, value in resolved.items():
@@ -86,7 +86,7 @@ def build_aes_payload(
 
     # Build _metadata for JS lookup
     # Groups: map group name to member region IDs
-    for group_name, members in geo_groups.items():
+    for group_name, members in outline_groups.items():
         if group_name in resolved:
             metadata[group_name] = list(members)
 

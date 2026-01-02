@@ -9,7 +9,7 @@
  *
  * @example
  * snakeToCamel("view_box") // "viewBox"
- * snakeToCamel("geometry_metadata") // "geometryMetadata"
+ * snakeToCamel("outline_metadata") // "outlineMetadata"
  */
 export function snakeToCamel(str) {
     return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
@@ -18,7 +18,7 @@ export function snakeToCamel(str) {
  * Keys that contain region IDs as sub-keys (don't convert those sub-keys).
  */
 const REGION_ID_CONTAINERS = new Set([
-    "geometry",
+    "regions",
     "tooltips",
     "value",
     "fill_color",
@@ -72,7 +72,7 @@ function convertValuesOnly(obj) {
  * - Handles nested objects
  * - Handles arrays (converts each element)
  * - Preserves null/undefined/primitives
- * - Preserves region ID keys in geometry/tooltips/value containers
+ * - Preserves region ID keys in regions/tooltips/value containers
  *
  * @param obj - Object with snake_case keys
  * @returns New object with camelCase keys
@@ -91,7 +91,7 @@ export function snakeToCamelDeep(obj) {
     for (const [key, value] of Object.entries(obj)) {
         // Preserve keys starting with underscore (v0.3 payload special keys)
         const newKey = shouldPreserveKey(key) ? key : snakeToCamel(key);
-        // For geometry, tooltips, value, etc. - preserve region ID keys
+        // For regions, tooltips, value, etc. - preserve region ID keys
         if (isRegionIdContainer(key)) {
             result[newKey] = convertValuesOnly(value);
         }

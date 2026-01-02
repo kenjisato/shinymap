@@ -9,7 +9,7 @@
  *
  * @example
  * snakeToCamel("view_box") // "viewBox"
- * snakeToCamel("geometry_metadata") // "geometryMetadata"
+ * snakeToCamel("outline_metadata") // "outlineMetadata"
  */
 export declare function snakeToCamel(str: string): string;
 /**
@@ -18,7 +18,7 @@ export declare function snakeToCamel(str: string): string;
  * - Handles nested objects
  * - Handles arrays (converts each element)
  * - Preserves null/undefined/primitives
- * - Preserves region ID keys in geometry/tooltips/value containers
+ * - Preserves region ID keys in regions/tooltips/value containers
  *
  * @param obj - Object with snake_case keys
  * @returns New object with camelCase keys

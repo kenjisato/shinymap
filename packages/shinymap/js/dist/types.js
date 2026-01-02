@@ -45,7 +45,7 @@ function isAesIndexedByGroup(config) {
  * - Direct IndexedAestheticData: {fillColor: [...], ...}
  * - ByGroup wrapper: {type: "byGroup", groups: {...}}
  */
-export function getIndexedDataForRegion(config, regionId, geometryMetadata) {
+export function getIndexedDataForRegion(config, regionId, outlineMetadata) {
     if (!config)
         return undefined;
     // Check if it's a ByGroup wrapper
@@ -55,8 +55,8 @@ export function getIndexedDataForRegion(config, regionId, geometryMetadata) {
             return config.groups[regionId];
         }
         // Check if region belongs to a group that has indexed aesthetic
-        if (geometryMetadata === null || geometryMetadata === void 0 ? void 0 : geometryMetadata.groups) {
-            for (const [groupName, regionIds] of Object.entries(geometryMetadata.groups)) {
+        if (outlineMetadata === null || outlineMetadata === void 0 ? void 0 : outlineMetadata.groups) {
+            for (const [groupName, regionIds] of Object.entries(outlineMetadata.groups)) {
                 if (regionIds.includes(regionId) && config.groups[groupName]) {
                     return config.groups[groupName];
                 }

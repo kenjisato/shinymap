@@ -93,7 +93,7 @@ export type TextElement = {
  */
 export type Element = CircleElement | RectElement | PathElement | PolygonElement | EllipseElement | LineElement | TextElement;
 /**
- * Geometry map supports both v0.x (string paths) and v1.x (polymorphic elements):
+ * Regions map supports both v0.x (string paths) and v1.x (polymorphic elements):
  * - v0.x: string | string[] (treated as path elements)
  * - v1.x: Element | Element[] (any SVG element type)
  *
@@ -103,7 +103,7 @@ export type Element = CircleElement | RectElement | PathElement | PolygonElement
  *   v1.x: { "region1": { type: "circle", cx: 50, cy: 50, r: 30 } }
  *   v1.x: { "region1": [{ type: "circle", ... }, { type: "rect", ... }] }
  */
-export type GeometryMap = Record<RegionId, string | string[] | Element | Element[]>;
+export type RegionsMap = Record<RegionId, string | string[] | Element | Element[]>;
 export type TooltipMap = Record<RegionId, string>;
 export type FillMap = string | Record<RegionId, string>;
 export type MapModeType = "single" | "multiple" | "count" | "cycle" | "display";
@@ -155,7 +155,7 @@ export declare function resolveIndexedAesthetic(data: IndexedAestheticData, coun
  * - Direct IndexedAestheticData: {fillColor: [...], ...}
  * - ByGroup wrapper: {type: "byGroup", groups: {...}}
  */
-export declare function getIndexedDataForRegion(config: AesIndexedConfig | undefined, regionId: RegionId, geometryMetadata?: GeometryMetadata): IndexedAestheticData | undefined;
+export declare function getIndexedDataForRegion(config: AesIndexedConfig | undefined, regionId: RegionId, outlineMetadata?: OutlineMetadata): IndexedAestheticData | undefined;
 /**
  * Mode configuration object (nested API).
  *
@@ -283,10 +283,10 @@ export declare const DEFAULT_HOVER_AESTHETIC: AestheticStyle;
  */
 export declare function createRenderedRegion(id: RegionId, aes: AestheticStyle, parent?: RenderedRegion): RenderedRegion;
 /**
- * Geometry metadata with optional group definitions.
+ * Outline metadata with optional group definitions.
  * Groups allow regions to be assigned to layers (underlay/overlay) and aesthetic groups.
  */
-export type GeometryMetadata = {
+export type OutlineMetadata = {
     viewBox?: string;
     groups?: Record<string, RegionId[]>;
 };
@@ -379,7 +379,7 @@ export type ResolveAestheticArgs = {
     baseAesthetic: AestheticStyle;
 };
 export type InputMapProps = {
-    geometry: GeometryMap;
+    regions: RegionsMap;
     tooltips?: TooltipMap;
     fillColor?: FillMap;
     viewBox?: string;
@@ -399,9 +399,9 @@ export type InputMapProps = {
      */
     layers?: LayersConfig;
     /**
-     * Geometry metadata containing group definitions.
+     * Outline metadata containing group definitions.
      */
-    geometryMetadata?: GeometryMetadata;
+    outlineMetadata?: OutlineMetadata;
     value?: Record<RegionId, number>;
     onChange?: (value: Record<RegionId, number>) => void;
     resolveAesthetic?: (args: ResolveAestheticArgs) => AestheticStyle | undefined;
@@ -412,16 +412,6 @@ export type InputMapProps = {
      * When true, all modes return Record<RegionId, number>.
      */
     raw?: boolean;
-    /**
-     * Non-interactive overlay geometry (dividers, borders, grids).
-     * @deprecated Use layers.overlays + aes.group instead
-     */
-    overlayGeometry?: GeometryMap;
-    /**
-     * Default aesthetic for overlay regions.
-     * @deprecated Use aes.group instead
-     */
-    overlayAesthetic?: AestheticStyle;
 };
 export type ResolveOutputAestheticArgs = {
     id: RegionId;
@@ -431,7 +421,7 @@ export type ResolveOutputAestheticArgs = {
     tooltip?: string;
 };
 export type OutputMapProps = {
-    geometry: GeometryMap;
+    regions: RegionsMap;
     tooltips?: TooltipMap;
     viewBox?: string;
     className?: string;
@@ -451,9 +441,9 @@ export type OutputMapProps = {
      */
     layers?: LayersConfig;
     /**
-     * Geometry metadata containing group definitions.
+     * Outline metadata containing group definitions.
      */
-    geometryMetadata?: GeometryMetadata;
+    outlineMetadata?: OutlineMetadata;
     fillColor?: string | Record<RegionId, string>;
     strokeWidth?: number | Record<RegionId, number>;
     strokeColor?: string | Record<RegionId, string>;
@@ -466,8 +456,4 @@ export type OutputMapProps = {
     onRegionClick?: (id: RegionId) => void;
     resolveAesthetic?: (args: ResolveOutputAestheticArgs) => AestheticStyle | undefined;
     regionProps?: (args: ResolveOutputAestheticArgs) => React.SVGProps<SVGPathElement>;
-    /** @deprecated Use layers.overlays + aes.group instead */
-    overlayGeometry?: GeometryMap;
-    /** @deprecated Use aes.group instead */
-    overlayAesthetic?: AestheticStyle;
 };

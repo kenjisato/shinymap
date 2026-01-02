@@ -11,8 +11,8 @@ from htmltools import TagList, css, div
 from shiny import ui
 
 from ..aes._core import ByGroup
-from ..geometry._core import Outline
 from ..mode import Display
+from ..outline._core import Outline
 from ..payload import build_aes_payload
 from ..types import TooltipMap
 from ._registry import _static_map_params
@@ -80,13 +80,13 @@ def _output_map(
         # Store static params (JS will convert snake_case to camelCase)
         static_params = _strip_none(
             {
-                "geometry": outline.regions,
+                "regions": outline.regions,
                 "tooltips": tooltips,
                 "view_box": vb_str,
                 "mode": mode_dict,
                 "aes": aes_dict,
                 "layers": outline.overlays() or None,
-                "geometry_metadata": outline.metadata_dict(vb_tuple),
+                "outline_metadata": outline.metadata_dict(vb_tuple),
                 "click_input_id": click_input_id,
             }
         )

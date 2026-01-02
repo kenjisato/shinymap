@@ -78,15 +78,15 @@ def set_repr_options(
         New ReprConfig with updated settings
 
     Example:
-        >>> from shinymap.geometry import Geometry, Circle, set_repr_options
-        >>> geo = Geometry(
+        >>> from shinymap.outline import Outline, Circle, set_repr_options
+        >>> outline = Outline(
         ...     regions={f"r{i}": [Circle(cx=i*10, cy=i*10, r=5)] for i in range(20)},
         ...     metadata={"viewBox": "0 0 500 500"}
         ... )
         >>>
         >>> # Default: shows first 5 of 20 regions
-        >>> geo
-        Geometry(regions=Regions({
+        >>> outline
+        Outline(regions=Regions({
           'r0': [Circle(...)],
           ...
           ... (15 more regions)
@@ -94,8 +94,8 @@ def set_repr_options(
         >>>
         >>> # Show more regions
         >>> with set_repr_options(max_regions=15):
-        ...     print(geo)
-        Geometry(regions=Regions({
+        ...     print(outline)
+        Outline(regions=Regions({
           'r0': [Circle(...)],
           ...
           ... (5 more regions)
@@ -103,8 +103,8 @@ def set_repr_options(
         >>>
         >>> # Show all regions
         >>> with set_repr_options(max_regions=100, max_elements=10):
-        ...     print(geo)
-        Geometry(regions=Regions({
+        ...     print(outline)
+        Outline(regions=Regions({
           'r0': [Circle(...)],
           'r1': [Circle(...)],
           ...

@@ -14,12 +14,12 @@ Usage:
     >>> from shinymap.mode import Single, Multiple, Cycle, Count
     >>>
     >>> # Multiple with selection limit
-    >>> input_map("regions", geometry, mode=Multiple(max_selection=3))
+    >>> input_map("regions", outline, mode=Multiple(max_selection=3))
     >>>
     >>> # Cycle mode with custom palette (e.g., traffic light survey)
     >>> input_map(
     ...     "rating",
-    ...     geometry,
+    ...     outline,
     ...     mode=Cycle(
     ...         n=4,
     ...         aes=aes.Indexed(
@@ -31,7 +31,7 @@ Usage:
     >>> # Per-group palettes (e.g., color coordination quiz)
     >>> input_map(
     ...     "quiz",
-    ...     geometry,
+    ...     outline,
     ...     mode=Cycle(
     ...         n=2,
     ...         aes=aes.ByGroup(
@@ -296,7 +296,7 @@ class Display:
         >>> # Traffic light colors for status values
         >>> output_map(
         ...     "status_map",
-        ...     geometry,
+        ...     outline,
         ...     mode=Display(aes=aes.Indexed(
         ...         fill_color=["#f3f4f6", "#22c55e", "#f59e0b", "#ef4444"]
         ...     ))
@@ -305,12 +305,12 @@ class Display:
         >>> @render_map
         >>> def status_map():
         ...     # value 0=unknown, 1=good, 2=warning, 3=error
-        ...     return Map(geometry, value=status_values)
+        ...     return Map(outline, value=status_values)
         >>>
         >>> # Clickable display map for triggering actions
         >>> output_map(
         ...     "clickable_map",
-        ...     geometry,
+        ...     outline,
         ...     mode=Display(clickable=True)
         ... )
         >>>
@@ -323,7 +323,7 @@ class Display:
         >>> # Custom input ID
         >>> output_map(
         ...     "my_map",
-        ...     geometry,
+        ...     outline,
         ...     mode=Display(clickable=True, input_id="region_clicked")
         ... )
         >>> # Access via input.region_clicked()

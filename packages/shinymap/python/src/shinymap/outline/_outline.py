@@ -1,4 +1,4 @@
-"""Geometry class for canonical geometry representation."""
+"""Outline class for canonical outline representation."""
 
 from __future__ import annotations
 
@@ -16,9 +16,9 @@ if TYPE_CHECKING:
 
 @dataclass
 class Outline:
-    """Canonical geometry representation with polymorphic elements.
+    """Canonical outline representation with polymorphic elements.
 
-    This class encapsulates SVG geometry with metadata. It supports both:
+    This class encapsulates SVG outline with metadata. It supports both:
     - v0.x format: String-based paths (for backward compatibility)
     - v1.x format: Polymorphic element objects (Circle, Rect, Path, etc.)
 
@@ -40,7 +40,7 @@ class Outline:
         >>> geo = Outline.from_dict(data)
         >>>
         >>> # v1.x format (polymorphic elements)
-        >>> from shinymap.geometry import Circle
+        >>> from shinymap.outline import Circle
         >>> geo = Outline(regions={"r1": [Circle(cx=100, cy=100, r=50)]}, metadata={})
     """
 
@@ -54,7 +54,7 @@ class Outline:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Outline:
-        """Load geometry from dict (supports v0.x strings and v1.x element dicts).
+        """Load outline from dict (supports v0.x strings and v1.x element dicts).
 
         Automatically detects format and converts:
         - v0.x: String paths → kept as strings (backward compatible)
@@ -64,7 +64,7 @@ class Outline:
             data: Dictionary with regions and optional _metadata key
 
         Returns:
-            Geometry object with normalized list-based regions
+            Outline object with normalized list-based regions
 
         Raises:
             ValueError: If _metadata exists but is not a dict
@@ -109,13 +109,13 @@ class Outline:
 
     @classmethod
     def from_json(cls, json_path: str | PathType) -> Outline:
-        """Load geometry from JSON file.
+        """Load outline from JSON file.
 
         Args:
             json_path: Path to JSON file in shinymap format
 
         Returns:
-            Geometry object with normalized list-based paths
+            Outline object with normalized list-based paths
 
         Example:
             >>> geo = Outline.from_json("japan_prefectures.json")
@@ -140,7 +140,7 @@ class Outline:
         svg_path: str | PathType,
         extract_viewbox: bool = True,
     ) -> Outline:
-        """Extract geometry from SVG file (all element types).
+        """Extract outline from SVG file (all element types).
 
         Extracts all supported SVG shape elements (path, circle, rect, polygon,
         ellipse, line, text) and generates auto-IDs for elements without IDs.
@@ -331,7 +331,7 @@ class Outline:
         return cls(regions=Regions(regions), metadata=metadata)  # type: ignore[arg-type]
 
     def viewbox(self, padding: float = 0.02) -> tuple[float, float, float, float]:
-        """Get viewBox from metadata, or compute from geometry coordinates.
+        """Get viewBox from metadata, or compute from outline coordinates.
 
         Works with both v0.x (string paths) and v1.x (Element objects).
 
@@ -354,7 +354,7 @@ class Outline:
                 raise ValueError(f"Invalid viewBox format: {vb_str}")
             return (float(parts[0]), float(parts[1]), float(parts[2]), float(parts[3]))
 
-        # Compute from geometry
+        # Compute from outline
         # Collect all bounds from all elements
         all_bounds: list[tuple[float, float, float, float]] = []
 
@@ -493,7 +493,7 @@ class Outline:
             path_parts = []
             for old_id in old_ids:
                 if old_id not in self.regions:
-                    raise ValueError(f"Path '{old_id}' not found in geometry")
+                    raise ValueError(f"Path '{old_id}' not found in outline")
                 # Extend to flatten: self.regions[old_id] is already a list
                 path_parts.extend(self.regions[old_id])
                 relabeled_ids.add(old_id)
@@ -604,20 +604,20 @@ class Outline:
 
         Example:
             >>> # v1.x format with mixed elements
-            >>> from shinymap.geometry import Circle, Line, Text, Path
-            >>> geo = Outline(regions={
+            >>> from shinymap.outline import Circle, Line, Text, Path
+            >>> outline = Outline(regions={
             ...     "region": [Circle(cx=50, cy=50, r=30)],
             ...     "_divider": [Line(x1=0, y1=50, x2=100, y2=50)],
             ...     "label": [Text(x=50, y=50, text="A")],
             ... }, metadata={})
-            >>> geo.region_types()
+            >>> outline.region_types()
             {'region': 'shape', '_divider': 'line', 'label': 'text'}
 
             >>> # Path marked as line via path_as_line()
-            >>> geo = Outline(regions={
+            >>> outline = Outline(regions={
             ...     "_border": [Path(d="M 0 0 L 100 0")],
             ... }, metadata={}).path_as_line("_border")
-            >>> geo.region_types()
+            >>> outline.region_types()
             {'_border': 'line'}
         """
         lines_as_path = set(self.metadata.get("lines_as_path", []))
@@ -758,14 +758,14 @@ class Outline:
 
         Example:
             >>> # v0.x format (strings)
-            >>> geo = Outline.from_dict({"region": ["M 0 0"]})
-            >>> geo.to_dict()
+            >>> outline = Outline.from_dict({"region": ["M 0 0"]})
+            >>> outline.to_dict()
             {'_metadata': {}, 'region': ['M 0 0']}
 
             >>> # v1.x format (elements)
-            >>> from shinymap.geometry import Circle
-            >>> geo = Outline(regions={"r1": [Circle(cx=100, cy=100, r=50)]}, metadata={})
-            >>> geo.to_dict()
+            >>> from shinymap.outline import Circle
+            >>> outline = Outline(regions={"r1": [Circle(cx=100, cy=100, r=50)]}, metadata={})
+            >>> outline.to_dict()
             {'_metadata': {}, 'r1': [{'type': 'circle', 'cx': 100, 'cy': 100, 'r': 50}]}
         """
         output: dict[str, Any] = {}
@@ -787,7 +787,7 @@ class Outline:
         return output
 
     def to_json(self, output_path: str | PathType) -> None:
-        """Write geometry to JSON file.
+        """Write outline to JSON file.
 
         Args:
             output_path: Path to write JSON file

@@ -14,7 +14,7 @@ from .types import CountMap, TooltipMap
 from .uicore._util import _normalize_outline, _strip_none, _validate_value
 
 if TYPE_CHECKING:
-    from .geometry import Outline
+    from .outline import Outline
 
 # Type aliases
 AesType = ByGroup | ByState | BaseAesthetic | Mapping[str, Mapping[str, Any] | None] | None
@@ -39,13 +39,13 @@ class MapBuilder:
         @render_map
         def my_map():
             return (
-                Map(geometry, tooltips=tooltips, view_box=viewbox)
+                Map(outline, tooltips=tooltips, view_box=viewbox)
                 .with_value(my_counts)
             )
 
     Example (with static params in output_map()):
         # UI layer
-        output_map("my_map", geometry=GEOMETRY, tooltips=TOOLTIPS, view_box=VIEWBOX)
+        output_map("my_map", outline, tooltips=TOOLTIPS, view_box=VIEWBOX)
 
         # Server layer
         @render_map
@@ -112,9 +112,9 @@ class MapBuilder:
         self._layers = layers
         return self
 
-    def with_geometry_metadata(self, metadata: Mapping[str, Any]) -> MapBuilder:
-        """Set geometry metadata (viewBox, groups)."""
-        self._geometry_metadata = metadata
+    def with_outline_metadata(self, metadata: Mapping[str, Any]) -> MapBuilder:
+        """Set outline metadata (viewBox, groups)."""
+        self._outline_metadata = metadata
         return self
 
     def as_json(self) -> Mapping[str, Any]:
@@ -126,7 +126,7 @@ class MapBuilder:
         data: dict[str, Any] = {}
 
         if self._regions is not None:
-            data["geometry"] = _normalize_outline(self._regions)
+            data["regions"] = _normalize_outline(self._regions)
         if self._tooltips is not None:
             data["tooltips"] = self._tooltips
         if self._value is not None:
@@ -143,14 +143,14 @@ class MapBuilder:
                 data["aes"] = self._aes
         if self._layers is not None:
             data["layers"] = self._layers
-        if hasattr(self, "_geometry_metadata") and self._geometry_metadata is not None:
-            data["geometry_metadata"] = self._geometry_metadata
+        if hasattr(self, "_outline_metadata") and self._outline_metadata is not None:
+            data["outline_metadata"] = self._outline_metadata
 
         return _strip_none(data)
 
 
 def Map(
-    geometry: Outline | None = None,
+    outline: Outline | None = None,
     *,
     view_box: tuple[float, float, float, float] | None = None,
     tooltips: dict[str, str] | None = None,
@@ -160,14 +160,14 @@ def Map(
 ) -> MapBuilder:
     """Create map from Outline object.
 
-    When used with output_map() that provides static geometry, you can call Map()
+    When used with output_map() that provides static outline, you can call Map()
     without arguments. Otherwise, provide an Outline object.
 
     Args:
-        geometry: Outline object with regions, viewBox, metadata.
+        outline: Outline object with regions, viewBox, metadata.
             Optional when used with output_map()
         view_box: Override viewBox tuple (for zoom/pan).
-            If None, uses geometry.viewbox()
+            If None, uses outline.viewbox()
         tooltips: Region tooltips
         value: Region values (counts, selection state).
             Values determine both visual state and selection:
@@ -181,8 +181,8 @@ def Map(
         geo = Outline.from_dict(data)
         Map(geo, value={"a": 1, "b": 1, "c": 0})
 
-        # With output_map() providing static geometry
-        output_map("my_map", GEOMETRY, tooltips=TOOLTIPS)
+        # With output_map() providing static outline
+        output_map("my_map", OUTLINE, tooltips=TOOLTIPS)
         @render_map
         def my_map():
             return Map().with_value(counts)
@@ -193,8 +193,8 @@ def Map(
     # Validate value (must be non-negative integers)
     _validate_value(value, "value")
 
-    if geometry is None:
-        # No geometry provided - will be merged from output_map() static params
+    if outline is None:
+        # No outline provided - will be merged from output_map() static params
         builder = MapBuilder(
             None,  # Will be filled by _apply_static_params
             view_box=view_box,
@@ -202,12 +202,12 @@ def Map(
         )
     else:
         # Extract regions using Outline methods
-        main_regions = geometry.main_regions()
+        main_regions = outline.main_regions()
 
         # Create MapBuilder with extracted data
         builder = MapBuilder(
             main_regions,
-            view_box=view_box or geometry.viewbox(),
+            view_box=view_box or outline.viewbox(),
             tooltips=tooltips,
         )
 

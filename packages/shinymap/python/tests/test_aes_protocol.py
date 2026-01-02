@@ -477,7 +477,7 @@ class TestWashConfigApply:
 
     def test_apply_single_aesthetic(self):
         """Single aesthetic applies as base, inherits from wash."""
-        from shinymap.geometry import Outline
+        from shinymap.outline import Outline
         from shinymap.uicore import Wash
 
         wc = Wash(shape=ShapeAesthetic(fill_color="#e5e7eb", stroke_width=1.0))
@@ -491,7 +491,7 @@ class TestWashConfigApply:
 
     def test_apply_bystate_with_all_layers(self):
         """ByState with all layers applies correctly."""
-        from shinymap.geometry import Outline
+        from shinymap.outline import Outline
         from shinymap.uicore import Wash
 
         wc = Wash(shape=ShapeAesthetic(fill_color="#e5e7eb", stroke_width=1.0))
@@ -512,7 +512,7 @@ class TestWashConfigApply:
 
     def test_apply_preserves_relative_expr(self):
         """RelativeExpr in hover is preserved (NOT resolved - JS does that)."""
-        from shinymap.geometry import Outline
+        from shinymap.outline import Outline
         from shinymap.relative import PARENT, RelativeExpr
         from shinymap.uicore import Wash
 
@@ -532,7 +532,7 @@ class TestWashConfigApply:
 
     def test_apply_with_missing(self):
         """MISSING aes returns wash defaults."""
-        from shinymap.geometry import Outline
+        from shinymap.outline import Outline
         from shinymap.types import MISSING
         from shinymap.uicore import Wash
 
@@ -546,7 +546,7 @@ class TestWashConfigApply:
 
     def test_apply_with_none(self):
         """None aes passes through defaults."""
-        from shinymap.geometry import Outline
+        from shinymap.outline import Outline
         from shinymap.uicore import Wash
 
         wc = Wash(shape=ShapeAesthetic(fill_color="#e5e7eb", stroke_width=1.0))

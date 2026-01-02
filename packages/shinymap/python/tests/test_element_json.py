@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from shinymap.geometry._elements import (
+from shinymap.outline._elements import (
     ELEMENT_TYPE_MAP,
     Circle,
     Ellipse,

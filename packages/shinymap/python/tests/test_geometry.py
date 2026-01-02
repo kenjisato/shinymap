@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from shinymap.geometry import convert, from_json, from_svg
+from shinymap.outline import convert, from_json, from_svg
 
 
 @pytest.fixture
@@ -618,7 +618,7 @@ def test_convert_svg_vs_json_equivalence(sample_svg_file):
 @pytest.mark.unit
 def test_infer_relabel_from_svg(sample_svg_file):
     """Test inferring relabel from SVG to final JSON."""
-    from shinymap.geometry import infer_relabel
+    from shinymap.outline import infer_relabel
 
     # Create final JSON with renames (v1.x format with Element dicts)
     # Must match what from_svg() produces, including fill attributes
@@ -641,7 +641,7 @@ def test_infer_relabel_from_svg(sample_svg_file):
 @pytest.mark.unit
 def test_infer_relabel_merge(sample_svg_file):
     """Test inferring merge transformations."""
-    from shinymap.geometry import infer_relabel
+    from shinymap.outline import infer_relabel
 
     # Create final JSON with merge (v1.x format with Element dicts)
     # Must match what from_svg() produces, including fill attributes
@@ -664,7 +664,7 @@ def test_infer_relabel_merge(sample_svg_file):
 @pytest.mark.unit
 def test_infer_relabel_from_intermediate_json(sample_svg_file):
     """Test inferring relabel from intermediate JSON."""
-    from shinymap.geometry import infer_relabel
+    from shinymap.outline import infer_relabel
 
     with tempfile.TemporaryDirectory() as tmpdir:
         intermediate_path = Path(tmpdir) / "intermediate.json"
@@ -691,7 +691,7 @@ def test_infer_relabel_from_intermediate_json(sample_svg_file):
 @pytest.mark.unit
 def test_infer_relabel_no_changes(sample_intermediate_json):
     """Test that infer_relabel returns None when no transformations."""
-    from shinymap.geometry import infer_relabel
+    from shinymap.outline import infer_relabel
 
     with tempfile.TemporaryDirectory() as tmpdir:
         # Write intermediate to file
@@ -715,7 +715,7 @@ def test_infer_relabel_no_changes(sample_intermediate_json):
 @pytest.mark.unit
 def test_geometry_from_svg_class_method(sample_svg_file):
     """Test Outline.from_svg() class method."""
-    from shinymap.geometry import Outline
+    from shinymap.outline import Outline
 
     geo = Outline.from_svg(sample_svg_file, extract_viewbox=True)
 
@@ -731,7 +731,7 @@ def test_geometry_from_svg_class_method(sample_svg_file):
 @pytest.mark.unit
 def test_geometry_from_json_class_method(sample_intermediate_json):
     """Test Outline.from_json() class method."""
-    from shinymap.geometry import Outline
+    from shinymap.outline import Outline
 
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         json.dump(sample_intermediate_json, f)
@@ -753,7 +753,7 @@ def test_geometry_from_json_class_method(sample_intermediate_json):
 @pytest.mark.unit
 def test_geometry_from_dict_class_method(sample_intermediate_json):
     """Test Outline.from_dict() class method."""
-    from shinymap.geometry import Outline
+    from shinymap.outline import Outline
 
     geo = Outline.from_dict(sample_intermediate_json)
 
@@ -766,7 +766,7 @@ def test_geometry_from_dict_class_method(sample_intermediate_json):
 @pytest.mark.unit
 def test_geometry_relabel_rename_single(sample_intermediate_json):
     """Test Outline.relabel() with single region rename."""
-    from shinymap.geometry import Outline
+    from shinymap.outline import Outline
 
     geo = Outline.from_dict(sample_intermediate_json)
     geo_relabeled = geo.relabel({"top_left": "path_1"})
@@ -785,7 +785,7 @@ def test_geometry_relabel_rename_single(sample_intermediate_json):
 @pytest.mark.unit
 def test_geometry_relabel_merge_multiple(sample_intermediate_json):
     """Test Outline.relabel() with region merge."""
-    from shinymap.geometry import Outline
+    from shinymap.outline import Outline
 
     geo = Outline.from_dict(sample_intermediate_json)
     geo_merged = geo.relabel({"top_merged": ["path_1", "path_2"]})
@@ -809,7 +809,7 @@ def test_geometry_relabel_merge_multiple(sample_intermediate_json):
 @pytest.mark.unit
 def test_geometry_relabel_nonexistent_raises(sample_intermediate_json):
     """Test Outline.relabel() raises ValueError for nonexistent region."""
-    from shinymap.geometry import Outline
+    from shinymap.outline import Outline
 
     geo = Outline.from_dict(sample_intermediate_json)
 
@@ -820,7 +820,7 @@ def test_geometry_relabel_nonexistent_raises(sample_intermediate_json):
 @pytest.mark.unit
 def test_geometry_set_overlays(sample_intermediate_json):
     """Test Outline.set_overlays() method."""
-    from shinymap.geometry import Outline
+    from shinymap.outline import Outline
 
     geo = Outline.from_dict(sample_intermediate_json)
     geo_overlays = geo.set_overlays(["bottom", "_border"])
@@ -837,7 +837,7 @@ def test_geometry_set_overlays(sample_intermediate_json):
 @pytest.mark.unit
 def test_geometry_update_metadata(sample_intermediate_json):
     """Test Outline.update_metadata() method."""
-    from shinymap.geometry import Outline
+    from shinymap.outline import Outline
 
     geo = Outline.from_dict(sample_intermediate_json)
     geo_updated = geo.update_metadata({"source": "Test", "license": "MIT"})
@@ -855,7 +855,7 @@ def test_geometry_update_metadata(sample_intermediate_json):
 @pytest.mark.unit
 def test_geometry_update_metadata_overwrites(sample_intermediate_json):
     """Test Outline.update_metadata() overwrites existing keys."""
-    from shinymap.geometry import Outline
+    from shinymap.outline import Outline
 
     geo = Outline.from_dict(sample_intermediate_json)
     geo_updated = geo.update_metadata({"viewBox": "0 0 200 200"})
@@ -870,7 +870,7 @@ def test_geometry_update_metadata_overwrites(sample_intermediate_json):
 @pytest.mark.unit
 def test_geometry_to_dict(sample_intermediate_json):
     """Test Outline.to_dict() method."""
-    from shinymap.geometry import Outline
+    from shinymap.outline import Outline
 
     geo = Outline.from_dict(sample_intermediate_json)
     output = geo.to_dict()
@@ -885,7 +885,7 @@ def test_geometry_to_dict(sample_intermediate_json):
 @pytest.mark.unit
 def test_geometry_to_json(sample_intermediate_json):
     """Test Outline.to_json() method."""
-    from shinymap.geometry import Outline
+    from shinymap.outline import Outline
 
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         output_path = f.name
@@ -910,7 +910,7 @@ def test_geometry_to_json(sample_intermediate_json):
 @pytest.mark.unit
 def test_outline_method_chaining(sample_intermediate_json):
     """Test Outline fluent API with method chaining."""
-    from shinymap.geometry import Outline
+    from shinymap.outline import Outline
 
     geo = (
         Outline.from_dict(sample_intermediate_json)
@@ -932,7 +932,7 @@ def test_outline_method_chaining(sample_intermediate_json):
 @pytest.mark.unit
 def test_outline_immutability(sample_intermediate_json):
     """Test that Outline transformations are immutable."""
-    from shinymap.geometry import Outline
+    from shinymap.outline import Outline
 
     original = Outline.from_dict(sample_intermediate_json)
     original_region_count = len(original.regions)
@@ -961,7 +961,7 @@ def test_outline_immutability(sample_intermediate_json):
 @pytest.mark.integration
 def test_geometry_oop_workflow(sample_svg_file):
     """Test complete OOP workflow: load -> transform -> export."""
-    from shinymap.geometry import Outline
+    from shinymap.outline import Outline
 
     with tempfile.TemporaryDirectory() as tmpdir:
         output_path = Path(tmpdir) / "output.json"
@@ -996,7 +996,7 @@ def test_geometry_oop_workflow(sample_svg_file):
 @pytest.mark.integration
 def test_functional_api_uses_outline_internally(sample_svg_file):
     """Test that functional API delegates to Outline class."""
-    from shinymap.geometry import Outline
+    from shinymap.outline import Outline
 
     # Functional API
     result_functional = from_svg(sample_svg_file, output_path=None)
@@ -1026,7 +1026,7 @@ def test_geometry_oop_equivalence_with_functional(sample_svg_file):
     )
 
     # OOP API
-    from shinymap.geometry import Outline
+    from shinymap.outline import Outline
 
     geo = (
         Outline.from_svg(sample_svg_file, extract_viewbox=True)

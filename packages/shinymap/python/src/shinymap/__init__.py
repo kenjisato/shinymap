@@ -4,9 +4,9 @@ from __future__ import annotations
 
 __version__ = "0.3.0-dev"
 
-from . import aes, geometry, types, ui, utils
+from . import aes, outline, types, ui, utils
 from ._map import Map
-from .geometry import Outline
+from .outline import Outline
 from .relative import (
     PARENT,
     AestheticConfig,
@@ -50,7 +50,7 @@ __all__ = [
     "resolve_region",
     "preview_region",
     # Subpackages
-    "geometry",  # Outline utilities
+    "outline",  # Outline utilities
     "types",  # Type definitions (MapBuilder, etc.)
     "ui",  # UI components (input_map, output_map, etc.)
     "utils",  # Utility functions (linspace, path_bb, strip_unit)

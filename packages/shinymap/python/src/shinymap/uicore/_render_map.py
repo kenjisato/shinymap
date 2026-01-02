@@ -28,7 +28,7 @@ def _apply_static_params(builder: MapBuilder, output_id: str) -> MapBuilder:
 
     # Create new builder with merged parameters
     # Builder values (if set) override static values
-    regions = builder._regions if builder._regions is not None else static_params.get("geometry")
+    regions = builder._regions if builder._regions is not None else static_params.get("regions")
     tooltips = builder._tooltips if builder._tooltips is not None else static_params.get("tooltips")
     view_box = builder._view_box if builder._view_box is not None else static_params.get("view_box")
     merged = MapBuilder(regions=regions, tooltips=tooltips, view_box=view_box)
@@ -52,12 +52,12 @@ def _apply_static_params(builder: MapBuilder, output_id: str) -> MapBuilder:
     elif static_layers is not None:
         merged._layers = static_layers
 
-    # Geometry metadata
-    static_metadata = static_params.get("geometry_metadata")
-    if hasattr(builder, "_geometry_metadata") and builder._geometry_metadata is not None:
-        merged._geometry_metadata = builder._geometry_metadata
+    # Outline metadata
+    static_metadata = static_params.get("outline_metadata")
+    if hasattr(builder, "_outline_metadata") and builder._outline_metadata is not None:
+        merged._outline_metadata = builder._outline_metadata
     elif static_metadata is not None:
-        merged._geometry_metadata = static_metadata
+        merged._outline_metadata = static_metadata
 
     return merged
 

@@ -2,10 +2,10 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 
 import { OutputMap, palette } from "../src";
-import type { GeometryMap } from "../src/types";
-import geometry from "./geometry.json";
+import type { RegionsMap } from "../src/types";
+import regionsData from "./regions.json";
 
-const demoGeometry = geometry as GeometryMap;
+const demoRegions = regionsData as RegionsMap;
 
 const SWATCHES: Array<{ name: string; colors: string[] }> = [
   { name: "Qualitative", colors: palette.qualitative },
@@ -52,7 +52,7 @@ function PaletteDemo() {
         <p style={{ marginTop: 0, color: "#475569" }}>Using sequential palettes for fills; adjust in your app as needed.</p>
         <div style={{ aspectRatio: "1", border: "1px solid #cbd5f5", borderRadius: 6, overflow: "hidden" }}>
           <OutputMap
-            geometry={demoGeometry}
+            regions={demoRegions}
             fillColor={fillColor}
             value={value}
             containerStyle={{ width: "100%", height: "100%" }}

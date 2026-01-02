@@ -6,7 +6,7 @@ This subpackage provides tools for:
 
 ## JSON Format
 
-Shinymap geometry JSON files use a **list-based path format**:
+Shinymap outline JSON files use a **list-based path format**:
 
 ```json
 {
@@ -33,7 +33,7 @@ Shinymap geometry JSON files use a **list-based path format**:
 
 **Interactive workflow** (two-step for manual inspection):
 ```python
-from shinymap.geometry import from_svg, from_json
+from shinymap.outline import from_svg, from_json
 
 # Step 1: Extract intermediate JSON with auto-generated IDs
 intermediate = from_svg("map.svg", "intermediate.json")
@@ -58,7 +58,7 @@ final = from_json(
 
 **One-shot conversion** (scripting/reproducibility):
 ```python
-from shinymap.geometry import convert
+from shinymap.outline import convert
 
 # From SVG file
 result = convert(
@@ -82,7 +82,7 @@ result = convert(
 
 **Infer conversion code** (reproducibility from manual work):
 ```python
-from shinymap.geometry import infer_relabel, convert
+from shinymap.outline import infer_relabel, convert
 
 # After manually creating final.json, infer the transformations
 relabel = infer_relabel("original.svg", "final.json")

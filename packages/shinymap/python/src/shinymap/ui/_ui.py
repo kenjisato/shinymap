@@ -8,8 +8,8 @@ Usage:
     from shinymap import render_map  # decorator, at top-level
 
     # UI layer
-    input_map("region", geometry, mode="single")
-    output_map("my_map", geometry)
+    input_map("region", outline, mode="single")
+    output_map("my_map", outline)
 
     # Server layer
     @render_map
@@ -32,7 +32,7 @@ from ..relative import PARENT
 from ..uicore import Wash, update_map
 
 if TYPE_CHECKING:
-    from ..geometry import Outline
+    from ..outline import Outline
 
 # =============================================================================
 # Default wash with sensible library defaults
@@ -87,7 +87,7 @@ render_map = _default_wash.render_map
 
 def input_radio_buttons(
     id: str,
-    geometry: Outline,
+    outline: Outline,
     *,
     tooltips: dict[str, str] | None = None,
     selected: str | None = None,
@@ -106,7 +106,7 @@ def input_radio_buttons(
 
     Args:
         id: Input ID for Shiny
-        geometry: Outline object with regions
+        outline: Outline object with regions
         tooltips: Region tooltips as {region_id: tooltip_text}
         selected: Initially selected region ID
         view_box: Override viewBox tuple
@@ -120,7 +120,7 @@ def input_radio_buttons(
 
     Example:
         >>> from shinymap import input_radio_buttons
-        >>> from shinymap.geometry import Outline
+        >>> from shinymap.outline import Outline
         >>>
         >>> geo = Outline.from_dict(data)
         >>> input_radio_buttons("region", geo)
@@ -128,7 +128,7 @@ def input_radio_buttons(
     value = {selected: 1} if selected else None
     return input_map(
         id,
-        geometry,
+        outline,
         "single",
         tooltips=tooltips,
         value=value,
@@ -142,7 +142,7 @@ def input_radio_buttons(
 
 def input_checkbox_group(
     id: str,
-    geometry: Outline,
+    outline: Outline,
     *,
     tooltips: dict[str, str] | None = None,
     selected: list[str] | None = None,
@@ -161,7 +161,7 @@ def input_checkbox_group(
 
     Args:
         id: Input ID for Shiny
-        geometry: Outline object with regions
+        outline: Outline object with regions
         tooltips: Region tooltips as {region_id: tooltip_text}
         selected: Initially selected region IDs
         view_box: Override viewBox tuple
@@ -175,7 +175,7 @@ def input_checkbox_group(
 
     Example:
         >>> from shinymap import input_checkbox_group
-        >>> from shinymap.geometry import Outline
+        >>> from shinymap.outline import Outline
         >>>
         >>> geo = Outline.from_dict(data)
         >>> input_checkbox_group("regions", geo, selected=["a", "b"])
@@ -183,7 +183,7 @@ def input_checkbox_group(
     value = {rid: 1 for rid in selected} if selected else None
     return input_map(
         id,
-        geometry,
+        outline,
         "multiple",
         tooltips=tooltips,
         value=value,
