@@ -1,8 +1,11 @@
 # Design: Unified MapBuilder for Static Analysis and Export
 
-**Status**: Phase 0 Complete
+**Status**: Phase 0 Complete, Phase 1 Redesigned (see Amendment below)
 **Created**: 2026-01-01
 **Updated**: 2026-01-02
+
+> **Note**: The original design proposed adding static analysis methods to MapBuilder.
+> This was revised to use a separate `StillLife` class. See the [Amendment](#amendment-stilllife-class-for-static-analysis-2026-01-02) at the end of this document.
 
 ## Overview
 
@@ -589,3 +592,347 @@ Migration:
 - [aes-protocol.md](aes-protocol.md) - References `dump_table()` in checklist
 - [aes-resolution.md](aes-resolution.md) - Resolution logic
 - [aes-payload-v03.md](aes-payload-v03.md) - Payload format
+
+---
+
+# Amendment: StillLife Class for Static Analysis (2026-01-02)
+
+## Design Revision
+
+After implementing the prerequisite changes (Phase 0.5), we reconsidered the original approach of adding `dump_aes()` and `to_svg()` methods directly to MapBuilder.
+
+### Concerns with Original Approach
+
+1. **Lazy imports inside methods**: The `dump_aes()` method would require importing from `relative.py` inside the method body to avoid circular dependencies. This is a code smell.
+
+2. **Mixed responsibilities**: MapBuilder would become responsible for two distinct concerns:
+   - Building payloads for Shiny (existing)
+   - Static analysis and export (new)
+
+3. **Optional workflow penalty**: Most users won't need static analysis, but MapBuilder would carry the extra complexity.
+
+### New Approach: Separate StillLife Class
+
+Instead of extending MapBuilder, we introduce a dedicated `StillLife` class that captures a map's state for static analysis and export.
+
+The name follows the painting metaphor established by `Wash()` (watercolor wash):
+- **Wash**: Prepare the canvas with default colors (like a watercolor wash)
+- **StillLife**: Capture the final scene for analysis and display
+
+## StillLife Class Design
+
+```python
+from shinymap import Wash, StillLife
+
+wc = Wash(shape=aes.Shape(fill_color="#e2e8f0"))
+builder = wc.build(geometry, value={"region1": 1, "region2": 0})
+
+# StillLife captures the scene for analysis/export
+pic = StillLife(builder, hovered="region2")
+
+pic.aes("region1")           # Resolved aesthetic for region1
+pic.aes_table()              # All regions' aesthetics
+pic.to_svg("map.svg")        # Export static SVG
+```
+
+### Naming: The Painting Metaphor
+
+| Class | Painting Metaphor | Role |
+|-------|-------------------|------|
+| `Wash` | Watercolor wash layer | Set default colors/aesthetics |
+| `Map` / `MapBuilder` | Work in progress | Dynamic, changing state |
+| `StillLife` | Still life painting | Static captured scene |
+
+Alternative names considered:
+- **Snapshot** - Familiar to developers (database snapshots)
+- **Print** - Final output for reproduction
+- **Proof** - Test print for inspection
+- **Frame** - Ready for display
+
+**StillLife** was chosen because it evokes a classic painting genre and suggests both analysis ("studying a still life") and export ("displaying a still life").
+
+## StillLife API
+
+```python
+class StillLife:
+    """Static snapshot of a map for aesthetic analysis and SVG export.
+
+    Like a still life painting, this class captures a map's state at a
+    specific moment, allowing you to:
+    - Inspect resolved aesthetics for any region
+    - Export a static SVG with specific hover/selection states
+    """
+
+    def __init__(
+        self,
+        builder: MapBuilder,
+        *,
+        value: dict[str, int] | None = None,  # Override builder's value
+        hovered: str | None = None,
+    ):
+        """Create a still life from a MapBuilder.
+
+        Args:
+            builder: MapBuilder created via WashResult.build()
+            value: Override value dict (if None, uses builder's value)
+            hovered: Region ID to show as hovered
+        """
+        ...
+
+    def aes(
+        self,
+        region: str,
+        *,
+        is_hovered: bool | None = None
+    ) -> dict[str, Any]:
+        """Get resolved aesthetic for a region."""
+        ...
+
+    def aes_table(
+        self,
+        *,
+        region_ids: list[str] | None = None
+    ) -> list[dict[str, Any]]:
+        """Get resolved aesthetics for multiple regions."""
+        ...
+
+    def to_svg(
+        self,
+        output: str | Path | None = None
+    ) -> str | None:
+        """Generate static SVG with resolved aesthetics."""
+        ...
+```
+
+## Revised Implementation Plan
+
+### Phase 0.5: Prerequisite Changes ✅ COMPLETE
+
+1. [x] Upgrade `RegionState` to use `value: int` with `is_selected` as derived property
+2. [x] Remove `active_ids` from Python and TypeScript
+3. [x] TypeScript components derive selection from `value > 0`
+
+### Phase 1: StillLife Class (REVISED)
+
+1. [ ] Create `shinymap/_stilllife.py` module
+2. [ ] Implement `StillLife.__init__()` - validates builder, stores state
+3. [ ] Implement `StillLife.aes()` - resolve aesthetic for single region
+4. [ ] Implement `StillLife.aes_table()` - resolve for all regions
+5. [ ] Add `WashResult.build()` method
+6. [ ] Extend `MapBuilder.__init__` to accept `_outline` and `_resolved_aes` (private)
+7. [ ] Export `StillLife` from `shinymap/__init__.py`
+8. [ ] Add unit tests
+
+### Phase 2: SVG Export
+
+1. [ ] Implement `StillLife.to_svg()` method
+2. [ ] Handle layer rendering order
+3. [ ] Apply resolved aesthetics to SVG elements
+4. [ ] Add unit tests
+
+### Phase 3: Documentation
+
+1. [ ] Update design documents
+2. [ ] Add examples
+3. [ ] Update CLAUDE.md with new API
+
+## Module Structure
+
+```
+shinymap/
+├── __init__.py          # Export StillLife
+├── _map.py              # MapBuilder (unchanged public API)
+├── _stilllife.py        # NEW: StillLife class
+├── uicore/
+│   └── _wash.py         # Add build() method to WashResult
+└── ...
+```
+
+## Benefits of StillLife Approach
+
+1. **Clean separation**: MapBuilder stays focused on Shiny payloads
+2. **No lazy imports in MapBuilder**: Heavy imports only in `_stilllife.py`
+3. **Explicit opt-in**: Users who need static analysis import `StillLife`
+4. **Testable**: `StillLife` can be tested independently
+5. **Future-proof**: Can add PDF export, animations without touching MapBuilder
+6. **Clear mental model**: Interactive (MapBuilder) vs Static (StillLife)
+7. **Consistent metaphor**: Wash → StillLife follows painting theme
+
+## Comparison: Original vs Revised
+
+| Aspect | Original (MapBuilder) | Revised (StillLife) |
+|--------|----------------------|---------------------|
+| Static methods on | MapBuilder | StillLife |
+| Lazy imports | Yes (in methods) | No (in module) |
+| Separation of concerns | Mixed | Clean |
+| User workflow | `builder.dump_aes()` | `StillLife(builder).aes()` |
+| Module dependencies | MapBuilder imports relative | StillLife imports all |
+| Breaking changes | Extends MapBuilder | Additive only |
+
+---
+
+# Prerequisite: Eliminate "geometry" Naming Confusion (2026-01-02)
+
+## Problem
+
+Three related terms are used inconsistently, causing confusion when reading code:
+
+| Term | Current Usage | Problem |
+|------|---------------|---------|
+| `geometry` | JS prop, Python param, payload key | Overloaded, vague |
+| `outline` | Python `Outline` class | Clear but underused |
+| `regions` | Python `Regions` class | Sometimes called `geometry` |
+
+**Confusing code examples:**
+```python
+# Param says "geometry" but receives Outline
+Map(geometry=outline_obj)
+
+# Internal var is "_regions" but emitted as "geometry"
+data["geometry"] = _normalize_outline(self._regions)
+
+# JS receives "geometry" which is actually regions
+<InputMap geometry={...} />
+```
+
+## Solution: Eliminate "geometry" Entirely
+
+**Goal**: Zero occurrences of "geo" in the codebase (except maybe legacy comments).
+
+### New Naming Convention
+
+| Concept | Class/Type | Variable/Param | Payload Key |
+|---------|------------|----------------|-------------|
+| Full container | `Outline` | `outline` | n/a |
+| Region dict | `Regions` | `regions` | `regions` |
+
+### Python Changes
+
+**API (breaking):**
+```python
+# Before
+Map(geometry=outline)
+input_map("id", geometry, mode="single")
+output_map("id", geometry)
+
+# After
+Map(outline=outline)
+# OR for convenience:
+Map(outline)  # positional
+
+input_map("id", outline, mode="single")
+output_map("id", outline)
+```
+
+**Internal:**
+- `MapBuilder._regions` → keep (it's accurate)
+- `_normalize_outline()` → `_normalize_regions()` (it normalizes regions, not outline)
+- All `geometry` variables → `outline` or `regions`
+
+**Payload:**
+```python
+# Before
+data["geometry"] = ...
+
+# After
+data["regions"] = ...
+```
+
+### TypeScript Changes
+
+**Props (breaking for React users):**
+```typescript
+// Before
+<InputMap geometry={...} />
+<OutputMap geometry={...} />
+
+// After
+<InputMap regions={...} />
+<OutputMap regions={...} />
+```
+
+**Types:**
+```typescript
+// Before
+type GeometryMap = Record<RegionId, Element[]>;
+
+// After
+type RegionsMap = Record<RegionId, Element[]>;
+// Keep GeometryMap as alias for backwards compat? Or remove entirely?
+```
+
+**Payload handling:**
+```typescript
+// Before
+props.geometry
+
+// After
+props.regions
+```
+
+### Files to Modify
+
+**Python:**
+- `_map.py`: `Map(geometry=)` → `Map(outline=)`
+- `_map.py`: `MapBuilder.__init__(regions=)` - keep
+- `_map.py`: `as_json()` emit `regions` instead of `geometry`
+- `uicore/_input_map.py`: param `outline` (already correct?)
+- `uicore/_output_map.py`: param `outline` (already correct?)
+- `uicore/_wash.py`: check param names
+- `uicore/_util.py`: `_normalize_outline()` → `_normalize_regions()`
+- All examples in `examples/`
+- Tests
+
+**TypeScript:**
+- `types.ts`: `GeometryMap` → `RegionsMap`, update prop interfaces
+- `components/InputMap.tsx`: `geometry` prop → `regions`
+- `components/OutputMap.tsx`: `geometry` prop → `regions`
+- `utils/geometry.ts`: function names if any use "geometry"
+- `shinyBridge.ts`: payload key handling
+- `demo/`: update all demos
+
+### Migration Guide
+
+```python
+# Python migration
+# Before (v0.2.x)
+from shinymap import Map, input_map, output_map
+
+Map(geometry=outline)
+input_map("id", geometry, mode="single")
+
+# After (v0.3.0)
+Map(outline=outline)
+# or positional:
+Map(outline)
+
+input_map("id", outline, mode="single")
+```
+
+```typescript
+// TypeScript migration
+// Before
+<InputMap geometry={regions} />
+
+// After
+<InputMap regions={regions} />
+```
+
+### Implementation Order
+
+1. **Phase 0.6**: Rename in Python
+   - Update `_map.py`, `_util.py`, UI functions
+   - Update payload key to `regions`
+   - Update all Python examples and tests
+
+2. **Phase 0.7**: Rename in TypeScript
+   - Update types and interfaces
+   - Update components
+   - Update demos
+   - Rebuild dist/
+
+3. **Phase 0.8**: Documentation
+   - Update CLAUDE.md, SPEC.md, README.md
+   - Migration notes in CHANGELOG
+
+This should be done **before** Phase 1 (StillLife) to avoid propagating confusion.
