@@ -40,12 +40,10 @@ def test_map_builder_method_chaining():
     """Test Map builder method chaining."""
     geo = Outline.from_dict({"a": ["M0 0 L10 0 L10 10 L0 10 Z"]})
     value = {"a": 5}
-    active_ids = ["a"]
 
-    builder = Map(geo).with_value(value).with_active(active_ids)
+    builder = Map(geo).with_value(value)
 
     assert builder._value == value
-    assert builder._active_ids == active_ids
 
 
 @pytest.mark.unit
@@ -100,15 +98,14 @@ def test_map_as_json():
     """Test Map builder as_json() output."""
     geo = Outline.from_dict({"a": ["M0 0"], "b": ["M10 10"]})
 
-    builder = Map(geo, value={"a": 1}, active=["a"])
+    # Selection is now derived from value > 0 (no separate active param)
+    builder = Map(geo, value={"a": 1, "b": 0})
     json_output = builder.as_json()
 
     # Check that geometry is normalized
     assert "geometry" in json_output
-    # Check that value is included
-    assert json_output["value"] == {"a": 1}
-    # as_json() returns snake_case; JS handles camelCase conversion
-    assert json_output["active_ids"] == ["a"]
+    # Check that value is included (value > 0 means selected)
+    assert json_output["value"] == {"a": 1, "b": 0}
 
 
 @pytest.mark.unit

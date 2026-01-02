@@ -17,7 +17,6 @@ if TYPE_CHECKING:
     from .geometry import Outline
 
 # Type aliases
-Selection = str | list[str] | None
 AesType = ByGroup | ByState | BaseAesthetic | Mapping[str, Mapping[str, Any] | None] | None
 
 
@@ -42,7 +41,6 @@ class MapBuilder:
             return (
                 Map(geometry, tooltips=tooltips, view_box=viewbox)
                 .with_value(my_counts)
-                .with_active(active_ids)
             )
 
     Example (with static params in output_map()):
@@ -72,7 +70,6 @@ class MapBuilder:
         self._regions: Mapping[str, Any] | None = regions
         self._tooltips = tooltips
         self._value: CountMap = None
-        self._active_ids: Selection = None
         self._view_box = view_box
         self._aes: AesType = None
         self._layers: Mapping[str, list[str] | None] | None = None
@@ -83,13 +80,13 @@ class MapBuilder:
         return self
 
     def with_value(self, value: CountMap) -> MapBuilder:
-        """Set region values (counts, selection state)."""
-        self._value = value
-        return self
+        """Set region values (counts, selection state).
 
-    def with_active(self, active_ids: Selection) -> MapBuilder:
-        """Set active/highlighted region IDs."""
-        self._active_ids = active_ids
+        Values determine both visual state and selection:
+        - value = 0: not selected (base aesthetic)
+        - value > 0: selected (select aesthetic applied)
+        """
+        self._value = value
         return self
 
     def with_view_box(self, view_box: tuple[float, float, float, float]) -> MapBuilder:
@@ -134,8 +131,6 @@ class MapBuilder:
             data["tooltips"] = self._tooltips
         if self._value is not None:
             data["value"] = self._value
-        if self._active_ids is not None:
-            data["active_ids"] = self._active_ids
         if self._view_box is not None:
             data["view_box"] = _viewbox_to_str(self._view_box)
         if self._aes is not None:
@@ -160,7 +155,6 @@ def Map(
     view_box: tuple[float, float, float, float] | None = None,
     tooltips: dict[str, str] | None = None,
     value: dict[str, int] | None = None,
-    active: list[str] | None = None,
     aes: AesType = None,
     layers: Mapping[str, list[str] | None] | None = None,
 ) -> MapBuilder:
@@ -175,15 +169,17 @@ def Map(
         view_box: Override viewBox tuple (for zoom/pan).
             If None, uses geometry.viewbox()
         tooltips: Region tooltips
-        value: Region values (counts, selection state)
-        active: Active region IDs
+        value: Region values (counts, selection state).
+            Values determine both visual state and selection:
+            - value = 0: not selected (base aesthetic)
+            - value > 0: selected (select aesthetic applied)
         aes: Aesthetic configuration (ByGroup, ByState, BaseAesthetic, or dict)
         layers: Layer configuration (nested dict: underlays, overlays, hidden)
 
     Example:
         # Standalone usage
         geo = Outline.from_dict(data)
-        Map(geo, value=counts, active=["a", "b"])
+        Map(geo, value={"a": 1, "b": 1, "c": 0})
 
         # With output_map() providing static geometry
         output_map("my_map", GEOMETRY, tooltips=TOOLTIPS)
@@ -216,8 +212,6 @@ def Map(
     # Apply optional parameters
     if value is not None:
         builder = builder.with_value(value)
-    if active is not None:
-        builder = builder.with_active(active)
     if aes is not None:
         builder = builder.with_aes(aes)
     if layers is not None:

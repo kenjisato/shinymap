@@ -195,15 +195,22 @@ class RegionState:
 
     Attributes:
         region_id: The ID of the region
-        is_selected: Whether the region is currently selected
+        value: The region's value (count, cycle state, etc.). Used for:
+            - IndexedAesthetic lookup
+            - Determining selection state (value > 0 means selected)
         is_hovered: Whether the region is currently hovered
         group: Optional group name for group-based aesthetics
     """
 
     region_id: str
-    is_selected: bool = False
+    value: int = 0
     is_hovered: bool = False
     group: str | None = None
+
+    @property
+    def is_selected(self) -> bool:
+        """Whether the region is selected (derived from value > 0)."""
+        return self.value > 0
 
 
 @dataclass
@@ -383,8 +390,8 @@ def preview_region(
     lines: list[str] = []
     lines.append(f"=== Aesthetic Resolution for '{state.region_id}' ===")
     lines.append(
-        f"State: is_selected={state.is_selected}, is_hovered={state.is_hovered}, "
-        f"group={state.group}"
+        f"State: value={state.value}, is_selected={state.is_selected}, "
+        f"is_hovered={state.is_hovered}, group={state.group}"
     )
     lines.append("")
 
