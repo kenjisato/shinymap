@@ -62,9 +62,7 @@ def _apply_static_params(builder: MapBuilder, output_id: str) -> MapBuilder:
     return merged
 
 
-def _render_map_ui(
-    builder: MapBuilder, click_input_id: str | None = None
-) -> Tag | TagList:
+def _render_map_ui(builder: MapBuilder, click_input_id: str | None = None) -> Tag | TagList:
     """Internal: Render a map builder to HTML.
 
     Used by @render_map decorator. This creates the inner content

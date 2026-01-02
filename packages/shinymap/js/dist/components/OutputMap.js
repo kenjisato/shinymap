@@ -30,16 +30,15 @@ function normalize(value, geometry) {
     return Object.fromEntries(Object.keys(geometry).map((id) => [id, value]));
 }
 export function OutputMap(props) {
-    var _a, _b, _c, _d, _e, _f, _g;
+    var _a, _b, _c, _d, _e, _f;
     const { geometry, tooltips, className, containerStyle, viewBox = DEFAULT_VIEWBOX, mode: modeConfig, aes, layers, geometryMetadata, fillColor, strokeWidth: strokeWidthProp, strokeColor: strokeColorProp, fillOpacity: fillOpacityProp, value, onRegionClick, resolveAesthetic, regionProps, 
     // Deprecated props (for backward compatibility)
     overlayGeometry, overlayAesthetic, } = props;
     // Extract from nested mode config (supports both string shorthand and full config)
     const normalizedMode = typeof modeConfig === "string" ? { type: modeConfig } : modeConfig;
-    const modeType = (_a = normalizedMode === null || normalizedMode === void 0 ? void 0 : normalizedMode.type) !== null && _a !== void 0 ? _a : "display";
     const aesIndexed = normalizedMode === null || normalizedMode === void 0 ? void 0 : normalizedMode.aesIndexed;
     // Display mode: clicks only enabled if clickable=true
-    const isClickable = (_b = normalizedMode === null || normalizedMode === void 0 ? void 0 : normalizedMode.clickable) !== null && _b !== void 0 ? _b : false;
+    const isClickable = (_a = normalizedMode === null || normalizedMode === void 0 ? void 0 : normalizedMode.clickable) !== null && _a !== void 0 ? _a : false;
     // Detect v0.3 payload format (has __all or _metadata at top level)
     const isV03Format = isAesPayload(aes);
     const aesPayload = isV03Format ? aes : undefined;
@@ -48,11 +47,11 @@ export function OutputMap(props) {
     // For old format: use aes.base/select/hover directly
     const legacyAes = !isV03Format ? aes : undefined;
     const aesBaseRaw = isV03Format
-        ? ((_d = (_c = aesPayload === null || aesPayload === void 0 ? void 0 : aesPayload.__all) === null || _c === void 0 ? void 0 : _c.base) !== null && _d !== void 0 ? _d : DEFAULT_AESTHETIC_VALUES)
-        : ((_e = legacyAes === null || legacyAes === void 0 ? void 0 : legacyAes.base) !== null && _e !== void 0 ? _e : DEFAULT_AESTHETIC_VALUES);
+        ? ((_c = (_b = aesPayload === null || aesPayload === void 0 ? void 0 : aesPayload.__all) === null || _b === void 0 ? void 0 : _b.base) !== null && _c !== void 0 ? _c : DEFAULT_AESTHETIC_VALUES)
+        : ((_d = legacyAes === null || legacyAes === void 0 ? void 0 : legacyAes.base) !== null && _d !== void 0 ? _d : DEFAULT_AESTHETIC_VALUES);
     const aesBase = aesBaseRaw;
-    const aesHover = isV03Format ? (_f = aesPayload === null || aesPayload === void 0 ? void 0 : aesPayload.__all) === null || _f === void 0 ? void 0 : _f.hover : legacyAes === null || legacyAes === void 0 ? void 0 : legacyAes.hover;
-    const aesSelect = isV03Format ? (_g = aesPayload === null || aesPayload === void 0 ? void 0 : aesPayload.__all) === null || _g === void 0 ? void 0 : _g.select : legacyAes === null || legacyAes === void 0 ? void 0 : legacyAes.select;
+    const aesHover = isV03Format ? (_e = aesPayload === null || aesPayload === void 0 ? void 0 : aesPayload.__all) === null || _e === void 0 ? void 0 : _e.hover : legacyAes === null || legacyAes === void 0 ? void 0 : legacyAes.hover;
+    const aesSelect = isV03Format ? (_f = aesPayload === null || aesPayload === void 0 ? void 0 : aesPayload.__all) === null || _f === void 0 ? void 0 : _f.select : legacyAes === null || legacyAes === void 0 ? void 0 : legacyAes.select;
     const aesNotSelect = legacyAes === null || legacyAes === void 0 ? void 0 : legacyAes.notSelect; // Only in legacy format
     // For v0.3, group aesthetics are in the payload directly (not under .group)
     const aesGroup = isV03Format ? undefined : legacyAes === null || legacyAes === void 0 ? void 0 : legacyAes.group;

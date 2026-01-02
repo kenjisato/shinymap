@@ -21,10 +21,7 @@ interface ShinyMapAPI {
     props: InputMapProps,
     onChange?: (value: Record<RegionId, number>) => void
   ) => { unmount: () => void };
-  renderOutputMap: (
-    target: HTMLElement,
-    props: OutputMapProps
-  ) => { unmount: () => void };
+  renderOutputMap: (target: HTMLElement, props: OutputMapProps) => { unmount: () => void };
 }
 
 // Extend HTMLElement to include our custom properties
@@ -49,15 +46,8 @@ interface ShinyMapElement extends HTMLElement {
 
 // Shiny types
 interface ShinyInterface {
-  setInputValue: (
-    id: string,
-    value: unknown,
-    options?: { priority?: string }
-  ) => void;
-  addCustomMessageHandler: (
-    type: string,
-    handler: (message: unknown) => void
-  ) => void;
+  setInputValue: (id: string, value: unknown, options?: { priority?: string }) => void;
+  addCustomMessageHandler: (type: string, handler: (message: unknown) => void) => void;
 }
 
 declare global {
@@ -67,7 +57,6 @@ declare global {
     shinymapScan?: (root?: HTMLElement | Document) => void;
     localStorage?: Storage;
   }
-  // eslint-disable-next-line no-var
   var shinymap: ShinyMapAPI | undefined;
 }
 
@@ -91,9 +80,7 @@ function bootstrap(start = performance.now()): void {
     if (elapsed < MAX_WAIT_MS) {
       setTimeout(() => bootstrap(start), RETRY_MS);
     } else {
-      console.warn(
-        "[shinymap] Global bundle not found after waiting; maps will not render."
-      );
+      console.warn("[shinymap] Global bundle not found after waiting; maps will not render.");
     }
     return;
   }
@@ -136,8 +123,7 @@ function bootstrap(start = performance.now()): void {
     const rawProps = parseJson(el, "shinymapProps") || parseJson(el, "shinymap_props") || {};
     const props = snakeToCamelDeep(rawProps) as InputMapProps;
 
-    const inputId =
-      el.dataset.shinymapInputId || el.dataset.shinymap_input_id || el.id;
+    const inputId = el.dataset.shinymapInputId || el.dataset.shinymap_input_id || el.id;
 
     // Extract mode type from nested mode config
     const modeConfig = (props.mode || {}) as { type?: MapModeType };
@@ -172,11 +158,7 @@ function bootstrap(start = performance.now()): void {
     };
 
     const onChange = (value: Record<RegionId, number>): void => {
-      if (
-        window.Shiny &&
-        typeof window.Shiny.setInputValue === "function" &&
-        inputId
-      ) {
+      if (window.Shiny && typeof window.Shiny.setInputValue === "function" && inputId) {
         const transformed = transformValue(value);
         window.Shiny.setInputValue(inputId, transformed, { priority: "event" });
       }
@@ -194,12 +176,7 @@ function bootstrap(start = performance.now()): void {
         attempts++;
         if (window.Shiny && typeof window.Shiny.setInputValue === "function") {
           window.Shiny.setInputValue(inputId, initialValue);
-          log(
-            "[shinymap] Set initial value for",
-            inputId,
-            initialValue,
-            `(attempt ${attempts})`
-          );
+          log("[shinymap] Set initial value for", inputId, initialValue, `(attempt ${attempts})`);
           return true;
         }
         if (attempts < maxAttempts) {
@@ -225,16 +202,12 @@ function bootstrap(start = performance.now()): void {
     log("[shinymap] mountOutput", el);
 
     // Parse payload and convert snake_case to camelCase
-    const rawPayload =
-      parseJson(el, "shinymapPayload") || parseJson(el, "shinymap_payload") || {};
+    const rawPayload = parseJson(el, "shinymapPayload") || parseJson(el, "shinymap_payload") || {};
     const payload = snakeToCamelDeep(rawPayload) as OutputMapProps;
 
-    const clickInputId =
-      el.dataset.shinymapClickInputId || el.dataset.shinymap_click_input_id;
+    const clickInputId = el.dataset.shinymapClickInputId || el.dataset.shinymap_click_input_id;
     const onRegionClick =
-      clickInputId &&
-      window.Shiny &&
-      typeof window.Shiny.setInputValue === "function"
+      clickInputId && window.Shiny && typeof window.Shiny.setInputValue === "function"
         ? (id: RegionId): void =>
             window.Shiny!.setInputValue(clickInputId, id, { priority: "event" })
         : undefined;
@@ -244,17 +217,11 @@ function bootstrap(start = performance.now()): void {
   }
 
   function scan(root: HTMLElement | Document = document): void {
-    const inputSelector =
-      "[data-shinymap-input],[data_shinymap_input],.shinymap-input";
-    const outputSelector =
-      "[data-shinymap-output],[data_shinymap_output],.shinymap-output";
+    const inputSelector = "[data-shinymap-input],[data_shinymap_input],.shinymap-input";
+    const outputSelector = "[data-shinymap-output],[data_shinymap_output],.shinymap-output";
 
-    const inputs = Array.from(
-      root.querySelectorAll<ShinyMapElement>(inputSelector)
-    );
-    const outputs = Array.from(
-      root.querySelectorAll<ShinyMapElement>(outputSelector)
-    );
+    const inputs = Array.from(root.querySelectorAll<ShinyMapElement>(inputSelector));
+    const outputs = Array.from(root.querySelectorAll<ShinyMapElement>(outputSelector));
 
     // Also check if the root element itself matches
     if (root !== document && root instanceof HTMLElement) {
@@ -262,13 +229,7 @@ function bootstrap(start = performance.now()): void {
       if (root.matches(outputSelector)) outputs.push(root as ShinyMapElement);
     }
 
-    log(
-      "[shinymap] scan found",
-      inputs.length,
-      "inputs",
-      outputs.length,
-      "outputs"
-    );
+    log("[shinymap] scan found", inputs.length, "inputs", outputs.length, "outputs");
     inputs.forEach(mountInput);
     outputs.forEach(mountOutput);
   }
@@ -338,130 +299,114 @@ function bootstrap(start = performance.now()): void {
 
   // Register custom message handler for update_map()
   if (window.Shiny) {
-    window.Shiny.addCustomMessageHandler(
-      "shinymap-update",
-      (message: unknown) => {
-        try {
-          const { id, updates: rawUpdates } = message as {
-            id: string;
-            updates: Record<string, unknown>;
-          };
+    window.Shiny.addCustomMessageHandler("shinymap-update", (message: unknown) => {
+      try {
+        const { id, updates: rawUpdates } = message as {
+          id: string;
+          updates: Record<string, unknown>;
+        };
 
-          // Convert updates from snake_case to camelCase
-          const updates = snakeToCamelDeep(rawUpdates);
+        // Convert updates from snake_case to camelCase
+        const updates = snakeToCamelDeep(rawUpdates);
 
-          const el = document.getElementById(id) as ShinyMapElement | null;
-          if (!el) {
-            console.warn(
-              `[shinymap] update_map: element with id="${id}" not found`
-            );
-            return;
+        const el = document.getElementById(id) as ShinyMapElement | null;
+        if (!el) {
+          console.warn(`[shinymap] update_map: element with id="${id}" not found`);
+          return;
+        }
+
+        const isInput = el.classList.contains("shinymap-input") || el.dataset.shinymapInput;
+        const isOutput = el.classList.contains("shinymap-output") || el.dataset.shinymapOutput;
+
+        if (isInput) {
+          // Parse current props and convert
+          const currentRaw = parseJson(el, "shinymapProps") || {};
+          const currentProps = snakeToCamelDeep(currentRaw);
+
+          // Merge updates
+          const newProps = { ...currentProps, ...updates } as InputMapProps;
+
+          // Preserve current value if not explicitly provided
+          if ((updates as Record<string, unknown>).value === undefined) {
+            const currentValue = currentProps.value as Record<RegionId, number> | undefined;
+            if (currentValue && Object.keys(currentValue).length > 0) {
+              newProps.value = currentValue;
+            } else {
+              delete newProps.value;
+            }
           }
 
-          const isInput =
-            el.classList.contains("shinymap-input") || el.dataset.shinymapInput;
-          const isOutput =
-            el.classList.contains("shinymap-output") || el.dataset.shinymapOutput;
+          el.dataset.shinymapProps = JSON.stringify(newProps);
 
-          if (isInput) {
-            // Parse current props and convert
-            const currentRaw = parseJson(el, "shinymapProps") || {};
-            const currentProps = snakeToCamelDeep(currentRaw);
+          // Re-render
+          if (el.__shinymapRoot && window.shinymap?.renderInputMap) {
+            const inputId = el.dataset.shinymapInputId || el.dataset.shinymap_input_id || el.id;
 
-            // Merge updates
-            const newProps = { ...currentProps, ...updates } as InputMapProps;
+            const modeConfig = (newProps.mode || {}) as { type?: MapModeType };
+            const modeType: MapModeType =
+              modeConfig.type ||
+              (el.dataset.shinymapInputMode as MapModeType) ||
+              (el.dataset.shinymap_input_mode as MapModeType) ||
+              "multiple";
 
-            // Preserve current value if not explicitly provided
-            if ((updates as Record<string, unknown>).value === undefined) {
-              const currentValue = currentProps.value as Record<RegionId, number> | undefined;
-              if (currentValue && Object.keys(currentValue).length > 0) {
-                newProps.value = currentValue;
-              } else {
-                delete newProps.value;
+            // Check if raw mode is enabled (skip value transformation)
+            const rawMode = (newProps as { raw?: boolean }).raw === true;
+
+            const transformValue = (
+              countMap: Record<RegionId, number>
+            ): string | string[] | Record<RegionId, number> | null => {
+              // If raw mode, always return the count map as-is
+              if (rawMode) return countMap;
+              if (modeType === "count" || modeType === "cycle") return countMap;
+              const selected = Object.entries(countMap)
+                .filter(([, count]) => count > 0)
+                .map(([id]) => id);
+              if (modeType === "single") {
+                return selected.length > 0 ? selected[0] : null;
               }
-            }
+              return selected;
+            };
 
-            el.dataset.shinymapProps = JSON.stringify(newProps);
-
-            // Re-render
-            if (el.__shinymapRoot && window.shinymap?.renderInputMap) {
-              const inputId =
-                el.dataset.shinymapInputId ||
-                el.dataset.shinymap_input_id ||
-                el.id;
-
-              const modeConfig = (newProps.mode || {}) as { type?: MapModeType };
-              const modeType: MapModeType =
-                modeConfig.type ||
-                (el.dataset.shinymapInputMode as MapModeType) ||
-                (el.dataset.shinymap_input_mode as MapModeType) ||
-                "multiple";
-
-              // Check if raw mode is enabled (skip value transformation)
-              const rawMode = (newProps as { raw?: boolean }).raw === true;
-
-              const transformValue = (
-                countMap: Record<RegionId, number>
-              ): string | string[] | Record<RegionId, number> | null => {
-                // If raw mode, always return the count map as-is
-                if (rawMode) return countMap;
-                if (modeType === "count" || modeType === "cycle") return countMap;
-                const selected = Object.entries(countMap)
-                  .filter(([, count]) => count > 0)
-                  .map(([id]) => id);
-                if (modeType === "single") {
-                  return selected.length > 0 ? selected[0] : null;
-                }
-                return selected;
-              };
-
-              const onChange = (value: Record<RegionId, number>): void => {
-                if (
-                  window.Shiny &&
-                  typeof window.Shiny.setInputValue === "function" &&
-                  inputId
-                ) {
-                  const transformed = transformValue(value);
-                  window.Shiny.setInputValue(inputId, transformed, {
-                    priority: "event",
-                  });
-                }
-              };
-
-              window.shinymap.renderInputMap(el, newProps, onChange);
-            } else {
-              // Fallback: unmount and remount
-              if (el.__shinymapRoot) {
-                el.__shinymapRoot.unmount();
-                delete el.__shinymapRoot;
+            const onChange = (value: Record<RegionId, number>): void => {
+              if (window.Shiny && typeof window.Shiny.setInputValue === "function" && inputId) {
+                const transformed = transformValue(value);
+                window.Shiny.setInputValue(inputId, transformed, {
+                  priority: "event",
+                });
               }
-              delete el.dataset.shinymapMounted;
-              mountInput(el);
-            }
-          } else if (isOutput) {
-            // Parse current payload and convert
-            const currentRaw = parseJson(el, "shinymapPayload") || {};
-            const currentPayload = snakeToCamelDeep(currentRaw);
-            const newPayload = { ...currentPayload, ...updates };
-            el.dataset.shinymapPayload = JSON.stringify(newPayload);
+            };
 
-            // Unmount and remount
+            window.shinymap.renderInputMap(el, newProps, onChange);
+          } else {
+            // Fallback: unmount and remount
             if (el.__shinymapRoot) {
               el.__shinymapRoot.unmount();
               delete el.__shinymapRoot;
             }
             delete el.dataset.shinymapMounted;
-            mountOutput(el);
-          } else {
-            console.warn(
-              `[shinymap] update_map: element id="${id}" is neither input nor output map`
-            );
+            mountInput(el);
           }
-        } catch (error) {
-          console.error("[shinymap] update_map error:", error);
+        } else if (isOutput) {
+          // Parse current payload and convert
+          const currentRaw = parseJson(el, "shinymapPayload") || {};
+          const currentPayload = snakeToCamelDeep(currentRaw);
+          const newPayload = { ...currentPayload, ...updates };
+          el.dataset.shinymapPayload = JSON.stringify(newPayload);
+
+          // Unmount and remount
+          if (el.__shinymapRoot) {
+            el.__shinymapRoot.unmount();
+            delete el.__shinymapRoot;
+          }
+          delete el.dataset.shinymapMounted;
+          mountOutput(el);
+        } else {
+          console.warn(`[shinymap] update_map: element id="${id}" is neither input nor output map`);
         }
+      } catch (error) {
+        console.error("[shinymap] update_map error:", error);
       }
-    );
+    });
   }
 }
 

@@ -19,7 +19,7 @@ from ..aes._core import (
     ShapeAesthetic,
     TextAesthetic,
 )
-from ..mode import Display, ModeType, OutputModeType
+from ..mode import Display, ModeType
 from ..types import MISSING, MissingType
 
 if TYPE_CHECKING:
@@ -87,6 +87,16 @@ class WashConfig:
         from ..aes import _defaults as aes_defaults
 
         # Get wash config for this kind
+        # Type annotations for variables that get assigned in branches
+        wash_state: (
+            ByState[ShapeAesthetic]
+            | ByState[LineAesthetic]
+            | ByState[TextAesthetic]
+            | None
+            | MissingType
+        )
+        lib_base: BaseAesthetic
+
         if kind == "line":
             wash_state = self.line
             lib_base = aes_defaults.line
@@ -98,6 +108,10 @@ class WashConfig:
             lib_base = aes_defaults.shape
 
         # Build complete ByState with defaults
+        base: BaseAesthetic
+        select: BaseAesthetic | None
+        hover: BaseAesthetic | None
+
         if isinstance(wash_state, ByState):
             base = wash_state.base if isinstance(wash_state.base, BaseAesthetic) else lib_base
             select = wash_state.select if isinstance(wash_state.select, BaseAesthetic) else None
@@ -182,15 +196,21 @@ class WashConfig:
             MISSING values inherit from wash. RelativeExpr is NOT resolved.
             """
             wash_by_state = self.get_by_state_for_kind(element_type)
-            resolved_base = wash_by_state.base
-            resolved_select = wash_by_state.select
-            resolved_hover = wash_by_state.hover
+            # get_by_state_for_kind guarantees base is always BaseAesthetic (never MISSING)
+            assert isinstance(wash_by_state.base, BaseAesthetic)
+            resolved_base: BaseAesthetic = wash_by_state.base
+            resolved_select: BaseAesthetic | None = (
+                wash_by_state.select if isinstance(wash_by_state.select, BaseAesthetic) else None
+            )
+            resolved_hover: BaseAesthetic | None = (
+                wash_by_state.hover if isinstance(wash_by_state.hover, BaseAesthetic) else None
+            )
 
             if isinstance(user_by_state, ByState):
                 # Apply user base
                 if isinstance(user_by_state.base, BaseAesthetic):
                     user_base = resolve_path_kind(user_by_state.base)
-                    resolved_base = user_base.resolve(resolved_base)  # type: ignore[assignment]
+                    resolved_base = user_base.resolve(resolved_base)
 
                 # Apply user select
                 if not isinstance(user_by_state.select, MissingType):
@@ -199,7 +219,7 @@ class WashConfig:
                     elif isinstance(user_by_state.select, BaseAesthetic):
                         user_select = resolve_path_kind(user_by_state.select)
                         parent = resolved_select if resolved_select else resolved_base
-                        resolved_select = user_select.resolve(parent)  # type: ignore[assignment]
+                        resolved_select = user_select.resolve(parent)
 
                 # Apply user hover
                 if not isinstance(user_by_state.hover, MissingType):
@@ -208,12 +228,12 @@ class WashConfig:
                     elif isinstance(user_by_state.hover, BaseAesthetic):
                         user_hover = resolve_path_kind(user_by_state.hover)
                         parent = resolved_hover if resolved_hover else resolved_base
-                        resolved_hover = user_hover.resolve(parent)  # type: ignore[assignment]
+                        resolved_hover = user_hover.resolve(parent)
 
             elif isinstance(user_by_state, BaseAesthetic):
                 # Single aesthetic applies as base only
                 user_base = resolve_path_kind(user_by_state)
-                resolved_base = user_base.resolve(resolved_base)  # type: ignore[assignment]
+                resolved_base = user_base.resolve(resolved_base)
 
             # NOTE: We do NOT resolve RelativeExpr here - that's done by JavaScript
 
@@ -339,7 +359,7 @@ class WashResult:
         id: str,
         geometry: Outline | None = None,
         *,
-        mode: Display = Display(),
+        mode: Display | None = None,
         aes: AesParam = MISSING,
         tooltips: dict[str, str] | None = None,
         view_box: tuple[float, float, float, float] | None = None,
@@ -383,6 +403,10 @@ class WashResult:
             ... )
         """
         from ._output_map import _output_map
+
+        # Default mode if not provided
+        if mode is None:
+            mode = Display()
 
         # Resolve aes against wash config (geometry required for resolution)
         if geometry is not None:

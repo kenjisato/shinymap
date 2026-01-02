@@ -75,15 +75,11 @@ export function InputMap(props: InputMapProps) {
   const aesBase = isV03Format
     ? (aesPayload?.__all?.base ?? DEFAULT_AESTHETIC_VALUES)
     : (legacyAes?.base ?? DEFAULT_AESTHETIC_VALUES);
-  const aesHover = isV03Format
-    ? aesPayload?.__all?.hover
-    : legacyAes?.hover;
-  const aesSelect = isV03Format
-    ? aesPayload?.__all?.select
-    : legacyAes?.select;
+  const aesHover = isV03Format ? aesPayload?.__all?.hover : legacyAes?.hover;
+  const aesSelect = isV03Format ? aesPayload?.__all?.select : legacyAes?.select;
   // For v0.3, group aesthetics are in the payload directly (not under .group)
   const aesGroup = isV03Format
-    ? undefined  // v0.3 uses getAesForRegion instead
+    ? undefined // v0.3 uses getAesForRegion instead
     : legacyAes?.group;
 
   // Extract from nested layers config

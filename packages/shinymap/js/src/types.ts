@@ -89,8 +89,21 @@ export type TextElement = {
   fontFamily?: string;
   fontWeight?: string;
   fontStyle?: string;
-  textAnchor?: string;
-  dominantBaseline?: string;
+  textAnchor?: "start" | "middle" | "end" | "inherit";
+  dominantBaseline?:
+    | "auto"
+    | "alphabetic"
+    | "ideographic"
+    | "middle"
+    | "central"
+    | "mathematical"
+    | "hanging"
+    | "inherit"
+    | "use-script"
+    | "no-change"
+    | "reset-size"
+    | "text-after-edge"
+    | "text-before-edge";
   transform?: string;
   fill?: string;
   class?: string;
@@ -211,10 +224,7 @@ function isAesIndexedByGroup(
   config: AesIndexedConfig
 ): config is { type: "byGroup"; groups: Record<string, IndexedAestheticData> } {
   return (
-    typeof config === "object" &&
-    config !== null &&
-    "type" in config &&
-    config.type === "byGroup"
+    typeof config === "object" && config !== null && "type" in config && config.type === "byGroup"
   );
 }
 

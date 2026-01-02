@@ -38,12 +38,8 @@ export function InputMap(props) {
     const aesBase = isV03Format
         ? ((_b = (_a = aesPayload === null || aesPayload === void 0 ? void 0 : aesPayload.__all) === null || _a === void 0 ? void 0 : _a.base) !== null && _b !== void 0 ? _b : DEFAULT_AESTHETIC_VALUES)
         : ((_c = legacyAes === null || legacyAes === void 0 ? void 0 : legacyAes.base) !== null && _c !== void 0 ? _c : DEFAULT_AESTHETIC_VALUES);
-    const aesHover = isV03Format
-        ? (_d = aesPayload === null || aesPayload === void 0 ? void 0 : aesPayload.__all) === null || _d === void 0 ? void 0 : _d.hover
-        : legacyAes === null || legacyAes === void 0 ? void 0 : legacyAes.hover;
-    const aesSelect = isV03Format
-        ? (_e = aesPayload === null || aesPayload === void 0 ? void 0 : aesPayload.__all) === null || _e === void 0 ? void 0 : _e.select
-        : legacyAes === null || legacyAes === void 0 ? void 0 : legacyAes.select;
+    const aesHover = isV03Format ? (_d = aesPayload === null || aesPayload === void 0 ? void 0 : aesPayload.__all) === null || _d === void 0 ? void 0 : _d.hover : legacyAes === null || legacyAes === void 0 ? void 0 : legacyAes.hover;
+    const aesSelect = isV03Format ? (_e = aesPayload === null || aesPayload === void 0 ? void 0 : aesPayload.__all) === null || _e === void 0 ? void 0 : _e.select : legacyAes === null || legacyAes === void 0 ? void 0 : legacyAes.select;
     // For v0.3, group aesthetics are in the payload directly (not under .group)
     const aesGroup = isV03Format
         ? undefined // v0.3 uses getAesForRegion instead

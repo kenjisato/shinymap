@@ -35,10 +35,7 @@ export function resolveIndexedAesthetic(data, count, cycle) {
  * Check if an AesIndexedConfig is a ByGroup wrapper (has type: "byGroup").
  */
 function isAesIndexedByGroup(config) {
-    return (typeof config === "object" &&
-        config !== null &&
-        "type" in config &&
-        config.type === "byGroup");
+    return (typeof config === "object" && config !== null && "type" in config && config.type === "byGroup");
 }
 /**
  * Get the IndexedAestheticData for a region from an AesIndexedConfig.

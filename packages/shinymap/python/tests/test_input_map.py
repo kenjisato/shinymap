@@ -12,12 +12,13 @@ import pytest
 from shinymap import input_map
 from shinymap.geometry import Outline
 
-
 # Test geometry
-GEOMETRY = Outline.from_dict({
-    "region1": ["M0 0 L10 0 L10 10 L0 10 Z"],
-    "region2": ["M20 0 L30 0 L30 10 L20 10 Z"],
-})
+GEOMETRY = Outline.from_dict(
+    {
+        "region1": ["M0 0 L10 0 L10 10 L0 10 Z"],
+        "region2": ["M20 0 L30 0 L30 10 L20 10 Z"],
+    }
+)
 
 
 class TestInputMapRaw:
@@ -42,11 +43,13 @@ class TestInputMapRaw:
 
         # Find the props JSON and parse it
         import re
+
         match = re.search(r'data-shinymap-props="([^"]*)"', html_str)
         assert match is not None
 
         # Unescape HTML entities
         import html as html_lib
+
         props_json = html_lib.unescape(match.group(1))
         props = json.loads(props_json)
 
@@ -58,8 +61,9 @@ class TestInputMapRaw:
 
         html_str = str(result)
 
-        import re
         import html as html_lib
+        import re
+
         match = re.search(r'data-shinymap-props="([^"]*)"', html_str)
         assert match is not None
 

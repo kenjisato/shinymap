@@ -44,7 +44,12 @@ MISSING = MissingType()
 
 
 # Type Aliases
-OutlineMap = Mapping[str, str | list[str] | dict[str, Any] | list[dict[str, Any]]]
+# OutlineMap accepts various region representations:
+# - str: single path string
+# - list[str]: multiple path strings
+# - list[Any]: list containing str, dict, or objects with to_dict() (e.g., Element)
+# - dict: single element dict
+OutlineMap = Mapping[str, str | list[Any] | dict[str, Any]]
 
 TooltipMap = Mapping[str, str] | None
 

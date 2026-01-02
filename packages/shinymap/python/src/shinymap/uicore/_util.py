@@ -93,6 +93,4 @@ def _validate_value(
                 f"got {type(count).__name__}: {count!r}"
             )
         if count < 0:
-            raise ValueError(
-                f"{param_name}[{region_id!r}] must be non-negative, got {count}"
-            )
+            raise ValueError(f"{param_name}[{region_id!r}] must be non-negative, got {count}")

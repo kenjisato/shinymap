@@ -88,9 +88,7 @@ function bootstrap(start = performance.now()) {
             return selected;
         };
         const onChange = (value) => {
-            if (window.Shiny &&
-                typeof window.Shiny.setInputValue === "function" &&
-                inputId) {
+            if (window.Shiny && typeof window.Shiny.setInputValue === "function" && inputId) {
                 const transformed = transformValue(value);
                 window.Shiny.setInputValue(inputId, transformed, { priority: "event" });
             }
@@ -127,9 +125,7 @@ function bootstrap(start = performance.now()) {
         const rawPayload = parseJson(el, "shinymapPayload") || parseJson(el, "shinymap_payload") || {};
         const payload = snakeToCamelDeep(rawPayload);
         const clickInputId = el.dataset.shinymapClickInputId || el.dataset.shinymap_click_input_id;
-        const onRegionClick = clickInputId &&
-            window.Shiny &&
-            typeof window.Shiny.setInputValue === "function"
+        const onRegionClick = clickInputId && window.Shiny && typeof window.Shiny.setInputValue === "function"
             ? (id) => window.Shiny.setInputValue(clickInputId, id, { priority: "event" })
             : undefined;
         renderOutputMap(el, { ...payload, onRegionClick });
@@ -243,9 +239,7 @@ function bootstrap(start = performance.now()) {
                     el.dataset.shinymapProps = JSON.stringify(newProps);
                     // Re-render
                     if (el.__shinymapRoot && ((_a = window.shinymap) === null || _a === void 0 ? void 0 : _a.renderInputMap)) {
-                        const inputId = el.dataset.shinymapInputId ||
-                            el.dataset.shinymap_input_id ||
-                            el.id;
+                        const inputId = el.dataset.shinymapInputId || el.dataset.shinymap_input_id || el.id;
                         const modeConfig = (newProps.mode || {});
                         const modeType = modeConfig.type ||
                             el.dataset.shinymapInputMode ||
@@ -268,9 +262,7 @@ function bootstrap(start = performance.now()) {
                             return selected;
                         };
                         const onChange = (value) => {
-                            if (window.Shiny &&
-                                typeof window.Shiny.setInputValue === "function" &&
-                                inputId) {
+                            if (window.Shiny && typeof window.Shiny.setInputValue === "function" && inputId) {
                                 const transformed = transformValue(value);
                                 window.Shiny.setInputValue(inputId, transformed, {
                                     priority: "event",

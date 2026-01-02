@@ -16,11 +16,9 @@ from shinymap.mode import (
     Display,
     Multiple,
     Single,
-    ModeType,
-    OutputModeType,
-    normalize_mode,
-    initial_value_from_mode,
     _serialize_aes,
+    initial_value_from_mode,
+    normalize_mode,
 )
 
 
@@ -130,9 +128,7 @@ class TestModeToDict:
 
     def test_display_with_indexed_aes(self):
         """Display mode with IndexedAesthetic."""
-        mode = Display(
-            aes=aes.Indexed(fill_color=["#f3f4f6", "#22c55e", "#f59e0b", "#ef4444"])
-        )
+        mode = Display(aes=aes.Indexed(fill_color=["#f3f4f6", "#22c55e", "#f59e0b", "#ef4444"]))
         d = mode.to_dict()
 
         assert d["type"] == "display"
@@ -313,7 +309,11 @@ class TestModeWithAes:
         # aes_indexed should be direct data (no type wrapper)
         assert "type" not in d["aes_indexed"]
         assert d["aes_indexed"]["fill_color"] == [
-            "#e5e7eb", "#fca5a5", "#f87171", "#ef4444", "#dc2626"
+            "#e5e7eb",
+            "#fca5a5",
+            "#f87171",
+            "#ef4444",
+            "#dc2626",
         ]
 
     def test_cycle_with_indexed_aes(self):
