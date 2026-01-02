@@ -175,3 +175,41 @@ def test_static_params_builder_precedence():
 
     # Cleanup
     del _static_map_params["test_map2"]
+
+
+class TestValueValidation:
+    """Test value validation in Map()."""
+
+    @pytest.mark.unit
+    def test_valid_values_pass(self):
+        """Valid non-negative integers pass validation."""
+        geo = Outline.from_dict({"a": ["M0 0"], "b": ["M10 10"]})
+
+        # Should not raise
+        builder = Map(geo, value={"a": 0, "b": 1})
+        assert builder._value == {"a": 0, "b": 1}
+
+    @pytest.mark.unit
+    def test_negative_value_raises(self):
+        """Negative values raise ValueError."""
+        geo = Outline.from_dict({"a": ["M0 0"]})
+
+        with pytest.raises(ValueError, match=r"value\['a'\] must be non-negative"):
+            Map(geo, value={"a": -1})
+
+    @pytest.mark.unit
+    def test_float_value_raises(self):
+        """Float values raise ValueError."""
+        geo = Outline.from_dict({"a": ["M0 0"]})
+
+        with pytest.raises(ValueError, match=r"value\['a'\] must be an integer"):
+            Map(geo, value={"a": 0.5})  # type: ignore
+
+    @pytest.mark.unit
+    def test_none_value_passes(self):
+        """None value (no value specified) passes validation."""
+        geo = Outline.from_dict({"a": ["M0 0"]})
+
+        # Should not raise
+        builder = Map(geo, value=None)
+        assert builder._value is None

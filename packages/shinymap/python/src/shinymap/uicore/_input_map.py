@@ -20,6 +20,7 @@ from ._util import (
     _merge_styles,
     _normalize_outline,
     _strip_none,
+    _validate_value,
 )
 
 
@@ -61,6 +62,9 @@ def _input_map(
     Returns:
         TagList containing the input component.
     """
+    # Validate initial value (must be non-negative integers)
+    _validate_value(value, "value")
+
     # Merge layers into outline metadata
     outline = outline.merge_layers(layers)
 

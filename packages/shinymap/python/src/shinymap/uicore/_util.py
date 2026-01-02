@@ -68,3 +68,31 @@ def _normalize_outline(outline: OutlineMap) -> Mapping[str, list[dict[str, Any]]
 def _strip_none(data: dict[str, Any]) -> dict[str, Any]:
     """Remove None values from dict."""
     return {k: v for k, v in data.items() if v is not None}
+
+
+def _validate_value(
+    value: Mapping[str, int] | None,
+    param_name: str = "value",
+) -> None:
+    """Validate that a value map contains only non-negative integers.
+
+    Args:
+        value: The value map to validate (or None)
+        param_name: Name of the parameter for error messages
+
+    Raises:
+        ValueError: If any value is negative or not an integer
+    """
+    if value is None:
+        return
+
+    for region_id, count in value.items():
+        if not isinstance(count, int):
+            raise ValueError(
+                f"{param_name}[{region_id!r}] must be an integer, "
+                f"got {type(count).__name__}: {count!r}"
+            )
+        if count < 0:
+            raise ValueError(
+                f"{param_name}[{region_id!r}] must be non-negative, got {count}"
+            )

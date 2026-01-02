@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any
 
 from .aes._core import BaseAesthetic, ByGroup, ByState
 from .types import CountMap, TooltipMap
-from .uicore._util import _normalize_outline, _strip_none
+from .uicore._util import _normalize_outline, _strip_none, _validate_value
 
 if TYPE_CHECKING:
     from .geometry import Outline
@@ -190,6 +190,8 @@ def Map(
     Returns:
         MapBuilder instance for method chaining
     """
+    # Validate value (must be non-negative integers)
+    _validate_value(value, "value")
 
     if geometry is None:
         # No geometry provided - will be merged from output_map() static params
