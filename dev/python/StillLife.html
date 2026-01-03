@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>index – shinymap</title>
+<title>stilllife – shinymap</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -19,6 +19,41 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -98,7 +133,7 @@ ul.task-list li input[type="checkbox"] {
 <span class="menu-text">Vignettes</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link active" href="../python/index.html" aria-current="page"> 
+    <a class="nav-link" href="../python/index.html"> 
 <span class="menu-text">Python API</span></a>
   </li>  
   <li class="nav-item">
@@ -128,15 +163,15 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#python-api-reference" id="toc-python-api-reference" class="nav-link active" data-scroll-target="#python-api-reference">Python API Reference</a>
+  <li><a href="#shinymap.StillLife" id="toc-shinymap.StillLife" class="nav-link active" data-scroll-target="#shinymap.StillLife">StillLife</a>
   <ul class="collapse">
-  <li><a href="#core-components" id="toc-core-components" class="nav-link" data-scroll-target="#core-components">Core Components</a></li>
-  <li><a href="#selection-modes" id="toc-selection-modes" class="nav-link" data-scroll-target="#selection-modes">Selection Modes</a></li>
-  <li><a href="#aesthetics" id="toc-aesthetics" class="nav-link" data-scroll-target="#aesthetics">Aesthetics</a></li>
-  <li><a href="#color-scales" id="toc-color-scales" class="nav-link" data-scroll-target="#color-scales">Color Scales</a></li>
-  <li><a href="#relative-expressions" id="toc-relative-expressions" class="nav-link" data-scroll-target="#relative-expressions">Relative Expressions</a></li>
-  <li><a href="#outline-utilities" id="toc-outline-utilities" class="nav-link" data-scroll-target="#outline-utilities">Outline Utilities</a></li>
-  <li><a href="#static-analysis-and-export" id="toc-static-analysis-and-export" class="nav-link" data-scroll-target="#static-analysis-and-export">Static Analysis and Export</a></li>
+  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
+  <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
+  <ul class="collapse">
+  <li><a href="#shinymap.StillLife.aes" id="toc-shinymap.StillLife.aes" class="nav-link" data-scroll-target="#shinymap.StillLife.aes">aes</a></li>
+  <li><a href="#shinymap.StillLife.aes_table" id="toc-shinymap.StillLife.aes_table" class="nav-link" data-scroll-target="#shinymap.StillLife.aes_table">aes_table</a></li>
+  <li><a href="#shinymap.StillLife.to_svg" id="toc-shinymap.StillLife.to_svg" class="nav-link" data-scroll-target="#shinymap.StillLife.to_svg">to_svg</a></li>
+  </ul></li>
   </ul></li>
   </ul>
 </nav>
@@ -147,169 +182,275 @@ ul.task-list li input[type="checkbox"] {
 
 
 
-<section id="python-api-reference" class="level1 doc doc-index">
-<h1 class="doc doc-index">Python API Reference</h1>
-<section id="core-components" class="level2">
-<h2 class="anchored" data-anchor-id="core-components">Core Components</h2>
-<p>Main UI components for creating interactive maps</p>
+<section id="shinymap.StillLife" class="level1">
+<h1>StillLife</h1>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>StillLife(builder, <span class="op">*</span>, value<span class="op">=</span><span class="va">None</span>, hovered<span class="op">=</span><span class="va">None</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Static snapshot of a map for aesthetic analysis and SVG export.</p>
+<p>Like a still life painting, this class captures a map’s state at a specific moment, allowing you to:</p>
+<ul>
+<li>Inspect resolved aesthetics for any region</li>
+<li>Export a static SVG with specific hover/selection states</li>
+</ul>
+<p>StillLife requires a <code>MapBuilder</code> created via <code>WashResult.build()</code>, which populates the private <code>_outline</code> and <code>_resolved_aes</code> fields.</p>
+<section id="examples" class="level2 doc-section doc-section-examples">
+<h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="im">from</span> shinymap <span class="im">import</span> Wash, StillLife, aes, Outline</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> wc <span class="op">=</span> Wash(shape<span class="op">=</span>aes.ByState(</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>...     base<span class="op">=</span>aes.Shape(fill_color<span class="op">=</span><span class="st">"#e2e8f0"</span>),</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>...     select<span class="op">=</span>aes.Shape(fill_color<span class="op">=</span><span class="st">"#3b82f6"</span>),</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>... ))</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> outline <span class="op">=</span> Outline.from_dict({<span class="st">"a"</span>: <span class="st">"M 0 0 L 10 10"</span>, <span class="st">"b"</span>: <span class="st">"M 20 0 L 30 10"</span>})</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> builder <span class="op">=</span> wc.build(outline, value<span class="op">=</span>{<span class="st">"a"</span>: <span class="dv">1</span>, <span class="st">"b"</span>: <span class="dv">0</span>})</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> pic <span class="op">=</span> StillLife(builder)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> pic.aes(<span class="st">"a"</span>)[<span class="st">"fill_color"</span>]  <span class="co"># Selected (value=1)</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co">'#3b82f6'</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> pic.aes(<span class="st">"b"</span>)[<span class="st">"fill_color"</span>]  <span class="co"># Not selected (value=0)</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co">'#e2e8f0'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="methods" class="level2">
+<h2 class="anchored" data-anchor-id="methods">Methods</h2>
 <table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
 <tbody>
 <tr class="odd">
-<td><a href="../python/input_map.html#shinymap.input_map">input_map</a></td>
+<td><a href="#shinymap.StillLife.aes">aes</a></td>
+<td>Get resolved aesthetic for a region.</td>
+</tr>
+<tr class="even">
+<td><a href="#shinymap.StillLife.aes_table">aes_table</a></td>
+<td>Get resolved aesthetics for multiple regions.</td>
+</tr>
+<tr class="odd">
+<td><a href="#shinymap.StillLife.to_svg">to_svg</a></td>
+<td>Generate static SVG with resolved aesthetics.</td>
+</tr>
+</tbody>
+</table>
+<section id="shinymap.StillLife.aes" class="level3">
+<h3 class="anchored" data-anchor-id="shinymap.StillLife.aes">aes</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>StillLife.aes(region, <span class="op">*</span>, is_hovered<span class="op">=</span><span class="va">None</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get resolved aesthetic for a region.</p>
+<section id="parameters" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 9%">
+<col style="width: 11%">
+<col style="width: 69%">
+<col style="width: 9%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>region</td>
+<td>str</td>
+<td>Region ID to get aesthetic for</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>is_hovered</td>
+<td>bool | None</td>
+<td>Override hover state. If None, uses the hovered region set in StillLife constructor.</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 8%">
+<col style="width: 18%">
+<col style="width: 73%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
 <td></td>
+<td>dict[str, Any]</td>
+<td>Dict of resolved aesthetic properties (fill_color, stroke_width, etc.)</td>
 </tr>
-<tr class="even">
-<td><a href="../python/output_map.html#shinymap.output_map">output_map</a></td>
+</tbody>
+</table>
+</section>
+<section id="examples-1" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-1">Examples</h4>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="im">from</span> shinymap <span class="im">import</span> Wash, StillLife, aes, Outline</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> wc <span class="op">=</span> Wash(shape<span class="op">=</span>aes.ByState(</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>...     base<span class="op">=</span>aes.Shape(fill_color<span class="op">=</span><span class="st">"#e2e8f0"</span>, stroke_width<span class="op">=</span><span class="fl">1.0</span>),</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>...     select<span class="op">=</span>aes.Shape(fill_color<span class="op">=</span><span class="st">"#3b82f6"</span>),</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>... ))</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> outline <span class="op">=</span> Outline.from_dict({<span class="st">"a"</span>: <span class="st">"M 0 0 L 10 10"</span>})</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> builder <span class="op">=</span> wc.build(outline, value<span class="op">=</span>{<span class="st">"a"</span>: <span class="dv">1</span>})</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> pic <span class="op">=</span> StillLife(builder)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> resolved <span class="op">=</span> pic.aes(<span class="st">"a"</span>)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> resolved[<span class="st">"fill_color"</span>]</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co">'#3b82f6'</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> resolved[<span class="st">"stroke_width"</span>]</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="fl">1.0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="shinymap.StillLife.aes_table" class="level3">
+<h3 class="anchored" data-anchor-id="shinymap.StillLife.aes_table">aes_table</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>StillLife.aes_table(region_ids<span class="op">=</span><span class="va">None</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get resolved aesthetics for multiple regions.</p>
+<section id="parameters-1" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 9%">
+<col style="width: 17%">
+<col style="width: 64%">
+<col style="width: 8%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>region_ids</td>
+<td>list[str] | None</td>
+<td>Specific region IDs to include. If None, includes all regions in the outline.</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-1" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 7%">
+<col style="width: 25%">
+<col style="width: 66%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
 <td></td>
+<td>list[dict[str, Any]]</td>
+<td>List of dicts, each containing region_id and resolved aesthetics.</td>
 </tr>
+</tbody>
+</table>
+</section>
+<section id="examples-2" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-2">Examples</h4>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="im">from</span> shinymap <span class="im">import</span> Wash, StillLife, aes, Outline</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> wc <span class="op">=</span> Wash(shape<span class="op">=</span>aes.Shape(fill_color<span class="op">=</span><span class="st">"#e2e8f0"</span>))</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> outline <span class="op">=</span> Outline.from_dict({<span class="st">"a"</span>: <span class="st">"M 0 0"</span>, <span class="st">"b"</span>: <span class="st">"M 10 0"</span>})</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> builder <span class="op">=</span> wc.build(outline, value<span class="op">=</span>{<span class="st">"a"</span>: <span class="dv">1</span>, <span class="st">"b"</span>: <span class="dv">0</span>})</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> pic <span class="op">=</span> StillLife(builder)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> table <span class="op">=</span> pic.aes_table()</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="bu">len</span>(table)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="dv">2</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> table[<span class="dv">0</span>][<span class="st">"region_id"</span>] <span class="kw">in</span> [<span class="st">"a"</span>, <span class="st">"b"</span>]</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="va">True</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="shinymap.StillLife.to_svg" class="level3">
+<h3 class="anchored" data-anchor-id="shinymap.StillLife.to_svg">to_svg</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>StillLife.to_svg(output<span class="op">=</span><span class="va">None</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Generate static SVG with resolved aesthetics.</p>
+<p>Note: This method will be implemented in Phase 2.</p>
+<section id="parameters-2" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-2">Parameters</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 6%">
+<col style="width: 17%">
+<col style="width: 66%">
+<col style="width: 9%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
 <tr class="odd">
-<td><a href="../python/render_map.html#shinymap.render_map">render_map</a></td>
+<td>output</td>
+<td>str | Path | None</td>
+<td>If provided, write SVG to file and return None. If None, return SVG as string.</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-2" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-2">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
 <td></td>
-</tr>
-<tr class="even">
-<td><a href="../python/update_map.html#shinymap.update_map">update_map</a></td>
-<td>Update an input_map or output_map without full re-render.</td>
-</tr>
-<tr class="odd">
-<td><a href="../python/Map.html#shinymap.Map">Map</a></td>
-<td>Create map from Outline object.</td>
-</tr>
-<tr class="even">
-<td><a href="../python/Outline.html#shinymap.Outline">Outline</a></td>
-<td>Canonical outline representation with polymorphic elements.</td>
-</tr>
-<tr class="odd">
-<td><a href="../python/Wash.html#shinymap.Wash">Wash</a></td>
-<td>Create configured map functions with custom default aesthetics.</td>
+<td>str | None</td>
+<td>SVG string if output is None, otherwise None.</td>
 </tr>
 </tbody>
 </table>
 </section>
-<section id="selection-modes" class="level2">
-<h2 class="anchored" data-anchor-id="selection-modes">Selection Modes</h2>
-<p>Mode classes controlling selection behavior</p>
+<section id="raises" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
 <table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
 <tbody>
 <tr class="odd">
-<td><a href="../python/mode.Single.html#shinymap.mode.Single">mode.Single</a></td>
-<td>Single selection mode with customization options.</td>
-</tr>
-<tr class="even">
-<td><a href="../python/mode.Multiple.html#shinymap.mode.Multiple">mode.Multiple</a></td>
-<td>Multiple selection mode with customization options.</td>
-</tr>
-<tr class="odd">
-<td><a href="../python/mode.Cycle.html#shinymap.mode.Cycle">mode.Cycle</a></td>
-<td>Cycle mode - finite state cycling (e.g., traffic light survey).</td>
-</tr>
-<tr class="even">
-<td><a href="../python/mode.Count.html#shinymap.mode.Count">mode.Count</a></td>
-<td>Count mode - unbounded counting.</td>
-</tr>
-<tr class="odd">
-<td><a href="../python/mode.Display.html#shinymap.mode.Display">mode.Display</a></td>
-<td>Display-only mode for output_map.</td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="aesthetics" class="level2">
-<h2 class="anchored" data-anchor-id="aesthetics">Aesthetics</h2>
-<p>Classes for styling map regions</p>
-<table class="caption-top table">
-<tbody>
-<tr class="odd">
-<td><a href="../python/aes.Shape.html#shinymap.aes.Shape">aes.Shape</a></td>
-<td>Create shape aesthetic (fill and stroke).</td>
-</tr>
-<tr class="even">
-<td><a href="../python/aes.Line.html#shinymap.aes.Line">aes.Line</a></td>
-<td>Create line aesthetic (stroke only, no fill).</td>
-</tr>
-<tr class="odd">
-<td><a href="../python/aes.ByState.html#shinymap.aes.ByState">aes.ByState</a></td>
-<td>Container for element aesthetics across interaction states.</td>
-</tr>
-<tr class="even">
-<td><a href="../python/aes.ByGroup.html#shinymap.aes.ByGroup">aes.ByGroup</a></td>
-<td>Container for aesthetics by group/region name.</td>
-</tr>
-<tr class="odd">
-<td><a href="../python/aes.Indexed.html#shinymap.aes.Indexed">aes.Indexed</a></td>
-<td>Create indexed aesthetic for multi-state modes (Cycle, Count).</td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="color-scales" class="level2">
-<h2 class="anchored" data-anchor-id="color-scales">Color Scales</h2>
-<p>Functions for generating fill colors</p>
-<table class="caption-top table">
-<tbody>
-<tr class="odd">
-<td><a href="../python/aes.color.scale_sequential.html#shinymap.aes.color.scale_sequential">aes.color.scale_sequential</a></td>
-<td>Create a sequential color scale based on counts.</td>
-</tr>
-<tr class="even">
-<td><a href="../python/aes.color.scale_diverging.html#shinymap.aes.color.scale_diverging">aes.color.scale_diverging</a></td>
-<td>Create a diverging color scale (red-white-blue style).</td>
-</tr>
-<tr class="odd">
-<td><a href="../python/aes.color.scale_qualitative.html#shinymap.aes.color.scale_qualitative">aes.color.scale_qualitative</a></td>
-<td>Create a qualitative color scale for categorical data.</td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="relative-expressions" class="level2">
-<h2 class="anchored" data-anchor-id="relative-expressions">Relative Expressions</h2>
-<p>PARENT proxy for relative aesthetic values</p>
-<table class="caption-top table">
-<tbody>
-<tr class="odd">
-<td><a href="../python/PARENT.html#shinymap.PARENT">PARENT</a></td>
 <td></td>
-</tr>
-<tr class="even">
-<td><a href="../python/RelativeExpr.html#shinymap.RelativeExpr">RelativeExpr</a></td>
-<td>A deferred expression that references a parent property.</td>
-</tr>
-<tr class="odd">
-<td><a href="../python/resolve_region.html#shinymap.resolve_region">resolve_region</a></td>
-<td>Resolve the final aesthetic for a region given its state.</td>
-</tr>
-<tr class="even">
-<td><a href="../python/preview_region.html#shinymap.preview_region">preview_region</a></td>
-<td>Preview the aesthetic resolution for a region with verbose output.</td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="outline-utilities" class="level2">
-<h2 class="anchored" data-anchor-id="outline-utilities">Outline Utilities</h2>
-<p>Tools for working with SVG geometry</p>
-<table class="caption-top table">
-<tbody>
-<tr class="odd">
-<td><a href="../python/outline.Outline.html#shinymap.outline.Outline">outline.Outline</a></td>
-<td>Canonical outline representation with polymorphic elements.</td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="static-analysis-and-export" class="level2">
-<h2 class="anchored" data-anchor-id="static-analysis-and-export">Static Analysis and Export</h2>
-<p>Mode classes for static pictures</p>
-<table class="caption-top table">
-<tbody>
-<tr class="odd">
-<td><a href="../python/StillLife.html#shinymap.StillLife">StillLife</a></td>
-<td>Static snapshot of a map for aesthetic analysis and SVG export.</td>
+<td>NotImplementedError</td>
+<td>This method is not yet implemented.</td>
 </tr>
 </tbody>
 </table>
 
 
+</section>
+</section>
 </section>
 </section>
 
