@@ -53,7 +53,8 @@ def build_aes_payload(
     Returns:
         Dict in v0.3 payload format with entries and _metadata
 
-    Example:
+    Examples:
+        ```pycon
         >>> from shinymap import Wash, aes, Outline
         >>> from shinymap.payload import build_aes_payload
         >>> wc = Wash(shape=aes.Shape(fill_color="#e5e7eb"))
@@ -66,6 +67,7 @@ def build_aes_payload(
         >>> payload = build_aes_payload(resolved, outline)
         >>> payload["coastal"]["base"]["fill_color"]
         '#3b82f6'
+        ```
     """
     result: dict[str, Any] = {}
     metadata: dict[str, list[str]] = {}

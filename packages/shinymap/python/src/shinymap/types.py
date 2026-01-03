@@ -18,7 +18,8 @@ class MissingType:
     This is better than using None because None might be a valid value.
     MissingType is falsy, allowing for concise `value or default` patterns.
 
-    Example:
+    Examples:
+        ```pycon
         >>> from shinymap.types import MISSING
         >>> # MISSING is falsy, enabling `x or default` pattern
         >>> bool(MISSING)
@@ -31,7 +32,7 @@ class MissingType:
         Hello, World!
         >>> greet("Alice")
         Hello, Alice!
-        >>>
+
         >>> # When None IS a valid value, use `is MISSING`:
         >>> def set_color(color=MISSING):
         ...     if color is MISSING:
@@ -43,6 +44,7 @@ class MissingType:
         color = #fff
         >>> set_color(None)  # None means "transparent"
         color = None
+        ```
     """
 
     def __repr__(self) -> str:

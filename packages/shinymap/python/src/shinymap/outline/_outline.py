@@ -34,14 +34,16 @@ class Outline:
         are NOT used by shinymap for rendering. Interactive appearance is controlled
         via Python API. Preserved values are for SVG export and reference only.
 
-    Example:
+    Examples:
+        ```pycon
         >>> # v0.x format (backward compatible)
         >>> data = {"region1": ["M 0 0 L 10 0"], "_metadata": {"viewBox": "0 0 100 100"}}
         >>> geo = Outline.from_dict(data)
-        >>>
+
         >>> # v1.x format (polymorphic elements)
         >>> from shinymap.outline import Circle
         >>> geo = Outline(regions={"r1": [Circle(cx=100, cy=100, r=50)]}, metadata={})
+        ```
     """
 
     regions: Regions
@@ -69,7 +71,8 @@ class Outline:
         Raises:
             ValueError: If _metadata exists but is not a dict
 
-        Example:
+        Examples:
+            ```pycon
             >>> # v0.x string format (backward compatible)
             >>> outline = Outline.from_dict({"a": "M 0 0 L 10 0"})
             >>> list(outline.regions.keys())
@@ -85,6 +88,7 @@ class Outline:
             >>> outline = Outline.from_dict(data)
             >>> outline.regions["a"]
             [Circle(cx=100, cy=100, r=50)]
+            ```
         """
         from ._element_mixins import JSONSerializableMixin
 
@@ -121,10 +125,12 @@ class Outline:
         Returns:
             Outline object with normalized list-based paths
 
-        Example:
+        Examples:
+            ```pycon
             >>> geo = Outline.from_json("japan_prefectures.json")  # doctest: +SKIP
             >>> geo.regions.keys()  # doctest: +SKIP
             dict_keys(['01', '02', ...])
+            ```
         """
         path = PathType(json_path).expanduser()
         if not path.exists():
@@ -165,17 +171,19 @@ class Outline:
             FileNotFoundError: If svg_path does not exist
             ValueError: If SVG parsing fails
 
-        Example:
+        Examples:
+            ```pycon
             >>> # Basic extraction (all element types)
             >>> geo = Outline.from_svg("design.svg")  # doctest: +SKIP
             >>> geo.regions.keys()  # doctest: +SKIP
             dict_keys(['circle_1', 'rect_1', 'path_1', 'text_1'])
-            >>>
+
             >>> # With transformations
             >>> geo = Outline.from_svg("map.svg")  # doctest: +SKIP
             >>> geo.relabel({"hokkaido": ["circle_1", "circle_2"]})  # doctest: +SKIP
             >>> geo.set_overlays(["_border"])  # doctest: +SKIP
             >>> geo.to_json("output.json")  # doctest: +SKIP
+            ```
         """
         from ._elements import Circle, Ellipse, Line, Path, Polygon, Rect, Text
 
@@ -345,10 +353,12 @@ class Outline:
         Returns:
             ViewBox tuple in format (x, y, width, height)
 
-        Example:
+        Examples:
+            ```pycon
             >>> geo = Outline.from_dict({"a": ["M 0 0 L 100 100"]})
             >>> geo.viewbox()  # Returns with 2% padding
             (-2.0, -2.0, 104.0, 104.0)
+            ```
         """
         if "viewBox" in self.metadata:
             # Parse viewBox string to tuple
@@ -404,7 +414,8 @@ class Outline:
         Returns:
             List of region IDs marked as overlays
 
-        Example:
+        Examples:
+            ```pycon
             >>> geo = Outline.from_dict({
             ...     "region": ["M 0 0"],
             ...     "_border": ["M 0 0 L 100 0"],
@@ -412,6 +423,7 @@ class Outline:
             ... })
             >>> geo.overlays()
             ['_border']
+            ```
         """
         overlays = self.metadata.get("overlays", [])
         return list(overlays) if isinstance(overlays, list) else []
@@ -422,7 +434,8 @@ class Outline:
         Returns:
             List of region IDs marked as underlays
 
-        Example:
+        Examples:
+            ```pycon
             >>> geo = Outline.from_dict({
             ...     "region": ["M 0 0"],
             ...     "_bg": ["M 0 0 L 100 0 L 100 100 L 0 100 Z"],
@@ -430,6 +443,7 @@ class Outline:
             ... })
             >>> geo.underlays()
             ['_bg']
+            ```
         """
         underlays = self.metadata.get("underlays", [])
         return list(underlays) if isinstance(underlays, list) else []
@@ -440,7 +454,8 @@ class Outline:
         Returns:
             List of region IDs marked as hidden
 
-        Example:
+        Examples:
+            ```pycon
             >>> geo = Outline.from_dict({
             ...     "region": ["M 0 0"],
             ...     "_temp": ["M 0 0 L 100 0"],
@@ -448,6 +463,7 @@ class Outline:
             ... })
             >>> geo.hidden()
             ['_temp']
+            ```
         """
         hidden = self.metadata.get("hidden", [])
         return list(hidden) if isinstance(hidden, list) else []
@@ -462,7 +478,8 @@ class Outline:
         Returns:
             Dict with layer configuration or None
 
-        Example:
+        Examples:
+            ```pycon
             >>> geo = Outline.from_dict({
             ...     "region": ["M 0 0"],
             ...     "_border": ["M 0 0 L 100 0"],
@@ -470,6 +487,7 @@ class Outline:
             ... })
             >>> geo.layers_dict()
             {'overlays': ['_border'], 'underlays': ['_bg']}
+            ```
         """
         overlays = self.overlays()
         underlays = self.underlays()
@@ -495,7 +513,8 @@ class Outline:
             Regions object with main regions {regionId: [element1, ...]}
             (elements can be strings for v0.x or Element objects for v1.x)
 
-        Example:
+        Examples:
+            ```pycon
             >>> geo = Outline.from_dict({
             ...     "region": ["M 0 0"],
             ...     "_border": ["M 0 0 L 100 0"],
@@ -505,6 +524,7 @@ class Outline:
             Regions({
               'region': ['M 0 0'],
             })
+            ```
         """
         overlay_ids = set(self.overlays())
         return Regions({k: v for k, v in self.regions.items() if k not in overlay_ids})
@@ -516,7 +536,8 @@ class Outline:
             Regions object with overlay regions {regionId: [element1, ...]}
             (elements can be strings for v0.x or Element objects for v1.x)
 
-        Example:
+        Examples:
+            ```pycon
             >>> geo = Outline.from_dict({
             ...     "region": ["M 0 0"],
             ...     "_border": ["M 0 0 L 100 0"],
@@ -526,6 +547,7 @@ class Outline:
             Regions({
               '_border': ['M 0 0 L 100 0'],
             })
+            ```
         """
         overlay_ids = set(self.overlays())
         return Regions({k: v for k, v in self.regions.items() if k in overlay_ids})
@@ -547,7 +569,8 @@ class Outline:
         Raises:
             ValueError: If an old ID in mapping doesn't exist
 
-        Example:
+        Examples:
+            ```pycon
             >>> geo = Outline.from_dict({
             ...     "path_1": ["M 0 0 L 10 0"],
             ...     "path_2": ["M 20 0 L 30 0"],
@@ -560,6 +583,7 @@ class Outline:
             ... })
             >>> geo2.regions.keys()
             dict_keys(['region_a', '_border'])
+            ```
         """
         new_regions: dict[str, list[str]] = {}
         relabeled_ids: set[str] = set()
@@ -597,7 +621,8 @@ class Outline:
         Returns:
             New Outline object with updated overlay metadata
 
-        Example:
+        Examples:
+            ```pycon
             >>> geo = Outline.from_dict({
             ...     "region": ["M 0 0"],
             ...     "_border": ["M 0 0 L 100 0"]
@@ -605,6 +630,7 @@ class Outline:
             >>> geo2 = geo.set_overlays(["_border"])
             >>> geo2.overlays()
             ['_border']
+            ```
         """
         new_metadata = dict(self.metadata)
         new_metadata["overlays"] = overlay_ids
@@ -622,7 +648,8 @@ class Outline:
         Returns:
             New Outline object with updated metadata
 
-        Example:
+        Examples:
+            ```pycon
             >>> geo = Outline.from_dict({"region": ["M 0 0"]})
             >>> geo2 = geo.update_metadata({
             ...     "source": "Wikimedia Commons",
@@ -630,6 +657,7 @@ class Outline:
             ... })
             >>> geo2.metadata["source"]
             'Wikimedia Commons'
+            ```
         """
         new_metadata = {**self.metadata, **metadata}
         return Outline(regions=Regions(dict(self.regions)), metadata=new_metadata)
@@ -647,13 +675,15 @@ class Outline:
         Returns:
             New Outline object with line regions recorded in metadata
 
-        Example:
+        Examples:
+            ```pycon
             >>> geo = Outline.from_dict({
             ...     "region": ["M 0 0 L 100 100"],
             ...     "_divider": ["M 50 0 L 50 100"]
             ... })
             >>> geo2 = geo.path_as_line("_divider")
             >>> # Now _divider will use stroke-only rendering
+            ```
         """
         # Get existing list or create new one
         existing = list(self.metadata.get("lines_as_path", []))
@@ -682,7 +712,8 @@ class Outline:
         Returns:
             Dict mapping region IDs to their aesthetic element types
 
-        Example:
+        Examples:
+            ```pycon
             >>> # v1.x format with mixed elements
             >>> from shinymap.outline import Circle, Line, Text, Path
             >>> outline = Outline(regions={
@@ -692,13 +723,14 @@ class Outline:
             ... }, metadata={})
             >>> outline.region_types()
             {'region': 'shape', '_divider': 'line', 'label': 'text'}
-
+            
             >>> # Path marked as line via path_as_line()
             >>> outline = Outline(regions={
             ...     "_border": [Path(d="M 0 0 L 100 0")],
             ... }, metadata={}).path_as_line("_border")
             >>> outline.region_types()
             {'_border': 'line'}
+            ```
         """
         lines_as_path = set(self.metadata.get("lines_as_path", []))
         result: dict[str, str] = {}
@@ -735,7 +767,8 @@ class Outline:
         Returns:
             Dict mapping group names to lists of region IDs
 
-        Example:
+        Examples:
+            ```pycon
             >>> geo = Outline.from_dict({
             ...     "region1": ["M 0 0"],
             ...     "region2": ["M 10 0"],
@@ -743,6 +776,7 @@ class Outline:
             ... })
             >>> geo.groups()
             {'coastal': ['region1', 'region2']}
+            ```
         """
         return dict(self.metadata.get("groups", {}))
 
@@ -760,13 +794,15 @@ class Outline:
         Returns:
             Dict with viewBox and groups, or None if no metadata
 
-        Example:
+        Examples:
+            ```pycon
             >>> outline = Outline.from_dict({
             ...     "region1": ["M 0 0 L 100 100"],
             ...     "_metadata": {"groups": {"coastal": ["region1"]}}
             ... })
             >>> outline.metadata_dict()
             {'viewBox': '-2.0 -2.0 104.0 104.0', 'groups': {'coastal': ['region1']}}
+            ```
         """
         if not self.metadata:
             return None
@@ -798,7 +834,8 @@ class Outline:
         Returns:
             New Outline with merged layers in metadata
 
-        Example:
+        Examples:
+            ```pycon
             >>> outline = Outline.from_dict({
             ...     "region": ["M 0 0"],
             ...     "_border": ["M 0 0 L 100 0"],
@@ -810,6 +847,7 @@ class Outline:
             >>> merged = outline.merge_layers({"overlays": ["_custom"]})
             >>> merged.metadata
             {'overlays': ['_custom']}
+            ```
         """
         if layers is None:
             return self
@@ -836,17 +874,19 @@ class Outline:
         Returns:
             Dict with _metadata and region data (v0.x strings or v1.x element dicts)
 
-        Example:
+        Examples:
+            ```pycon
             >>> # v0.x format (strings) - empty metadata is omitted
             >>> outline = Outline.from_dict({"region": ["M 0 0"]})
             >>> outline.to_dict()
             {'region': ['M 0 0']}
-
+            
             >>> # v1.x format (elements)
             >>> from shinymap.outline import Circle
             >>> outline = Outline(regions={"r1": [Circle(cx=100, cy=100, r=50)]}, metadata={})
             >>> outline.to_dict()
             {'r1': [{'type': 'circle', 'cx': 100, 'cy': 100, 'r': 50}]}
+            ```
         """
         output: dict[str, Any] = {}
         if self.metadata:
@@ -872,9 +912,11 @@ class Outline:
         Args:
             output_path: Path to write JSON file
 
-        Example:
+        Examples:
+            ```pycon
             >>> geo = Outline.from_svg("map.svg")  # doctest: +SKIP
             >>> geo.to_json("output.json")  # doctest: +SKIP
+            ```
         """
         output_path = PathType(output_path).expanduser()
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -888,10 +930,12 @@ class Outline:
         Shows region count instead of full region data.
         Uses global repr configuration from get_repr_config().
 
-        Example:
+        Examples:
+            ```pycon
             >>> geo = Outline.from_svg("map.svg")  # doctest: +SKIP
             >>> geo  # doctest: +SKIP
             Outline(regions={47 regions}, metadata={'viewBox': '0 0 1000 1000'})
+            ```
         """
         import reprlib
 

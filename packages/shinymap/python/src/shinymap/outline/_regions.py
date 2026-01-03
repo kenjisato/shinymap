@@ -14,13 +14,15 @@ class Regions(dict[str, list["str | Element"]]):
     This class wraps the regions dictionary to provide a more readable
     repr output while maintaining full dictionary compatibility.
 
-    Example:
+    Examples:
+        ```pycon
         >>> from shinymap.outline import Circle
         >>> regions = Regions({"r1": [Circle(cx=100, cy=100, r=50)]})
         >>> regions
         Regions({
           'r1': [Circle(cx=100, cy=100, r=50)],
         })
+        ```
     """
 
     def __repr__(self) -> str:

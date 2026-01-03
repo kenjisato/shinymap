@@ -74,9 +74,11 @@ def Line(
     Returns:
         LineAesthetic instance
 
-    Example:
+    Examples:
+        ```pycon
         >>> from shinymap import aes
         >>> grid_aes = aes.Line(stroke_color="#ddd", stroke_dasharray=aes.line.dashed)
+        ```
     """
     return LineAesthetic(
         stroke_color=stroke_color,
@@ -109,9 +111,11 @@ def Shape(
     Returns:
         ShapeAesthetic instance
 
-    Example:
+    Examples:
+        ```pycon
         >>> from shinymap import aes
         >>> region_aes = aes.Shape(fill_color="#3b82f6", stroke_color="#000", stroke_width=1)
+        ```
     """
     return ShapeAesthetic(
         fill_color=fill_color,
@@ -146,9 +150,11 @@ def Text(
     Returns:
         TextAesthetic instance
 
-    Example:
+    Examples:
+        ```pycon
         >>> from shinymap import aes
         >>> label_aes = aes.Text(fill_color="#000", stroke_color="#fff", stroke_width=0.5)
+        ```
     """
     return TextAesthetic(
         fill_color=fill_color,
@@ -194,7 +200,8 @@ def Path(
     Returns:
         PathAesthetic instance
 
-    Example:
+    Examples:
+        ```pycon
         >>> from shinymap import aes
         >>> # Path used as a line (apply line defaults from wash)
         >>> divider_aes = aes.Path(kind="line", stroke_color="#000")
@@ -202,6 +209,7 @@ def Path(
         >>> border_aes = aes.Path(fill_color=None, stroke_color="#000", stroke_width=1)
         >>> # Path used as a shape (filled)
         >>> region_aes = aes.Path(fill_color="#3b82f6", stroke_color="#fff")
+        ```
     """
     return PathAesthetic(
         kind=kind,
@@ -242,18 +250,20 @@ def Indexed(
     Returns:
         IndexedAesthetic instance
 
-    Example:
+    Examples:
+        ```pycon
         >>> from shinymap import aes
-        >>>
+
         >>> # Two-state (off/on) with different colors
         >>> _ = aes.Indexed(fill_color=["#e5e7eb", "#3b82f6"])
-        >>>
+
         >>> # Heat map with opacity gradient
         >>> from shinymap.utils import linspace
         >>> _ = aes.Indexed(fill_color="#f97316", fill_opacity=linspace(0.0, 1.0, num=6))
-        >>>
+
         >>> # Traffic light (4 states)
         >>> _ = aes.Indexed(fill_color=["#e2e8f0", "#ef4444", "#eab308", "#22c55e"])
+        ```
     """
     return IndexedAesthetic(
         fill_color=fill_color,

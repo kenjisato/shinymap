@@ -56,10 +56,12 @@ class Circle(svg.Circle, ShinymapElementMixin):
         but NOT used by shinymap for rendering. Use Python API parameters
         (default_aesthetic, with_fill_color(), etc.) to control appearance.
 
-    Example:
+    Examples:
+        ```pycon
         >>> circle = Circle(cx=100, cy=100, r=50)
         >>> circle.bounds()
         (50.0, 50.0, 150.0, 150.0)
+        ```
     """
 
     def __repr__(self) -> str:
@@ -82,10 +84,12 @@ class Rect(svg.Rect, ShinymapElementMixin):
         stroke: Stroke color (preserved but not used by shinymap)
         ... and all other svg.Rect attributes
 
-    Example:
+    Examples:
+        ```pycon
         >>> rect = Rect(x=10, y=20, width=100, height=80)
         >>> rect.bounds()
         (10.0, 20.0, 110.0, 100.0)
+        ```
     """
 
     def __repr__(self) -> str:
@@ -111,15 +115,17 @@ class Path(svg.Path, ShinymapElementMixin):
         Internally, svg.py uses PathData objects. When serializing to JSON,
         these are converted to strings.
 
-    Example:
+    Examples:
+        ```pycon
         >>> path = Path(d="M 0 0 L 100 0 L 100 100 Z")
         >>> path.bounds()
         (0.0, 0.0, 100.0, 100.0)
-
+        
         >>> from svg._path import M, L, Z
         >>> path = Path(d=[M(0, 0), L(100, 0), L(100, 100), Z()])
         >>> path.bounds()
         (0.0, 0.0, 100.0, 100.0)
+        ```
     """
 
     def __repr__(self) -> str:
@@ -137,10 +143,12 @@ class Polygon(svg.Polygon, ShinymapElementMixin):
         stroke: Stroke color (preserved but not used by shinymap)
         ... and all other svg.Polygon attributes
 
-    Example:
+    Examples:
+        ```pycon
         >>> polygon = Polygon(points=[0, 0, 100, 0, 100, 100, 0, 100])
         >>> polygon.bounds()
         (0.0, 0.0, 100.0, 100.0)
+        ```
     """
 
     def __repr__(self) -> str:
@@ -161,10 +169,12 @@ class Ellipse(svg.Ellipse, ShinymapElementMixin):
         stroke: Stroke color (preserved but not used by shinymap)
         ... and all other svg.Ellipse attributes
 
-    Example:
+    Examples:
+        ```pycon
         >>> ellipse = Ellipse(cx=100, cy=100, rx=50, ry=30)
         >>> ellipse.bounds()
         (50.0, 70.0, 150.0, 130.0)
+        ```
     """
 
     def __repr__(self) -> str:
@@ -185,10 +195,12 @@ class Line(svg.Line, ShinymapElementMixin):
         stroke_width: Stroke width (preserved but not used by shinymap)
         ... and all other svg.Line attributes
 
-    Example:
+    Examples:
+        ```pycon
         >>> line = Line(x1=0, y1=0, x2=100, y2=100)
         >>> line.bounds()
         (0.0, 0.0, 100.0, 100.0)
+        ```
     """
 
     def __repr__(self) -> str:
@@ -215,10 +227,12 @@ class Text(svg.Text, ShinymapElementMixin):
         without a text layout engine. This is sufficient for annotation
         layers but not for precise interactive text regions.
 
-    Example:
+    Examples:
+        ```pycon
         >>> text = Text(x=100, y=100, text="Hello")
         >>> text.bounds()  # Approximate bounds
         (100.0, 100.0, 101.0, 101.0)
+        ```
     """
 
     def __repr__(self) -> str:

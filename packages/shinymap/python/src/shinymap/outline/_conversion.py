@@ -42,7 +42,8 @@ def from_svg(
         FileNotFoundError: If svg_path does not exist
         ValueError: If SVG parsing fails
 
-    Example:
+    Examples:
+        ```pycon
         >>> # Interactive workflow: Step 1 - Extract
         >>> extracted = from_svg("map.svg", "map_extracted.json")  # doctest: +SKIP
         >>> # Inspect extracted JSON, identify paths to group/rename
@@ -51,13 +52,14 @@ def from_svg(
         ...     extracted,
         ...     relabel={"region_01": "path_1", "hokkaido": ["path_2", "path_3"]}
         ... )
-
+        
         >>> # Or: one-shot conversion
         >>> final = convert(  # doctest: +SKIP
         ...     "map.svg",
         ...     "map.json",
         ...     relabel={"region_01": "path_1"}
         ... )
+        ```
     """
     # Use Outline class method internally
     geo = Outline.from_svg(svg_path, extract_viewbox=extract_viewbox)

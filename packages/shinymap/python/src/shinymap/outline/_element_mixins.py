@@ -187,7 +187,8 @@ class JSONSerializableMixin:
         Yields:
             Tuple of (attribute_name, attribute_value)
 
-        Example:
+        Examples:
+            ```pycon
             >>> from shinymap.outline import Circle
             >>> circle = Circle(cx=100, cy=100, r=50, fill="#ff0000")
             >>> for key, val in circle.attrs():
@@ -196,6 +197,7 @@ class JSONSerializableMixin:
             cy=100
             r=50
             fill=#ff0000
+            ```
         """
         for key, val in vars(self).items():
             if val is None or key in ("elements", "element_name"):
@@ -323,13 +325,15 @@ class ShinymapElementMixin(BoundsMixin, JSONSerializableMixin):
         Uses reprlib for concise output similar to to_dict() format.
         Only shows attributes with non-None values.
 
-        Example:
+        Examples:
+            ```pycon
             >>> from shinymap.outline import Circle
             >>> circle = Circle(cx=100, cy=100, r=50, fill="#ff0000")
             >>> repr(circle)
             "Circle(cx=100, cy=100, r=50, fill='#ff0000')"
             >>> str(circle)  # SVG markup from svg.py
             '<circle cx="100" cy="100" r="50" fill="#ff0000"/>'
+            ```
         """
         import reprlib
 

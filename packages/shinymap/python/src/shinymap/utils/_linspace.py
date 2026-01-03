@@ -21,24 +21,26 @@ def linspace(start: float, stop: float, num: int = 5) -> list[float]:
     Raises:
         ValueError: If num < 1.
 
-    Example:
+    Examples:
+        ```pycon
         >>> from shinymap.utils import linspace
         >>> from shinymap import aes
-        >>>
+
         >>> # Opacity gradient from transparent to opaque
         >>> linspace(0.0, 1.0, num=6)  # doctest: +NORMALIZE_WHITESPACE
         [0.0, 0.2, 0.4, 0.6..., 0.8, 1.0]
-        >>>
+
         >>> # Stroke width progression
         >>> linspace(0.5, 3.0, num=6)
         [0.5, 1.0, 1.5, 2.0, 2.5, 3.0]
-        >>>
+
         >>> # Use with aes.Indexed for count mode
         >>> aes.Indexed(
         ...     fill_color="#f97316",
         ...     fill_opacity=linspace(0.0, 1.0, num=6),
         ... )  # doctest: +ELLIPSIS
         Indexed(fill_color='#f97316', fill_opacity=[0.0, 0.2, ...])
+        ```
     """
     if num < 1:
         raise ValueError("num must be at least 1")

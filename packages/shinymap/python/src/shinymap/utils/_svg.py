@@ -21,9 +21,11 @@ def path_bb(path_d: str) -> tuple[float, float, float, float]:
         Does not handle curves (C, Q, A) accurately - uses only coordinate endpoints.
         Sufficient for simplified map outlines.
 
-    Example:
+    Examples:
+        ```pycon
         >>> path_bb("M 0 0 L 100 0 L 100 100 Z")
         (0.0, 0.0, 100.0, 100.0)
+        ```
     """
     # Extract all numbers (handles negative, decimals)
     coord_pattern = r"[-]?\d+\.?\d*"
@@ -47,7 +49,8 @@ def strip_unit(value: str) -> float | None:
     Returns:
         Parsed float value, or None if parsing fails
 
-    Example:
+    Examples:
+        ```pycon
         >>> strip_unit("100")
         100.0
         >>> strip_unit("100px")
@@ -56,6 +59,7 @@ def strip_unit(value: str) -> float | None:
         50.5
         >>> strip_unit("invalid") is None
         True
+        ```
     """
     # Remove common SVG units and try to parse as float
     # Note: This doesn't convert units (e.g., pt to px) - just strips them

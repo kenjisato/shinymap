@@ -46,10 +46,12 @@ class BaseAesthetic:
         None values are preserved (they mean transparent/none in SVG).
         RelativeExpr values are serialized to their JSON representation.
 
-        Example:
+        Examples:
+            ```pycon
             >>> aes = ShapeAesthetic(fill_color="#fff", stroke_color=None)
             >>> aes.to_dict()
             {'fill_color': '#fff', 'stroke_color': None, 'type': 'shape'}
+            ```
         """
         # Import here to avoid circular dependency
         from ..relative import RelativeExpr
@@ -70,13 +72,15 @@ class BaseAesthetic:
 
         Uses dataclasses.replace() for immutable update pattern.
 
-        Example:
+        Examples:
+            ```pycon
             >>> shape = ShapeAesthetic(stroke_width=1, fill_color="#fff")
             >>> updated = shape.update(stroke_width=2)
             >>> updated.stroke_width
             2
             >>> updated.fill_color  # Unchanged
             '#fff'
+            ```
         """
         return replace(self, **kwargs)
 
@@ -98,7 +102,8 @@ class BaseAesthetic:
         Returns:
             A new aesthetic with all values resolved
 
-        Example:
+        Examples:
+            ```pycon
             >>> from shinymap import aes, PARENT
             >>> parent = aes.Shape(fill_color="#fff", stroke_width=1.0)
             >>> child = aes.Shape(stroke_width=PARENT.stroke_width + 1)
@@ -107,6 +112,7 @@ class BaseAesthetic:
             '#fff'
             >>> resolved.stroke_width  # resolved: 1.0 + 1 = 2.0
             2.0
+            ```
         """
         # Import here to avoid circular dependency
         from ..relative import RelativeExpr
@@ -149,9 +155,11 @@ class ShapeAesthetic(BaseAesthetic):
         stroke_dasharray: Dash pattern (e.g., "5,5" for dashed, "1,3" for dotted)
         non_scaling_stroke: If True, stroke width is in screen pixels (default: False)
 
-    Example:
+    Examples:
+        ```pycon
         >>> from shinymap import aes
         >>> region_aes = aes.Shape(fill_color="#3b82f6", stroke_width=1)
+        ```
     """
 
     fill_color: str | None | MissingType = MISSING
@@ -205,9 +213,11 @@ class LineAesthetic(BaseAesthetic):
         stroke_dasharray: Dash pattern (e.g., "5,5" for dashed)
         non_scaling_stroke: If True, stroke width is in screen pixels (default: False)
 
-    Example:
+    Examples:
+        ```pycon
         >>> from shinymap import aes
         >>> grid_aes = aes.Line(stroke_color="#ddd", stroke_dasharray=aes.line.dashed)
+        ```
     """
 
     stroke_color: str | None | MissingType = MISSING
@@ -254,9 +264,11 @@ class TextAesthetic(BaseAesthetic):
         stroke_dasharray: Outline dash pattern (rarely used for text)
         non_scaling_stroke: If True, stroke width is in screen pixels (default: False)
 
-    Example:
+    Examples:
+        ```pycon
         >>> from shinymap import aes
         >>> label_aes = aes.Text(fill_color="#000", stroke_color="#fff", stroke_width=0.5)
+        ```
     """
 
     fill_color: str | None | MissingType = MISSING
@@ -319,7 +331,8 @@ class PathAesthetic(BaseAesthetic):
         stroke_dasharray: Dash pattern (e.g., "5,5" for dashed)
         non_scaling_stroke: If True, stroke width is in screen pixels (default: False)
 
-    Example:
+    Examples:
+        ```pycon
         >>> from shinymap import aes
         >>> # Path used as a line (apply line defaults from wash)
         >>> divider_aes = aes.Path(kind="line", stroke_color="#000")
@@ -327,6 +340,7 @@ class PathAesthetic(BaseAesthetic):
         >>> border_aes = aes.Path(fill_color=None, stroke_color="#000")
         >>> # Path used as a shape (filled)
         >>> region_aes = aes.Path(fill_color="#3b82f6", stroke_color="#fff")
+        ```
     """
 
     kind: PathKind | MissingType = MISSING
@@ -412,18 +426,20 @@ class ByState[T: BaseAesthetic]:
         hover: Aesthetic override when region is hovered.
                MISSING = inherit library default hover, None = no hover effect.
 
-    Example:
+    Examples:
+        ```pycon
         >>> from shinymap import aes, PARENT
-        >>>
+
         >>> # Full form with all states
         >>> shape_states = aes.ByState(
         ...     aes.Shape(fill_color="#f0f9ff"),
         ...     select=aes.Shape(fill_color="#7dd3fc"),
         ...     hover=aes.Shape(stroke_width=PARENT.stroke_width + 2),
         ... )
-        >>>
+
         >>> # Base only (select/hover inherit defaults)
         >>> line_states = aes.ByState(aes.Line(stroke_color="#0369a1"))
+        ```
     """
 
     __slots__ = ("base", "select", "hover")
@@ -550,7 +566,8 @@ class ByState[T: BaseAesthetic]:
         Returns:
             A fully resolved aesthetic
 
-        Example:
+        Examples:
+            ```pycon
             >>> from shinymap import aes, PARENT
             >>> default = aes.Shape(fill_color="#e5e7eb", stroke_width=1.0)
             >>> states = aes.ByState(
@@ -570,6 +587,7 @@ class ByState[T: BaseAesthetic]:
             '#1e40af'
             >>> resolved.stroke_width  # 1.0 + 1 from hover
             2.0
+            ```
         """
         # Layer 1: base resolves against wash default
         if isinstance(self.base, MissingType) or self.base is None:
@@ -601,9 +619,10 @@ class ByType:
         line: Aesthetics for line elements.
         text: Aesthetics for text elements.
 
-    Example:
+    Examples:
+        ```pycon
         >>> from shinymap import aes, PARENT
-        >>>
+
         >>> # Full form with ByState for each element type
         >>> _ = aes.ByType(
         ...     shape=aes.ByState(
@@ -613,6 +632,7 @@ class ByType:
         ...     line=aes.Line(stroke_color="#0369a1"),  # base only shorthand
         ...     text=aes.Text(fill_color="#0c4a6e"),
         ... )
+        ```
     """
 
     __slots__ = ("shape", "line", "text")
@@ -707,9 +727,10 @@ class ByGroup:
         **groups: Mapping of group names to aesthetics.
                   Values can be ByState for full state config, or single aesthetic for base only.
 
-    Example:
+    Examples:
+        ```pycon
         >>> from shinymap import aes, PARENT
-        >>>
+
         >>> _ = aes.ByGroup(
         ...     __all=aes.ByState(
         ...         base=aes.Shape(fill_color="#e5e7eb"),
@@ -721,6 +742,7 @@ class ByGroup:
         ...         select=aes.Shape(fill_color="#6ee7b7"),
         ...     ),
         ... )
+        ```
     """
 
     __slots__ = ("_groups",)
@@ -816,18 +838,20 @@ class IndexedAesthetic:
         stroke_width: Optional stroke width(s).
         stroke_dasharray: Optional dash pattern(s) for line styling.
 
-    Example:
+    Examples:
+        ```pycon
         >>> from shinymap import aes
-        >>>
+
         >>> # Two-state (off/on) with different colors
         >>> _ = aes.Indexed(fill_color=["#e5e7eb", "#3b82f6"])
-        >>>
+
         >>> # Heat map with opacity gradient
         >>> from shinymap.utils import linspace
         >>> _ = aes.Indexed(fill_color="#f97316", fill_opacity=linspace(0.0, 1.0, num=6))
-        >>>
+
         >>> # Traffic light (4 states)
         >>> _ = aes.Indexed(fill_color=["#e2e8f0", "#ef4444", "#eab308", "#22c55e"])
+        ```
     """
 
     fill_color: str | list[str] | None = None
@@ -906,15 +930,17 @@ def from_dict(d: dict[str, Any]) -> AnyAesthetic:
     Raises:
         ValueError: If 'type' key is missing or unknown
 
-    Example:
+    Examples:
+        ```pycon
         >>> from_dict({"type": "shape", "fill_color": "#fff"})  # doctest: +ELLIPSIS
         ShapeAesthetic(fill_color='#fff', ...)
-
+        
         >>> from_dict({
         ...     "type": "bystate",
         ...     "base": {"type": "shape", "fill_color": "#fff"},
         ... })  # doctest: +ELLIPSIS
         ByState(base=ShapeAesthetic(fill_color='#fff', ...))
+        ```
     """
     aes_type = d.get("type")
     if aes_type is None:

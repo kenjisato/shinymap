@@ -31,6 +31,7 @@ format:
 
 # quartodoc configuration
 quartodoc:
+  parser: google
   package: shinymap
   source_dir: ../packages/shinymap/python/src
   title: "Python API Reference"

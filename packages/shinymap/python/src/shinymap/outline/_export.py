@@ -47,19 +47,20 @@ def export_svg(
         height: SVG height attribute (default: extract from viewBox)
         include_ids: Add id attributes to elements (default: True)
 
-    Example:
+    Examples:
+        ```pycon
         >>> from shinymap.outline import Outline, export_svg
         >>> outline = Outline.from_svg("input.svg")  # doctest: +SKIP
-        >>>
+
         >>> # Basic export preserving original aesthetics
         >>> export_svg(outline, "output.svg")  # doctest: +SKIP
-        >>>
+
         >>> # Export with custom viewBox
         >>> export_svg(outline, "custom.svg", viewbox="0 0 1000 1000")  # doctest: +SKIP
-        >>>
+
         >>> # Export without id attributes
         >>> export_svg(outline, "no_ids.svg", include_ids=False)  # doctest: +SKIP
-
+        ```
     Note:
         Exported SVG preserves aesthetic attributes (fill, stroke, etc.)
         from the original geometry. These aesthetics are NOT used by shinymap

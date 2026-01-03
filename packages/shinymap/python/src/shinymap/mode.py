@@ -71,22 +71,24 @@ class Single:
         aes: Two-state aesthetic [unselected, selected].
              Can be aes.Indexed (global) or aes.ByGroup wrapping aes.Indexed.
 
-    Example:
+    Examples:
+        ```pycon
         >>> from shinymap.mode import Single
         >>> from shinymap import aes
-        >>>
+
         >>> # Pre-select a region
         >>> mode = Single(selected="region_a")
-        >>>
+
         >>> # Disable deselection (must always have one selected)
         >>> mode = Single(allow_deselect=False)
-        >>>
+
         >>> # Custom selection colors
         >>> mode = Single(
         ...     aes=aes.Indexed(
         ...         fill_color=["#e5e7eb", "#3b82f6"],  # gray -> blue
         ...     )
         ... )
+        ```
     """
 
     selected: str | None = None
@@ -121,16 +123,17 @@ class Multiple:
         aes: Two-state aesthetic [unselected, selected].
              Can be aes.Indexed (global) or aes.ByGroup wrapping aes.Indexed.
 
-    Example:
+    Examples:
+        ```pycon
         >>> from shinymap.mode import Multiple
         >>> from shinymap import aes
-        >>>
+
         >>> # Limit to 3 selections
         >>> mode = Multiple(max_selection=3)
-        >>>
+
         >>> # Pre-select regions
         >>> mode = Multiple(selected=["region_a", "region_b"])
-        >>>
+
         >>> # Custom selection colors with limit
         >>> mode = Multiple(
         ...     max_selection=5,
@@ -138,6 +141,7 @@ class Multiple:
         ...         fill_color=["#e5e7eb", "#10b981"],  # gray -> green
         ...     )
         ... )
+        ```
     """
 
     selected: list[str] | None = None
@@ -172,17 +176,18 @@ class Cycle:
              Can be aes.Indexed (global) or aes.ByGroup wrapping aes.Indexed.
              Index is computed as: count % n (wrapping).
 
-    Example:
+    Examples:
+        ```pycon
         >>> from shinymap.mode import Cycle
         >>> from shinymap import aes
         >>> from shinymap.aes.color import HUE_CYCLE_4
-        >>>
+
         >>> # Traffic light survey (4 states)
         >>> mode = Cycle(
         ...     n=4,
         ...     aes=aes.Indexed(fill_color=HUE_CYCLE_4),
         ... )
-        >>>
+
         >>> # Per-group palettes (color coordination quiz)
         >>> mode = Cycle(
         ...     n=2,
@@ -191,6 +196,7 @@ class Cycle:
         ...         question_2=aes.Indexed(fill_color=["#bbf7d0", "#16a34a"]),
         ...     ),
         ... )
+        ```
     """
 
     n: int
@@ -229,11 +235,12 @@ class Count:
              Can be aes.Indexed (global) or aes.ByGroup wrapping aes.Indexed.
              Index is computed as: min(count, len(list) - 1) (clamping).
 
-    Example:
+    Examples:
+        ```pycon
         >>> from shinymap.mode import Count
         >>> from shinymap import aes
         >>> from shinymap.utils import linspace
-        >>>
+
         >>> # Heat map with opacity gradient
         >>> mode = Count(
         ...     aes=aes.Indexed(
@@ -241,7 +248,7 @@ class Count:
         ...         fill_opacity=linspace(0.0, 1.0, num=6),
         ...     ),
         ... )
-        >>>
+
         >>> # Per-group palettes
         >>> mode = Count(
         ...     aes=aes.ByGroup(
@@ -253,6 +260,7 @@ class Count:
         ...         ),
         ...     ),
         ... )
+        ```
     """
 
     values: dict[str, int] | None = None
@@ -426,11 +434,13 @@ def normalize_mode(mode: ModeType) -> Single | Multiple | Cycle | Count:
     Raises:
         ValueError: If mode is not a valid string or Mode class instance
 
-    Example:
+    Examples:
+        ```pycon
         >>> normalize_mode("single")
         Single(selected=None, allow_deselect=True, aes=None)
         >>> normalize_mode(Multiple(max_selection=3))
         Multiple(selected=None, max_selection=3, aes=None)
+        ```
     """
     if mode == "single":
         return Single()
@@ -458,13 +468,15 @@ def initial_value_from_mode(
     Returns:
         Initial value dict {region_id: count}, or None if no initial value
 
-    Example:
+    Examples:
+        ```pycon
         >>> initial_value_from_mode(Single(selected="region1"))
         {'region1': 1}
         >>> initial_value_from_mode(Multiple(selected=["a", "b"]))
         {'a': 1, 'b': 1}
         >>> initial_value_from_mode(Count(values={"r1": 3}))
         {'r1': 3}
+        ```
     """
     if isinstance(mode, Single) and mode.selected is not None:
         return {mode.selected: 1}

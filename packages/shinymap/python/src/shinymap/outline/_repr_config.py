@@ -43,10 +43,12 @@ def get_repr_config() -> ReprConfig:
     Returns:
         Current ReprConfig instance
 
-    Example:
+    Examples:
+        ```pycon
         >>> config = get_repr_config()
         >>> config.max_regions
         10
+        ```
     """
     config = _repr_config.get()
     if config is None:

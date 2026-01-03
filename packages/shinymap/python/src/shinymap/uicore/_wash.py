@@ -162,7 +162,8 @@ class WashConfig:
             Fully resolved ByGroup with all entries having complete ByState values.
             RelativeExpr values are preserved (not resolved).
 
-        Example:
+        Examples:
+            ```pycon
             >>> from shinymap import Wash, aes, PARENT, Outline
             >>> wc = Wash(shape=aes.ByState(
             ...     base=aes.Shape(fill_color="#e5e7eb", stroke_width=1.0),
@@ -175,6 +176,7 @@ class WashConfig:
             >>> resolved["__all"].base.stroke_width  # inherited from wash
             1.0
             >>> # hover.stroke_width is still RelativeExpr (not resolved)
+            ```
         """
         # Get region types and groups from geometry
         region_types = geometry.region_types()
@@ -400,11 +402,12 @@ class WashResult:
         Returns:
             TagList with the output container
 
-        Example:
+        Examples:
+            ```pycon
             >>> from shinymap import output_map, aes, Outline
             >>> from shinymap.mode import Display
             >>> outline = Outline.from_dict({"r1": "M 0 0 L 10 10"})
-            >>>
+
             >>> # Prepopulate color scale in UI declaration
             >>> _ = output_map(
             ...     "status_map",
@@ -413,6 +416,7 @@ class WashResult:
             ...         fill_color=["#f3f4f6", "#22c55e", "#f59e0b", "#ef4444"]
             ...     ))
             ... )
+            ```
         """
         from ._output_map import _output_map
 

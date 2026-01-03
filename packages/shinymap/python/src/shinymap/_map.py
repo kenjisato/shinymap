@@ -176,17 +176,18 @@ def Map(
         aes: Aesthetic configuration (ByGroup, ByState, BaseAesthetic, or dict)
         layers: Layer configuration (nested dict: underlays, overlays, hidden)
 
-    Example:
+    Examples:
+        ```pycon
         # Standalone usage
         geo = Outline.from_dict(data)
         Map(geo, value={"a": 1, "b": 1, "c": 0})
-
+        
         # With output_map() providing static outline
         output_map("my_map", OUTLINE, tooltips=TOOLTIPS)
         @render_map
         def my_map():
             return Map().with_value(counts)
-
+        ```
     Returns:
         MapBuilder instance for method chaining
     """

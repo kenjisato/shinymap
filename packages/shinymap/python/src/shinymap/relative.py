@@ -76,10 +76,12 @@ class RelativeExpr:
         Returns:
             The computed value
 
-        Example:
+        Examples:
+            ```pycon
             >>> expr = PARENT.stroke_width + 2
             >>> expr.resolve(1.0)  # 1.0 + 2 = 3.0
             3.0
+            ```
         """
         if self.operator == "+":
             return parent_value + self.operand
@@ -116,9 +118,11 @@ class ParentProperty:
     Created when accessing attributes on the PARENT proxy object.
     Supports arithmetic operations that create RelativeExpr objects.
 
-    Example:
+    Examples:
+        ```pycon
         PARENT.stroke_width       # ParentProperty("stroke_width")
         PARENT.stroke_width + 2   # RelativeExpr("stroke_width", "+", 2)
+        ```
     """
 
     __slots__ = ("_name",)
@@ -160,10 +164,12 @@ class ParentProxy:
     Accessing any attribute creates a ParentProperty that can be
     used in arithmetic expressions to create RelativeExpr objects.
 
-    Example:
+    Examples:
+        ```pycon
         PARENT.stroke_width       # ParentProperty("stroke_width")
         PARENT.stroke_width + 2   # RelativeExpr("stroke_width", "+", 2)
         2 * PARENT.fill_opacity   # RelativeExpr("fill_opacity", "*", 2)
+        ```
     """
 
     __slots__ = ()
@@ -299,7 +305,8 @@ def resolve_region(
     Returns:
         A fully resolved ShapeAesthetic with all properties set
 
-    Example:
+    Examples:
+        ```pycon
         >>> from shinymap import aes, PARENT, resolve_region, RegionState, AestheticConfig
         >>> state = RegionState("region_1", value=1, is_hovered=True)  # value=1 means selected
         >>> config = AestheticConfig(
@@ -310,6 +317,7 @@ def resolve_region(
         >>> resolved = resolve_region(state, config)
         >>> resolved.stroke_width  # 3 (from select) + 1 (from hover) = 4
         4.0
+        ```
     """
     # Layer 0: DEFAULT
     current = _aes_default.shape
@@ -377,7 +385,8 @@ def preview_region(
     Returns:
         A formatted string showing the resolution at each layer
 
-    Example:
+    Examples:
+        ```pycon
         >>> from shinymap import aes, PARENT, preview_region, RegionState, AestheticConfig
         >>> state = RegionState("region_1", value=1, is_hovered=True)  # value=1 means selected
         >>> config = AestheticConfig(
@@ -386,6 +395,7 @@ def preview_region(
         ...     aes_hover=aes.Shape(stroke_width=PARENT.stroke_width + 1),
         ... )
         >>> print(preview_region(state, config))  # doctest: +SKIP
+        ```
     """
     lines: list[str] = []
     lines.append(f"=== Aesthetic Resolution for '{state.region_id}' ===")
