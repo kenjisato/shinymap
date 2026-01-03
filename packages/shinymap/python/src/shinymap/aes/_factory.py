@@ -246,14 +246,14 @@ def Indexed(
         >>> from shinymap import aes
         >>>
         >>> # Two-state (off/on) with different colors
-        >>> aes.Indexed(fill_color=["#e5e7eb", "#3b82f6"])
+        >>> _ = aes.Indexed(fill_color=["#e5e7eb", "#3b82f6"])
         >>>
         >>> # Heat map with opacity gradient
         >>> from shinymap.utils import linspace
-        >>> aes.Indexed(fill_color="#f97316", fill_opacity=linspace(0.0, 1.0, num=6))
+        >>> _ = aes.Indexed(fill_color="#f97316", fill_opacity=linspace(0.0, 1.0, num=6))
         >>>
         >>> # Traffic light (4 states)
-        >>> aes.Indexed(fill_color=["#e2e8f0", "#ef4444", "#eab308", "#22c55e"])
+        >>> _ = aes.Indexed(fill_color=["#e2e8f0", "#ef4444", "#eab308", "#22c55e"])
     """
     return IndexedAesthetic(
         fill_color=fill_color,

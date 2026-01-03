@@ -44,16 +44,16 @@ def from_svg(
 
     Example:
         >>> # Interactive workflow: Step 1 - Extract
-        >>> extracted = from_svg("map.svg", "map_extracted.json")
+        >>> extracted = from_svg("map.svg", "map_extracted.json")  # doctest: +SKIP
         >>> # Inspect extracted JSON, identify paths to group/rename
         >>> # Step 2 - Apply transformations
-        >>> final = from_json(
+        >>> final = from_json(  # doctest: +SKIP
         ...     extracted,
         ...     relabel={"region_01": "path_1", "hokkaido": ["path_2", "path_3"]}
         ... )
 
         >>> # Or: one-shot conversion
-        >>> final = convert(
+        >>> final = convert(  # doctest: +SKIP
         ...     "map.svg",
         ...     "map.json",
         ...     relabel={"region_01": "path_1"}
@@ -99,31 +99,32 @@ def from_json(
         FileNotFoundError: If extracted_json is a path and file doesn't exist
         ValueError: If JSON parsing fails or relabeled paths not found
 
-    Example:
-        >>> # Interactive workflow
-        >>> # Step 1: Extract
-        >>> extracted = from_svg("map.svg")
-        >>>
-        >>> # Inspect extracted, plan transformations
-        >>> print(list(extracted.keys()))
-        ['_metadata', 'path_1', 'path_2', 'path_3']
-        >>>
-        >>> # Step 2: Apply transformations
-        >>> final = from_json(
-        ...     extracted,
-        ...     relabel={
-        ...         "region_north": ["path_1", "path_2"],  # Merge multiple
-        ...         "_border": "path_3",                    # Rename single
-        ...     },
-        ...     overlay_ids=["_border"],
-        ...     metadata={"source": "Custom SVG", "license": "MIT"}
-        ... )
-        >>>
-        >>> # Result has merged and renamed paths
-        >>> final["region_north"]  # Merged path_1 + path_2
-        >>> final["_border"]  # Renamed from path_3
-        >>> final["_metadata"]["overlays"]
-        ['_border']
+    Example::
+
+        # Interactive workflow
+        # Step 1: Extract
+        extracted = from_svg("map.svg")
+
+        # Inspect extracted, plan transformations
+        print(list(extracted.keys()))
+        # ['_metadata', 'path_1', 'path_2', 'path_3']
+
+        # Step 2: Apply transformations
+        final = from_json(
+            extracted,
+            relabel={
+                "region_north": ["path_1", "path_2"],  # Merge multiple
+                "_border": "path_3",                    # Rename single
+            },
+            overlay_ids=["_border"],
+            metadata={"source": "Custom SVG", "license": "MIT"}
+        )
+
+        # Result has merged and renamed paths
+        final["region_north"]  # Merged path_1 + path_2
+        final["_border"]  # Renamed from path_3
+        final["_metadata"]["overlays"]
+        # ['_border']
     """
     # Load from file or dict
     if isinstance(extracted_json, (Path, str)):
@@ -178,30 +179,31 @@ def convert(
         FileNotFoundError: If input_path does not exist
         ValueError: If SVG/JSON parsing fails or relabeled paths not found
 
-    Example:
-        >>> # From SVG file
-        >>> result = convert(
-        ...     "japan.svg",
-        ...     "japan.json",
-        ...     relabel={
-        ...         "01": ["hokkaido", "northern_territories"],  # Merge multiple
-        ...         "_divider": "path_divider",                   # Rename single
-        ...     },
-        ...     overlay_ids=["_divider"],
-        ...     metadata={"source": "Wikimedia Commons", "license": "CC BY-SA 3.0"}
-        ... )
+    Example::
 
-        >>> # From intermediate JSON file
-        >>> result = convert(
-        ...     "intermediate.json",
-        ...     "final.json",
-        ...     relabel={"region_01": "path_1"},
-        ... )
+        # From SVG file
+        result = convert(
+            "japan.svg",
+            "japan.json",
+            relabel={
+                "01": ["hokkaido", "northern_territories"],  # Merge multiple
+                "_divider": "path_divider",                   # Rename single
+            },
+            overlay_ids=["_divider"],
+            metadata={"source": "Wikimedia Commons", "license": "CC BY-SA 3.0"}
+        )
 
-        >>> # For interactive workflow, use two-step process:
-        >>> intermediate = from_svg("map.svg")
-        >>> # ... inspect intermediate JSON ...
-        >>> final = from_json(intermediate, relabel={...})
+        # From intermediate JSON file
+        result = convert(
+            "intermediate.json",
+            "final.json",
+            relabel={"region_01": "path_1"},
+        )
+
+        # For interactive workflow, use two-step process:
+        intermediate = from_svg("map.svg")
+        # ... inspect intermediate JSON ...
+        final = from_json(intermediate, relabel={...})
     """
     # Determine file type by extension
     file_path = Path(input_path).expanduser()
@@ -242,14 +244,15 @@ def infer_relabel(
     Returns:
         Relabel mapping dict, or None if no transformations detected
 
-    Example:
-        >>> # From SVG to final JSON
-        >>> infer_relabel("map.svg", "final.json")
-        {"region_a": "path_1", "hokkaido": ["path_2", "path_3"]}
+    Example::
 
-        >>> # From intermediate JSON to final JSON
-        >>> infer_relabel("intermediate.json", "final.json")
-        {"region_a": "path_1", "hokkaido": ["path_2", "path_3"]}
+        # From SVG to final JSON
+        infer_relabel("map.svg", "final.json")
+        # {"region_a": "path_1", "hokkaido": ["path_2", "path_3"]}
+
+        # From intermediate JSON to final JSON
+        infer_relabel("intermediate.json", "final.json")
+        # {"region_a": "path_1", "hokkaido": ["path_2", "path_3"]}
     """
     # Load initial file
     initial_path = Path(initial_file).expanduser()

@@ -188,6 +188,7 @@ class JSONSerializableMixin:
             Tuple of (attribute_name, attribute_value)
 
         Example:
+            >>> from shinymap.outline import Circle
             >>> circle = Circle(cx=100, cy=100, r=50, fill="#ff0000")
             >>> for key, val in circle.attrs():
             ...     print(f"{key}={val}")
@@ -323,6 +324,7 @@ class ShinymapElementMixin(BoundsMixin, JSONSerializableMixin):
         Only shows attributes with non-None values.
 
         Example:
+            >>> from shinymap.outline import Circle
             >>> circle = Circle(cx=100, cy=100, r=50, fill="#ff0000")
             >>> repr(circle)
             "Circle(cx=100, cy=100, r=50, fill='#ff0000')"

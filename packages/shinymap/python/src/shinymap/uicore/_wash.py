@@ -163,12 +163,13 @@ class WashConfig:
             RelativeExpr values are preserved (not resolved).
 
         Example:
-            >>> from shinymap import Wash, aes, PARENT
+            >>> from shinymap import Wash, aes, PARENT, Outline
             >>> wc = Wash(shape=aes.ByState(
             ...     base=aes.Shape(fill_color="#e5e7eb", stroke_width=1.0),
             ...     hover=aes.Shape(stroke_width=PARENT.stroke_width + 1),
             ... ))
-            >>> resolved = wc.config.apply(aes.Shape(fill_color="#3b82f6"), geometry)
+            >>> outline = Outline.from_dict({"r1": "M 0 0 L 10 10"})
+            >>> resolved = wc.config.apply(aes.Shape(fill_color="#3b82f6"), outline)
             >>> resolved["__all"].base.fill_color
             '#3b82f6'
             >>> resolved["__all"].base.stroke_width  # inherited from wash
@@ -400,13 +401,14 @@ class WashResult:
             TagList with the output container
 
         Example:
-            >>> from shinymap import output_map, aes
+            >>> from shinymap import output_map, aes, Outline
             >>> from shinymap.mode import Display
+            >>> outline = Outline.from_dict({"r1": "M 0 0 L 10 10"})
             >>>
             >>> # Prepopulate color scale in UI declaration
-            >>> output_map(
+            >>> _ = output_map(
             ...     "status_map",
-            ...     geometry,
+            ...     outline,
             ...     mode=Display(aes=aes.Indexed(
             ...         fill_color=["#f3f4f6", "#22c55e", "#f59e0b", "#ef4444"]
             ...     ))
@@ -490,7 +492,7 @@ def Wash(
 
     Examples
     --------
-    >>> from shinymap import Wash, aes
+    >>> from shinymap import Wash, aes, Outline
     >>> from shinymap.relative import PARENT
     >>>
     >>> # Full form with ByState for each element type
@@ -514,11 +516,8 @@ def Wash(
     ... )
     >>>
     >>> # Use the configured functions
-    >>> wc.input_map("region", geometry)
-    >>>
-    >>> @wc.render_map
-    ... def my_map():
-    ...     return Map(geometry)
+    >>> outline = Outline.from_dict({"r1": "M 0 0 L 10 10"})
+    >>> _ = wc.input_map("region", outline, mode="single")
     """
     config = WashConfig(
         shape=_normalize_to_by_state(shape, ShapeAesthetic.from_dict),

@@ -4,6 +4,7 @@ This module provides pre-defined constants for common stroke-dasharray patterns.
 Use these with the aesthetic builders for consistent, readable code.
 
 Usage:
+    >>> from shinymap import aes
     >>> from shinymap.aes import line
     >>>
     >>> # Dashed line

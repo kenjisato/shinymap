@@ -49,16 +49,16 @@ def export_svg(
 
     Example:
         >>> from shinymap.outline import Outline, export_svg
-        >>> outline = Outline.from_svg("input.svg")
+        >>> outline = Outline.from_svg("input.svg")  # doctest: +SKIP
         >>>
         >>> # Basic export preserving original aesthetics
-        >>> export_svg(outline, "output.svg")
+        >>> export_svg(outline, "output.svg")  # doctest: +SKIP
         >>>
         >>> # Export with custom viewBox
-        >>> export_svg(outline, "custom.svg", viewbox="0 0 1000 1000")
+        >>> export_svg(outline, "custom.svg", viewbox="0 0 1000 1000")  # doctest: +SKIP
         >>>
         >>> # Export without id attributes
-        >>> export_svg(outline, "no_ids.svg", include_ids=False)
+        >>> export_svg(outline, "no_ids.svg", include_ids=False)  # doctest: +SKIP
 
     Note:
         Exported SVG preserves aesthetic attributes (fill, stroke, etc.)

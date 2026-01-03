@@ -10,14 +10,19 @@ Two-Tier API:
     Tier 2 (Advanced): Mode classes for customization
 
 Usage:
-    >>> from shinymap import input_map, aes
+    >>> from shinymap import aes, input_map, Outline
     >>> from shinymap.mode import Single, Multiple, Cycle, Count
     >>>
+    >>> outline = Outline.from_dict({
+    ...     "question_1": "M 5 5 L 5 7 L 7 7 L 7 5 Z",
+    ...     "question_2": "M 7 7 L 7 9 L 9 9 L 9 7 Z"
+    ... })
+    >>>
     >>> # Multiple with selection limit
-    >>> input_map("regions", outline, mode=Multiple(max_selection=3))
+    >>> _ = input_map("regions", outline, mode=Multiple(max_selection=3))
     >>>
     >>> # Cycle mode with custom palette (e.g., traffic light survey)
-    >>> input_map(
+    >>> _ = input_map(
     ...     "rating",
     ...     outline,
     ...     mode=Cycle(
@@ -29,7 +34,7 @@ Usage:
     ... )
     >>>
     >>> # Per-group palettes (e.g., color coordination quiz)
-    >>> input_map(
+    >>> _ = input_map(
     ...     "quiz",
     ...     outline,
     ...     mode=Cycle(
@@ -170,7 +175,7 @@ class Cycle:
     Example:
         >>> from shinymap.mode import Cycle
         >>> from shinymap import aes
-        >>> from shinymap.palettes import HUE_CYCLE_4
+        >>> from shinymap.aes.color import HUE_CYCLE_4
         >>>
         >>> # Traffic light survey (4 states)
         >>> mode = Cycle(
@@ -289,44 +294,48 @@ class Display:
         input_id: Custom input ID for click events. If None (default),
                   uses "{output_map_id}_click". Only used when clickable=True.
 
-    Example:
-        >>> from shinymap.mode import Display
-        >>> from shinymap import aes, output_map
-        >>>
-        >>> # Traffic light colors for status values
-        >>> output_map(
-        ...     "status_map",
-        ...     outline,
-        ...     mode=Display(aes=aes.Indexed(
-        ...         fill_color=["#f3f4f6", "#22c55e", "#f59e0b", "#ef4444"]
-        ...     ))
-        ... )
-        >>>
-        >>> @render_map
-        >>> def status_map():
-        ...     # value 0=unknown, 1=good, 2=warning, 3=error
-        ...     return Map(outline, value=status_values)
-        >>>
-        >>> # Clickable display map for triggering actions
-        >>> output_map(
-        ...     "clickable_map",
-        ...     outline,
-        ...     mode=Display(clickable=True)
-        ... )
-        >>>
-        >>> @reactive.effect
-        >>> @reactive.event(input.clickable_map_click)
-        >>> def show_region_modal():
-        ...     region_id = input.clickable_map_click()
-        ...     # Show modal with region details
-        >>>
-        >>> # Custom input ID
-        >>> output_map(
-        ...     "my_map",
-        ...     outline,
-        ...     mode=Display(clickable=True, input_id="region_clicked")
-        ... )
-        >>> # Access via input.region_clicked()
+    Example::
+        from shinymap.mode import Display
+        from shinymap import aes, output_map, render_map, Outline
+
+        outline = Outline.from_dict({
+            "question_1": "M 5 5 L 5 10 L 10 10 L 10 5 Z",
+            "question_2": "M 7 7 L 7 9 L 9 9 L 9 7 Z"
+        })
+
+        # Traffic light colors for status values
+        _ = output_map(
+            "status_map",
+            outline,
+            mode=Display(aes=aes.Indexed(
+                fill_color=["#f3f4f6", "#22c55e", "#f59e0b", "#ef4444"]
+            ))
+        )
+
+        @render_map
+        def status_map():
+            # value 0=unknown, 1=good, 2=warning, 3=error
+            return Map(outline, value=status_values)
+
+        # Clickable display map for triggering actions
+        _ = output_map(
+            "clickable_map",
+            outline,
+            mode=Display(clickable=True)
+        )
+
+        @reactive.effect
+        @reactive.event(input.clickable_map_click)
+        def show_region_modal():
+            region_id = input.clickable_map_click()
+            # Show modal with region details
+
+        # Custom input ID
+        _ = output_map(
+            "my_map",
+            outline,
+            mode=Display(clickable=True, input_id="region_clicked")
+        )
     """
 
     aes: IndexedAesthetic | ByGroup | None = None

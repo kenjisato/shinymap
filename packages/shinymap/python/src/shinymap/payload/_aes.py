@@ -54,10 +54,14 @@ def build_aes_payload(
         Dict in v0.3 payload format with entries and _metadata
 
     Example:
-        >>> from shinymap import Wash, aes
+        >>> from shinymap import Wash, aes, Outline
         >>> from shinymap.payload import build_aes_payload
         >>> wc = Wash(shape=aes.Shape(fill_color="#e5e7eb"))
         >>> coastal_aes = aes.ByGroup(coastal=aes.Shape(fill_color="#3b82f6"))
+        >>> outline = Outline.from_dict({
+        ...     "r1": "M 0 0 L 10 10",
+        ...     "_metadata": {"groups": {"coastal": ["r1"]}}
+        ... })
         >>> resolved = wc.config.apply(coastal_aes, outline)
         >>> payload = build_aes_payload(resolved, outline)
         >>> payload["coastal"]["base"]["fill_color"]

@@ -20,15 +20,29 @@ class MissingType:
 
     Example:
         >>> from shinymap.types import MISSING
-        >>> def foo(x: int | MissingType = MISSING):
-        ...     x = x or 42  # Use default if x is MISSING
-        ...     print(f"x = {x}")
-        >>> foo()
-        x = 42
-        >>> foo(10)
-        x = 10
-        >>> foo(None)  # None is a valid value, different from missing
-        x = None
+        >>> # MISSING is falsy, enabling `x or default` pattern
+        >>> bool(MISSING)
+        False
+        >>> # When None is NOT a valid value, use `or`:
+        >>> def greet(name=MISSING):
+        ...     name = name or "World"
+        ...     print(f"Hello, {name}!")
+        >>> greet()
+        Hello, World!
+        >>> greet("Alice")
+        Hello, Alice!
+        >>>
+        >>> # When None IS a valid value, use `is MISSING`:
+        >>> def set_color(color=MISSING):
+        ...     if color is MISSING:
+        ...         color = "#000"  # default black
+        ...     print(f"color = {color}")
+        >>> set_color()
+        color = #000
+        >>> set_color("#fff")
+        color = #fff
+        >>> set_color(None)  # None means "transparent"
+        color = None
     """
 
     def __repr__(self) -> str:

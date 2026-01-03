@@ -19,7 +19,7 @@ class Regions(dict[str, list["str | Element"]]):
         >>> regions = Regions({"r1": [Circle(cx=100, cy=100, r=50)]})
         >>> regions
         Regions({
-          'r1': [Circle(cx=100, cy=100, r=50)]
+          'r1': [Circle(cx=100, cy=100, r=50)],
         })
     """
 

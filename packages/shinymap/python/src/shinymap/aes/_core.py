@@ -49,7 +49,7 @@ class BaseAesthetic:
         Example:
             >>> aes = ShapeAesthetic(fill_color="#fff", stroke_color=None)
             >>> aes.to_dict()
-            {'fill_color': '#fff', 'stroke_color': None}
+            {'fill_color': '#fff', 'stroke_color': None, 'type': 'shape'}
         """
         # Import here to avoid circular dependency
         from ..relative import RelativeExpr
@@ -605,7 +605,7 @@ class ByType:
         >>> from shinymap import aes, PARENT
         >>>
         >>> # Full form with ByState for each element type
-        >>> aes.ByType(
+        >>> _ = aes.ByType(
         ...     shape=aes.ByState(
         ...         base=aes.Shape(fill_color="#f0f9ff"),
         ...         hover=aes.Shape(stroke_width=PARENT.stroke_width + 2),
@@ -710,7 +710,7 @@ class ByGroup:
     Example:
         >>> from shinymap import aes, PARENT
         >>>
-        >>> aes.ByGroup(
+        >>> _ = aes.ByGroup(
         ...     __all=aes.ByState(
         ...         base=aes.Shape(fill_color="#e5e7eb"),
         ...         hover=aes.Shape(stroke_width=PARENT.stroke_width + 1),
@@ -820,14 +820,14 @@ class IndexedAesthetic:
         >>> from shinymap import aes
         >>>
         >>> # Two-state (off/on) with different colors
-        >>> aes.Indexed(fill_color=["#e5e7eb", "#3b82f6"])
+        >>> _ = aes.Indexed(fill_color=["#e5e7eb", "#3b82f6"])
         >>>
         >>> # Heat map with opacity gradient
         >>> from shinymap.utils import linspace
-        >>> aes.Indexed(fill_color="#f97316", fill_opacity=linspace(0.0, 1.0, num=6))
+        >>> _ = aes.Indexed(fill_color="#f97316", fill_opacity=linspace(0.0, 1.0, num=6))
         >>>
         >>> # Traffic light (4 states)
-        >>> aes.Indexed(fill_color=["#e2e8f0", "#ef4444", "#eab308", "#22c55e"])
+        >>> _ = aes.Indexed(fill_color=["#e2e8f0", "#ef4444", "#eab308", "#22c55e"])
     """
 
     fill_color: str | list[str] | None = None
@@ -907,14 +907,14 @@ def from_dict(d: dict[str, Any]) -> AnyAesthetic:
         ValueError: If 'type' key is missing or unknown
 
     Example:
-        >>> from_dict({"type": "shape", "fill_color": "#fff"})
-        ShapeAesthetic(fill_color='#fff')
+        >>> from_dict({"type": "shape", "fill_color": "#fff"})  # doctest: +ELLIPSIS
+        ShapeAesthetic(fill_color='#fff', ...)
 
         >>> from_dict({
         ...     "type": "bystate",
         ...     "base": {"type": "shape", "fill_color": "#fff"},
-        ... })
-        ByState(base=ShapeAesthetic(fill_color='#fff'))
+        ... })  # doctest: +ELLIPSIS
+        ByState(base=ShapeAesthetic(fill_color='#fff', ...))
     """
     aes_type = d.get("type")
     if aes_type is None:

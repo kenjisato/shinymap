@@ -301,7 +301,7 @@ def resolve_region(
 
     Example:
         >>> from shinymap import aes, PARENT, resolve_region, RegionState, AestheticConfig
-        >>> state = RegionState("region_1", is_selected=True, is_hovered=True)
+        >>> state = RegionState("region_1", value=1, is_hovered=True)  # value=1 means selected
         >>> config = AestheticConfig(
         ...     aes_base=aes.Shape(stroke_width=2),
         ...     aes_select=aes.Shape(stroke_width=3, fill_color="#fef08a"),
@@ -379,13 +379,13 @@ def preview_region(
 
     Example:
         >>> from shinymap import aes, PARENT, preview_region, RegionState, AestheticConfig
-        >>> state = RegionState("region_1", is_selected=True, is_hovered=True)
+        >>> state = RegionState("region_1", value=1, is_hovered=True)  # value=1 means selected
         >>> config = AestheticConfig(
         ...     aes_base=aes.Shape(stroke_width=2),
         ...     aes_select=aes.Shape(stroke_width=3),
         ...     aes_hover=aes.Shape(stroke_width=PARENT.stroke_width + 1),
         ... )
-        >>> print(preview_region(state, config))
+        >>> print(preview_region(state, config))  # doctest: +SKIP
     """
     lines: list[str] = []
     lines.append(f"=== Aesthetic Resolution for '{state.region_id}' ===")

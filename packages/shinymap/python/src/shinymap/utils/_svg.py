@@ -54,8 +54,8 @@ def strip_unit(value: str) -> float | None:
         100.0
         >>> strip_unit("50.5pt")
         50.5
-        >>> strip_unit("invalid")
-        None
+        >>> strip_unit("invalid") is None
+        True
     """
     # Remove common SVG units and try to parse as float
     # Note: This doesn't convert units (e.g., pt to px) - just strips them

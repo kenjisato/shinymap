@@ -122,8 +122,8 @@ def input_radio_buttons(
         >>> from shinymap import input_radio_buttons
         >>> from shinymap.outline import Outline
         >>>
-        >>> geo = Outline.from_dict(data)
-        >>> input_radio_buttons("region", geo)
+        >>> geo = Outline.from_dict({"r1": "M 0 0 L 10 10"})
+        >>> _ = input_radio_buttons("region", geo)
     """
     value = {selected: 1} if selected else None
     return input_map(
@@ -177,8 +177,8 @@ def input_checkbox_group(
         >>> from shinymap import input_checkbox_group
         >>> from shinymap.outline import Outline
         >>>
-        >>> geo = Outline.from_dict(data)
-        >>> input_checkbox_group("regions", geo, selected=["a", "b"])
+        >>> geo = Outline.from_dict({"a": "M 0 0 L 10 10", "b": "M 10 10 L 20 20"})
+        >>> _ = input_checkbox_group("regions", geo, selected=["a", "b"])
     """
     value = {rid: 1 for rid in selected} if selected else None
     return input_map(

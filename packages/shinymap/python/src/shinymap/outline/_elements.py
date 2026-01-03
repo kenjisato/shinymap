@@ -217,8 +217,8 @@ class Text(svg.Text, ShinymapElementMixin):
 
     Example:
         >>> text = Text(x=100, y=100, text="Hello")
-        >>> text.bounds()
-        (100.0, 100.0, 101.0, 101.0)  # Approximate bounds
+        >>> text.bounds()  # Approximate bounds
+        (100.0, 100.0, 101.0, 101.0)
     """
 
     def __repr__(self) -> str:

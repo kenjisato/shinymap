@@ -77,38 +77,22 @@ def set_repr_options(
     Yields:
         New ReprConfig with updated settings
 
-    Example:
-        >>> from shinymap.outline import Outline, Circle, set_repr_options
-        >>> outline = Outline(
-        ...     regions={f"r{i}": [Circle(cx=i*10, cy=i*10, r=5)] for i in range(20)},
-        ...     metadata={"viewBox": "0 0 500 500"}
-        ... )
-        >>>
-        >>> # Default: shows first 5 of 20 regions
-        >>> outline
-        Outline(regions=Regions({
-          'r0': [Circle(...)],
-          ...
-          ... (15 more regions)
-        }), metadata=...)
-        >>>
-        >>> # Show more regions
-        >>> with set_repr_options(max_regions=15):
-        ...     print(outline)
-        Outline(regions=Regions({
-          'r0': [Circle(...)],
-          ...
-          ... (5 more regions)
-        }), metadata=...)
-        >>>
-        >>> # Show all regions
-        >>> with set_repr_options(max_regions=100, max_elements=10):
-        ...     print(outline)
-        Outline(regions=Regions({
-          'r0': [Circle(...)],
-          'r1': [Circle(...)],
-          ...
-        }), metadata=...)
+    Example::
+
+        from shinymap.outline import Outline, Circle, set_repr_options
+
+        outline = Outline(
+            regions={f"r{i}": [Circle(cx=i*10, cy=i*10, r=5)] for i in range(20)},
+            metadata={"viewBox": "0 0 500 500"}
+        )
+
+        # Default repr shows summary with region count
+        print(outline)
+        # Outline(regions={'r0', 'r1', ... (20 regions)}, metadata={'viewBox': '0 0 500 500'})
+
+        # Customize repr behavior with context manager
+        with set_repr_options(max_regions=10):
+            print(outline)  # Shows more region keys in preview
     """
     current = get_repr_config()
 
