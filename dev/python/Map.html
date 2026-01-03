@@ -163,7 +163,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#shinymap.Map" id="toc-shinymap.Map" class="nav-link active" data-scroll-target="#shinymap.Map">Map</a></li>
+  <li><a href="#shinymap.Map" id="toc-shinymap.Map" class="nav-link active" data-scroll-target="#shinymap.Map">Map</a>
+  <ul class="collapse">
+  <li><a href="#parameters" id="toc-parameters" class="nav-link" data-scroll-target="#parameters">Parameters</a></li>
+  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -186,9 +190,70 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Create map from Outline object.</p>
 <p>When used with output_map() that provides static outline, you can call Map() without arguments. Otherwise, provide an Outline object.</p>
-<p>Args: outline: Outline object with regions, viewBox, metadata. Optional when used with output_map() view_box: Override viewBox tuple (for zoom/pan). If None, uses outline.viewbox() tooltips: Region tooltips value: Region values (counts, selection state). Values determine both visual state and selection: - value = 0: not selected (base aesthetic) - value &gt; 0: selected (select aesthetic applied) aes: Aesthetic configuration (ByGroup, ByState, BaseAesthetic, or dict) layers: Layer configuration (nested dict: underlays, overlays, hidden)</p>
-<p>Example: # Standalone usage geo = Outline.from_dict(data) Map(geo, value={“a”: 1, “b”: 1, “c”: 0})</p>
-<pre><code># With output_map() providing static outline
+<section id="parameters" class="level2 doc-section doc-section-parameters">
+<h2 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 4%">
+<col style="width: 18%">
+<col style="width: 73%">
+<col style="width: 4%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>outline</td>
+<td>Outline | None</td>
+<td>Outline object with regions, viewBox, metadata. Optional when used with output_map()</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>view_box</td>
+<td>tuple[float, float, float, float] | None</td>
+<td>Override viewBox tuple (for zoom/pan). If None, uses outline.viewbox()</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>tooltips</td>
+<td>dict[str, str] | None</td>
+<td>Region tooltips</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>value</td>
+<td>dict[str, int] | None</td>
+<td>Region values (counts, selection state). Values determine both visual state and selection: - value = 0: not selected (base aesthetic) - value &gt; 0: selected (select aesthetic applied)</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>aes</td>
+<td>AesType</td>
+<td>Aesthetic configuration (ByGroup, ByState, BaseAesthetic, or dict)</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>layers</td>
+<td>Mapping[str, list[str] | None] | None</td>
+<td>Layer configuration (nested dict: underlays, overlays, hidden)</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples" class="level2 doc-section doc-section-examples">
+<h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
+<pre class="pycon"><code># Standalone usage
+geo = Outline.from_dict(data)
+Map(geo, value={"a": 1, "b": 1, "c": 0})
+
+# With output_map() providing static outline
 output_map("my_map", OUTLINE, tooltips=TOOLTIPS)
 @render_map
 def my_map():
@@ -196,6 +261,7 @@ def my_map():
 <p>Returns: MapBuilder instance for method chaining</p>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

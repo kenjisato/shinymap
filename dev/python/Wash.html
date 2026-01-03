@@ -186,66 +186,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Wash() is like preparing a watercolor canvas - it sets the foundational layer that all maps in your app will build upon.</p>
 <section id="parameters" class="level2 doc-section doc-section-parameters">
 <h2 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h2>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 1%">
-<col style="width: 20%">
-<col style="width: 75%">
-<col style="width: 2%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>shape</td>
-<td>ByState[ShapeAesthetic] | ShapeAesthetic | dict[str, Any] | None | MissingType</td>
-<td>Aesthetics for shape elements (Circle, Rect, Path, Polygon, Ellipse). Can be: - ByState: Full state configuration (base, select, hover) - ShapeAesthetic: Base state only (via aes.Shape()) - dict: Shorthand for base state (e.g., {“fill_color”: “#f0f9ff”}) - None: Shapes invisible/disabled - MISSING: Inherit library defaults</td>
-<td><code>MISSING</code></td>
-</tr>
-<tr class="even">
-<td>line</td>
-<td>ByState[LineAesthetic] | LineAesthetic | dict[str, Any] | None | MissingType</td>
-<td>Aesthetics for line elements. Same value types as shape.</td>
-<td><code>MISSING</code></td>
-</tr>
-<tr class="odd">
-<td>text</td>
-<td>ByState[TextAesthetic] | TextAesthetic | dict[str, Any] | None | MissingType</td>
-<td>Aesthetics for text elements. Same value types as shape.</td>
-<td><code>MISSING</code></td>
-</tr>
-</tbody>
-</table>
+<p>shape Aesthetics for shape elements (Circle, Rect, Path, Polygon, Ellipse). Can be: - ByState: Full state configuration (base, select, hover) - ShapeAesthetic: Base state only (via aes.Shape()) - dict: Shorthand for base state (e.g., {“fill_color”: “#f0f9ff”}) - None: Shapes invisible/disabled - MISSING: Inherit library defaults line Aesthetics for line elements. Same value types as shape. text Aesthetics for text elements. Same value types as shape.</p>
 </section>
 <section id="returns" class="level2 doc-section doc-section-returns">
 <h2 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h2>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 6%">
-<col style="width: 9%">
-<col style="width: 84%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td></td>
-<td>WashResult</td>
-<td>An object with configured input_map, output_map, and render_map methods that use the wash’s default aesthetics.</td>
-</tr>
-</tbody>
-</table>
+<p>WashResult An object with configured input_map, output_map, and render_map methods that use the wash’s default aesthetics.</p>
 </section>
 <section id="notes" class="level2 doc-section doc-section-notes">
 <h2 class="doc-section doc-section-notes anchored" data-anchor-id="notes">Notes</h2>
@@ -253,32 +198,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="examples" class="level2 doc-section doc-section-examples">
 <h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="im">from</span> shinymap <span class="im">import</span> Wash, aes, Outline</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="im">from</span> shinymap.relative <span class="im">import</span> PARENT</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="co"># Full form with ByState for each element type</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> wc <span class="op">=</span> Wash(</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>...     shape<span class="op">=</span>aes.ByState(</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>...         base<span class="op">=</span>aes.Shape(fill_color<span class="op">=</span><span class="st">"#f0f9ff"</span>, stroke_color<span class="op">=</span><span class="st">"#0369a1"</span>),</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>...         select<span class="op">=</span>aes.Shape(fill_color<span class="op">=</span><span class="st">"#7dd3fc"</span>),</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>...         hover<span class="op">=</span>aes.Shape(stroke_width<span class="op">=</span>PARENT.stroke_width <span class="op">+</span> <span class="dv">2</span>),</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>...     ),</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>...     line<span class="op">=</span>aes.ByState(</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>...         base<span class="op">=</span>aes.Line(stroke_color<span class="op">=</span><span class="st">"#0369a1"</span>),</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>...         hover<span class="op">=</span>aes.Line(stroke_width<span class="op">=</span>PARENT.stroke_width <span class="op">+</span> <span class="dv">1</span>),</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>...     ),</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>...     text<span class="op">=</span>aes.Text(fill_color<span class="op">=</span><span class="st">"#0c4a6e"</span>),  <span class="co"># base only shorthand</span></span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>... )</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span></span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="co"># Dict shorthand for simple base-only configuration</span></span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> wc <span class="op">=</span> Wash(</span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>...     shape<span class="op">=</span>{<span class="st">"fill_color"</span>: <span class="st">"#f0f9ff"</span>, <span class="st">"stroke_color"</span>: <span class="st">"#0369a1"</span>},</span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>...     line<span class="op">=</span>{<span class="st">"stroke_color"</span>: <span class="st">"#0369a1"</span>},</span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>... )</span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span></span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="co"># Use the configured functions</span></span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> outline <span class="op">=</span> Outline.from_dict({<span class="st">"r1"</span>: <span class="st">"M 0 0 L 10 10"</span>})</span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> _ <span class="op">=</span> wc.input_map(<span class="st">"region"</span>, outline, mode<span class="op">=</span><span class="st">"single"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<blockquote class="blockquote">
+<blockquote class="blockquote">
+<blockquote class="blockquote">
+<p>from shinymap import Wash, aes, Outline from shinymap.relative import PARENT</p>
+<h1 id="full-form-with-bystate-for-each-element-type">Full form with ByState for each element type</h1>
+<p>wc = Wash( … shape=aes.ByState( … base=aes.Shape(fill_color=“#f0f9ff”, stroke_color=“#0369a1”), … select=aes.Shape(fill_color=“#7dd3fc”), … hover=aes.Shape(stroke_width=PARENT.stroke_width + 2), … ), … line=aes.ByState( … base=aes.Line(stroke_color=“#0369a1”), … hover=aes.Line(stroke_width=PARENT.stroke_width + 1), … ), … text=aes.Text(fill_color=“#0c4a6e”), # base only shorthand … )</p>
+<h1 id="dict-shorthand-for-simple-base-only-configuration">Dict shorthand for simple base-only configuration</h1>
+<p>wc = Wash( … shape={“fill_color”: “#f0f9ff”, “stroke_color”: “#0369a1”}, … line={“stroke_color”: “#0369a1”}, … )</p>
+<h1 id="use-the-configured-functions">Use the configured functions</h1>
+<p>outline = Outline.from_dict({“r1”: “M 0 0 L 10 10”}) _ = wc.input_map(“region”, outline, mode=“single”)</p>
+</blockquote>
+</blockquote>
+</blockquote>
 
 
 </section>

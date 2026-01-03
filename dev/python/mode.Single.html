@@ -165,6 +165,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#shinymap.mode.Single" id="toc-shinymap.mode.Single" class="nav-link active" data-scroll-target="#shinymap.mode.Single">mode.Single</a>
   <ul class="collapse">
+  <li><a href="#parameters" id="toc-parameters" class="nav-link" data-scroll-target="#parameters">Parameters</a></li>
+  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
   <li><a href="#shinymap.mode.Single.to_dict" id="toc-shinymap.mode.Single.to_dict" class="nav-link" data-scroll-target="#shinymap.mode.Single.to_dict">to_dict</a></li>
@@ -184,8 +186,63 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>mode.Single(selected<span class="op">=</span><span class="va">None</span>, allow_deselect<span class="op">=</span><span class="va">True</span>, aes<span class="op">=</span><span class="va">None</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Single selection mode with customization options.</p>
 <p>Use when you need options beyond the simple mode=“single” string: - Initial selection - Disable deselection - Custom two-state aesthetics</p>
-<p>Args: selected: Initially selected region ID. allow_deselect: If True (default), clicking selected region deselects it. aes: Two-state aesthetic [unselected, selected]. Can be aes.Indexed (global) or aes.ByGroup wrapping aes.Indexed.</p>
-<p>Example: &gt;&gt;&gt; from shinymap.mode import Single &gt;&gt;&gt; from shinymap import aes &gt;&gt;&gt; &gt;&gt;&gt; # Pre-select a region &gt;&gt;&gt; mode = Single(selected=“region_a”) &gt;&gt;&gt; &gt;&gt;&gt; # Disable deselection (must always have one selected) &gt;&gt;&gt; mode = Single(allow_deselect=False) &gt;&gt;&gt; &gt;&gt;&gt; # Custom selection colors &gt;&gt;&gt; mode = Single( … aes=aes.Indexed( … fill_color=[“#e5e7eb”, “#3b82f6”], # gray -&gt; blue … ) … )</p>
+<section id="parameters" class="level2 doc-section doc-section-parameters">
+<h2 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 9%">
+<col style="width: 21%">
+<col style="width: 63%">
+<col style="width: 6%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>selected</td>
+<td>str | None</td>
+<td>Initially selected region ID.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>allow_deselect</td>
+<td>bool</td>
+<td>If True (default), clicking selected region deselects it.</td>
+<td><code>True</code></td>
+</tr>
+<tr class="odd">
+<td>aes</td>
+<td>IndexedAesthetic | ByGroup | None</td>
+<td>Two-state aesthetic [unselected, selected]. Can be aes.Indexed (global) or aes.ByGroup wrapping aes.Indexed.</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples" class="level2 doc-section doc-section-examples">
+<h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
+<pre class="pycon"><code>&gt;&gt;&gt; from shinymap.mode import Single
+&gt;&gt;&gt; from shinymap import aes
+
+&gt;&gt;&gt; # Pre-select a region
+&gt;&gt;&gt; mode = Single(selected="region_a")
+
+&gt;&gt;&gt; # Disable deselection (must always have one selected)
+&gt;&gt;&gt; mode = Single(allow_deselect=False)
+
+&gt;&gt;&gt; # Custom selection colors
+&gt;&gt;&gt; mode = Single(
+...     aes=aes.Indexed(
+...         fill_color=["#e5e7eb", "#3b82f6"],  # gray -&gt; blue
+...     )
+... )</code></pre>
+</section>
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">Methods</h2>
 <table class="caption-top table">
@@ -204,7 +261,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="shinymap.mode.Single.to_dict" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.mode.Single.to_dict">to_dict</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>mode.Single.to_dict()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>mode.Single.to_dict()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Serialize for JavaScript (snake_case, JS converts to camelCase).</p>
 
 

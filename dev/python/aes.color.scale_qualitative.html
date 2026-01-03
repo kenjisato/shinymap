@@ -163,7 +163,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#shinymap.aes.color.scale_qualitative" id="toc-shinymap.aes.color.scale_qualitative" class="nav-link active" data-scroll-target="#shinymap.aes.color.scale_qualitative">aes.color.scale_qualitative</a></li>
+  <li><a href="#shinymap.aes.color.scale_qualitative" id="toc-shinymap.aes.color.scale_qualitative" class="nav-link active" data-scroll-target="#shinymap.aes.color.scale_qualitative">aes.color.scale_qualitative</a>
+  <ul class="collapse">
+  <li><a href="#parameters" id="toc-parameters" class="nav-link" data-scroll-target="#parameters">Parameters</a></li>
+  <li><a href="#returns" id="toc-returns" class="nav-link" data-scroll-target="#returns">Returns</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -182,10 +186,72 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    neutral_color<span class="op">=</span>NEUTRALS[<span class="st">'fill'</span>],</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Create a qualitative color scale for categorical data.</p>
-<p>Args: categories: Mapping of region_id to category name (or None) region_ids: All region IDs to include palette: Color palette to use (cycles if more categories than colors) neutral_color: Color for regions with no category</p>
-<p>Returns: Mapping of region_id to hex color</p>
+<section id="parameters" class="level2 doc-section doc-section-parameters">
+<h2 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 11%">
+<col style="width: 23%">
+<col style="width: 49%">
+<col style="width: 15%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>categories</td>
+<td>Mapping[str, str | None]</td>
+<td>Mapping of region_id to category name (or None)</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>region_ids</td>
+<td>list[str]</td>
+<td>All region IDs to include</td>
+<td><em>required</em></td>
+</tr>
+<tr class="odd">
+<td>palette</td>
+<td>list[str]</td>
+<td>Color palette to use (cycles if more categories than colors)</td>
+<td><code>QUALITATIVE</code></td>
+</tr>
+<tr class="even">
+<td>neutral_color</td>
+<td>str</td>
+<td>Color for regions with no category</td>
+<td><code>NEUTRALS['fill']</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level2 doc-section doc-section-returns">
+<h2 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>dict[str, str]</td>
+<td>Mapping of region_id to hex color</td>
+</tr>
+</tbody>
+</table>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

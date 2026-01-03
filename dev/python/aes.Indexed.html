@@ -163,7 +163,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#shinymap.aes.Indexed" id="toc-shinymap.aes.Indexed" class="nav-link active" data-scroll-target="#shinymap.aes.Indexed">aes.Indexed</a></li>
+  <li><a href="#shinymap.aes.Indexed" id="toc-shinymap.aes.Indexed" class="nav-link active" data-scroll-target="#shinymap.aes.Indexed">aes.Indexed</a>
+  <ul class="collapse">
+  <li><a href="#parameters" id="toc-parameters" class="nav-link" data-scroll-target="#parameters">Parameters</a></li>
+  <li><a href="#returns" id="toc-returns" class="nav-link" data-scroll-target="#returns">Returns</a></li>
+  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -185,11 +190,92 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Create indexed aesthetic for multi-state modes (Cycle, Count).</p>
 <p>Each property can be a single value (applied to all states) or a list of values indexed by state: - For Single/Multiple: index 0 = off, index 1 = on - For Cycle mode: index = count % n (wrapping) - For Count mode: index = min(count, len(list) - 1) (clamping)</p>
 <p>IMPORTANT: Index 0 is used as the base aesthetic for ALL regions. This ensures never-touched regions and count=0 regions look the same.</p>
-<p>Args: fill_color: Single color or list of colors indexed by state. fill_opacity: Single value or list of opacities (0.0-1.0). stroke_color: Optional stroke color(s). stroke_width: Optional stroke width(s). stroke_dasharray: Optional dash pattern(s) for line styling.</p>
-<p>Returns: IndexedAesthetic instance</p>
-<p>Example: &gt;&gt;&gt; from shinymap import aes &gt;&gt;&gt; &gt;&gt;&gt; # Two-state (off/on) with different colors &gt;&gt;&gt; _ = aes.Indexed(fill_color=[“#e5e7eb”, “#3b82f6”]) &gt;&gt;&gt; &gt;&gt;&gt; # Heat map with opacity gradient &gt;&gt;&gt; from shinymap.utils import linspace &gt;&gt;&gt; _ = aes.Indexed(fill_color=“#f97316”, fill_opacity=linspace(0.0, 1.0, num=6)) &gt;&gt;&gt; &gt;&gt;&gt; # Traffic light (4 states) &gt;&gt;&gt; _ = aes.Indexed(fill_color=[“#e2e8f0”, “#ef4444”, “#eab308”, “#22c55e”])</p>
+<section id="parameters" class="level2 doc-section doc-section-parameters">
+<h2 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 16%">
+<col style="width: 28%">
+<col style="width: 45%">
+<col style="width: 9%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>fill_color</td>
+<td>str | list[str] | None</td>
+<td>Single color or list of colors indexed by state.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>fill_opacity</td>
+<td>float | list[float] | None</td>
+<td>Single value or list of opacities (0.0-1.0).</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>stroke_color</td>
+<td>str | list[str] | None</td>
+<td>Optional stroke color(s).</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>stroke_width</td>
+<td>float | list[float] | None</td>
+<td>Optional stroke width(s).</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>stroke_dasharray</td>
+<td>str | list[str] | None</td>
+<td>Optional dash pattern(s) for line styling.</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level2 doc-section doc-section-returns">
+<h2 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>IndexedAesthetic</td>
+<td>IndexedAesthetic instance</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples" class="level2 doc-section doc-section-examples">
+<h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
+<pre class="pycon"><code>&gt;&gt;&gt; from shinymap import aes
+
+&gt;&gt;&gt; # Two-state (off/on) with different colors
+&gt;&gt;&gt; _ = aes.Indexed(fill_color=["#e5e7eb", "#3b82f6"])
+
+&gt;&gt;&gt; # Heat map with opacity gradient
+&gt;&gt;&gt; from shinymap.utils import linspace
+&gt;&gt;&gt; _ = aes.Indexed(fill_color="#f97316", fill_opacity=linspace(0.0, 1.0, num=6))
+
+&gt;&gt;&gt; # Traffic light (4 states)
+&gt;&gt;&gt; _ = aes.Indexed(fill_color=["#e2e8f0", "#ef4444", "#eab308", "#22c55e"])</code></pre>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

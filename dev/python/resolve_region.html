@@ -163,7 +163,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#shinymap.resolve_region" id="toc-shinymap.resolve_region" class="nav-link active" data-scroll-target="#shinymap.resolve_region">resolve_region</a></li>
+  <li><a href="#shinymap.resolve_region" id="toc-shinymap.resolve_region" class="nav-link active" data-scroll-target="#shinymap.resolve_region">resolve_region</a>
+  <ul class="collapse">
+  <li><a href="#this-function-walks-the-aesthetic-hierarchy-recursively" id="toc-this-function-walks-the-aesthetic-hierarchy-recursively" class="nav-link" data-scroll-target="#this-function-walks-the-aesthetic-hierarchy-recursively">This function walks the aesthetic hierarchy recursively</a></li>
+  <li><a href="#parameters" id="toc-parameters" class="nav-link" data-scroll-target="#parameters">Parameters</a></li>
+  <li><a href="#returns" id="toc-returns" class="nav-link" data-scroll-target="#returns">Returns</a></li>
+  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -177,13 +183,83 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h1>resolve_region</h1>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>resolve_region(state, config)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Resolve the final aesthetic for a region given its state.</p>
-<p>This function walks the aesthetic hierarchy recursively: DEFAULT → BASE → GROUP → SELECT (if selected) → HOVER (if hovered)</p>
+<section id="this-function-walks-the-aesthetic-hierarchy-recursively" class="level2 doc-section doc-section-this-function-walks-the-aesthetic-hierarchy-recursively">
+<h2 class="doc-section doc-section-this-function-walks-the-aesthetic-hierarchy-recursively anchored" data-anchor-id="this-function-walks-the-aesthetic-hierarchy-recursively">This function walks the aesthetic hierarchy recursively</h2>
+<p>DEFAULT → BASE → GROUP → SELECT (if selected) → HOVER (if hovered)</p>
 <p>Each layer merges onto the previous, with RelativeExpr values resolved against the parent layer’s values.</p>
-<p>Args: state: The region’s current state (selected, hovered, group) config: The aesthetic configuration (base, select, hover, group aesthetics)</p>
-<p>Returns: A fully resolved ShapeAesthetic with all properties set</p>
-<p>Example: &gt;&gt;&gt; from shinymap import aes, PARENT, resolve_region, RegionState, AestheticConfig &gt;&gt;&gt; state = RegionState(“region_1”, value=1, is_hovered=True) # value=1 means selected &gt;&gt;&gt; config = AestheticConfig( … aes_base=aes.Shape(stroke_width=2), … aes_select=aes.Shape(stroke_width=3, fill_color=“#fef08a”), … aes_hover=aes.Shape(stroke_width=PARENT.stroke_width + 1), … ) &gt;&gt;&gt; resolved = resolve_region(state, config) &gt;&gt;&gt; resolved.stroke_width # 3 (from select) + 1 (from hover) = 4 4.0</p>
+</section>
+<section id="parameters" class="level2 doc-section doc-section-parameters">
+<h2 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 7%">
+<col style="width: 16%">
+<col style="width: 65%">
+<col style="width: 11%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>state</td>
+<td>RegionState</td>
+<td>The region’s current state (selected, hovered, group)</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>config</td>
+<td>AestheticConfig</td>
+<td>The aesthetic configuration (base, select, hover, group aesthetics)</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level2 doc-section doc-section-returns">
+<h2 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 9%">
+<col style="width: 19%">
+<col style="width: 70%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>ShapeAesthetic</td>
+<td>A fully resolved ShapeAesthetic with all properties set</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples" class="level2 doc-section doc-section-examples">
+<h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
+<pre class="pycon"><code>&gt;&gt;&gt; from shinymap import aes, PARENT, resolve_region, RegionState, AestheticConfig
+&gt;&gt;&gt; state = RegionState("region_1", value=1, is_hovered=True)  # value=1 means selected
+&gt;&gt;&gt; config = AestheticConfig(
+...     aes_base=aes.Shape(stroke_width=2),
+...     aes_select=aes.Shape(stroke_width=3, fill_color="#fef08a"),
+...     aes_hover=aes.Shape(stroke_width=PARENT.stroke_width + 1),
+... )
+&gt;&gt;&gt; resolved = resolve_region(state, config)
+&gt;&gt;&gt; resolved.stroke_width  # 3 (from select) + 1 (from hover) = 4
+4.0</code></pre>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

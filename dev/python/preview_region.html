@@ -163,7 +163,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#shinymap.preview_region" id="toc-shinymap.preview_region" class="nav-link active" data-scroll-target="#shinymap.preview_region">preview_region</a></li>
+  <li><a href="#shinymap.preview_region" id="toc-shinymap.preview_region" class="nav-link active" data-scroll-target="#shinymap.preview_region">preview_region</a>
+  <ul class="collapse">
+  <li><a href="#parameters" id="toc-parameters" class="nav-link" data-scroll-target="#parameters">Parameters</a></li>
+  <li><a href="#returns" id="toc-returns" class="nav-link" data-scroll-target="#returns">Returns</a></li>
+  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -178,11 +183,70 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>preview_region(state, config)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Preview the aesthetic resolution for a region with verbose output.</p>
 <p>Shows how aesthetics are inherited and resolved at each layer, displaying ALL properties at each step.</p>
-<p>Args: state: The region’s current state config: The aesthetic configuration</p>
-<p>Returns: A formatted string showing the resolution at each layer</p>
-<p>Example: &gt;&gt;&gt; from shinymap import aes, PARENT, preview_region, RegionState, AestheticConfig &gt;&gt;&gt; state = RegionState(“region_1”, value=1, is_hovered=True) # value=1 means selected &gt;&gt;&gt; config = AestheticConfig( … aes_base=aes.Shape(stroke_width=2), … aes_select=aes.Shape(stroke_width=3), … aes_hover=aes.Shape(stroke_width=PARENT.stroke_width + 1), … ) &gt;&gt;&gt; print(preview_region(state, config)) # doctest: +SKIP</p>
+<section id="parameters" class="level2 doc-section doc-section-parameters">
+<h2 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>state</td>
+<td>RegionState</td>
+<td>The region’s current state</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>config</td>
+<td>AestheticConfig</td>
+<td>The aesthetic configuration</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level2 doc-section doc-section-returns">
+<h2 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 10%">
+<col style="width: 10%">
+<col style="width: 78%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>str</td>
+<td>A formatted string showing the resolution at each layer</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples" class="level2 doc-section doc-section-examples">
+<h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
+<pre class="pycon"><code>&gt;&gt;&gt; from shinymap import aes, PARENT, preview_region, RegionState, AestheticConfig
+&gt;&gt;&gt; state = RegionState("region_1", value=1, is_hovered=True)  # value=1 means selected
+&gt;&gt;&gt; config = AestheticConfig(
+...     aes_base=aes.Shape(stroke_width=2),
+...     aes_select=aes.Shape(stroke_width=3),
+...     aes_hover=aes.Shape(stroke_width=PARENT.stroke_width + 1),
+... )
+&gt;&gt;&gt; print(preview_region(state, config))  # doctest: +SKIP</code></pre>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

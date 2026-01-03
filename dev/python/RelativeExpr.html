@@ -165,6 +165,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#shinymap.RelativeExpr" id="toc-shinymap.RelativeExpr" class="nav-link active" data-scroll-target="#shinymap.RelativeExpr">RelativeExpr</a>
   <ul class="collapse">
+  <li><a href="#attributes" id="toc-attributes" class="nav-link" data-scroll-target="#attributes">Attributes</a></li>
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
   <li><a href="#shinymap.RelativeExpr.resolve" id="toc-shinymap.RelativeExpr.resolve" class="nav-link" data-scroll-target="#shinymap.RelativeExpr.resolve">resolve</a></li>
@@ -185,7 +186,40 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>RelativeExpr(<span class="bu">property</span>, operator, operand)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>A deferred expression that references a parent property.</p>
 <p>These expressions capture the intent to compute a value relative to a parent property. The library resolves them automatically during rendering when the parent context is available.</p>
-<p>Attributes: property: The parent property name (e.g., “stroke_width”) operator: The mathematical operator (+, -, *, /) operand: The numeric value to apply with the operator</p>
+<section id="attributes" class="level2 doc-section doc-section-attributes">
+<h2 class="doc-section doc-section-attributes anchored" data-anchor-id="attributes">Attributes</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 10%">
+<col style="width: 39%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>property</td>
+<td>str</td>
+<td>The parent property name (e.g., “stroke_width”)</td>
+</tr>
+<tr class="even">
+<td>operator</td>
+<td>Literal['+', '-', '*', '/']</td>
+<td>The mathematical operator (+, -, *, /)</td>
+</tr>
+<tr class="odd">
+<td>operand</td>
+<td>float</td>
+<td>The numeric value to apply with the operator</td>
+</tr>
+</tbody>
+</table>
+</section>
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">Methods</h2>
 <table class="caption-top table">
@@ -211,13 +245,62 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>RelativeExpr.resolve(parent_value)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Resolve this expression given the parent’s actual value.</p>
 <p>This method is called by the library’s resolution layer. You typically don’t need to call this directly.</p>
-<p>Args: parent_value: The parent’s value for this property</p>
-<p>Returns: The computed value</p>
-<p>Example: &gt;&gt;&gt; expr = PARENT.stroke_width + 2 &gt;&gt;&gt; expr.resolve(1.0) # 1.0 + 2 = 3.0 3.0</p>
+<section id="parameters" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 19%">
+<col style="width: 11%">
+<col style="width: 52%">
+<col style="width: 16%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>parent_value</td>
+<td>float</td>
+<td>The parent’s value for this property</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>float</td>
+<td>The computed value</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h4>
+<pre class="pycon"><code>&gt;&gt;&gt; expr = PARENT.stroke_width + 2
+&gt;&gt;&gt; expr.resolve(1.0)  # 1.0 + 2 = 3.0
+3.0</code></pre>
+</section>
 </section>
 <section id="shinymap.RelativeExpr.to_json" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.RelativeExpr.to_json">to_json</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>RelativeExpr.to_json()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>RelativeExpr.to_json()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Serialize for sending to JavaScript.</p>
 <p>Returns a dict with a marker that JavaScript can detect and resolve at render time.</p>
 

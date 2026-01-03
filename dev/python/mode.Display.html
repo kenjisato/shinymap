@@ -165,6 +165,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#shinymap.mode.Display" id="toc-shinymap.mode.Display" class="nav-link active" data-scroll-target="#shinymap.mode.Display">mode.Display</a>
   <ul class="collapse">
+  <li><a href="#parameters" id="toc-parameters" class="nav-link" data-scroll-target="#parameters">Parameters</a></li>
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
   <li><a href="#shinymap.mode.Display.get_click_input_id" id="toc-shinymap.mode.Display.get_click_input_id" class="nav-link" data-scroll-target="#shinymap.mode.Display.get_click_input_id">get_click_input_id</a></li>
@@ -186,7 +187,44 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Display-only mode for output_map.</p>
 <p>Regions respond to hover but not click by default. Value determines which indexed aesthetic to use, enabling declarative value-to-color mapping.</p>
 <p>This mode is specifically for output_map, allowing you to prepopulate the color scale in the UI declaration rather than computing it in the render function.</p>
-<p>Args: aes: Indexed aesthetic mapping values to colors. Can be aes.Indexed (global) or aes.ByGroup wrapping aes.Indexed. Index is computed as: min(value, len(list) - 1) (clamping). clickable: If True, clicking a region emits an input event with the region ID. Use with <span class="citation" data-cites="reactive.event">@reactive.event</span> to trigger actions like showing modals. Default is False. input_id: Custom input ID for click events. If None (default), uses “{output_map_id}_click”. Only used when clickable=True.</p>
+<section id="parameters" class="level2 doc-section doc-section-parameters">
+<h2 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 4%">
+<col style="width: 16%">
+<col style="width: 74%">
+<col style="width: 4%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>aes</td>
+<td>IndexedAesthetic | ByGroup | None</td>
+<td>Indexed aesthetic mapping values to colors. Can be aes.Indexed (global) or aes.ByGroup wrapping aes.Indexed. Index is computed as: min(value, len(list) - 1) (clamping).</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>clickable</td>
+<td>bool</td>
+<td>If True, clicking a region emits an input event with the region ID. Use with <span class="citation" data-cites="reactive.event">@reactive.event</span> to trigger actions like showing modals. Default is False.</td>
+<td><code>False</code></td>
+</tr>
+<tr class="odd">
+<td>input_id</td>
+<td>str | None</td>
+<td>Custom input ID for click events. If None (default), uses “{output_map_id}_click”. Only used when clickable=True.</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
 <p>Example:: from shinymap.mode import Display from shinymap import aes, output_map, render_map, Outline</p>
 <pre><code>outline = Outline.from_dict({
     "question_1": "M 5 5 L 5 10 L 10 10 L 10 5 Z",
@@ -226,6 +264,7 @@ _ = output_map(
     outline,
     mode=Display(clickable=True, input_id="region_clicked")
 )</code></pre>
+</section>
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">Methods</h2>
 <table class="caption-top table">
@@ -250,8 +289,51 @@ _ = output_map(
 <h3 class="anchored" data-anchor-id="shinymap.mode.Display.get_click_input_id">get_click_input_id</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>mode.Display.get_click_input_id(output_id)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get the click input ID for this mode.</p>
-<p>Args: output_id: The output map’s ID</p>
-<p>Returns: The input ID for click events, or None if not clickable</p>
+<section id="parameters-1" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>output_id</td>
+<td>str</td>
+<td>The output map’s ID</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 10%">
+<col style="width: 16%">
+<col style="width: 73%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>str | None</td>
+<td>The input ID for click events, or None if not clickable</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="shinymap.mode.Display.to_dict" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.mode.Display.to_dict">to_dict</h3>

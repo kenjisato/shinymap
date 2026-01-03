@@ -163,7 +163,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#shinymap.aes.Shape" id="toc-shinymap.aes.Shape" class="nav-link active" data-scroll-target="#shinymap.aes.Shape">aes.Shape</a></li>
+  <li><a href="#shinymap.aes.Shape" id="toc-shinymap.aes.Shape" class="nav-link active" data-scroll-target="#shinymap.aes.Shape">aes.Shape</a>
+  <ul class="collapse">
+  <li><a href="#parameters" id="toc-parameters" class="nav-link" data-scroll-target="#parameters">Parameters</a></li>
+  <li><a href="#returns" id="toc-returns" class="nav-link" data-scroll-target="#returns">Returns</a></li>
+  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -185,11 +190,89 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Create shape aesthetic (fill and stroke).</p>
 <p>Use for filled shapes like circles, rectangles, paths, polygons.</p>
-<p>Args: fill_color: Fill color (e.g., “#3b82f6”). None means “none” (transparent). fill_opacity: Fill opacity (0.0 to 1.0), or RelativeExpr for parent-relative stroke_color: Stroke color (e.g., “#000”). None means “none”. stroke_width: Stroke width in viewBox units, or RelativeExpr for parent-relative values stroke_dasharray: Dash pattern (e.g., “5,5”). Use linestyle constants. non_scaling_stroke: If True, stroke width is in screen pixels (default: False)</p>
-<p>Returns: ShapeAesthetic instance</p>
-<p>Example: &gt;&gt;&gt; from shinymap import aes &gt;&gt;&gt; region_aes = aes.Shape(fill_color=“#3b82f6”, stroke_color=“#000”, stroke_width=1)</p>
+<section id="parameters" class="level2 doc-section doc-section-parameters">
+<h2 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 13%">
+<col style="width: 30%">
+<col style="width: 49%">
+<col style="width: 7%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>fill_color</td>
+<td>str | None | MissingType</td>
+<td>Fill color (e.g., “#3b82f6”). None means “none” (transparent).</td>
+<td><code>MISSING</code></td>
+</tr>
+<tr class="even">
+<td>fill_opacity</td>
+<td>float | RelativeExpr | None | MissingType</td>
+<td>Fill opacity (0.0 to 1.0), or RelativeExpr for parent-relative</td>
+<td><code>MISSING</code></td>
+</tr>
+<tr class="odd">
+<td>stroke_color</td>
+<td>str | None | MissingType</td>
+<td>Stroke color (e.g., “#000”). None means “none”.</td>
+<td><code>MISSING</code></td>
+</tr>
+<tr class="even">
+<td>stroke_width</td>
+<td>float | RelativeExpr | None | MissingType</td>
+<td>Stroke width in viewBox units, or RelativeExpr for parent-relative values</td>
+<td><code>MISSING</code></td>
+</tr>
+<tr class="odd">
+<td>stroke_dasharray</td>
+<td>str | None | MissingType</td>
+<td>Dash pattern (e.g., “5,5”). Use linestyle constants.</td>
+<td><code>MISSING</code></td>
+</tr>
+<tr class="even">
+<td>non_scaling_stroke</td>
+<td>bool | MissingType</td>
+<td>If True, stroke width is in screen pixels (default: False)</td>
+<td><code>MISSING</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level2 doc-section doc-section-returns">
+<h2 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>ShapeAesthetic</td>
+<td>ShapeAesthetic instance</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples" class="level2 doc-section doc-section-examples">
+<h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
+<pre class="pycon"><code>&gt;&gt;&gt; from shinymap import aes
+&gt;&gt;&gt; region_aes = aes.Shape(fill_color="#3b82f6", stroke_color="#000", stroke_width=1)</code></pre>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

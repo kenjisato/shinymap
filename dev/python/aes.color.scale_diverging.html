@@ -163,7 +163,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#shinymap.aes.color.scale_diverging" id="toc-shinymap.aes.color.scale_diverging" class="nav-link active" data-scroll-target="#shinymap.aes.color.scale_diverging">aes.color.scale_diverging</a></li>
+  <li><a href="#shinymap.aes.color.scale_diverging" id="toc-shinymap.aes.color.scale_diverging" class="nav-link active" data-scroll-target="#shinymap.aes.color.scale_diverging">aes.color.scale_diverging</a>
+  <ul class="collapse">
+  <li><a href="#parameters" id="toc-parameters" class="nav-link" data-scroll-target="#parameters">Parameters</a></li>
+  <li><a href="#returns" id="toc-returns" class="nav-link" data-scroll-target="#returns">Returns</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -184,10 +188,84 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    midpoint<span class="op">=</span><span class="fl">0.0</span>,</span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Create a diverging color scale (red-white-blue style).</p>
-<p>Args: values: Mapping of region_id to numeric value region_ids: All region IDs to include low_color: Color for low values mid_color: Color for midpoint value high_color: Color for high values midpoint: Value that maps to mid_color</p>
-<p>Returns: Mapping of region_id to hex color</p>
+<section id="parameters" class="level2 doc-section doc-section-parameters">
+<h2 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 13%">
+<col style="width: 26%">
+<col style="width: 44%">
+<col style="width: 14%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>values</td>
+<td>Mapping[str, float]</td>
+<td>Mapping of region_id to numeric value</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>region_ids</td>
+<td>list[str]</td>
+<td>All region IDs to include</td>
+<td><em>required</em></td>
+</tr>
+<tr class="odd">
+<td>low_color</td>
+<td>str</td>
+<td>Color for low values</td>
+<td><code>'#ef4444'</code></td>
+</tr>
+<tr class="even">
+<td>mid_color</td>
+<td>str</td>
+<td>Color for midpoint value</td>
+<td><code>'#f3f4f6'</code></td>
+</tr>
+<tr class="odd">
+<td>high_color</td>
+<td>str</td>
+<td>Color for high values</td>
+<td><code>'#3b82f6'</code></td>
+</tr>
+<tr class="even">
+<td>midpoint</td>
+<td>float</td>
+<td>Value that maps to mid_color</td>
+<td><code>0.0</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level2 doc-section doc-section-returns">
+<h2 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>dict[str, str]</td>
+<td>Mapping of region_id to hex color</td>
+</tr>
+</tbody>
+</table>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

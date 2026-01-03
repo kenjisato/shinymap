@@ -163,7 +163,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#shinymap.aes.Line" id="toc-shinymap.aes.Line" class="nav-link active" data-scroll-target="#shinymap.aes.Line">aes.Line</a></li>
+  <li><a href="#shinymap.aes.Line" id="toc-shinymap.aes.Line" class="nav-link active" data-scroll-target="#shinymap.aes.Line">aes.Line</a>
+  <ul class="collapse">
+  <li><a href="#parameters" id="toc-parameters" class="nav-link" data-scroll-target="#parameters">Parameters</a></li>
+  <li><a href="#returns" id="toc-returns" class="nav-link" data-scroll-target="#returns">Returns</a></li>
+  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -183,11 +188,77 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Create line aesthetic (stroke only, no fill).</p>
 <p>Use for line elements where only stroke properties are relevant.</p>
-<p>Args: stroke_color: Stroke color (e.g., “#ddd”). None means “none” in SVG. stroke_width: Stroke width in viewBox units, or RelativeExpr for parent-relative values stroke_dasharray: Dash pattern (e.g., “5,5” for dashed). Use aes.line constants. non_scaling_stroke: If True, stroke width is in screen pixels (default: False)</p>
-<p>Returns: LineAesthetic instance</p>
-<p>Example: &gt;&gt;&gt; from shinymap import aes &gt;&gt;&gt; grid_aes = aes.Line(stroke_color=“#ddd”, stroke_dasharray=aes.line.dashed)</p>
+<section id="parameters" class="level2 doc-section doc-section-parameters">
+<h2 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 13%">
+<col style="width: 30%">
+<col style="width: 49%">
+<col style="width: 7%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>stroke_color</td>
+<td>str | None | MissingType</td>
+<td>Stroke color (e.g., “#ddd”). None means “none” in SVG.</td>
+<td><code>MISSING</code></td>
+</tr>
+<tr class="even">
+<td>stroke_width</td>
+<td>float | RelativeExpr | None | MissingType</td>
+<td>Stroke width in viewBox units, or RelativeExpr for parent-relative values</td>
+<td><code>MISSING</code></td>
+</tr>
+<tr class="odd">
+<td>stroke_dasharray</td>
+<td>str | None | MissingType</td>
+<td>Dash pattern (e.g., “5,5” for dashed). Use aes.line constants.</td>
+<td><code>MISSING</code></td>
+</tr>
+<tr class="even">
+<td>non_scaling_stroke</td>
+<td>bool | MissingType</td>
+<td>If True, stroke width is in screen pixels (default: False)</td>
+<td><code>MISSING</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level2 doc-section doc-section-returns">
+<h2 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>LineAesthetic</td>
+<td>LineAesthetic instance</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples" class="level2 doc-section doc-section-examples">
+<h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
+<pre class="pycon"><code>&gt;&gt;&gt; from shinymap import aes
+&gt;&gt;&gt; grid_aes = aes.Line(stroke_color="#ddd", stroke_dasharray=aes.line.dashed)</code></pre>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

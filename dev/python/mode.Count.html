@@ -165,6 +165,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#shinymap.mode.Count" id="toc-shinymap.mode.Count" class="nav-link active" data-scroll-target="#shinymap.mode.Count">mode.Count</a>
   <ul class="collapse">
+  <li><a href="#parameters" id="toc-parameters" class="nav-link" data-scroll-target="#parameters">Parameters</a></li>
+  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
   <li><a href="#shinymap.mode.Count.to_dict" id="toc-shinymap.mode.Count.to_dict" class="nav-link" data-scroll-target="#shinymap.mode.Count.to_dict">to_dict</a></li>
@@ -184,8 +186,71 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>mode.Count(values<span class="op">=</span><span class="va">None</span>, max_count<span class="op">=</span><span class="va">None</span>, aes<span class="op">=</span><span class="va">None</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Count mode - unbounded counting.</p>
 <p>Each click increments the count. Use with aes.Indexed to define visual appearance based on count (with clamping for index lookup).</p>
-<p>Args: values: Initial counts per region {id: count}. Default: all 0. max_count: Optional cap for aesthetic indexing (clamping). If None, uses len(aes list) - 1 as the cap. aes: Indexed aesthetic for visual feedback. Can be aes.Indexed (global) or aes.ByGroup wrapping aes.Indexed. Index is computed as: min(count, len(list) - 1) (clamping).</p>
-<p>Example: &gt;&gt;&gt; from shinymap.mode import Count &gt;&gt;&gt; from shinymap import aes &gt;&gt;&gt; from shinymap.utils import linspace &gt;&gt;&gt; &gt;&gt;&gt; # Heat map with opacity gradient &gt;&gt;&gt; mode = Count( … aes=aes.Indexed( … fill_color=“#f97316”, … fill_opacity=linspace(0.0, 1.0, num=6), … ), … ) &gt;&gt;&gt; &gt;&gt;&gt; # Per-group palettes &gt;&gt;&gt; mode = Count( … aes=aes.ByGroup( … group_a=aes.Indexed( … fill_color=“#ef4444”, fill_opacity=linspace(0.2, 1.0, num=5) … ), … group_b=aes.Indexed( … fill_color=“#3b82f6”, fill_opacity=linspace(0.2, 1.0, num=5) … ), … ), … )</p>
+<section id="parameters" class="level2 doc-section doc-section-parameters">
+<h2 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 4%">
+<col style="width: 16%">
+<col style="width: 73%">
+<col style="width: 4%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>values</td>
+<td>dict[str, int] | None</td>
+<td>Initial counts per region {id: count}. Default: all 0.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>max_count</td>
+<td>int | None</td>
+<td>Optional cap for aesthetic indexing (clamping). If None, uses len(aes list) - 1 as the cap.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>aes</td>
+<td>IndexedAesthetic | ByGroup | None</td>
+<td>Indexed aesthetic for visual feedback. Can be aes.Indexed (global) or aes.ByGroup wrapping aes.Indexed. Index is computed as: min(count, len(list) - 1) (clamping).</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples" class="level2 doc-section doc-section-examples">
+<h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
+<pre class="pycon"><code>&gt;&gt;&gt; from shinymap.mode import Count
+&gt;&gt;&gt; from shinymap import aes
+&gt;&gt;&gt; from shinymap.utils import linspace
+
+&gt;&gt;&gt; # Heat map with opacity gradient
+&gt;&gt;&gt; mode = Count(
+...     aes=aes.Indexed(
+...         fill_color="#f97316",
+...         fill_opacity=linspace(0.0, 1.0, num=6),
+...     ),
+... )
+
+&gt;&gt;&gt; # Per-group palettes
+&gt;&gt;&gt; mode = Count(
+...     aes=aes.ByGroup(
+...         group_a=aes.Indexed(
+...             fill_color="#ef4444", fill_opacity=linspace(0.2, 1.0, num=5)
+...         ),
+...         group_b=aes.Indexed(
+...             fill_color="#3b82f6", fill_opacity=linspace(0.2, 1.0, num=5)
+...         ),
+...     ),
+... )</code></pre>
+</section>
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">Methods</h2>
 <table class="caption-top table">
@@ -204,7 +269,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="shinymap.mode.Count.to_dict" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.mode.Count.to_dict">to_dict</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>mode.Count.to_dict()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>mode.Count.to_dict()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Serialize for JavaScript (snake_case, JS converts to camelCase).</p>
 
 

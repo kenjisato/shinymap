@@ -165,6 +165,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#shinymap.Outline" id="toc-shinymap.Outline" class="nav-link active" data-scroll-target="#shinymap.Outline">Outline</a>
   <ul class="collapse">
+  <li><a href="#attributes" id="toc-attributes" class="nav-link" data-scroll-target="#attributes">Attributes</a></li>
+  <li><a href="#note-on-aesthetics" id="toc-note-on-aesthetics" class="nav-link" data-scroll-target="#note-on-aesthetics">Note on aesthetics</a></li>
+  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
   <li><a href="#shinymap.Outline.from_dict" id="toc-shinymap.Outline.from_dict" class="nav-link" data-scroll-target="#shinymap.Outline.from_dict">from_dict</a></li>
@@ -204,9 +207,49 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Canonical outline representation with polymorphic elements.</p>
 <p>This class encapsulates SVG outline with metadata. It supports both: - v0.x format: String-based paths (for backward compatibility) - v1.x format: Polymorphic element objects (Circle, Rect, Path, etc.)</p>
 <p>The class automatically converts between formats for seamless migration.</p>
-<p>Attributes: regions: Regions object (dict subclass) mapping region IDs to lists of elements (str for v0.x compatibility, Element objects for v1.x) metadata: Optional metadata dict (viewBox, overlays, source, license, etc.)</p>
-<p>Note on aesthetics: SVG elements preserve aesthetic attributes (fill, stroke, etc.) but these are NOT used by shinymap for rendering. Interactive appearance is controlled via Python API. Preserved values are for SVG export and reference only.</p>
-<p>Example: &gt;&gt;&gt; # v0.x format (backward compatible) &gt;&gt;&gt; data = {“region1”: [“M 0 0 L 10 0”], “_metadata”: {“viewBox”: “0 0 100 100”}} &gt;&gt;&gt; geo = Outline.from_dict(data) &gt;&gt;&gt; &gt;&gt;&gt; # v1.x format (polymorphic elements) &gt;&gt;&gt; from shinymap.outline import Circle &gt;&gt;&gt; geo = Outline(regions={“r1”: [Circle(cx=100, cy=100, r=50)]}, metadata={})</p>
+<section id="attributes" class="level2 doc-section doc-section-attributes">
+<h2 class="doc-section doc-section-attributes anchored" data-anchor-id="attributes">Attributes</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 6%">
+<col style="width: 11%">
+<col style="width: 82%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>regions</td>
+<td>Regions</td>
+<td>Regions object (dict subclass) mapping region IDs to lists of elements (str for v0.x compatibility, Element objects for v1.x)</td>
+</tr>
+<tr class="even">
+<td>metadata</td>
+<td>dict[str, Any]</td>
+<td>Optional metadata dict (viewBox, overlays, source, license, etc.)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="note-on-aesthetics" class="level2 doc-section doc-section-note-on-aesthetics">
+<h2 class="doc-section doc-section-note-on-aesthetics anchored" data-anchor-id="note-on-aesthetics">Note on aesthetics</h2>
+<p>SVG elements preserve aesthetic attributes (fill, stroke, etc.) but these are NOT used by shinymap for rendering. Interactive appearance is controlled via Python API. Preserved values are for SVG export and reference only.</p>
+</section>
+<section id="examples" class="level2 doc-section doc-section-examples">
+<h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
+<pre class="pycon"><code>&gt;&gt;&gt; # v0.x format (backward compatible)
+&gt;&gt;&gt; data = {"region1": ["M 0 0 L 10 0"], "_metadata": {"viewBox": "0 0 100 100"}}
+&gt;&gt;&gt; geo = Outline.from_dict(data)
+
+&gt;&gt;&gt; # v1.x format (polymorphic elements)
+&gt;&gt;&gt; from shinymap.outline import Circle
+&gt;&gt;&gt; geo = Outline(regions={"r1": [Circle(cx=100, cy=100, r=50)]}, metadata={})</code></pre>
+</section>
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">Methods</h2>
 <table class="caption-top table">
@@ -301,14 +344,82 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="shinymap.Outline.from_dict" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.Outline.from_dict">from_dict</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>Outline.from_dict(data)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>Outline.from_dict(data)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Load outline from dict (supports v0.x strings and v1.x element dicts).</p>
 <p>Automatically detects format and converts: - v0.x: String paths → kept as strings (backward compatible) - v1.x: Element dicts → deserialized to Element objects</p>
-<p>Args: data: Dictionary with regions and optional _metadata key</p>
-<p>Returns: Outline object with normalized list-based regions</p>
-<p>Raises: ValueError: If _metadata exists but is not a dict</p>
-<p>Example: &gt;&gt;&gt; # v0.x string format (backward compatible) &gt;&gt;&gt; outline = Outline.from_dict({“a”: “M 0 0 L 10 0”}) &gt;&gt;&gt; list(outline.regions.keys()) [‘a’]</p>
-<pre><code>&gt;&gt;&gt; # v0.x list format
+<section id="parameters" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 8%">
+<col style="width: 20%">
+<col style="width: 57%">
+<col style="width: 13%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>data</td>
+<td>dict[str, Any]</td>
+<td>Dictionary with regions and optional _metadata key</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>Outline</td>
+<td>Outline object with normalized list-based regions</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>ValueError</td>
+<td>If _metadata exists but is not a dict</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples-1" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-1">Examples</h4>
+<pre class="pycon"><code>&gt;&gt;&gt; # v0.x string format (backward compatible)
+&gt;&gt;&gt; outline = Outline.from_dict({"a": "M 0 0 L 10 0"})
+&gt;&gt;&gt; list(outline.regions.keys())
+['a']
+
+&gt;&gt;&gt; # v0.x list format
 &gt;&gt;&gt; outline = Outline.from_dict({"a": ["M 0 0", "L 10 0"]})
 &gt;&gt;&gt; outline.regions["a"]
 ['M 0 0', 'L 10 0']
@@ -319,175 +430,1028 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 &gt;&gt;&gt; outline.regions["a"]
 [Circle(cx=100, cy=100, r=50)]</code></pre>
 </section>
+</section>
 <section id="shinymap.Outline.from_json" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.Outline.from_json">from_json</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>Outline.from_json(json_path)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>Outline.from_json(json_path)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Load outline from JSON file.</p>
-<p>Args: json_path: Path to JSON file in shinymap format</p>
-<p>Returns: Outline object with normalized list-based paths</p>
-<p>Example: &gt;&gt;&gt; geo = Outline.from_json(“japan_prefectures.json”) # doctest: +SKIP &gt;&gt;&gt; geo.regions.keys() # doctest: +SKIP dict_keys([‘01’, ‘02’, …])</p>
+<section id="parameters-1" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 14%">
+<col style="width: 21%">
+<col style="width: 48%">
+<col style="width: 15%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>json_path</td>
+<td>str | PathType</td>
+<td>Path to JSON file in shinymap format</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-1" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>Outline</td>
+<td>Outline object with normalized list-based paths</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples-2" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-2">Examples</h4>
+<pre class="pycon"><code>&gt;&gt;&gt; geo = Outline.from_json("japan_prefectures.json")  # doctest: +SKIP
+&gt;&gt;&gt; geo.regions.keys()  # doctest: +SKIP
+dict_keys(['01', '02', ...])</code></pre>
+</section>
 </section>
 <section id="shinymap.Outline.from_svg" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.Outline.from_svg">from_svg</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>Outline.from_svg(svg_path, extract_viewbox<span class="op">=</span><span class="va">True</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>Outline.from_svg(svg_path, extract_viewbox<span class="op">=</span><span class="va">True</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Extract outline from SVG file (all element types).</p>
 <p>Extracts all supported SVG shape elements (path, circle, rect, polygon, ellipse, line, text) and generates auto-IDs for elements without IDs. This is v1.0 behavior - returns polymorphic Element objects instead of path strings.</p>
 <p>Preserves SVG aesthetics (fill, stroke, etc.) but these are NOT used by shinymap for rendering. See class docstring for details.</p>
-<p>Args: svg_path: Path to input SVG file extract_viewbox: If True, extract viewBox from SVG root element</p>
-<p>Returns: Outline object with extracted elements (v1.x format)</p>
-<p>Raises: FileNotFoundError: If svg_path does not exist ValueError: If SVG parsing fails</p>
-<p>Example: &gt;&gt;&gt; # Basic extraction (all element types) &gt;&gt;&gt; geo = Outline.from_svg(“design.svg”) # doctest: +SKIP &gt;&gt;&gt; geo.regions.keys() # doctest: +SKIP dict_keys([‘circle_1’, ‘rect_1’, ‘path_1’, ‘text_1’]) &gt;&gt;&gt; &gt;&gt;&gt; # With transformations &gt;&gt;&gt; geo = Outline.from_svg(“map.svg”) # doctest: +SKIP &gt;&gt;&gt; geo.relabel({“hokkaido”: [“circle_1”, “circle_2”]}) # doctest: +SKIP &gt;&gt;&gt; geo.set_overlays([“_border”]) # doctest: +SKIP &gt;&gt;&gt; geo.to_json(“output.json”) # doctest: +SKIP</p>
+<section id="parameters-2" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-2">Parameters</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 18%">
+<col style="width: 18%">
+<col style="width: 51%">
+<col style="width: 12%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>svg_path</td>
+<td>str | PathType</td>
+<td>Path to input SVG file</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>extract_viewbox</td>
+<td>bool</td>
+<td>If True, extract viewBox from SVG root element</td>
+<td><code>True</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-2" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-2">Returns</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 11%">
+<col style="width: 12%">
+<col style="width: 76%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>Outline</td>
+<td>Outline object with extracted elements (v1.x format)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-1" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-1">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>FileNotFoundError</td>
+<td>If svg_path does not exist</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>ValueError</td>
+<td>If SVG parsing fails</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples-3" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-3">Examples</h4>
+<pre class="pycon"><code>&gt;&gt;&gt; # Basic extraction (all element types)
+&gt;&gt;&gt; geo = Outline.from_svg("design.svg")  # doctest: +SKIP
+&gt;&gt;&gt; geo.regions.keys()  # doctest: +SKIP
+dict_keys(['circle_1', 'rect_1', 'path_1', 'text_1'])
+
+&gt;&gt;&gt; # With transformations
+&gt;&gt;&gt; geo = Outline.from_svg("map.svg")  # doctest: +SKIP
+&gt;&gt;&gt; geo.relabel({"hokkaido": ["circle_1", "circle_2"]})  # doctest: +SKIP
+&gt;&gt;&gt; geo.set_overlays(["_border"])  # doctest: +SKIP
+&gt;&gt;&gt; geo.to_json("output.json")  # doctest: +SKIP</code></pre>
+</section>
 </section>
 <section id="shinymap.Outline.groups" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.Outline.groups">groups</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>Outline.groups()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>Outline.groups()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get group membership from metadata.</p>
-<p>Returns: Dict mapping group names to lists of region IDs</p>
-<p>Example: &gt;&gt;&gt; geo = Outline.from_dict({ … “region1”: [“M 0 0”], … “region2”: [“M 10 0”], … “_metadata”: {“groups”: {“coastal”: [“region1”, “region2”]}} … }) &gt;&gt;&gt; geo.groups() {‘coastal’: [‘region1’, ‘region2’]}</p>
+<section id="returns-3" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-3">Returns</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 9%">
+<col style="width: 31%">
+<col style="width: 59%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>dict[str, list[str]]</td>
+<td>Dict mapping group names to lists of region IDs</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples-4" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-4">Examples</h4>
+<pre class="pycon"><code>&gt;&gt;&gt; geo = Outline.from_dict({
+...     "region1": ["M 0 0"],
+...     "region2": ["M 10 0"],
+...     "_metadata": {"groups": {"coastal": ["region1", "region2"]}}
+... })
+&gt;&gt;&gt; geo.groups()
+{'coastal': ['region1', 'region2']}</code></pre>
+</section>
 </section>
 <section id="shinymap.Outline.hidden" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.Outline.hidden">hidden</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>Outline.hidden()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>Outline.hidden()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get hidden region IDs from metadata.</p>
-<p>Returns: List of region IDs marked as hidden</p>
-<p>Example: &gt;&gt;&gt; geo = Outline.from_dict({ … “region”: [“M 0 0”], … “_temp”: [“M 0 0 L 100 0”], … “_metadata”: {“hidden”: [“_temp”]} … }) &gt;&gt;&gt; geo.hidden() [’_temp’]</p>
+<section id="returns-4" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-4">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>list[str]</td>
+<td>List of region IDs marked as hidden</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples-5" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-5">Examples</h4>
+<pre class="pycon"><code>&gt;&gt;&gt; geo = Outline.from_dict({
+...     "region": ["M 0 0"],
+...     "_temp": ["M 0 0 L 100 0"],
+...     "_metadata": {"hidden": ["_temp"]}
+... })
+&gt;&gt;&gt; geo.hidden()
+['_temp']</code></pre>
+</section>
 </section>
 <section id="shinymap.Outline.layers_dict" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.Outline.layers_dict">layers_dict</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>Outline.layers_dict()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>Outline.layers_dict()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get layers configuration dict for JavaScript props.</p>
 <p>Returns a dict with overlays, underlays, and hidden keys if any layer configuration is present in metadata. Returns None if no layer configuration exists.</p>
-<p>Returns: Dict with layer configuration or None</p>
-<p>Example: &gt;&gt;&gt; geo = Outline.from_dict({ … “region”: [“M 0 0”], … “_border”: [“M 0 0 L 100 0”], … “_metadata”: {“overlays”: [“_border”], “underlays”: [“_bg”]} … }) &gt;&gt;&gt; geo.layers_dict() {‘overlays’: [’_border’], ‘underlays’: [’_bg’]}</p>
+<section id="returns-5" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-5">Returns</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 9%">
+<col style="width: 41%">
+<col style="width: 48%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>dict[str, list[str]] | None</td>
+<td>Dict with layer configuration or None</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples-6" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-6">Examples</h4>
+<pre class="pycon"><code>&gt;&gt;&gt; geo = Outline.from_dict({
+...     "region": ["M 0 0"],
+...     "_border": ["M 0 0 L 100 0"],
+...     "_metadata": {"overlays": ["_border"], "underlays": ["_bg"]}
+... })
+&gt;&gt;&gt; geo.layers_dict()
+{'overlays': ['_border'], 'underlays': ['_bg']}</code></pre>
+</section>
 </section>
 <section id="shinymap.Outline.main_regions" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.Outline.main_regions">main_regions</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>Outline.main_regions()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>Outline.main_regions()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get main regions (excluding overlays).</p>
-<p>Returns: Regions object with main regions {regionId: [element1, …]} (elements can be strings for v0.x or Element objects for v1.x)</p>
-<p>Example: &gt;&gt;&gt; geo = Outline.from_dict({ … “region”: [“M 0 0”], … “_border”: [“M 0 0 L 100 0”], … “_metadata”: {“overlays”: [“_border”]} … }) &gt;&gt;&gt; geo.main_regions() Regions({ ‘region’: [‘M 0 0’], })</p>
+<section id="returns-6" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-6">Returns</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 9%">
+<col style="width: 11%">
+<col style="width: 79%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>Regions</td>
+<td>Regions object with main regions {regionId: [element1, …]}</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>Regions</td>
+<td>(elements can be strings for v0.x or Element objects for v1.x)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples-7" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-7">Examples</h4>
+<pre class="pycon"><code>&gt;&gt;&gt; geo = Outline.from_dict({
+...     "region": ["M 0 0"],
+...     "_border": ["M 0 0 L 100 0"],
+...     "_metadata": {"overlays": ["_border"]}
+... })
+&gt;&gt;&gt; geo.main_regions()
+Regions({
+  'region': ['M 0 0'],
+})</code></pre>
+</section>
 </section>
 <section id="shinymap.Outline.merge_layers" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.Outline.merge_layers">merge_layers</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>Outline.merge_layers(layers)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>Outline.merge_layers(layers)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Merge provided layers with outline’s metadata overlays.</p>
 <p>Returns a new Outline with updated metadata containing the merged layers configuration. Explicit layers take priority over metadata overlays.</p>
 <p>This method follows the immutable pattern - the original Outline is unchanged and a new Outline is returned.</p>
-<p>Args: layers: Optional explicit layer configuration with keys: underlays, overlays, hidden</p>
-<p>Returns: New Outline with merged layers in metadata</p>
-<p>Example: &gt;&gt;&gt; outline = Outline.from_dict({ … “region”: [“M 0 0”], … “_border”: [“M 0 0 L 100 0”], … “_metadata”: {“overlays”: [“_border”]} … }) &gt;&gt;&gt; merged = outline.merge_layers({“underlays”: [“_bg”]}) &gt;&gt;&gt; merged.metadata {‘overlays’: [’_border’], ‘underlays’: [’_bg’]} &gt;&gt;&gt; merged = outline.merge_layers({“overlays”: [“_custom”]}) &gt;&gt;&gt; merged.metadata {‘overlays’: [’_custom’]}</p>
+<section id="parameters-3" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-3">Parameters</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 5%">
+<col style="width: 25%">
+<col style="width: 60%">
+<col style="width: 8%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>layers</td>
+<td>dict[str, list[str]] | None</td>
+<td>Optional explicit layer configuration with keys: underlays, overlays, hidden</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-7" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-7">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>Outline</td>
+<td>New Outline with merged layers in metadata</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples-8" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-8">Examples</h4>
+<pre class="pycon"><code>&gt;&gt;&gt; outline = Outline.from_dict({
+...     "region": ["M 0 0"],
+...     "_border": ["M 0 0 L 100 0"],
+...     "_metadata": {"overlays": ["_border"]}
+... })
+&gt;&gt;&gt; merged = outline.merge_layers({"underlays": ["_bg"]})
+&gt;&gt;&gt; merged.metadata
+{'overlays': ['_border'], 'underlays': ['_bg']}
+&gt;&gt;&gt; merged = outline.merge_layers({"overlays": ["_custom"]})
+&gt;&gt;&gt; merged.metadata
+{'overlays': ['_custom']}</code></pre>
+</section>
 </section>
 <section id="shinymap.Outline.metadata_dict" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.Outline.metadata_dict">metadata_dict</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>Outline.metadata_dict(view_box<span class="op">=</span><span class="va">None</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>Outline.metadata_dict(view_box<span class="op">=</span><span class="va">None</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Build outline metadata dict for JavaScript props.</p>
 <p>Creates the outlineMetadata object sent to React components, containing viewBox and groups information.</p>
-<p>Args: view_box: Optional override viewBox tuple. If None, uses self.viewbox()</p>
-<p>Returns: Dict with viewBox and groups, or None if no metadata</p>
-<p>Example: &gt;&gt;&gt; outline = Outline.from_dict({ … “region1”: [“M 0 0 L 100 100”], … “_metadata”: {“groups”: {“coastal”: [“region1”]}} … }) &gt;&gt;&gt; outline.metadata_dict() {‘viewBox’: ‘-2.0 -2.0 104.0 104.0’, ‘groups’: {‘coastal’: [‘region1’]}}</p>
+<section id="parameters-4" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-4">Parameters</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 7%">
+<col style="width: 34%">
+<col style="width: 48%">
+<col style="width: 8%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>view_box</td>
+<td>tuple[float, float, float, float] | None</td>
+<td>Optional override viewBox tuple. If None, uses self.viewbox()</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-8" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-8">Returns</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 9%">
+<col style="width: 29%">
+<col style="width: 61%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>dict[str, Any] | None</td>
+<td>Dict with viewBox and groups, or None if no metadata</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples-9" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-9">Examples</h4>
+<pre class="pycon"><code>&gt;&gt;&gt; outline = Outline.from_dict({
+...     "region1": ["M 0 0 L 100 100"],
+...     "_metadata": {"groups": {"coastal": ["region1"]}}
+... })
+&gt;&gt;&gt; outline.metadata_dict()
+{'viewBox': '-2.0 -2.0 104.0 104.0', 'groups': {'coastal': ['region1']}}</code></pre>
+</section>
 </section>
 <section id="shinymap.Outline.overlay_regions" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.Outline.overlay_regions">overlay_regions</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>Outline.overlay_regions()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>Outline.overlay_regions()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get overlay regions only.</p>
-<p>Returns: Regions object with overlay regions {regionId: [element1, …]} (elements can be strings for v0.x or Element objects for v1.x)</p>
-<p>Example: &gt;&gt;&gt; geo = Outline.from_dict({ … “region”: [“M 0 0”], … “_border”: [“M 0 0 L 100 0”], … “_metadata”: {“overlays”: [“_border”]} … }) &gt;&gt;&gt; geo.overlay_regions() Regions({ ’_border’: [‘M 0 0 L 100 0’], })</p>
+<section id="returns-9" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-9">Returns</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 9%">
+<col style="width: 10%">
+<col style="width: 79%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>Regions</td>
+<td>Regions object with overlay regions {regionId: [element1, …]}</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>Regions</td>
+<td>(elements can be strings for v0.x or Element objects for v1.x)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples-10" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-10">Examples</h4>
+<pre class="pycon"><code>&gt;&gt;&gt; geo = Outline.from_dict({
+...     "region": ["M 0 0"],
+...     "_border": ["M 0 0 L 100 0"],
+...     "_metadata": {"overlays": ["_border"]}
+... })
+&gt;&gt;&gt; geo.overlay_regions()
+Regions({
+  '_border': ['M 0 0 L 100 0'],
+})</code></pre>
+</section>
 </section>
 <section id="shinymap.Outline.overlays" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.Outline.overlays">overlays</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>Outline.overlays()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>Outline.overlays()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get overlay region IDs from metadata.</p>
-<p>Returns: List of region IDs marked as overlays</p>
-<p>Example: &gt;&gt;&gt; geo = Outline.from_dict({ … “region”: [“M 0 0”], … “_border”: [“M 0 0 L 100 0”], … “_metadata”: {“overlays”: [“_border”]} … }) &gt;&gt;&gt; geo.overlays() [’_border’]</p>
+<section id="returns-10" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-10">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>list[str]</td>
+<td>List of region IDs marked as overlays</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples-11" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-11">Examples</h4>
+<pre class="pycon"><code>&gt;&gt;&gt; geo = Outline.from_dict({
+...     "region": ["M 0 0"],
+...     "_border": ["M 0 0 L 100 0"],
+...     "_metadata": {"overlays": ["_border"]}
+... })
+&gt;&gt;&gt; geo.overlays()
+['_border']</code></pre>
+</section>
 </section>
 <section id="shinymap.Outline.path_as_line" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.Outline.path_as_line">path_as_line</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>Outline.path_as_line(<span class="op">*</span>region_ids)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>Outline.path_as_line(<span class="op">*</span>region_ids)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Mark regions as lines described in path notation.</p>
 <p>Some SVG paths represent lines (dividers, borders, grids) rather than filled shapes. This method stores the region IDs so that stroke-only aesthetics are automatically applied.</p>
-<p>Args: *region_ids: Region IDs containing line elements in path notation</p>
-<p>Returns: New Outline object with line regions recorded in metadata</p>
-<p>Example: &gt;&gt;&gt; geo = Outline.from_dict({ … “region”: [“M 0 0 L 100 100”], … “_divider”: [“M 50 0 L 50 100”] … }) &gt;&gt;&gt; geo2 = geo.path_as_line(“_divider”) &gt;&gt;&gt; # Now _divider will use stroke-only rendering</p>
+<section id="parameters-5" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-5">Parameters</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 15%">
+<col style="width: 9%">
+<col style="width: 62%">
+<col style="width: 12%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>*region_ids</td>
+<td>str</td>
+<td>Region IDs containing line elements in path notation</td>
+<td><code>()</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-11" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-11">Returns</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 10%">
+<col style="width: 11%">
+<col style="width: 77%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>Outline</td>
+<td>New Outline object with line regions recorded in metadata</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples-12" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-12">Examples</h4>
+<pre class="pycon"><code>&gt;&gt;&gt; geo = Outline.from_dict({
+...     "region": ["M 0 0 L 100 100"],
+...     "_divider": ["M 50 0 L 50 100"]
+... })
+&gt;&gt;&gt; geo2 = geo.path_as_line("_divider")
+&gt;&gt;&gt; # Now _divider will use stroke-only rendering</code></pre>
+</section>
 </section>
 <section id="shinymap.Outline.region_types" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.Outline.region_types">region_types</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>Outline.region_types()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>Outline.region_types()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get aesthetic element type for each region.</p>
 <p>Returns a mapping of region_id -&gt; element_type where element_type is one of “shape”, “line”, or “text” for aesthetic resolution purposes.</p>
 <p>Priority: 1. metadata[“lines_as_path”] - explicit line override for path elements 2. Element’s element_name: - “line” → “line” - “text” → “text” - All others → “shape”</p>
-<p>Returns: Dict mapping region IDs to their aesthetic element types</p>
-<p>Example: &gt;&gt;&gt; # v1.x format with mixed elements &gt;&gt;&gt; from shinymap.outline import Circle, Line, Text, Path &gt;&gt;&gt; outline = Outline(regions={ … “region”: [Circle(cx=50, cy=50, r=30)], … “_divider”: [Line(x1=0, y1=50, x2=100, y2=50)], … “label”: [Text(x=50, y=50, text=“A”)], … }, metadata={}) &gt;&gt;&gt; outline.region_types() {‘region’: ‘shape’, ’_divider’: ‘line’, ‘label’: ‘text’}</p>
-<pre><code>&gt;&gt;&gt; # Path marked as line via path_as_line()
+<section id="returns-12" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-12">Returns</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 9%">
+<col style="width: 21%">
+<col style="width: 69%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>dict[str, str]</td>
+<td>Dict mapping region IDs to their aesthetic element types</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples-13" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-13">Examples</h4>
+<pre class="pycon"><code>&gt;&gt;&gt; # v1.x format with mixed elements
+&gt;&gt;&gt; from shinymap.outline import Circle, Line, Text, Path
+&gt;&gt;&gt; outline = Outline(regions={
+...     "region": [Circle(cx=50, cy=50, r=30)],
+...     "_divider": [Line(x1=0, y1=50, x2=100, y2=50)],
+...     "label": [Text(x=50, y=50, text="A")],
+... }, metadata={})
+&gt;&gt;&gt; outline.region_types()
+{'region': 'shape', '_divider': 'line', 'label': 'text'}
+
+&gt;&gt;&gt; # Path marked as line via path_as_line()
 &gt;&gt;&gt; outline = Outline(regions={
 ...     "_border": [Path(d="M 0 0 L 100 0")],
 ... }, metadata={}).path_as_line("_border")
 &gt;&gt;&gt; outline.region_types()
 {'_border': 'line'}</code></pre>
 </section>
+</section>
 <section id="shinymap.Outline.relabel" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.Outline.relabel">relabel</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>Outline.relabel(mapping)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>Outline.relabel(mapping)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Rename or merge regions (returns new Outline object).</p>
 <p>This method applies relabeling transformations to create a new Outline object with renamed or merged regions. Original object is unchanged.</p>
-<p>Args: mapping: Dict mapping new IDs to old ID(s) - String value: rename single region (e.g., {“tokyo”: “path_5”}) - List value: merge multiple regions (e.g., {“hokkaido”: [“path_1”, “path_2”]})</p>
-<p>Returns: New Outline object with relabeled regions</p>
-<p>Raises: ValueError: If an old ID in mapping doesn’t exist</p>
-<p>Example: &gt;&gt;&gt; geo = Outline.from_dict({ … “path_1”: [“M 0 0 L 10 0”], … “path_2”: [“M 20 0 L 30 0”], … “path_3”: [“M 40 0 L 50 0”] … }) &gt;&gt;&gt; # Rename and merge &gt;&gt;&gt; geo2 = geo.relabel({ … “region_a”: [“path_1”, “path_2”], # Merge … “_border”: “path_3” # Rename … }) &gt;&gt;&gt; geo2.regions.keys() dict_keys([‘region_a’, ’_border’])</p>
+<section id="parameters-6" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-6">Parameters</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 3%">
+<col style="width: 14%">
+<col style="width: 76%">
+<col style="width: 5%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>mapping</td>
+<td>dict[str, str | list[str]]</td>
+<td>Dict mapping new IDs to old ID(s) - String value: rename single region (e.g., {“tokyo”: “path_5”}) - List value: merge multiple regions (e.g., {“hokkaido”: [“path_1”, “path_2”]})</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-13" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-13">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>Outline</td>
+<td>New Outline object with relabeled regions</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-2" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-2">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>ValueError</td>
+<td>If an old ID in mapping doesn’t exist</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples-14" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-14">Examples</h4>
+<pre class="pycon"><code>&gt;&gt;&gt; geo = Outline.from_dict({
+...     "path_1": ["M 0 0 L 10 0"],
+...     "path_2": ["M 20 0 L 30 0"],
+...     "path_3": ["M 40 0 L 50 0"]
+... })
+&gt;&gt;&gt; # Rename and merge
+&gt;&gt;&gt; geo2 = geo.relabel({
+...     "region_a": ["path_1", "path_2"],  # Merge
+...     "_border": "path_3"                 # Rename
+... })
+&gt;&gt;&gt; geo2.regions.keys()
+dict_keys(['region_a', '_border'])</code></pre>
+</section>
 </section>
 <section id="shinymap.Outline.set_overlays" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.Outline.set_overlays">set_overlays</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>Outline.set_overlays(overlay_ids)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>Outline.set_overlays(overlay_ids)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Set overlay region IDs in metadata (returns new Outline object).</p>
-<p>Args: overlay_ids: List of region IDs to mark as overlays</p>
-<p>Returns: New Outline object with updated overlay metadata</p>
-<p>Example: &gt;&gt;&gt; geo = Outline.from_dict({ … “region”: [“M 0 0”], … “_border”: [“M 0 0 L 100 0”] … }) &gt;&gt;&gt; geo2 = geo.set_overlays([“_border”]) &gt;&gt;&gt; geo2.overlays() [’_border’]</p>
+<section id="parameters-7" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-7">Parameters</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 51%">
+<col style="width: 15%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>overlay_ids</td>
+<td>list[str]</td>
+<td>List of region IDs to mark as overlays</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-14" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-14">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>Outline</td>
+<td>New Outline object with updated overlay metadata</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples-15" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-15">Examples</h4>
+<pre class="pycon"><code>&gt;&gt;&gt; geo = Outline.from_dict({
+...     "region": ["M 0 0"],
+...     "_border": ["M 0 0 L 100 0"]
+... })
+&gt;&gt;&gt; geo2 = geo.set_overlays(["_border"])
+&gt;&gt;&gt; geo2.overlays()
+['_border']</code></pre>
+</section>
 </section>
 <section id="shinymap.Outline.to_dict" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.Outline.to_dict">to_dict</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>Outline.to_dict()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>Outline.to_dict()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Export to dict in shinymap JSON format.</p>
 <p>Automatically serializes elements: - v0.x format: Strings are kept as-is - v1.x format: Element objects are serialized to dicts via to_dict()</p>
-<p>Returns: Dict with _metadata and region data (v0.x strings or v1.x element dicts)</p>
-<p>Example: &gt;&gt;&gt; # v0.x format (strings) - empty metadata is omitted &gt;&gt;&gt; outline = Outline.from_dict({“region”: [“M 0 0”]}) &gt;&gt;&gt; outline.to_dict() {‘region’: [‘M 0 0’]}</p>
-<pre><code>&gt;&gt;&gt; # v1.x format (elements)
+<section id="returns-15" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-15">Returns</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 8%">
+<col style="width: 18%">
+<col style="width: 74%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>dict[str, Any]</td>
+<td>Dict with _metadata and region data (v0.x strings or v1.x element dicts)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples-16" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-16">Examples</h4>
+<pre class="pycon"><code>&gt;&gt;&gt; # v0.x format (strings) - empty metadata is omitted
+&gt;&gt;&gt; outline = Outline.from_dict({"region": ["M 0 0"]})
+&gt;&gt;&gt; outline.to_dict()
+{'region': ['M 0 0']}
+
+&gt;&gt;&gt; # v1.x format (elements)
 &gt;&gt;&gt; from shinymap.outline import Circle
 &gt;&gt;&gt; outline = Outline(regions={"r1": [Circle(cx=100, cy=100, r=50)]}, metadata={})
 &gt;&gt;&gt; outline.to_dict()
 {'r1': [{'type': 'circle', 'cx': 100, 'cy': 100, 'r': 50}]}</code></pre>
 </section>
+</section>
 <section id="shinymap.Outline.to_json" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.Outline.to_json">to_json</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>Outline.to_json(output_path)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>Outline.to_json(output_path)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Write outline to JSON file.</p>
-<p>Args: output_path: Path to write JSON file</p>
-<p>Example: &gt;&gt;&gt; geo = Outline.from_svg(“map.svg”) # doctest: +SKIP &gt;&gt;&gt; geo.to_json(“output.json”) # doctest: +SKIP</p>
+<section id="parameters-8" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-8">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>output_path</td>
+<td>str | PathType</td>
+<td>Path to write JSON file</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples-17" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-17">Examples</h4>
+<pre class="pycon"><code>&gt;&gt;&gt; geo = Outline.from_svg("map.svg")  # doctest: +SKIP
+&gt;&gt;&gt; geo.to_json("output.json")  # doctest: +SKIP</code></pre>
+</section>
 </section>
 <section id="shinymap.Outline.underlays" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.Outline.underlays">underlays</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>Outline.underlays()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>Outline.underlays()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get underlay region IDs from metadata.</p>
-<p>Returns: List of region IDs marked as underlays</p>
-<p>Example: &gt;&gt;&gt; geo = Outline.from_dict({ … “region”: [“M 0 0”], … “_bg”: [“M 0 0 L 100 0 L 100 100 L 0 100 Z”], … “_metadata”: {“underlays”: [“_bg”]} … }) &gt;&gt;&gt; geo.underlays() [’_bg’]</p>
+<section id="returns-16" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-16">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>list[str]</td>
+<td>List of region IDs marked as underlays</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples-18" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-18">Examples</h4>
+<pre class="pycon"><code>&gt;&gt;&gt; geo = Outline.from_dict({
+...     "region": ["M 0 0"],
+...     "_bg": ["M 0 0 L 100 0 L 100 100 L 0 100 Z"],
+...     "_metadata": {"underlays": ["_bg"]}
+... })
+&gt;&gt;&gt; geo.underlays()
+['_bg']</code></pre>
+</section>
 </section>
 <section id="shinymap.Outline.update_metadata" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.Outline.update_metadata">update_metadata</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>Outline.update_metadata(metadata)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>Outline.update_metadata(metadata)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Update metadata (returns new Outline object).</p>
 <p>Merges provided metadata with existing metadata. Existing keys are overwritten by new values.</p>
-<p>Args: metadata: Dict of metadata to merge</p>
-<p>Returns: New Outline object with updated metadata</p>
-<p>Example: &gt;&gt;&gt; geo = Outline.from_dict({“region”: [“M 0 0”]}) &gt;&gt;&gt; geo2 = geo.update_metadata({ … “source”: “Wikimedia Commons”, … “license”: “CC BY-SA 3.0” … }) &gt;&gt;&gt; geo2.metadata[“source”] ‘Wikimedia Commons’</p>
+<section id="parameters-9" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-9">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>metadata</td>
+<td>dict[str, Any]</td>
+<td>Dict of metadata to merge</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-17" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-17">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>Outline</td>
+<td>New Outline object with updated metadata</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples-19" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-19">Examples</h4>
+<pre class="pycon"><code>&gt;&gt;&gt; geo = Outline.from_dict({"region": ["M 0 0"]})
+&gt;&gt;&gt; geo2 = geo.update_metadata({
+...     "source": "Wikimedia Commons",
+...     "license": "CC BY-SA 3.0"
+... })
+&gt;&gt;&gt; geo2.metadata["source"]
+'Wikimedia Commons'</code></pre>
+</section>
 </section>
 <section id="shinymap.Outline.viewbox" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.Outline.viewbox">viewbox</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>Outline.viewbox(padding<span class="op">=</span><span class="fl">0.02</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>Outline.viewbox(padding<span class="op">=</span><span class="fl">0.02</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get viewBox from metadata, or compute from outline coordinates.</p>
 <p>Works with both v0.x (string paths) and v1.x (Element objects).</p>
-<p>Args: padding: Padding fraction for computed viewBox (default 2%)</p>
-<p>Returns: ViewBox tuple in format (x, y, width, height)</p>
-<p>Example: &gt;&gt;&gt; geo = Outline.from_dict({“a”: [“M 0 0 L 100 100”]}) &gt;&gt;&gt; geo.viewbox() # Returns with 2% padding (-2.0, -2.0, 104.0, 104.0)</p>
+<section id="parameters-10" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-10">Parameters</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 11%">
+<col style="width: 10%">
+<col style="width: 65%">
+<col style="width: 13%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>padding</td>
+<td>float</td>
+<td>Padding fraction for computed viewBox (default 2%)</td>
+<td><code>0.02</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-18" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-18">Returns</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 8%">
+<col style="width: 40%">
+<col style="width: 51%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>tuple[float, float, float, float]</td>
+<td>ViewBox tuple in format (x, y, width, height)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples-20" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-20">Examples</h4>
+<pre class="pycon"><code>&gt;&gt;&gt; geo = Outline.from_dict({"a": ["M 0 0 L 100 100"]})
+&gt;&gt;&gt; geo.viewbox()  # Returns with 2% padding
+(-2.0, -2.0, 104.0, 104.0)</code></pre>
 
 
+</section>
 </section>
 </section>
 </section>

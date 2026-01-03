@@ -163,7 +163,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#shinymap.aes.color.scale_sequential" id="toc-shinymap.aes.color.scale_sequential" class="nav-link active" data-scroll-target="#shinymap.aes.color.scale_sequential">aes.color.scale_sequential</a></li>
+  <li><a href="#shinymap.aes.color.scale_sequential" id="toc-shinymap.aes.color.scale_sequential" class="nav-link active" data-scroll-target="#shinymap.aes.color.scale_sequential">aes.color.scale_sequential</a>
+  <ul class="collapse">
+  <li><a href="#parameters" id="toc-parameters" class="nav-link" data-scroll-target="#parameters">Parameters</a></li>
+  <li><a href="#returns" id="toc-returns" class="nav-link" data-scroll-target="#returns">Returns</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -184,10 +188,78 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Create a sequential color scale based on counts.</p>
 <p>Regions with count=0 get the neutral color. Regions with counts are colored from palette[0] (low) to palette[-1] (high).</p>
-<p>Args: counts: Mapping of region_id to count region_ids: All region IDs to include palette: Color palette to use (default: SEQUENTIAL_BLUE) neutral_color: Color for regions with count=0 max_count: Fixed maximum for scaling. If None, uses dynamic max from counts. For interactive visualizations, use a fixed value to prevent other regions from changing color when one region is clicked.</p>
-<p>Returns: Mapping of region_id to hex color</p>
+<section id="parameters" class="level2 doc-section doc-section-parameters">
+<h2 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 5%">
+<col style="width: 8%">
+<col style="width: 78%">
+<col style="width: 7%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>counts</td>
+<td>Mapping[str, int]</td>
+<td>Mapping of region_id to count</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>region_ids</td>
+<td>list[str]</td>
+<td>All region IDs to include</td>
+<td><em>required</em></td>
+</tr>
+<tr class="odd">
+<td>palette</td>
+<td>list[str]</td>
+<td>Color palette to use (default: SEQUENTIAL_BLUE)</td>
+<td><code>SEQUENTIAL_BLUE</code></td>
+</tr>
+<tr class="even">
+<td>neutral_color</td>
+<td>str</td>
+<td>Color for regions with count=0</td>
+<td><code>NEUTRALS['fill']</code></td>
+</tr>
+<tr class="odd">
+<td>max_count</td>
+<td>int | None</td>
+<td>Fixed maximum for scaling. If None, uses dynamic max from counts. For interactive visualizations, use a fixed value to prevent other regions from changing color when one region is clicked.</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level2 doc-section doc-section-returns">
+<h2 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>dict[str, str]</td>
+<td>Mapping of region_id to hex color</td>
+</tr>
+</tbody>
+</table>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

@@ -163,7 +163,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#shinymap.update_map" id="toc-shinymap.update_map" class="nav-link active" data-scroll-target="#shinymap.update_map">update_map</a></li>
+  <li><a href="#shinymap.update_map" id="toc-shinymap.update_map" class="nav-link active" data-scroll-target="#shinymap.update_map">update_map</a>
+  <ul class="collapse">
+  <li><a href="#parameters" id="toc-parameters" class="nav-link" data-scroll-target="#parameters">Parameters</a></li>
+  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -178,9 +182,63 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>update_map(<span class="bu">id</span>, <span class="op">*</span>, aes<span class="op">=</span><span class="va">None</span>, value<span class="op">=</span><span class="va">None</span>, tooltips<span class="op">=</span><span class="va">None</span>, session<span class="op">=</span><span class="va">None</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Update an input_map or output_map without full re-render.</p>
 <p>For input_map: Updates aesthetics and selection state. For output_map: Updates aesthetics only (use <span class="citation" data-cites="render_map">@render_map</span> for data changes).</p>
-<p>Args: id: The map element ID aes: Aesthetic configuration (ByGroup, ByState, or BaseAesthetic) value: (input_map only) Selection state; pass {} to clear all selections tooltips: Region tooltips session: A Session instance. If not provided, it is inferred via get_current_session()</p>
-<p>Example: from shinymap import aes from shinymap.ui import update_map</p>
-<pre><code># Update aesthetics with ByGroup (per-region colors)
+<section id="parameters" class="level2 doc-section doc-section-parameters">
+<h2 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 8%">
+<col style="width: 14%">
+<col style="width: 66%">
+<col style="width: 10%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>id</td>
+<td>str</td>
+<td>The map element ID</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>aes</td>
+<td>AesType</td>
+<td>Aesthetic configuration (ByGroup, ByState, or BaseAesthetic)</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>value</td>
+<td>CountMap</td>
+<td>(input_map only) Selection state; pass {} to clear all selections</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>tooltips</td>
+<td>TooltipMap</td>
+<td>Region tooltips</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>session</td>
+<td>Session | None</td>
+<td>A Session instance. If not provided, it is inferred via get_current_session()</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples" class="level2 doc-section doc-section-examples">
+<h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
+<pre class="pycon"><code>from shinymap import aes
+from shinymap.ui import update_map
+
+# Update aesthetics with ByGroup (per-region colors)
 update_map("my_map", aes=aes.ByGroup(
     region1=aes.Shape(fill_color="#ff0000"),
     region2=aes.Shape(fill_color="#00ff00"),
@@ -200,6 +258,7 @@ update_map("my_map", value={"region1": 1, "region2": 1})</code></pre>
 <p>Note: - Uses shallow merge semantics: new properties override existing ones - Properties not specified are left unchanged - For output_map data updates, use <span class="citation" data-cites="render_map">@render_map</span> re-execution instead</p>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

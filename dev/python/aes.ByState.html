@@ -165,6 +165,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#shinymap.aes.ByState" id="toc-shinymap.aes.ByState" class="nav-link active" data-scroll-target="#shinymap.aes.ByState">aes.ByState</a>
   <ul class="collapse">
+  <li><a href="#parameters" id="toc-parameters" class="nav-link" data-scroll-target="#parameters">Parameters</a></li>
+  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
   <li><a href="#shinymap.aes.ByState.from_dict" id="toc-shinymap.aes.ByState.from_dict" class="nav-link" data-scroll-target="#shinymap.aes.ByState.from_dict">from_dict</a></li>
@@ -187,8 +189,59 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>aes.ByState(base<span class="op">=</span>MISSING, <span class="op">*</span>, select<span class="op">=</span>MISSING, hover<span class="op">=</span>MISSING)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Container for element aesthetics across interaction states.</p>
 <p>Groups base, select, and hover aesthetics for a single element type. The type parameter T is constrained to BaseAesthetic subclasses (ShapeAesthetic, LineAesthetic, TextAesthetic).</p>
-<p>Args: base: Aesthetic for the default/base state (positional). MISSING = inherit from library default, None = invisible. select: Aesthetic override when region is selected. MISSING = inherit from base, None = no selection effect. hover: Aesthetic override when region is hovered. MISSING = inherit library default hover, None = no hover effect.</p>
-<p>Example: &gt;&gt;&gt; from shinymap import aes, PARENT &gt;&gt;&gt; &gt;&gt;&gt; # Full form with all states &gt;&gt;&gt; shape_states = aes.ByState( … aes.Shape(fill_color=“#f0f9ff”), … select=aes.Shape(fill_color=“#7dd3fc”), … hover=aes.Shape(stroke_width=PARENT.stroke_width + 2), … ) &gt;&gt;&gt; &gt;&gt;&gt; # Base only (select/hover inherit defaults) &gt;&gt;&gt; line_states = aes.ByState(aes.Line(stroke_color=“#0369a1”))</p>
+<section id="parameters" class="level2 doc-section doc-section-parameters">
+<h2 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 5%">
+<col style="width: 16%">
+<col style="width: 71%">
+<col style="width: 7%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>base</td>
+<td>T | None | MissingType</td>
+<td>Aesthetic for the default/base state (positional). MISSING = inherit from library default, None = invisible.</td>
+<td><code>MISSING</code></td>
+</tr>
+<tr class="even">
+<td>select</td>
+<td>T | None | MissingType</td>
+<td>Aesthetic override when region is selected. MISSING = inherit from base, None = no selection effect.</td>
+<td><code>MISSING</code></td>
+</tr>
+<tr class="odd">
+<td>hover</td>
+<td>T | None | MissingType</td>
+<td>Aesthetic override when region is hovered. MISSING = inherit library default hover, None = no hover effect.</td>
+<td><code>MISSING</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples" class="level2 doc-section doc-section-examples">
+<h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
+<pre class="pycon"><code>&gt;&gt;&gt; from shinymap import aes, PARENT
+
+&gt;&gt;&gt; # Full form with all states
+&gt;&gt;&gt; shape_states = aes.ByState(
+...     aes.Shape(fill_color="#f0f9ff"),
+...     select=aes.Shape(fill_color="#7dd3fc"),
+...     hover=aes.Shape(stroke_width=PARENT.stroke_width + 2),
+... )
+
+&gt;&gt;&gt; # Base only (select/hover inherit defaults)
+&gt;&gt;&gt; line_states = aes.ByState(aes.Line(stroke_color="#0369a1"))</code></pre>
+</section>
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">Methods</h2>
 <table class="caption-top table">
@@ -219,36 +272,141 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="shinymap.aes.ByState.from_dict" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.aes.ByState.from_dict">from_dict</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>aes.ByState.from_dict(d)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>aes.ByState.from_dict(d)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Convert dict with base/select/hover keys to ByState.</p>
 <p>Recursively deserializes nested aesthetic dicts using _leaf_from_dict().</p>
 </section>
 <section id="shinymap.aes.ByState.resolve_for_region" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.aes.ByState.resolve_for_region">resolve_for_region</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>aes.ByState.resolve_for_region(</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    wash_default,</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    is_selected<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    is_hovered<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>aes.ByState.resolve_for_region(</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    wash_default,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    is_selected<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    is_hovered<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Resolve the final aesthetic for a region given its state.</p>
 <p>Chain: wash_default → base → select (if selected) → hover (if hovered)</p>
-<p>Args: wash_default: The wash config default aesthetic for this element type is_selected: Whether the region is currently selected is_hovered: Whether the region is currently hovered</p>
-<p>Returns: A fully resolved aesthetic</p>
-<p>Example: &gt;&gt;&gt; from shinymap import aes, PARENT &gt;&gt;&gt; default = aes.Shape(fill_color=“#e5e7eb”, stroke_width=1.0) &gt;&gt;&gt; states = aes.ByState( … base=aes.Shape(fill_color=“#3b82f6”), … select=aes.Shape(fill_color=“#1e40af”), … hover=aes.Shape(stroke_width=PARENT.stroke_width + 1), … ) &gt;&gt;&gt; # Not selected, not hovered &gt;&gt;&gt; resolved = states.resolve_for_region(default) &gt;&gt;&gt; resolved.fill_color ‘#3b82f6’ &gt;&gt;&gt; resolved.stroke_width # inherited from default 1.0 &gt;&gt;&gt; # Selected and hovered &gt;&gt;&gt; resolved = states.resolve_for_region(default, is_selected=True, is_hovered=True) &gt;&gt;&gt; resolved.fill_color # from select ‘#1e40af’ &gt;&gt;&gt; resolved.stroke_width # 1.0 + 1 from hover 2.0</p>
+<section id="parameters-1" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 14%">
+<col style="width: 15%">
+<col style="width: 58%">
+<col style="width: 12%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>wash_default</td>
+<td>BaseAesthetic</td>
+<td>The wash config default aesthetic for this element type</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>is_selected</td>
+<td>bool</td>
+<td>Whether the region is currently selected</td>
+<td><code>False</code></td>
+</tr>
+<tr class="odd">
+<td>is_hovered</td>
+<td>bool</td>
+<td>Whether the region is currently hovered</td>
+<td><code>False</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>BaseAesthetic</td>
+<td>A fully resolved aesthetic</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples-1" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-1">Examples</h4>
+<pre class="pycon"><code>&gt;&gt;&gt; from shinymap import aes, PARENT
+&gt;&gt;&gt; default = aes.Shape(fill_color="#e5e7eb", stroke_width=1.0)
+&gt;&gt;&gt; states = aes.ByState(
+...     base=aes.Shape(fill_color="#3b82f6"),
+...     select=aes.Shape(fill_color="#1e40af"),
+...     hover=aes.Shape(stroke_width=PARENT.stroke_width + 1),
+... )
+&gt;&gt;&gt; # Not selected, not hovered
+&gt;&gt;&gt; resolved = states.resolve_for_region(default)
+&gt;&gt;&gt; resolved.fill_color
+'#3b82f6'
+&gt;&gt;&gt; resolved.stroke_width  # inherited from default
+1.0
+&gt;&gt;&gt; # Selected and hovered
+&gt;&gt;&gt; resolved = states.resolve_for_region(default, is_selected=True, is_hovered=True)
+&gt;&gt;&gt; resolved.fill_color  # from select
+'#1e40af'
+&gt;&gt;&gt; resolved.stroke_width  # 1.0 + 1 from hover
+2.0</code></pre>
+</section>
 </section>
 <section id="shinymap.aes.ByState.to_dict" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.aes.ByState.to_dict">to_dict</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>aes.ByState.to_dict()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>aes.ByState.to_dict()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Convert to dict with type key, recursively converting nested aesthetics.</p>
 </section>
 <section id="shinymap.aes.ByState.to_js_dict" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.aes.ByState.to_js_dict">to_js_dict</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>aes.ByState.to_js_dict()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>aes.ByState.to_js_dict()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Convert to dict format for JavaScript consumption.</p>
 <p>Unlike to_dict(), this produces a simplified format without type discriminators, suitable for direct use by React components.</p>
-<p>Returns: Dict with keys: base, select, hover Each value is a dict of aesthetic properties (snake_case keys).</p>
+<section id="returns-1" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 8%">
+<col style="width: 19%">
+<col style="width: 71%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>dict[str, Any]</td>
+<td>Dict with keys: base, select, hover</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>dict[str, Any]</td>
+<td>Each value is a dict of aesthetic properties (snake_case keys).</td>
+</tr>
+</tbody>
+</table>
 
 
+</section>
 </section>
 </section>
 </section>

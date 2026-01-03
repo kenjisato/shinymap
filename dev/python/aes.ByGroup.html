@@ -165,6 +165,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#shinymap.aes.ByGroup" id="toc-shinymap.aes.ByGroup" class="nav-link active" data-scroll-target="#shinymap.aes.ByGroup">aes.ByGroup</a>
   <ul class="collapse">
+  <li><a href="#special-group-names" id="toc-special-group-names" class="nav-link" data-scroll-target="#special-group-names">Special group names</a></li>
+  <li><a href="#parameters" id="toc-parameters" class="nav-link" data-scroll-target="#parameters">Parameters</a></li>
+  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
   <li><a href="#shinymap.aes.ByGroup.from_dict" id="toc-shinymap.aes.ByGroup.from_dict" class="nav-link" data-scroll-target="#shinymap.aes.ByGroup.from_dict">from_dict</a></li>
@@ -185,9 +188,53 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>aes.ByGroup(<span class="op">**</span>groups)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Container for aesthetics by group/region name.</p>
 <p>Used by input_map() and output_map() for group-wise configuration. ByGroup wraps ByState (row-first composition).</p>
-<p>Special group names: __all: Default for all regions regardless of type (lowest priority) __shape: Default for shape elements (medium priority) __line: Default for line elements (medium priority) __text: Default for text elements (medium priority) <group_name>: Named groups from geometry metadata (high priority) <region_id>: Individual region IDs (highest priority)</region_id></group_name></p>
-<p>Args: **groups: Mapping of group names to aesthetics. Values can be ByState for full state config, or single aesthetic for base only.</p>
-<p>Example: &gt;&gt;&gt; from shinymap import aes, PARENT &gt;&gt;&gt; &gt;&gt;&gt; _ = aes.ByGroup( … __all=aes.ByState( … base=aes.Shape(fill_color=“#e5e7eb”), … hover=aes.Shape(stroke_width=PARENT.stroke_width + 1), … ), … coastal=aes.Shape(fill_color=“#3b82f6”), # base only shorthand … mountain=aes.ByState( … base=aes.Shape(fill_color=“#10b981”), … select=aes.Shape(fill_color=“#6ee7b7”), … ), … )</p>
+<section id="special-group-names" class="level2 doc-section doc-section-special-group-names">
+<h2 class="doc-section doc-section-special-group-names anchored" data-anchor-id="special-group-names">Special group names</h2>
+<p>__all: Default for all regions regardless of type (lowest priority) __shape: Default for shape elements (medium priority) __line: Default for line elements (medium priority) __text: Default for text elements (medium priority) <group_name>: Named groups from geometry metadata (high priority) <region_id>: Individual region IDs (highest priority)</region_id></group_name></p>
+</section>
+<section id="parameters" class="level2 doc-section doc-section-parameters">
+<h2 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 5%">
+<col style="width: 25%">
+<col style="width: 64%">
+<col style="width: 5%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>**groups</td>
+<td>ByState | BaseAesthetic | None | MissingType</td>
+<td>Mapping of group names to aesthetics. Values can be ByState for full state config, or single aesthetic for base only.</td>
+<td><code>{}</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples" class="level2 doc-section doc-section-examples">
+<h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
+<pre class="pycon"><code>&gt;&gt;&gt; from shinymap import aes, PARENT
+
+&gt;&gt;&gt; _ = aes.ByGroup(
+...     __all=aes.ByState(
+...         base=aes.Shape(fill_color="#e5e7eb"),
+...         hover=aes.Shape(stroke_width=PARENT.stroke_width + 1),
+...     ),
+...     coastal=aes.Shape(fill_color="#3b82f6"),  # base only shorthand
+...     mountain=aes.ByState(
+...         base=aes.Shape(fill_color="#10b981"),
+...         select=aes.Shape(fill_color="#6ee7b7"),
+...     ),
+... )</code></pre>
+</section>
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">Methods</h2>
 <table class="caption-top table">
@@ -210,13 +257,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="shinymap.aes.ByGroup.from_dict" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.aes.ByGroup.from_dict">from_dict</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>aes.ByGroup.from_dict(d)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>aes.ByGroup.from_dict(d)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Convert dict to ByGroup.</p>
 <p>Values can be ByState dicts or leaf aesthetic dicts.</p>
 </section>
 <section id="shinymap.aes.ByGroup.to_dict" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.aes.ByGroup.to_dict">to_dict</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>aes.ByGroup.to_dict()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>aes.ByGroup.to_dict()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Convert to dict with type key, recursively converting nested aesthetics.</p>
 
 
