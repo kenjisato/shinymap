@@ -187,7 +187,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>IMPORTANT: Index 0 is used as the base aesthetic for ALL regions. This ensures never-touched regions and count=0 regions look the same.</p>
 <p>Args: fill_color: Single color or list of colors indexed by state. fill_opacity: Single value or list of opacities (0.0-1.0). stroke_color: Optional stroke color(s). stroke_width: Optional stroke width(s). stroke_dasharray: Optional dash pattern(s) for line styling.</p>
 <p>Returns: IndexedAesthetic instance</p>
-<p>Example: &gt;&gt;&gt; from shinymap import aes &gt;&gt;&gt; &gt;&gt;&gt; # Two-state (off/on) with different colors &gt;&gt;&gt; aes.Indexed(fill_color=[“#e5e7eb”, “#3b82f6”]) &gt;&gt;&gt; &gt;&gt;&gt; # Heat map with opacity gradient &gt;&gt;&gt; from shinymap.utils import linspace &gt;&gt;&gt; aes.Indexed(fill_color=“#f97316”, fill_opacity=linspace(0.0, 1.0, num=6)) &gt;&gt;&gt; &gt;&gt;&gt; # Traffic light (4 states) &gt;&gt;&gt; aes.Indexed(fill_color=[“#e2e8f0”, “#ef4444”, “#eab308”, “#22c55e”])</p>
+<p>Example: &gt;&gt;&gt; from shinymap import aes &gt;&gt;&gt; &gt;&gt;&gt; # Two-state (off/on) with different colors &gt;&gt;&gt; _ = aes.Indexed(fill_color=[“#e5e7eb”, “#3b82f6”]) &gt;&gt;&gt; &gt;&gt;&gt; # Heat map with opacity gradient &gt;&gt;&gt; from shinymap.utils import linspace &gt;&gt;&gt; _ = aes.Indexed(fill_color=“#f97316”, fill_opacity=linspace(0.0, 1.0, num=6)) &gt;&gt;&gt; &gt;&gt;&gt; # Traffic light (4 states) &gt;&gt;&gt; _ = aes.Indexed(fill_color=[“#e2e8f0”, “#ef4444”, “#eab308”, “#22c55e”])</p>
 
 
 </section>

@@ -181,7 +181,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Each layer merges onto the previous, with RelativeExpr values resolved against the parent layer’s values.</p>
 <p>Args: state: The region’s current state (selected, hovered, group) config: The aesthetic configuration (base, select, hover, group aesthetics)</p>
 <p>Returns: A fully resolved ShapeAesthetic with all properties set</p>
-<p>Example: &gt;&gt;&gt; from shinymap import aes, PARENT, resolve_region, RegionState, AestheticConfig &gt;&gt;&gt; state = RegionState(“region_1”, is_selected=True, is_hovered=True) &gt;&gt;&gt; config = AestheticConfig( … aes_base=aes.Shape(stroke_width=2), … aes_select=aes.Shape(stroke_width=3, fill_color=“#fef08a”), … aes_hover=aes.Shape(stroke_width=PARENT.stroke_width + 1), … ) &gt;&gt;&gt; resolved = resolve_region(state, config) &gt;&gt;&gt; resolved.stroke_width # 3 (from select) + 1 (from hover) = 4 4.0</p>
+<p>Example: &gt;&gt;&gt; from shinymap import aes, PARENT, resolve_region, RegionState, AestheticConfig &gt;&gt;&gt; state = RegionState(“region_1”, value=1, is_hovered=True) # value=1 means selected &gt;&gt;&gt; config = AestheticConfig( … aes_base=aes.Shape(stroke_width=2), … aes_select=aes.Shape(stroke_width=3, fill_color=“#fef08a”), … aes_hover=aes.Shape(stroke_width=PARENT.stroke_width + 1), … ) &gt;&gt;&gt; resolved = resolve_region(state, config) &gt;&gt;&gt; resolved.stroke_width # 3 (from select) + 1 (from hover) = 4 4.0</p>
 
 
 </section>

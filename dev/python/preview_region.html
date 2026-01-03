@@ -180,7 +180,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Shows how aesthetics are inherited and resolved at each layer, displaying ALL properties at each step.</p>
 <p>Args: state: The region’s current state config: The aesthetic configuration</p>
 <p>Returns: A formatted string showing the resolution at each layer</p>
-<p>Example: &gt;&gt;&gt; from shinymap import aes, PARENT, preview_region, RegionState, AestheticConfig &gt;&gt;&gt; state = RegionState(“region_1”, is_selected=True, is_hovered=True) &gt;&gt;&gt; config = AestheticConfig( … aes_base=aes.Shape(stroke_width=2), … aes_select=aes.Shape(stroke_width=3), … aes_hover=aes.Shape(stroke_width=PARENT.stroke_width + 1), … ) &gt;&gt;&gt; print(preview_region(state, config))</p>
+<p>Example: &gt;&gt;&gt; from shinymap import aes, PARENT, preview_region, RegionState, AestheticConfig &gt;&gt;&gt; state = RegionState(“region_1”, value=1, is_hovered=True) # value=1 means selected &gt;&gt;&gt; config = AestheticConfig( … aes_base=aes.Shape(stroke_width=2), … aes_select=aes.Shape(stroke_width=3), … aes_hover=aes.Shape(stroke_width=PARENT.stroke_width + 1), … ) &gt;&gt;&gt; print(preview_region(state, config)) # doctest: +SKIP</p>
 
 
 </section>

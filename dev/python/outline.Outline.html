@@ -307,14 +307,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Args: data: Dictionary with regions and optional _metadata key</p>
 <p>Returns: Outline object with normalized list-based regions</p>
 <p>Raises: ValueError: If _metadata exists but is not a dict</p>
-<p>Example: &gt;&gt;&gt; # v0.x string format (backward compatible) &gt;&gt;&gt; Outline.from_dict({“a”: “M 0 0 L 10 0”}) Outline(regions={‘a’: [‘M 0 0 L 10 0’]}, metadata={})</p>
+<p>Example: &gt;&gt;&gt; # v0.x string format (backward compatible) &gt;&gt;&gt; outline = Outline.from_dict({“a”: “M 0 0 L 10 0”}) &gt;&gt;&gt; list(outline.regions.keys()) [‘a’]</p>
 <pre><code>&gt;&gt;&gt; # v0.x list format
-&gt;&gt;&gt; Outline.from_dict({"a": ["M 0 0", "L 10 0"]})
-Outline(regions={'a': ['M 0 0', 'L 10 0']}, metadata={})
+&gt;&gt;&gt; outline = Outline.from_dict({"a": ["M 0 0", "L 10 0"]})
+&gt;&gt;&gt; outline.regions["a"]
+['M 0 0', 'L 10 0']
 
 &gt;&gt;&gt; # v1.x element format
-&gt;&gt;&gt; Outline.from_dict({"a": [{"type": "circle", "cx": 100, "cy": 100, "r": 50}]})
-Outline(regions={'a': [Circle(cx=100, cy=100, r=50)]}, metadata={})</code></pre>
+&gt;&gt;&gt; data = {"a": [{"type": "circle", "cx": 100, "cy": 100, "r": 50}]}
+&gt;&gt;&gt; outline = Outline.from_dict(data)
+&gt;&gt;&gt; outline.regions["a"]
+[Circle(cx=100, cy=100, r=50)]</code></pre>
 </section>
 <section id="shinymap.outline.Outline.from_json" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.outline.Outline.from_json">from_json</h3>
@@ -322,7 +325,7 @@ Outline(regions={'a': [Circle(cx=100, cy=100, r=50)]}, metadata={})</code></pre>
 <p>Load outline from JSON file.</p>
 <p>Args: json_path: Path to JSON file in shinymap format</p>
 <p>Returns: Outline object with normalized list-based paths</p>
-<p>Example: &gt;&gt;&gt; geo = Outline.from_json(“japan_prefectures.json”) &gt;&gt;&gt; geo.regions.keys() dict_keys([‘01’, ‘02’, …])</p>
+<p>Example: &gt;&gt;&gt; geo = Outline.from_json(“japan_prefectures.json”) # doctest: +SKIP &gt;&gt;&gt; geo.regions.keys() # doctest: +SKIP dict_keys([‘01’, ‘02’, …])</p>
 </section>
 <section id="shinymap.outline.Outline.from_svg" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.outline.Outline.from_svg">from_svg</h3>
@@ -333,7 +336,7 @@ Outline(regions={'a': [Circle(cx=100, cy=100, r=50)]}, metadata={})</code></pre>
 <p>Args: svg_path: Path to input SVG file extract_viewbox: If True, extract viewBox from SVG root element</p>
 <p>Returns: Outline object with extracted elements (v1.x format)</p>
 <p>Raises: FileNotFoundError: If svg_path does not exist ValueError: If SVG parsing fails</p>
-<p>Example: &gt;&gt;&gt; # Basic extraction (all element types) &gt;&gt;&gt; geo = Outline.from_svg(“design.svg”) &gt;&gt;&gt; geo.regions.keys() dict_keys([‘circle_1’, ‘rect_1’, ‘path_1’, ‘text_1’]) &gt;&gt;&gt; &gt;&gt;&gt; # With transformations &gt;&gt;&gt; geo = Outline.from_svg(“map.svg”) &gt;&gt;&gt; geo.relabel({“hokkaido”: [“circle_1”, “circle_2”]}) &gt;&gt;&gt; geo.set_overlays([“_border”]) &gt;&gt;&gt; geo.to_json(“output.json”)</p>
+<p>Example: &gt;&gt;&gt; # Basic extraction (all element types) &gt;&gt;&gt; geo = Outline.from_svg(“design.svg”) # doctest: +SKIP &gt;&gt;&gt; geo.regions.keys() # doctest: +SKIP dict_keys([‘circle_1’, ‘rect_1’, ‘path_1’, ‘text_1’]) &gt;&gt;&gt; &gt;&gt;&gt; # With transformations &gt;&gt;&gt; geo = Outline.from_svg(“map.svg”) # doctest: +SKIP &gt;&gt;&gt; geo.relabel({“hokkaido”: [“circle_1”, “circle_2”]}) # doctest: +SKIP &gt;&gt;&gt; geo.set_overlays([“_border”]) # doctest: +SKIP &gt;&gt;&gt; geo.to_json(“output.json”) # doctest: +SKIP</p>
 </section>
 <section id="shinymap.outline.Outline.groups" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.outline.Outline.groups">groups</h3>
@@ -362,7 +365,7 @@ Outline(regions={'a': [Circle(cx=100, cy=100, r=50)]}, metadata={})</code></pre>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>outline.Outline.main_regions()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get main regions (excluding overlays).</p>
 <p>Returns: Regions object with main regions {regionId: [element1, …]} (elements can be strings for v0.x or Element objects for v1.x)</p>
-<p>Example: &gt;&gt;&gt; geo = Outline.from_dict({ … “region”: [“M 0 0”], … “_border”: [“M 0 0 L 100 0”], … “_metadata”: {“overlays”: [“_border”]} … }) &gt;&gt;&gt; geo.main_regions() Regions({‘region’: [‘M 0 0’]})</p>
+<p>Example: &gt;&gt;&gt; geo = Outline.from_dict({ … “region”: [“M 0 0”], … “_border”: [“M 0 0 L 100 0”], … “_metadata”: {“overlays”: [“_border”]} … }) &gt;&gt;&gt; geo.main_regions() Regions({ ‘region’: [‘M 0 0’], })</p>
 </section>
 <section id="shinymap.outline.Outline.merge_layers" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.outline.Outline.merge_layers">merge_layers</h3>
@@ -381,14 +384,14 @@ Outline(regions={'a': [Circle(cx=100, cy=100, r=50)]}, metadata={})</code></pre>
 <p>Creates the outlineMetadata object sent to React components, containing viewBox and groups information.</p>
 <p>Args: view_box: Optional override viewBox tuple. If None, uses self.viewbox()</p>
 <p>Returns: Dict with viewBox and groups, or None if no metadata</p>
-<p>Example: &gt;&gt;&gt; outline = Outline.from_dict({ … “region1”: [“M 0 0”], … “_metadata”: {“groups”: {“coastal”: [“region1”]}} … }) &gt;&gt;&gt; outline.metadata_dict() {‘viewBox’: ‘-2.0 -2.0 104.0 104.0’, ‘groups’: {‘coastal’: [‘region1’]}}</p>
+<p>Example: &gt;&gt;&gt; outline = Outline.from_dict({ … “region1”: [“M 0 0 L 100 100”], … “_metadata”: {“groups”: {“coastal”: [“region1”]}} … }) &gt;&gt;&gt; outline.metadata_dict() {‘viewBox’: ‘-2.0 -2.0 104.0 104.0’, ‘groups’: {‘coastal’: [‘region1’]}}</p>
 </section>
 <section id="shinymap.outline.Outline.overlay_regions" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.outline.Outline.overlay_regions">overlay_regions</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>outline.Outline.overlay_regions()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get overlay regions only.</p>
 <p>Returns: Regions object with overlay regions {regionId: [element1, …]} (elements can be strings for v0.x or Element objects for v1.x)</p>
-<p>Example: &gt;&gt;&gt; geo = Outline.from_dict({ … “region”: [“M 0 0”], … “_border”: [“M 0 0 L 100 0”], … “_metadata”: {“overlays”: [“_border”]} … }) &gt;&gt;&gt; geo.overlay_regions() Regions({’_border’: [‘M 0 0 L 100 0’]})</p>
+<p>Example: &gt;&gt;&gt; geo = Outline.from_dict({ … “region”: [“M 0 0”], … “_border”: [“M 0 0 L 100 0”], … “_metadata”: {“overlays”: [“_border”]} … }) &gt;&gt;&gt; geo.overlay_regions() Regions({ ’_border’: [‘M 0 0 L 100 0’], })</p>
 </section>
 <section id="shinymap.outline.Outline.overlays" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.outline.Outline.overlays">overlays</h3>
@@ -445,19 +448,19 @@ Outline(regions={'a': [Circle(cx=100, cy=100, r=50)]}, metadata={})</code></pre>
 <p>Export to dict in shinymap JSON format.</p>
 <p>Automatically serializes elements: - v0.x format: Strings are kept as-is - v1.x format: Element objects are serialized to dicts via to_dict()</p>
 <p>Returns: Dict with _metadata and region data (v0.x strings or v1.x element dicts)</p>
-<p>Example: &gt;&gt;&gt; # v0.x format (strings) &gt;&gt;&gt; outline = Outline.from_dict({“region”: [“M 0 0”]}) &gt;&gt;&gt; outline.to_dict() {’_metadata’: {}, ‘region’: [‘M 0 0’]}</p>
+<p>Example: &gt;&gt;&gt; # v0.x format (strings) - empty metadata is omitted &gt;&gt;&gt; outline = Outline.from_dict({“region”: [“M 0 0”]}) &gt;&gt;&gt; outline.to_dict() {‘region’: [‘M 0 0’]}</p>
 <pre><code>&gt;&gt;&gt; # v1.x format (elements)
 &gt;&gt;&gt; from shinymap.outline import Circle
 &gt;&gt;&gt; outline = Outline(regions={"r1": [Circle(cx=100, cy=100, r=50)]}, metadata={})
 &gt;&gt;&gt; outline.to_dict()
-{'_metadata': {}, 'r1': [{'type': 'circle', 'cx': 100, 'cy': 100, 'r': 50}]}</code></pre>
+{'r1': [{'type': 'circle', 'cx': 100, 'cy': 100, 'r': 50}]}</code></pre>
 </section>
 <section id="shinymap.outline.Outline.to_json" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.outline.Outline.to_json">to_json</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>outline.Outline.to_json(output_path)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Write outline to JSON file.</p>
 <p>Args: output_path: Path to write JSON file</p>
-<p>Example: &gt;&gt;&gt; geo = Outline.from_svg(“map.svg”) &gt;&gt;&gt; geo.to_json(“output.json”)</p>
+<p>Example: &gt;&gt;&gt; geo = Outline.from_svg(“map.svg”) # doctest: +SKIP &gt;&gt;&gt; geo.to_json(“output.json”) # doctest: +SKIP</p>
 </section>
 <section id="shinymap.outline.Outline.underlays" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.outline.Outline.underlays">underlays</h3>
@@ -482,7 +485,7 @@ Outline(regions={'a': [Circle(cx=100, cy=100, r=50)]}, metadata={})</code></pre>
 <p>Works with both v0.x (string paths) and v1.x (Element objects).</p>
 <p>Args: padding: Padding fraction for computed viewBox (default 2%)</p>
 <p>Returns: ViewBox tuple in format (x, y, width, height)</p>
-<p>Example: &gt;&gt;&gt; geo = Outline.from_dict({“a”: [“M 0 0 L 100 100”]}) &gt;&gt;&gt; geo.viewbox() (-2.0, -2.0, 104.0, 104.0) # With 2% padding</p>
+<p>Example: &gt;&gt;&gt; geo = Outline.from_dict({“a”: [“M 0 0 L 100 100”]}) &gt;&gt;&gt; geo.viewbox() # Returns with 2% padding (-2.0, -2.0, 104.0, 104.0)</p>
 
 
 </section>

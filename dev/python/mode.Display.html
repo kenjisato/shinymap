@@ -187,7 +187,45 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Regions respond to hover but not click by default. Value determines which indexed aesthetic to use, enabling declarative value-to-color mapping.</p>
 <p>This mode is specifically for output_map, allowing you to prepopulate the color scale in the UI declaration rather than computing it in the render function.</p>
 <p>Args: aes: Indexed aesthetic mapping values to colors. Can be aes.Indexed (global) or aes.ByGroup wrapping aes.Indexed. Index is computed as: min(value, len(list) - 1) (clamping). clickable: If True, clicking a region emits an input event with the region ID. Use with <span class="citation" data-cites="reactive.event">@reactive.event</span> to trigger actions like showing modals. Default is False. input_id: Custom input ID for click events. If None (default), uses “{output_map_id}_click”. Only used when clickable=True.</p>
-<p>Example: &gt;&gt;&gt; from shinymap.mode import Display &gt;&gt;&gt; from shinymap import aes, output_map &gt;&gt;&gt; &gt;&gt;&gt; # Traffic light colors for status values &gt;&gt;&gt; output_map( … “status_map”, … outline, … mode=Display(aes=aes.Indexed( … fill_color=[“#f3f4f6”, “#22c55e”, “#f59e0b”, “#ef4444”] … )) … ) &gt;&gt;&gt; &gt;&gt;&gt; <span class="citation" data-cites="render_map">@render_map</span> &gt;&gt;&gt; def status_map(): … # value 0=unknown, 1=good, 2=warning, 3=error … return Map(outline, value=status_values) &gt;&gt;&gt; &gt;&gt;&gt; # Clickable display map for triggering actions &gt;&gt;&gt; output_map( … “clickable_map”, … outline, … mode=Display(clickable=True) … ) &gt;&gt;&gt; &gt;&gt;&gt; <span class="citation" data-cites="reactive.effect">@reactive.effect</span> &gt;&gt;&gt; <span class="citation" data-cites="reactive.event">@reactive.event</span>(input.clickable_map_click) &gt;&gt;&gt; def show_region_modal(): … region_id = input.clickable_map_click() … # Show modal with region details &gt;&gt;&gt; &gt;&gt;&gt; # Custom input ID &gt;&gt;&gt; output_map( … “my_map”, … outline, … mode=Display(clickable=True, input_id=“region_clicked”) … ) &gt;&gt;&gt; # Access via input.region_clicked()</p>
+<p>Example:: from shinymap.mode import Display from shinymap import aes, output_map, render_map, Outline</p>
+<pre><code>outline = Outline.from_dict({
+    "question_1": "M 5 5 L 5 10 L 10 10 L 10 5 Z",
+    "question_2": "M 7 7 L 7 9 L 9 9 L 9 7 Z"
+})
+
+# Traffic light colors for status values
+_ = output_map(
+    "status_map",
+    outline,
+    mode=Display(aes=aes.Indexed(
+        fill_color=["#f3f4f6", "#22c55e", "#f59e0b", "#ef4444"]
+    ))
+)
+
+@render_map
+def status_map():
+    # value 0=unknown, 1=good, 2=warning, 3=error
+    return Map(outline, value=status_values)
+
+# Clickable display map for triggering actions
+_ = output_map(
+    "clickable_map",
+    outline,
+    mode=Display(clickable=True)
+)
+
+@reactive.effect
+@reactive.event(input.clickable_map_click)
+def show_region_modal():
+    region_id = input.clickable_map_click()
+    # Show modal with region details
+
+# Custom input ID
+_ = output_map(
+    "my_map",
+    outline,
+    mode=Display(clickable=True, input_id="region_clicked")
+)</code></pre>
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">Methods</h2>
 <table class="caption-top table">
@@ -210,14 +248,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="shinymap.mode.Display.get_click_input_id" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.mode.Display.get_click_input_id">get_click_input_id</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>mode.Display.get_click_input_id(output_id)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>mode.Display.get_click_input_id(output_id)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get the click input ID for this mode.</p>
 <p>Args: output_id: The output map’s ID</p>
 <p>Returns: The input ID for click events, or None if not clickable</p>
 </section>
 <section id="shinymap.mode.Display.to_dict" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.mode.Display.to_dict">to_dict</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>mode.Display.to_dict()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>mode.Display.to_dict()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Serialize for JavaScript (snake_case, JS converts to camelCase).</p>
 
 

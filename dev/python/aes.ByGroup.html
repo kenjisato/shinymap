@@ -187,7 +187,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Used by input_map() and output_map() for group-wise configuration. ByGroup wraps ByState (row-first composition).</p>
 <p>Special group names: __all: Default for all regions regardless of type (lowest priority) __shape: Default for shape elements (medium priority) __line: Default for line elements (medium priority) __text: Default for text elements (medium priority) <group_name>: Named groups from geometry metadata (high priority) <region_id>: Individual region IDs (highest priority)</region_id></group_name></p>
 <p>Args: **groups: Mapping of group names to aesthetics. Values can be ByState for full state config, or single aesthetic for base only.</p>
-<p>Example: &gt;&gt;&gt; from shinymap import aes, PARENT &gt;&gt;&gt; &gt;&gt;&gt; aes.ByGroup( … __all=aes.ByState( … base=aes.Shape(fill_color=“#e5e7eb”), … hover=aes.Shape(stroke_width=PARENT.stroke_width + 1), … ), … coastal=aes.Shape(fill_color=“#3b82f6”), # base only shorthand … mountain=aes.ByState( … base=aes.Shape(fill_color=“#10b981”), … select=aes.Shape(fill_color=“#6ee7b7”), … ), … )</p>
+<p>Example: &gt;&gt;&gt; from shinymap import aes, PARENT &gt;&gt;&gt; &gt;&gt;&gt; _ = aes.ByGroup( … __all=aes.ByState( … base=aes.Shape(fill_color=“#e5e7eb”), … hover=aes.Shape(stroke_width=PARENT.stroke_width + 1), … ), … coastal=aes.Shape(fill_color=“#3b82f6”), # base only shorthand … mountain=aes.ByState( … base=aes.Shape(fill_color=“#10b981”), … select=aes.Shape(fill_color=“#6ee7b7”), … ), … )</p>
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">Methods</h2>
 <table class="caption-top table">
