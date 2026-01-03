@@ -48,33 +48,41 @@ Additionally, `output_map` provides simplified statistical visualizations (choro
 - R Shiny (planned): character scalar/vector for single/multiple, named integer vector for count
 - React: JavaScript objects/arrays following standard patterns
 
-**Mode Classes** (v0.2.0):
+**Mode Classes** (v0.2.0+):
 Mode configuration uses class instances instead of string literals for better customization:
 
 ```python
-from shinymap import input_map
-from shinymap.mode import Single, Multiple, Cycle, Count
+from shinymap import input_map, output_map
+from shinymap.mode import Single, Multiple, Cycle, Count, Display
 
 # Basic modes (equivalent to mode="single" / mode="multiple")
-input_map("id", geometry, mode=Single())
-input_map("id", geometry, mode=Multiple())
+input_map("id", outline, mode=Single())
+input_map("id", outline, mode=Multiple())
 
 # Cycle mode: finite state cycling (0 → 1 → 2 → 3 → 0)
-input_map("id", geometry, mode=Cycle(n=4))
+input_map("id", outline, mode=Cycle(n=4))
 
 # Count mode: unbounded or capped counting
-input_map("id", geometry, mode=Count())          # Unbounded
-input_map("id", geometry, mode=Count(max=10))    # Capped at 10
+input_map("id", outline, mode=Count())          # Unbounded
+input_map("id", outline, mode=Count(max=10))    # Capped at 10
+
+# Display mode for output_map: hover-only, values index into aesthetics
+output_map("id", outline, mode=Display(aes=aes.Indexed(
+    fill_color=["#gray", "#green", "#yellow", "#red"]
+)))
+
+# Display mode with click events
+output_map("id", outline, mode=Display(clickable=True, input_id="clicked"))
 
 # With initial values
-input_map("id", geometry, mode=Single(selected="region_a"))
-input_map("id", geometry, mode=Multiple(selected=["a", "b"]))
-input_map("id", geometry, mode=Count(values={"a": 3, "b": 5}))
+input_map("id", outline, mode=Single(selected="region_a"))
+input_map("id", outline, mode=Multiple(selected=["a", "b"]))
+input_map("id", outline, mode=Count(values={"a": 3, "b": 5}))
 
 # With indexed aesthetics for visual feedback
 from shinymap import aes
 CYCLE_COLORS = ["#e2e8f0", "#fecaca", "#fef08a", "#bbf7d0"]
-input_map("id", geometry, mode=Cycle(n=4, aes=aes.Indexed(fill_color=CYCLE_COLORS)))
+input_map("id", outline, mode=Cycle(n=4, aes=aes.Indexed(fill_color=CYCLE_COLORS)))
 ```
 
 **Styling** (v0.2.0 - Hierarchical Aesthetic System):
@@ -322,24 +330,24 @@ overlays = geo.overlays()       # List[str]
 
 **Integration with UI functions**:
 
-The `Geometry` class is the recommended way to pass geometry to UI functions:
+The `Outline` class is the recommended way to pass geometry to UI functions:
 
 ```python
 from shinymap import Map, input_map, output_map
-from shinymap.geometry import Geometry
+from shinymap.outline import Outline
 
-geo = Geometry.from_json("map.json")
+outline = Outline.from_json("map.json")
 
 # Input maps
-input_map("my_input", geo, mode="multiple")
+input_map("my_input", outline, mode="multiple")
 
-# Output maps with static geometry
-output_map("my_output", geo, tooltips=tooltips)
+# Output maps with static outline
+output_map("my_output", outline, tooltips=tooltips)
 
 # Output maps with dynamic rendering
 @render_map
 def my_output():
-    return Map(geo).with_fill_color(colors).with_counts(counts)
+    return Map(outline).with_value(counts)
 ```
 
 ## Shiny for Python (`shinymap`)
@@ -349,8 +357,8 @@ def my_output():
 - Input components surface their state via the declared Shiny input ID with mode-appropriate return types (see External ergonomic APIs above).
 - Server helpers should minimize boilerplate while staying explicit and readable.
 - Input helpers expose the same internal unified model as the JS component: values are `{id: count}` map internally, but the Python API returns mode-appropriate types (`str | None`, `list[str]`, or `dict[str, int]`).
-- Define JSON payload schema for the React output: geometry config, fills, static tooltips, optional active selection, optional colorbar metadata.
-- State flow: the input component calls `Shiny.setInputValue(id, value)` for selections. The server sends updated payloads (including the active selection) to the output component. Hover is purely visual.
+- Define JSON payload schema for the React output: regions config, fills, static tooltips, value dict, optional colorbar metadata.
+- State flow: the input component calls `Shiny.setInputValue(id, value)` for selections. The server sends updated payloads (including the value dict for selection state) to the output component. Hover is purely visual. Selection is derived from `value > 0`.
 - Package requirements: MIT license, semver, Python ≥3.12, dependencies (`shiny>=…`). Ship wheel + sdist artifacts for PyPI.
 
 ### Color Scaling Utilities
@@ -383,8 +391,8 @@ w = wash(
 )
 
 # Use themed factory to create maps
-w.input_map("region", geometry, mode="single")
-w.output_map("display", geometry)
+w.input_map("region", outline, mode="single")
+w.output_map("display", outline)
 
 # Access resolved aesthetics
 result = w.result  # WashResult with shape, line, text aesthetics
@@ -471,16 +479,16 @@ The hover overlay is automatically rendered on top of everything, ensuring the d
 
 ```python
 from shinymap import input_map, aes
-from shinymap.geometry import Geometry
+from shinymap.outline import Outline
 
 # Option 1: Use path_as_line() for line regions
-geo = Geometry.from_json("map.json").path_as_line("_dividers")
-input_map("map_id", geo, mode="single")
+outline = Outline.from_json("map.json").path_as_line("_dividers")
+input_map("map_id", outline, mode="single")
 
 # Option 2: Use aes.ByGroup for per-region styling
 input_map(
     "map_id",
-    geometry,
+    outline,
     mode="single",
     aes=aes.ByGroup(
         __all=aes.Shape(fill_color="#e2e8f0"),
@@ -492,40 +500,36 @@ input_map(
 **Implementation details**:
 - Overlay layer rendered AFTER interactive regions, BEFORE selection/hover
 - `pointerEvents="none"` prevents click interference
-- Automatic layer detection from region ID prefixes (`_overlay_`, `_underlay_`, `_hidden_`)
 
 **Layer System** (v0.2.0):
 
-Regions are automatically assigned to layers based on their ID prefixes:
+Regions can be assigned to non-interactive layers via Outline methods or the `layers` parameter:
 
 ```python
 from shinymap import input_map, aes
-from shinymap.geometry import Geometry
+from shinymap.outline import Outline
 
-# Automatic layer detection from region ID prefixes
-geo = Geometry.from_dict({
-    "_metadata": {"viewBox": "0 0 100 100"},
-    "_underlay_grid": [...],       # Auto-detected as underlay (prefix: _underlay_)
-    "_overlay_border": [...],      # Auto-detected as overlay (prefix: _overlay_)
-    "_hidden_reference": [...],    # Auto-detected as hidden (prefix: _hidden_)
-    "region_a": [...],             # Normal interactive region
-    "region_b": [...],             # Normal interactive region
+# Method 1: Use set_overlays() on Outline (currently implemented)
+outline = Outline.from_json("map.json").set_overlays(["_border", "_dividers"])
+
+# Method 2: Use merge_layers() for multiple layer types (currently implemented)
+outline = outline.merge_layers({
+    "underlays": ["_grid"],
+    "overlays": ["_border"],
 })
 
-# Or use metadata overlays (traditional approach)
-geo = Geometry.from_dict({
-    "_metadata": {
-        "viewBox": "0 0 100 100",
-        "overlays": ["_border"],   # Explicit overlay declaration
-    },
-    "_border": [...],
-    "region_a": [...],
-})
+# Method 3: Planned - move_layer() for fluent API (not yet implemented)
+outline = (
+    Outline.from_json("map.json")
+    .move_layer("underlay", "_grid", "_background")
+    .move_layer("overlay", "_border", "_dividers")
+    .move_layer("hidden", "_construction_guides")
+)
 
-# Or specify layers explicitly
+# Method 4: Specify layers explicitly via input_map/output_map parameter
 input_map(
     "map_id",
-    geo,
+    outline,
     layers={
         "underlays": ["grid_lines"],
         "overlays": ["border_lines"],
@@ -540,7 +544,7 @@ Mark path regions that represent lines (not filled shapes) for automatic stroke-
 
 ```python
 # Mark regions containing lines described in path notation
-geo = geo.path_as_line("_divider_lines", "_grid")
+outline = outline.path_as_line("_divider_lines", "_grid")
 
 # These regions automatically get stroke-only aesthetics
 # (fill="none", stroke applied from default line aesthetic)
@@ -607,11 +611,11 @@ output_map(
 )
 ```
 
-### Static vs Dynamic Parameters (Planned)
+### Static vs Dynamic Parameters
 
-**Vision**: Separate structural configuration (static) from reactive data (dynamic) to keep server code clean and focused.
+Separate structural configuration (static) from reactive data (dynamic) to keep server code clean and focused.
 
-**Current API** (v0.2.0 - static params in output_map):
+**Current API** (v0.2.0+):
 
 ```python
 from shinymap import output_map, render_map, Map, aes
@@ -620,7 +624,7 @@ from shinymap import output_map, render_map, Map, aes
 app_ui = ui.page_fluid(
     output_map(
         "my_map",
-        geometry=GEOMETRY,           # Static - defined once
+        OUTLINE,                     # Static - defined once
         tooltips=TOOLTIPS,           # Static - defined once
         aes=aes.ByState(...),        # Static - defined once
         layers={"overlays": [...]},  # Static - defined once
@@ -630,17 +634,17 @@ app_ui = ui.page_fluid(
 # Server layer - focus only on reactive data transformations
 @render_map
 def my_map():
-    fills = scale_qualitative(categories, region_ids)
-    return Map(GEOMETRY).with_fill_color(fills)
+    # Just provide dynamic value - static config already in output_map()
+    return Map().with_value(counts)
 ```
 
 **Benefits**:
-1. **Cleaner server code**: No repeated geometry/tooltips/viewBox in every render function
+1. **Cleaner server code**: No repeated outline/tooltips/viewBox in every render function
 2. **Better separation of concerns**: UI layer = structure, server layer = data transformations
 3. **Easier maintenance**: Static configuration in one place, visible in UI definition
 4. **Consistent with Shiny patterns**: Similar to how `output_plot(width=, height=)` defines figure size in UI, not in render function
 
-**Implementation status** (v0.2.0): Implemented. Static parameters can be defined in `output_map()` and are merged with dynamic parameters from `Map*()` builders.
+Static parameters defined in `output_map()` are merged with dynamic parameters from `Map()` builders.
 
 ## Shiny for R (Future Work)
 
@@ -704,11 +708,42 @@ def my_map():
 
 Accessibility is planned with specific limitations acknowledged. Not all features from standard form controls will translate cleanly to spatial visual interfaces.
 
-## Interactive Output Maps (Future)
+## Interactive Output Maps
 
-**Vision**: Extend `output_map()` to support optional interactivity while maintaining current simplicity for non-interactive use cases.
+Output maps can optionally respond to click events using `Display(clickable=True)` mode:
 
-**Current workaround**: Users can achieve interactive visualizations using `@render.ui` with `input_map`:
+```python
+from shinymap import output_map, render_map, Map
+from shinymap.mode import Display
+
+# UI - output map with click events enabled
+output_map(
+    "my_map",
+    OUTLINE,
+    mode=Display(clickable=True, input_id="clicked_region"),
+)
+
+@render_map
+def my_map():
+    return Map().with_value(status_values)
+
+# Server - handle click events
+@reactive.effect
+@reactive.event(input.clicked_region)
+def handle_click():
+    region_id = input.clicked_region()
+    # Handle the click (e.g., show details, copy to clipboard)
+```
+
+**Display mode options**:
+- `Display()`: Hover only, no click (default)
+- `Display(clickable=True)`: Emit click events to default input ID (output ID + "_click")
+- `Display(clickable=True, input_id="custom")`: Emit click events to custom input ID
+- `Display(aes=aes.Indexed(...))`: Value-indexed aesthetics for choropleth-style visualizations
+
+### Alternative: `@render.ui` with `input_map`
+
+For cases requiring fully dynamic UI (e.g., changing geometry, tooltips, or mode based on reactive inputs), the idiomatic Shiny pattern is `@render.ui`:
 
 ```python
 # UI
@@ -726,58 +761,20 @@ def color_ring_ui():
 
     return input_map(
         "selected_color",
-        PCCS_GEOMETRY,
+        PCCS_OUTLINE,
         tooltips=tooltips,
-        fills=colors,
         mode="single",
     )
 ```
 
-**Why this workaround is suboptimal**:
+**When to use each approach**:
 
-1. **Performance**: Re-rendering entire input component on every reactive change is expensive compared to React reconciliation updating only changed properties
-2. **Lost transient state**: Re-creating the component resets hover position and other UI state
-3. **Semantic confusion**: Using "input" for pure visualization (when user interaction isn't the primary goal) obscures intent
-4. **Pattern inconsistency**: Most Shiny apps use `output_*` for server→client displays; mixing input/output semantics reduces code clarity
+| Approach | Use When |
+|----------|----------|
+| `Display(clickable=True)` | Static structure, dynamic values; click events needed |
+| `@render.ui` + `input_map` | Dynamic structure (geometry, tooltips, mode change reactively) |
 
-**Proposed enhancement**: Add optional parameters to `output_map()` for common interactive patterns:
-
-```python
-output_map(
-    "my_map",
-    geometry=GEOMETRY,
-    click_input_id="clicked_region",  # Optional: emit region ID on click
-    hover_tooltip=True,               # Optional: show dynamic tooltip data
-)
-
-@render_map
-def my_map():
-    return Map(geometry).with_fill_color(fills).with_tooltip_data(data)
-```
-
-**Use case example: PCCS Color Ring Application**
-
-PCCS (Practical Color Coordinate System) is a Japanese color system that groups colors by psychological feelings (vivid, soft, light, etc.).
-
-Application workflow:
-1. User selects tone category from input (e.g., "vivid", "soft", "light")
-2. Output map displays color ring with actual colors in that tone group
-3. Hover over a color shows tooltip with conversions (Munsell, HCL, CMYK, RGB)
-4. Click (or double-click) copies color data to clipboard
-
-**Benefits over @render.ui workaround**:
-- Better performance: React reconciliation updates only changed tooltips/colors, not entire component
-- Preserves UI state: Hover position and focus maintained across updates
-- Clearer semantics: `output_map` signals server→client data flow; `input_map` signals user interaction capture
-- Maintains library philosophy: Simple, focused, good enough for 80% of interactive visualization needs without D3.js
-
-**Technical notes**:
-- Groundwork exists: `_render_map_ui()` already has `click_input_id` parameter
-- React components (InputMap/OutputMap) share rendering logic, can share interactivity
-- Tooltip data could be passed via `.with_tooltip_data(dict)` method on builders
-- Click events follow existing Shiny input pattern: `input.clicked_region()` returns region ID
-
-**Status**: Planned for future. Not yet implemented. Current `@render.ui` + `input_map` workaround is functional but has performance and semantic trade-offs.
+**Performance comparison**: Future work. Both approaches use React reconciliation at the component level; benchmarking is needed to quantify differences for typical use cases.
 
 ## Open / Deferred Items
 

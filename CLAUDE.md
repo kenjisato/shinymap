@@ -29,10 +29,11 @@ Additionally, `output_map` provides simplified statistical visualizations (choro
 
 1. **Input-first philosophy**: These are form controls, not just visualizations. Return simple values (`str`, `list`, `dict`), not shapes/GeoJSON.
 
-2. **Unified count model**: Internally uses `{region_id: count}` representation. Python API transforms this to ergonomic types:
+2. **Unified value model**: Internally uses `{region_id: int}` representation. Python API transforms this to ergonomic types:
    - `mode="single"` or `Single()` → `str | None`
    - `mode="multiple"` or `Multiple()` → `list[str]`
    - `Count()` or `Cycle(n)` → `dict[str, int]`
+   - `Display()` for output_map → values index into aesthetics; optionally clickable with `clickable=True`
 
 3. **Geometry-agnostic**: Same API works for any SVG paths, not geography-specific.
 
@@ -48,6 +49,32 @@ Additionally, `output_map` provides simplified statistical visualizations (choro
 - **JavaScript/TypeScript**: React components in `packages/shinymap/js`
 - **License**: MIT (keep all dependencies MIT-compatible)
 
+## Development Commands (Mandatory)
+
+**ALWAYS use the Makefile** for build operations. NEVER manually run npm/tsc/esbuild commands.
+
+| Command | Purpose |
+|---------|---------|
+| `make install` | Install all dependencies (npm + uv sync) |
+| `make build` | Full build: TypeScript → bundle → Python assets |
+| `make test` | Run Python tests |
+| `make lint` | Run TypeScript linter |
+| `make format` | Format TypeScript code |
+
+**Python commands** (always prefix with `uv run`):
+
+| Command | Purpose |
+|---------|---------|
+| `uv run pytest packages/shinymap/python/tests -v` | Run Python tests |
+| `uv run ruff check packages/shinymap/python` | Lint Python code |
+| `uv run ruff format packages/shinymap/python` | Format Python code |
+| `uv run mypy packages/shinymap/python/src` | Type check Python |
+
+**Prohibitions**:
+- NEVER run `pip install` - use `uv sync` or `uv add <package>`
+- NEVER run `npm install` manually - use `make install`
+- NEVER run `tsc` or `esbuild` directly - use `make build`
+
 ## Git Workflow
 
 We use a **Main-Only Strategy**:
@@ -62,6 +89,33 @@ We use a **Main-Only Strategy**:
 - Never push directly to `main`
 - Version in `pyproject.toml` should be `X.Y.Z-dev` during development
 - See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed release process
+
+## Quality Gates (Before Declaring Complete)
+
+A task is NOT complete until these checks pass. Run them before any commit.
+
+**For TypeScript changes**:
+```bash
+make lint && make format
+make build  # CRITICAL: bundles JS into Python package
+```
+
+**For Python changes**:
+```bash
+uv run ruff check packages/shinymap/python
+uv run ruff format packages/shinymap/python
+uv run mypy packages/shinymap/python/src
+```
+
+**For any code changes**:
+```bash
+make test  # Must pass
+```
+
+**Rules**:
+- If tests fail, fix them before moving on
+- If lint fails, fix before committing
+- If React code changed, `make build` is mandatory before testing Python
 
 ## Key Documents
 
@@ -83,6 +137,105 @@ Read these for detailed context:
 - **Implementation details needed** → Create detailed design document in [design/](design/)
 
 Check these documents before making significant changes to ensure alignment with project philosophy.
+
+## Snapshot and Context Discipline
+
+### Before Experimental Changes
+
+Create a checkpoint before risky or exploratory changes:
+```bash
+git add -A && git commit -m "WIP: checkpoint before <experiment>"
+```
+
+If the experiment fails, rollback is easy: `git reset --hard HEAD~1`
+
+### Multi-Step Tasks
+
+For complex tasks with multiple steps:
+1. Make a checkpoint commit after each significant milestone
+2. Use clear commit messages: "WIP: completed step N of task X"
+3. This allows partial rollback if later steps fail
+
+### Commit Granularity
+
+**Target: One commit per checklist item.** This provides:
+- Safe rollback points at each step
+- Clear progress visibility
+- Mental peace for both user and AI
+
+This won't always be possible (e.g., atomic changes spanning multiple files), but it's the target granularity.
+
+### Context Management (CRITICAL)
+
+**Two types of documentation**:
+- **`design/`** - Long-term design goals and architectural decisions (create before large features)
+- **`COMMUNICATION.md`** - Short-term session logging for progress tracking and resumption
+
+When context is getting full or before switching tasks, write to `COMMUNICATION.md`:
+
+1. **Write actionable resumption notes**:
+   ```markdown
+   ## Session Checkpoint - [Date/Time or Task Name]
+
+   ### Current Task
+   [Exact user request that started this work]
+
+   ### Completed
+   - [Specific file]: [What was changed and why]
+   - [Specific file]: [What was changed and why]
+
+   ### In Progress
+   - [File being edited]: [Current state, what's done, what remains]
+
+   ### Next Steps (in order)
+   1. [Exact action with file paths]
+   2. [Exact action with file paths]
+   3. [Exact action with file paths]
+
+   ### Context a Fresh Session Needs
+   - [Key decision made and why]
+   - [Gotcha or trap to avoid]
+   - [Reference: see design/foo.md for details]
+   ```
+
+2. **Commit the checkpoint**:
+   ```bash
+   git add -A && git commit -m "WIP: checkpoint - see COMMUNICATION.md for resumption"
+   ```
+
+3. **What NOT to do**:
+   - ❌ Vague messages: "WIP: working on feature X"
+   - ❌ Trusting memory: "I'll remember what I was doing"
+   - ❌ Commit message only: Too short for complex task state
+
+### Side Questions and Diversions
+
+When user asks a question unrelated to the current task:
+1. Assess: Is this a quick question (< 2 min) or a major diversion?
+2. If quick: Answer briefly, return to task
+3. If major diversion:
+   - Write current state to `COMMUNICATION.md`
+   - Make checkpoint commit
+   - Then switch to the new task
+4. Consider asking: "Should I complete the current task first?"
+
+### Using GitHub Issues
+
+**When to create an issue**:
+- Bug discovered while working on something else (don't fix it now, track it)
+- Feature idea mentioned by user worth tracking for later
+- Task too large to complete in current session and needs to be parked
+- Design question that needs user input before implementation
+
+**When NOT to use issues**:
+- Mid-task checkpoints (use `COMMUNICATION.md`)
+- Implementation details already decided (use `design/`)
+- Quick fixes that will be done this session
+
+**Workflow**:
+- If you discover an unrelated bug → `gh issue create`, continue current task
+- If user mentions a feature idea → ask "Should I create an issue for this?"
+- If task must be parked → create issue with context, reference in `COMMUNICATION.md`
 
 ## Performance Philosophy
 
@@ -115,8 +268,8 @@ wc = wash(
 )
 
 # Use washed functions
-wc.input_map("region", geometry, mode="single")
-wc.output_map("my_map", geometry)
+wc.input_map("region", outline, mode="single")
+wc.output_map("my_map", outline)
 
 @wc.render_map
 def my_map():
@@ -149,7 +302,7 @@ from shinymap.aes.color import SEQUENTIAL_ORANGE
 
 wc.input_map(
     "counts",
-    geometry,
+    outline,
     mode=Count(aes=aes.Indexed(fill_color=["lightgray", *SEQUENTIAL_ORANGE])),
 )
 ```
@@ -175,19 +328,62 @@ fills = scale_qualitative(categories, region_ids, palette=QUALITATIVE)
 Available `MapBuilder` methods (via `Map()` or method chaining):
 
 ```python
-Map(geometry, tooltips=tooltips, value=value, active=active_ids, aes=aes_config)
+Map(outline, tooltips=tooltips, value=value, aes=aes_config)
 # Or fluent API:
-Map(geometry).with_value(value).with_active(active_ids).with_aes(aes_config)
+Map(outline).with_value(value).with_aes(aes_config)
 ```
 
-- `.with_value(dict)` - Set region values (counts)
-- `.with_active(list)` - Set active/highlighted region IDs
+- `.with_value(dict)` - Set region values. Values also determine selection: value > 0 means selected
 - `.with_aes(ByGroup|ByState|Shape)` - Set aesthetic configuration
 - `.with_tooltips(dict)` - Set region tooltips
 - `.with_view_box(tuple)` - Set SVG viewBox
 - `.with_layers(dict)` - Set layer configuration
 
 Note: There is NO `.with_fill_color()` method. Use `.with_aes(aes.ByGroup(...))` for per-region colors.
+
+### Value-Based Selection Model
+
+Selection state is derived from `value`:
+- `value = 0` or missing: region is not selected (base aesthetic applied)
+- `value > 0`: region is selected (select aesthetic applied)
+
+This is the unified model. Encode selection state directly in the value dict:
+
+```python
+Map(outline, value={"a": 1, "b": 1, "c": 0})  # a, b are selected; c is not
+```
+
+### Display Mode for Output Maps
+
+`Display()` mode enables value-indexed aesthetics on output maps. By default, regions respond to hover but not click. Set `clickable=True` to emit click events.
+
+```python
+from shinymap import output_map
+from shinymap.mode import Display
+
+# Basic display mode: hover only, value indexes into colors
+output_map(
+    "status_map",
+    outline,
+    mode=Display(aes=aes.Indexed(
+        fill_color=["#gray", "#green", "#yellow", "#red"]
+    ))
+)
+
+# Clickable display mode: emits click events
+output_map(
+    "clickable_map",
+    outline,
+    mode=Display(clickable=True, input_id="clicked_region")
+)
+
+# In server:
+@reactive.effect
+@reactive.event(input.clicked_region)
+def handle_click():
+    region_id = input.clicked_region()
+    # Handle the click...
+```
 
 ## Honest Positioning
 
@@ -209,14 +405,19 @@ Note: There is NO `.with_fill_color()` method. Use `.with_aes(aes.ByGroup(...))`
 
 ## When Starting New Tasks
 
-1. Check [SPEC.md](SPEC.md) for current implementation status and philosophy
-2. Check [design/](design/) for detailed implementation plans if feature is mentioned in SPEC
-3. Check [CONTRIBUTING.md](CONTRIBUTING.md) for practical workflows and command sequences (especially useful for understanding working directories)
-4. Check [SHINY-FOR-PYTHON.md](SHINY-FOR-PYTHON.md) for Python-specific patterns and best practices
-5. For new features, assess whether detailed design document is needed before implementation
-6. Prefer editing existing files over creating new ones
-7. Use TodoWrite tool for multi-step tasks to track progress
-8. After implementing changes, update relevant documentation (SPEC, PROPOSAL, README as appropriate)
+1. Verify you're on `dev` branch: `git branch`
+2. Pull latest: `git pull`
+3. Run `make install` if dependencies might have changed
+4. Check `COMMUNICATION.md` for any in-progress work from previous sessions
+5. For complex tasks, consider a checkpoint commit before starting
+6. Check [SPEC.md](SPEC.md) for current implementation status and philosophy
+7. Check [design/](design/) for detailed implementation plans if feature is mentioned in SPEC
+8. Check [CONTRIBUTING.md](CONTRIBUTING.md) for practical workflows and command sequences (especially useful for understanding working directories)
+9. Check [SHINY-FOR-PYTHON.md](SHINY-FOR-PYTHON.md) for Python-specific patterns and best practices
+10. For new features, assess whether detailed design document is needed before implementation
+11. Prefer editing existing files over creating new ones
+12. Use TodoWrite tool for multi-step tasks to track progress
+13. After implementing changes, update relevant documentation (SPEC, PROPOSAL, README as appropriate)
 
 ## SVG Rendering and Overlay Architecture
 
@@ -228,11 +429,14 @@ Note: There is NO `.with_fill_color()` method. Use `.with_aes(aes.ByGroup(...))`
 
 **Solution**: Layered overlay rendering ensures important elements (selected, hovered) are always visible.
 
-**Rendering order** (bottom to top):
-1. **Base regions**: All regions with normal aesthetics and click handlers
-2. **Overlay geometry**: Non-interactive annotations (dividers, borders, grids) with `pointer-events: none`
-3. **Selection overlay**: Duplicates of selected/active regions with selection aesthetics and `pointer-events: none`
-4. **Hover overlay**: Duplicate of hovered region with hover aesthetics and `pointer-events: none`
+**Rendering order** (5 layers, bottom to top):
+1. **Underlay regions**: Background elements (grids, reference lines) with `pointer-events: none`
+2. **Base regions**: Interactive regions with normal aesthetics and click handlers
+3. **Overlay regions**: Non-interactive annotations (dividers, borders) with `pointer-events: none`
+4. **Selection overlay**: Duplicates of selected/active regions with selection aesthetics and `pointer-events: none`
+5. **Hover overlay**: Duplicate of hovered region with hover aesthetics and `pointer-events: none`
+
+**Hidden regions**: Regions in the `hidden` layer are not rendered at all.
 
 This multi-layer approach guarantees:
 - Selected regions' borders are fully visible on top of non-selected regions
@@ -240,13 +444,60 @@ This multi-layer approach guarantees:
 - All overlays use `pointer-events: none` so clicks pass through to base regions
 - No z-index conflicts or CSS hacks needed
 
+### Configuring Layers
+
+**Currently implemented methods**:
+
+```python
+from shinymap.outline import Outline
+
+# set_overlays() - mark regions as overlay (implemented)
+outline = Outline.from_json("map.json").set_overlays(["_border", "_dividers"])
+
+# merge_layers() - set multiple layer types at once (implemented)
+outline = outline.merge_layers({
+    "underlays": ["_grid"],
+    "overlays": ["_border"],
+})
+
+# Via layers parameter on input_map/output_map (implemented)
+input_map("id", outline, layers={
+    "underlays": ["_grid"],
+    "overlays": ["_border"],
+    "hidden": ["_guides"],
+})
+```
+
+**TODO**: Implement `move_layer()` for a more fluent API:
+
+```python
+# Planned API (not yet implemented)
+outline = (
+    Outline.from_json("map.json")
+    .move_layer("underlay", "_grid", "_background")
+    .move_layer("overlay", "_border", "_dividers")
+    .move_layer("hidden", "_construction_guides")
+)
+```
+
 **Implementation details**:
+- Layer assignment logic in [layers.ts](packages/shinymap/js/src/utils/layers.ts)
+- `assignLayers()` assigns each region to exactly one layer (priority: hidden > overlay > underlay > base)
 - InputMap and OutputMap both implement this layered rendering
 - Hover state tracked via React `useState` with mouse/focus event handlers
-- Python aesthetic dicts (`hover_highlight`, `default_aesthetic`) are recursively converted from snake_case to camelCase
+- Python aesthetic dicts are recursively converted from snake_case to camelCase
 - Overlays render duplicate `<path>` elements with the same geometry but different aesthetics
 
 See [SPEC.md](SPEC.md) for detailed technical documentation.
+
+## Planned Features (Next Phase)
+
+These are designed and ready for implementation. See [design/static-map-and-aes-dump.md](design/static-map-and-aes-dump.md):
+
+- **StillLife class**: Static snapshot of map state for aesthetic inspection and SVG export
+  - `StillLife(builder).aes("region_id")` - inspect resolved aesthetics
+  - `StillLife(builder).to_svg("output.svg")` - export static SVG
+- **WashResult.build()**: Create MapBuilder with wash aesthetics for static analysis
 
 ## Deferred/Future Items
 
@@ -275,3 +526,84 @@ See [design/README.md](design/README.md) for topics needing detailed design docu
 - Design documents: [`design/`](design/)
 - Contributing guidelines: [`CONTRIBUTING.md`](CONTRIBUTING.md)
 - Python Shiny practices: [`SHINY-FOR-PYTHON.md`](SHINY-FOR-PYTHON.md)
+
+## Obsolete Patterns (Migration Guide)
+
+This section helps identify and update deprecated code patterns. If you encounter these patterns in the codebase, they should be updated to the current API.
+
+### Removed: `geometry` Parameter (Now `outline`)
+
+**Obsolete pattern** (if you see this, update it):
+```python
+# Python
+Map(geometry=outline)
+input_map("id", geometry, mode="single")
+
+# TypeScript
+<InputMap geometry={regions} />
+```
+
+**Current API**:
+```python
+# Python - first positional arg is `outline`
+Map(outline)
+input_map("id", outline, mode="single")
+
+# TypeScript - prop is `regions` (the data structure, not Outline object)
+<InputMap regions={regions} />
+```
+
+The Python `Outline` class wraps the regions dict and provides metadata. TypeScript receives the raw `regions` dict in the payload.
+
+### Removed: `active_ids` and `.with_active()`
+
+**Obsolete pattern** (if you see this, update it):
+```python
+Map(outline, value=counts, active=["a", "b"])
+Map(outline).with_active(["a", "b"])
+```
+
+**Current API**:
+```python
+# Selection is now derived from value > 0
+Map(outline, value={"a": 1, "b": 1, "c": 0})  # a, b selected; c not selected
+```
+
+The unified value model means:
+- `value = 0` or missing → not selected
+- `value > 0` → selected
+
+There is no separate `active_ids` parameter or `.with_active()` method.
+
+### Removed: `RegionState(is_selected=True)`
+
+**Obsolete pattern** (if you see this, update it):
+```python
+state = RegionState("region_1", is_selected=True)
+```
+
+**Current API**:
+```python
+state = RegionState("region_1", value=1)  # value > 0 means selected
+state.is_selected  # Property derived from value > 0
+```
+
+### Removed: `activeIds` in TypeScript
+
+**Obsolete pattern** (if you see this, update it):
+```typescript
+<OutputMap activeIds={["a", "b"]} />
+```
+
+**Current API**:
+```typescript
+<OutputMap value={{ a: 1, b: 1, c: 0 }} />
+// Selection derived: deriveActiveFromValue(value) → Set of IDs where value > 0
+```
+
+### Payload Key Changes
+
+| Old Key | New Key | Notes |
+|---------|---------|-------|
+| `geometry` | `regions` | In JSON payload sent to JS |
+| `active_ids` | (removed) | Selection derived from `value` |

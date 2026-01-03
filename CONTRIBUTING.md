@@ -243,14 +243,15 @@ cd ../../..
 ```python
 import pytest
 from shinymap import Map
+from shinymap.outline import Outline
 
 @pytest.mark.unit
 def test_map_builder_basic():
     """Test basic Map builder functionality."""
-    geometry = {"a": "M0 0 L10 0 L10 10 L0 10 Z"}
-    map_obj = Map(geometry)
-    payload = map_obj.build()
-    assert payload.geometry == geometry
+    outline = Outline.from_dict({"a": ["M0 0 L10 0 L10 10 L0 10 Z"]})
+    map_obj = Map(outline)
+    payload = map_obj.as_json()
+    assert "a" in payload["regions"]
 ```
 
 **Test markers:**
