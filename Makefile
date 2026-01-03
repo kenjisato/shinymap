@@ -1,4 +1,4 @@
-.PHONY: help build build-js build-bundle build-shiny clean test lint format install
+.PHONY: help build build-js build-bundle build-shiny clean test lint format install docs docs-python docs-typescript docs-preview
 
 # Default target
 help:
@@ -13,6 +13,13 @@ help:
 	@echo "  make lint         - Run linters"
 	@echo "  make format       - Format code"
 	@echo "  make install      - Install dependencies"
+	@echo ""
+	@echo "Documentation Commands"
+	@echo ""
+	@echo "  make docs         - Build full documentation site"
+	@echo "  make docs-python  - Generate Python API docs (quartodoc)"
+	@echo "  make docs-typescript - Generate TypeScript API docs (typedoc)"
+	@echo "  make docs-preview - Preview documentation site locally"
 
 # Full build: TypeScript compilation + bundling for Python
 build: build-js build-bundle build-shiny
@@ -70,3 +77,28 @@ install:
 	@echo "Installing Python dependencies..."
 	uv sync
 	@echo "✓ Dependencies installed"
+
+# Documentation targets
+
+# Build full documentation site
+docs: docs-python docs-typescript
+	@echo "Building Quarto site..."
+	cd docs && uv run quarto render
+	@echo "✓ Documentation built at docs/_site/"
+
+# Generate Python API docs
+docs-python:
+	@echo "Generating Python API documentation..."
+	cd docs && uv run quartodoc build
+	@echo "✓ Python API docs generated"
+
+# Generate TypeScript API docs
+docs-typescript:
+	@echo "Generating TypeScript API documentation..."
+	cd packages/shinymap/js && npm run docs
+	@echo "✓ TypeScript API docs generated"
+
+# Preview documentation site locally
+docs-preview:
+	@echo "Starting documentation preview server..."
+	cd docs && uv run quarto preview

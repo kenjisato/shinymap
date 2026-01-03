@@ -1,0 +1,70 @@
+---
+title: "shinymap"
+---
+
+Interactive SVG map components for Shiny (Python and R).
+
+## Overview
+
+**shinymap** provides **visual alternatives to standard HTML form inputs** using SVG regions:
+
+- `input_map(mode="single")` - Visual radio buttons (select one region)
+- `input_map(mode="multiple")` - Visual checkboxes (select multiple regions)
+- `input_map(mode=Count())` - Visual counter (click to increment)
+- `input_map(mode=Cycle(n))` - Visual state cycling (n discrete states)
+
+Additionally, `output_map` provides simplified statistical visualizations (choropleths, categorical coloring) with a declarative API.
+
+**Not just maps**: Works with any SVG paths - geographic maps, diagrams, floor plans, anatomical illustrations, etc.
+
+## Installation
+
+### Python
+
+```bash
+pip install shinymap
+```
+
+Or with uv:
+
+```bash
+uv add shinymap
+```
+
+## Quick Start
+
+```python
+from shiny import App, ui
+from shinymap import input_map, output_map, render_map, Map
+from shinymap.outline import Outline
+
+# Create simple geometry
+OUTLINE = Outline.from_dict({
+    "circle": [{"type": "circle", "cx": 25, "cy": 50, "r": 20}],
+    "square": [{"type": "rect", "x": 55, "y": 30, "width": 40, "height": 40}],
+    "_metadata": {"viewBox": "0 0 100 100"},
+})
+
+app_ui = ui.page_fluid(
+    ui.h2("shinymap demo"),
+    ui.layout_columns(
+        input_map("region", OUTLINE, mode="single"),
+        output_map("result", OUTLINE),
+    ),
+)
+
+def server(input, output, session):
+    @render_map
+    def result():
+        selected = input.region()
+        value = {selected: 1} if selected else {}
+        return Map().with_value(value)
+
+app = App(app_ui, server)
+```
+
+## Documentation
+
+- [Vignettes](vignettes/index.qmd) - Tutorials and use cases
+- [Python API](python/index.qmd) - API reference
+- [TypeScript API](typescript/index.md) - React component API

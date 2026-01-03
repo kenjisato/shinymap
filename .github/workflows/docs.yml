@@ -1,0 +1,121 @@
+name: Build and Deploy Docs
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - 'docs/**'
+      - 'packages/shinymap/python/src/**'
+      - 'packages/shinymap/js/src/**'
+      - '.github/workflows/docs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages-${{ github.ref_name }}"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: packages/shinymap/js/package-lock.json
+
+      - name: Set up Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: Install Python dependencies
+        run: uv sync --all-packages --all-extras
+
+      - name: Install Node.js dependencies
+        run: cd packages/shinymap/js && npm ci
+
+      - name: Build TypeScript
+        run: make build-js
+
+      - name: Generate TypeScript docs
+        run: make docs-typescript
+
+      - name: Generate Python docs
+        run: make docs-python
+
+      - name: Build Quarto site
+        run: cd docs && uv run quarto render
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/_site
+
+  # Deploy main branch to root of GitHub Pages
+  deploy-release:
+    if: github.ref_name == 'main'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  # Deploy dev branch to /dev/ subdirectory
+  deploy-dev:
+    if: github.ref_name == 'dev'
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 0
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: github-pages
+          path: artifact
+
+      - name: Extract and deploy to /dev/
+        run: |
+          # Extract the tarball
+          mkdir -p dev-docs
+          tar -xf artifact/artifact.tar -C dev-docs
+
+          # Remove old dev docs and copy new ones
+          rm -rf dev
+          mv dev-docs dev
+          rm -rf artifact
+
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Commit and push
+          git add dev
+          git diff --staged --quiet || git commit -m "Update dev docs from ${{ github.sha }}"
+          git push

@@ -17,7 +17,8 @@
     "format:check": "prettier --check \"src/**/*.ts\" \"src/**/*.tsx\"",
     "demo": "esbuild demo/App.tsx --bundle --sourcemap --format=esm --outfile=demo/dist/app.js --watch",
     "serve": "npm-run-all --parallel demo serve:static",
-    "serve:static": "npx --yes http-server demo --port 4173"
+    "serve:static": "npx --yes http-server demo --port 4173",
+    "docs": "typedoc"
   },
   "files": [
     "dist",
@@ -44,6 +45,8 @@
     "eslint-config-prettier": "^10.1.8",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.7.4",
+    "typedoc": "^0.28.15",
+    "typedoc-plugin-markdown": "^4.9.0",
     "typescript": "^5.4.0"
   }
 }

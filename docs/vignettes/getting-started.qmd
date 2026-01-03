@@ -1,0 +1,53 @@
+---
+title: "Getting Started"
+---
+
+This guide walks you through creating your first interactive map with shinymap.
+
+## Installation
+
+```bash
+pip install shinymap
+```
+
+Or with uv:
+
+```bash
+uv add shinymap
+```
+
+## Basic Example
+
+```python
+from shiny import App, ui
+from shinymap import input_map, output_map, render_map, Map
+from shinymap.outline import Outline
+
+# Define simple geometry
+OUTLINE = Outline.from_dict({
+    "region_a": [{"type": "rect", "x": 10, "y": 10, "width": 30, "height": 30}],
+    "region_b": [{"type": "rect", "x": 50, "y": 10, "width": 30, "height": 30}],
+    "region_c": [{"type": "rect", "x": 30, "y": 50, "width": 30, "height": 30}],
+    "_metadata": {"viewBox": "0 0 100 100"},
+})
+
+app_ui = ui.page_fluid(
+    ui.h2("My First Map"),
+    input_map("selection", OUTLINE, mode="single"),
+    ui.output_text("selected"),
+)
+
+def server(input, output, session):
+    @output
+    @render.text
+    def selected():
+        return f"Selected: {input.selection()}"
+
+app = App(app_ui, server)
+```
+
+## Next Steps
+
+- Learn about [selection modes](modes.qmd)
+- Customize appearance with [aesthetics](aesthetics.qmd)
+- Load real geometry from [SVG files](svg-geometry.qmd)

@@ -1,0 +1,88 @@
+project:
+  type: website
+  output-dir: _site
+  render:
+    - "*.qmd"
+    - "vignettes/*.qmd"
+    - "typescript/*.md"
+    - "typescript/**/*.md"
+
+website:
+  title: "shinymap"
+  description: "Interactive SVG map components for Shiny"
+  navbar:
+    left:
+      - text: "Get Started"
+        href: index.qmd
+      - text: "Vignettes"
+        href: vignettes/index.qmd
+      - text: "Python API"
+        href: python/index.qmd
+      - text: "TypeScript API"
+        href: typescript/index.md
+    right:
+      - icon: github
+        href: https://github.com/kenjisato/shinymap
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+
+# quartodoc configuration
+quartodoc:
+  package: shinymap
+  source_dir: ../packages/shinymap/python/src
+  title: "Python API Reference"
+  dir: python
+  sidebar: python/_sidebar.yml
+
+  sections:
+    - title: "Core Components"
+      desc: "Main UI components for creating interactive maps"
+      contents:
+        - input_map
+        - output_map
+        - render_map
+        - update_map
+        - Map
+        - Outline
+        - Wash
+
+    - title: "Selection Modes"
+      desc: "Mode classes controlling selection behavior"
+      contents:
+        - mode.Single
+        - mode.Multiple
+        - mode.Cycle
+        - mode.Count
+        - mode.Display
+
+    - title: "Aesthetics"
+      desc: "Classes for styling map regions"
+      contents:
+        - aes.Shape
+        - aes.Line
+        - aes.ByState
+        - aes.ByGroup
+        - aes.Indexed
+
+    - title: "Color Scales"
+      desc: "Functions for generating fill colors"
+      contents:
+        - aes.color.scale_sequential
+        - aes.color.scale_diverging
+        - aes.color.scale_qualitative
+
+    - title: "Relative Expressions"
+      desc: "PARENT proxy for relative aesthetic values"
+      contents:
+        - PARENT
+        - RelativeExpr
+        - resolve_region
+        - preview_region
+
+    - title: "Outline Utilities"
+      desc: "Tools for working with SVG geometry"
+      contents:
+        - outline.Outline

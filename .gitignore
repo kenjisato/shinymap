@@ -23,3 +23,9 @@ r/shinyjpmap/.Rproj.user/
 
 # temporary
 archive
+
+# Documentation build artifacts
+docs/_site/
+docs/.quarto/
+docs/python/
+docs/typescript/
