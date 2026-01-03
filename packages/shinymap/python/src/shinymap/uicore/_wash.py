@@ -25,6 +25,7 @@ from ..types import MISSING, MissingType
 if TYPE_CHECKING:
     from htmltools import TagList
 
+    from .._map import MapBuilder
     from ..outline import Outline
 
 # Type alias for Wash() aesthetic parameters
@@ -305,6 +306,65 @@ class WashResult:
 
     def __init__(self, config: WashConfig) -> None:
         self.config = config
+
+    def build(
+        self,
+        outline: Outline,
+        *,
+        aes: AesParam = MISSING,
+        value: dict[str, int] | None = None,
+        tooltips: dict[str, str] | None = None,
+        view_box: tuple[float, float, float, float] | None = None,
+        layers: dict[str, list[str]] | None = None,
+    ) -> "MapBuilder":  # noqa: UP037
+        """Create a MapBuilder with wash aesthetics applied.
+
+        This is the entry point for static analysis via StillLife:
+        - Create a MapBuilder with resolved aesthetics
+        - Pass to StillLife for aesthetic inspection
+        - Use StillLife.to_svg() for static SVG export
+
+        Args:
+            outline: Outline object with regions and metadata
+            aes: Aesthetic overrides (merged with wash defaults)
+            value: Region values (determines selection state)
+            tooltips: Region tooltips
+            view_box: Override viewBox tuple
+            layers: Layer configuration
+
+        Returns:
+            MapBuilder with _outline and _resolved_aes populated for StillLife
+
+        Examples:
+            >>> from shinymap import Wash, StillLife, aes, Outline
+            >>> wc = Wash(shape=aes.Shape(fill_color="#e2e8f0"))
+            >>> outline = Outline.from_dict({"a": "M 0 0 L 10 10"})
+            >>> builder = wc.build(outline, value={"a": 1})
+            >>> pic = StillLife(builder)  # doctest: +SKIP
+            >>> pic.aes("a")  # doctest: +SKIP
+            {'fill_color': '#e2e8f0', ...}
+        """
+        from .._map import MapBuilder
+
+        # Resolve aes against wash config
+        resolved_aes = self.config.apply(aes, outline)
+
+        # Merge layers with outline metadata
+        merged_outline = outline.merge_layers(layers)
+
+        # Create MapBuilder with private fields populated for StillLife
+        builder = MapBuilder(
+            merged_outline.main_regions(),
+            tooltips=tooltips,
+            view_box=view_box or outline.viewbox(),
+            _outline=merged_outline,
+            _resolved_aes=resolved_aes,
+        )
+
+        if value is not None:
+            builder = builder.with_value(value)
+
+        return builder
 
     def input_map(
         self,

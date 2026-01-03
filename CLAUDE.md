@@ -490,14 +490,32 @@ outline = (
 
 See [SPEC.md](SPEC.md) for detailed technical documentation.
 
+## Static Analysis with StillLife
+
+The `StillLife` class provides static analysis of resolved aesthetics. Create a builder via `WashResult.build()`, then inspect with StillLife:
+
+```python
+from shinymap import Wash, StillLife, aes, Outline
+
+wc = Wash(shape=aes.ByState(
+    base=aes.Shape(fill_color="#e2e8f0"),
+    select=aes.Shape(fill_color="#3b82f6"),
+))
+
+outline = Outline.from_dict({"a": "M 0 0 L 10 0 L 10 10 L 0 10 Z", "b": "M 20 0 L 30 0 L 30 10 L 20 10 Z"})
+builder = wc.build(outline, value={"a": 1, "b": 0})
+
+pic = StillLife(builder)
+pic.aes("a")["fill_color"]  # '#3b82f6' (selected)
+pic.aes("b")["fill_color"]  # '#e2e8f0' (not selected)
+pic.aes_table()  # Get all regions' aesthetics
+```
+
 ## Planned Features (Next Phase)
 
 These are designed and ready for implementation. See [design/static-map-and-aes-dump.md](design/static-map-and-aes-dump.md):
 
-- **StillLife class**: Static snapshot of map state for aesthetic inspection and SVG export
-  - `StillLife(builder).aes("region_id")` - inspect resolved aesthetics
-  - `StillLife(builder).to_svg("output.svg")` - export static SVG
-- **WashResult.build()**: Create MapBuilder with wash aesthetics for static analysis
+- **StillLife.to_svg()**: Export static SVG with resolved aesthetics (Phase 2)
 
 ## Deferred/Future Items
 

@@ -40,22 +40,22 @@ def update_map(
         ```pycon
         from shinymap import aes
         from shinymap.ui import update_map
-        
+
         # Update aesthetics with ByGroup (per-region colors)
         update_map("my_map", aes=aes.ByGroup(
             region1=aes.Shape(fill_color="#ff0000"),
             region2=aes.Shape(fill_color="#00ff00"),
         ))
-        
+
         # Update with ByState (base/select/hover)
         update_map("my_map", aes=aes.ByState(
             base=aes.Shape(fill_color="#e2e8f0"),
             select=aes.Shape(fill_color="#bfdbfe"),
         ))
-        
+
         # Clear all selections (input_map only)
         update_map("my_map", value={})
-        
+
         # Set specific selections (input_map only)
         update_map("my_map", value={"region1": 1, "region2": 1})
         ```

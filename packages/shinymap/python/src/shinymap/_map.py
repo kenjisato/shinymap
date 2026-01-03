@@ -16,6 +16,9 @@ from .uicore._util import _normalize_outline, _strip_none, _validate_value
 if TYPE_CHECKING:
     from .outline import Outline
 
+# Type alias for resolved aesthetics stored in MapBuilder
+ResolvedAesType = ByGroup | None
+
 # Type aliases
 AesType = ByGroup | ByState | BaseAesthetic | Mapping[str, Mapping[str, Any] | None] | None
 
@@ -59,6 +62,8 @@ class MapBuilder:
         *,
         tooltips: TooltipMap = None,
         view_box: tuple[float, float, float, float] | None = None,
+        _outline: Outline | None = None,
+        _resolved_aes: ResolvedAesType = None,
     ):
         """Internal constructor - use Map() function instead.
 
@@ -66,6 +71,8 @@ class MapBuilder:
             regions: Dict of main regions {regionId: [element1, ...]}
             tooltips: Optional region tooltips
             view_box: ViewBox as tuple (x, y, width, height)
+            _outline: (Private) Full Outline object for StillLife analysis
+            _resolved_aes: (Private) Pre-resolved ByGroup aesthetics from Wash
         """
         self._regions: Mapping[str, Any] | None = regions
         self._tooltips = tooltips
@@ -73,6 +80,9 @@ class MapBuilder:
         self._view_box = view_box
         self._aes: AesType = None
         self._layers: Mapping[str, list[str] | None] | None = None
+        # Private fields for StillLife static analysis
+        self._outline: Outline | None = _outline
+        self._resolved_aes: ResolvedAesType = _resolved_aes
 
     def with_tooltips(self, tooltips: TooltipMap) -> MapBuilder:
         """Set region tooltips."""
@@ -181,7 +191,7 @@ def Map(
         # Standalone usage
         geo = Outline.from_dict(data)
         Map(geo, value={"a": 1, "b": 1, "c": 0})
-        
+
         # With output_map() providing static outline
         output_map("my_map", OUTLINE, tooltips=TOOLTIPS)
         @render_map

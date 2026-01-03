@@ -120,7 +120,7 @@ class Path(svg.Path, ShinymapElementMixin):
         >>> path = Path(d="M 0 0 L 100 0 L 100 100 Z")
         >>> path.bounds()
         (0.0, 0.0, 100.0, 100.0)
-        
+
         >>> from svg._path import M, L, Z
         >>> path = Path(d=[M(0, 0), L(100, 0), L(100, 100), Z()])
         >>> path.bounds()

@@ -52,7 +52,7 @@ def from_svg(
         ...     extracted,
         ...     relabel={"region_01": "path_1", "hokkaido": ["path_2", "path_3"]}
         ... )
-        
+
         >>> # Or: one-shot conversion
         >>> final = convert(  # doctest: +SKIP
         ...     "map.svg",

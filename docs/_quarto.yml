@@ -87,3 +87,8 @@ quartodoc:
       desc: "Tools for working with SVG geometry"
       contents:
         - outline.Outline
+
+    - title: "Static Analysis and Export"
+      desc: "Mode classes for static pictures"
+      contents:
+        - StillLife

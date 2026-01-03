@@ -934,7 +934,7 @@ def from_dict(d: dict[str, Any]) -> AnyAesthetic:
         ```pycon
         >>> from_dict({"type": "shape", "fill_color": "#fff"})  # doctest: +ELLIPSIS
         ShapeAesthetic(fill_color='#fff', ...)
-        
+
         >>> from_dict({
         ...     "type": "bystate",
         ...     "base": {"type": "shape", "fill_color": "#fff"},

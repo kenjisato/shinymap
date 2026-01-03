@@ -723,7 +723,7 @@ class Outline:
             ... }, metadata={})
             >>> outline.region_types()
             {'region': 'shape', '_divider': 'line', 'label': 'text'}
-            
+
             >>> # Path marked as line via path_as_line()
             >>> outline = Outline(regions={
             ...     "_border": [Path(d="M 0 0 L 100 0")],
@@ -880,7 +880,7 @@ class Outline:
             >>> outline = Outline.from_dict({"region": ["M 0 0"]})
             >>> outline.to_dict()
             {'region': ['M 0 0']}
-            
+
             >>> # v1.x format (elements)
             >>> from shinymap.outline import Circle
             >>> outline = Outline(regions={"r1": [Circle(cx=100, cy=100, r=50)]}, metadata={})

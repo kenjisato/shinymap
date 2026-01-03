@@ -6,6 +6,7 @@ __version__ = "0.3.0-dev"
 
 from . import aes, outline, types, ui, utils
 from ._map import Map
+from ._stilllife import StillLife
 from .outline import Outline
 from .relative import (
     PARENT,
@@ -31,6 +32,7 @@ __all__ = [
     "__version__",
     "Outline",
     "Map",
+    "StillLife",
     "render_map",
     "input_map",
     "input_radio_buttons",

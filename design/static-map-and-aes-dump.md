@@ -1,6 +1,6 @@
 # Design: Unified MapBuilder for Static Analysis and Export
 
-**Status**: Phase 0 Complete, Phase 1 Redesigned (see Amendment below)
+**Status**: Phase 1 Complete (see Amendment below)
 **Created**: 2026-01-01
 **Updated**: 2026-01-02
 
@@ -712,16 +712,16 @@ class StillLife:
 2. [x] Remove `active_ids` from Python and TypeScript
 3. [x] TypeScript components derive selection from `value > 0`
 
-### Phase 1: StillLife Class (REVISED)
+### Phase 1: StillLife Class (REVISED) ✅ COMPLETE
 
-1. [ ] Create `shinymap/_stilllife.py` module
-2. [ ] Implement `StillLife.__init__()` - validates builder, stores state
-3. [ ] Implement `StillLife.aes()` - resolve aesthetic for single region
-4. [ ] Implement `StillLife.aes_table()` - resolve for all regions
-5. [ ] Add `WashResult.build()` method
-6. [ ] Extend `MapBuilder.__init__` to accept `_outline` and `_resolved_aes` (private)
-7. [ ] Export `StillLife` from `shinymap/__init__.py`
-8. [ ] Add unit tests
+1. [x] Create `shinymap/_stilllife.py` module
+2. [x] Implement `StillLife.__init__()` - validates builder, stores state
+3. [x] Implement `StillLife.aes()` - resolve aesthetic for single region
+4. [x] Implement `StillLife.aes_table()` - resolve for all regions
+5. [x] Add `WashResult.build()` method
+6. [x] Extend `MapBuilder.__init__` to accept `_outline` and `_resolved_aes` (private)
+7. [x] Export `StillLife` from `shinymap/__init__.py`
+8. [x] Add unit tests
 
 ### Phase 2: SVG Export
 
