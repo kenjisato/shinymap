@@ -549,6 +549,48 @@ See [design/README.md](design/README.md) for topics needing detailed design docu
 - Contributing guidelines: [`CONTRIBUTING.md`](CONTRIBUTING.md)
 - Python Shiny practices: [`SHINY-FOR-PYTHON.md`](SHINY-FOR-PYTHON.md)
 
+## Pre-1.0.0 Breaking Changes: End-of-Life ImportError Pattern
+
+When renaming or moving public modules in pre-1.0.0, use helpful ImportError messages instead of silent breakage. This provides clear migration guidance when users try to import from obsolete locations.
+
+### Implementation Pattern
+
+Create a stub module at the old location that raises `ImportError` with migration instructions:
+
+```python
+# shinymap/old_module/__init__.py (stub for moved module)
+"""This module has moved. See error message for migration instructions."""
+
+def __getattr__(name: str):
+    raise ImportError(
+        f"'shinymap.old_module' has been renamed to 'shinymap.new_module'. "
+        f"Please update your import:\n"
+        f"  from shinymap.new_module import {name}"
+    )
+```
+
+For modules where specific names moved to a different location:
+
+```python
+# In __init__.py of module that lost exports
+_MOVED_NAMES = {"OldClass", "old_function"}
+
+def __getattr__(name: str):
+    if name in _MOVED_NAMES:
+        raise ImportError(
+            f"'{name}' has moved to shinymap.new_location. "
+            f"Please update your import:\n"
+            f"  from shinymap.new_location import {name}"
+        )
+    raise AttributeError(f"module 'shinymap.xxx' has no attribute '{name}'")
+```
+
+### Active End-of-Life Stubs
+
+| Old Import | New Import | Status |
+|------------|------------|--------|
+| `shinymap.geometry` | `shinymap.outline` | Active (raises ImportError) |
+
 ## Obsolete Patterns (Migration Guide)
 
 This section helps identify and update deprecated code patterns. If you encounter these patterns in the codebase, they should be updated to the current API.
