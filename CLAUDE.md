@@ -509,13 +509,17 @@ pic = StillLife(builder)
 pic.aes("a")["fill_color"]  # '#3b82f6' (selected)
 pic.aes("b")["fill_color"]  # '#e2e8f0' (not selected)
 pic.aes_table()  # Get all regions' aesthetics
+
+# Static SVG export
+pic.to_svg()                    # Returns SVG string
+pic.to_svg(output="map.svg")    # Writes to file
+
+# With hover state
+pic_hovered = StillLife(builder, hovered="a")
+pic_hovered.to_svg()            # Includes hover aesthetics
 ```
 
-## Planned Features (Next Phase)
-
-These are designed and ready for implementation. See [design/static-map-and-aes-dump.md](design/static-map-and-aes-dump.md):
-
-- **StillLife.to_svg()**: Export static SVG with resolved aesthetics (Phase 2)
+Layer rendering order: underlay → base → overlay → selection → hover.
 
 ## Deferred/Future Items
 

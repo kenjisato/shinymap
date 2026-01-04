@@ -2,7 +2,7 @@
 
 import pytest
 
-from shinymap import Map, PARENT, StillLife, Wash, aes
+from shinymap import PARENT, Map, StillLife, Wash, aes
 from shinymap.outline import Circle, Line, Outline, Path
 
 
@@ -405,19 +405,196 @@ class TestStillLifeToSvg:
     """Test StillLife.to_svg() method."""
 
     @pytest.mark.unit
-    def test_to_svg_not_implemented(self):
-        """to_svg() raises NotImplementedError (Phase 2)."""
+    def test_to_svg_returns_string(self):
+        """to_svg() returns SVG string."""
         outline = Outline(
             regions={"a": [Circle(cx=50, cy=50, r=30)]},
-            metadata={},
+            metadata={"viewBox": "0 0 100 100"},
         )
         wc = Wash(shape=aes.Shape(fill_color="#e2e8f0"))
 
         builder = wc.build(outline)
         pic = StillLife(builder)
 
-        with pytest.raises(NotImplementedError, match="Phase 2"):
-            pic.to_svg()
+        svg_str = pic.to_svg()
+
+        assert svg_str is not None
+        assert "<svg" in svg_str
+        assert "<circle" in svg_str
+
+    @pytest.mark.unit
+    def test_to_svg_applies_fill_color(self):
+        """to_svg() applies resolved fill color."""
+        outline = Outline(
+            regions={"a": [Circle(cx=50, cy=50, r=30)]},
+            metadata={"viewBox": "0 0 100 100"},
+        )
+        wc = Wash(shape=aes.Shape(fill_color="#3b82f6"))
+
+        builder = wc.build(outline)
+        pic = StillLife(builder)
+
+        svg_str = pic.to_svg()
+
+        assert 'fill="#3b82f6"' in svg_str
+
+    @pytest.mark.unit
+    def test_to_svg_applies_stroke(self):
+        """to_svg() applies resolved stroke properties."""
+        outline = Outline(
+            regions={"a": [Circle(cx=50, cy=50, r=30)]},
+            metadata={"viewBox": "0 0 100 100"},
+        )
+        wc = Wash(shape=aes.Shape(stroke_color="#000000", stroke_width=2.0))
+
+        builder = wc.build(outline)
+        pic = StillLife(builder)
+
+        svg_str = pic.to_svg()
+
+        assert 'stroke="#000000"' in svg_str
+        assert 'stroke-width="2.0"' in svg_str
+
+    @pytest.mark.unit
+    def test_to_svg_selected_region(self):
+        """to_svg() applies select aesthetic for selected regions."""
+        outline = Outline(
+            regions={"a": [Circle(cx=50, cy=50, r=30)]},
+            metadata={"viewBox": "0 0 100 100"},
+        )
+        wc = Wash(
+            shape=aes.ByState(
+                base=aes.Shape(fill_color="#e2e8f0"),
+                select=aes.Shape(fill_color="#3b82f6"),
+            )
+        )
+
+        builder = wc.build(outline, value={"a": 1})
+        pic = StillLife(builder)
+
+        svg_str = pic.to_svg()
+
+        # Selected region should have select fill color
+        assert 'fill="#3b82f6"' in svg_str
+
+    @pytest.mark.unit
+    def test_to_svg_hovered_region(self):
+        """to_svg() applies hover aesthetic for hovered region."""
+        outline = Outline(
+            regions={"a": [Circle(cx=50, cy=50, r=30)]},
+            metadata={"viewBox": "0 0 100 100"},
+        )
+        wc = Wash(
+            shape=aes.ByState(
+                base=aes.Shape(stroke_width=1.0),
+                hover=aes.Shape(stroke_width=3.0),
+            )
+        )
+
+        builder = wc.build(outline)
+        pic = StillLife(builder, hovered="a")
+
+        svg_str = pic.to_svg()
+
+        # Hovered region should have hover stroke width
+        assert 'stroke-width="3.0"' in svg_str
+
+    @pytest.mark.unit
+    def test_to_svg_hidden_region(self):
+        """to_svg() excludes hidden regions."""
+        outline = Outline(
+            regions={
+                "visible": [Circle(cx=50, cy=50, r=30)],
+                "_hidden": [Circle(cx=150, cy=50, r=30)],
+            },
+            metadata={"viewBox": "0 0 200 100", "hidden": ["_hidden"]},
+        )
+        wc = Wash(shape=aes.Shape(fill_color="#e2e8f0"))
+
+        builder = wc.build(outline)
+        pic = StillLife(builder)
+
+        svg_str = pic.to_svg()
+
+        # Only one circle should be present (hidden one excluded)
+        assert svg_str.count("<circle") == 1
+        assert 'cx="50"' in svg_str  # visible circle
+        assert 'cx="150"' not in svg_str  # hidden circle not present
+
+    @pytest.mark.unit
+    def test_to_svg_with_path_string(self):
+        """to_svg() handles v0.x string path format."""
+        outline = Outline.from_dict(
+            {
+                "a": "M 0 0 L 100 0 L 100 100 L 0 100 Z",
+                "_metadata": {"viewBox": "0 0 100 100"},
+            }
+        )
+        wc = Wash(shape=aes.Shape(fill_color="#e2e8f0"))
+
+        builder = wc.build(outline)
+        pic = StillLife(builder)
+
+        svg_str = pic.to_svg()
+
+        assert "<path" in svg_str
+        assert 'fill="#e2e8f0"' in svg_str
+
+    @pytest.mark.unit
+    def test_to_svg_writes_to_file(self, tmp_path):
+        """to_svg() writes to file when output is provided."""
+        outline = Outline(
+            regions={"a": [Circle(cx=50, cy=50, r=30)]},
+            metadata={"viewBox": "0 0 100 100"},
+        )
+        wc = Wash(shape=aes.Shape(fill_color="#e2e8f0"))
+
+        builder = wc.build(outline)
+        pic = StillLife(builder)
+
+        output_file = tmp_path / "test.svg"
+        result = pic.to_svg(output=output_file)
+
+        assert result is None
+        assert output_file.exists()
+        content = output_file.read_text()
+        assert "<svg" in content
+
+    @pytest.mark.unit
+    def test_to_svg_layer_order(self):
+        """to_svg() renders layers in correct order."""
+        outline = Outline(
+            regions={
+                "_bg": [Circle(cx=50, cy=50, r=40)],
+                "region": [Circle(cx=50, cy=50, r=30)],
+                "_border": [Line(x1=0, y1=0, x2=100, y2=0)],
+            },
+            metadata={
+                "viewBox": "0 0 100 100",
+                "underlays": ["_bg"],
+                "overlays": ["_border"],
+            },
+        )
+        wc = Wash(
+            shape=aes.Shape(fill_color="#e2e8f0"),
+            line=aes.Line(stroke_color="#000000"),
+        )
+
+        builder = wc.build(outline)
+        pic = StillLife(builder)
+
+        svg_str = pic.to_svg()
+
+        # Check all elements are present
+        assert svg_str.count("<circle") == 2
+        assert "<line" in svg_str
+
+        # Check order: underlay (r=40) < base (r=30) < overlay (line)
+        bg_pos = svg_str.index('r="40"')
+        region_pos = svg_str.index('r="30"')
+        border_pos = svg_str.index("<line")
+
+        assert bg_pos < region_pos < border_pos
 
 
 class TestWashResultBuild:

@@ -304,7 +304,7 @@ class StillLife:
     ) -> str | None:
         """Generate static SVG with resolved aesthetics.
 
-        Note: This method will be implemented in Phase 2.
+        Renders layers in order: underlay → base → overlay → selection → hover.
 
         Args:
             output: If provided, write SVG to file and return None.
@@ -312,14 +312,93 @@ class StillLife:
 
         Returns:
             SVG string if output is None, otherwise None.
-
-        Raises:
-            NotImplementedError: This method is not yet implemented.
         """
-        raise NotImplementedError(
-            "StillLife.to_svg() will be implemented in Phase 2. "
-            "See design/static-map-and-aes-dump.md for details."
+        import dataclasses
+
+        import svg
+
+        from .outline._elements import Path as PathElement
+
+        # ViewBox
+        vb = self._outline.viewbox()
+        viewbox_str = f"{vb[0]} {vb[1]} {vb[2]} {vb[3]}"
+
+        # Layer sets
+        overlays = set(self._outline.overlays())
+        underlays = set(self._outline.underlays())
+        hidden = set(self._outline.hidden())
+
+        # Helper to apply aesthetics to element
+        def style_element(elem: Any, aes_dict: dict[str, Any]) -> svg.Element:
+            if isinstance(elem, str):
+                elem = PathElement(d=elem)  # type: ignore[arg-type]
+            kwargs: dict[str, Any] = {}
+
+            # Check if element is a Line (no fill support)
+            is_line = hasattr(elem, "element_name") and elem.element_name == "line"
+
+            # Map aes keys to SVG attrs (skip fill for lines)
+            if not is_line:
+                if "fill_color" in aes_dict:
+                    kwargs["fill"] = aes_dict["fill_color"]
+                if "fill_opacity" in aes_dict:
+                    kwargs["fill_opacity"] = aes_dict["fill_opacity"]
+            if "stroke_color" in aes_dict:
+                kwargs["stroke"] = aes_dict["stroke_color"]
+            if "stroke_width" in aes_dict:
+                kwargs["stroke_width"] = aes_dict["stroke_width"]
+            if "stroke_dasharray" in aes_dict:
+                kwargs["stroke_dasharray"] = aes_dict["stroke_dasharray"]
+
+            return dataclasses.replace(elem, **kwargs)  # type: ignore[type-var]
+
+        # Build element list in layer order
+        svg_elements: list[svg.Element] = []
+
+        def render(region_id: str, is_hovered: bool = False) -> None:
+            aes_dict = self.aes(region_id, is_hovered=is_hovered)
+            for elem in self._outline.regions.get(region_id, []):
+                svg_elements.append(style_element(elem, aes_dict))  # type: ignore[arg-type]
+
+        # Render layers: underlay → base → overlay → selection → hover
+        for region_id in self._outline.regions:
+            if region_id in hidden:
+                continue
+            if region_id in underlays:
+                render(region_id)
+
+        for region_id in self._outline.regions:
+            if region_id in hidden or region_id in underlays or region_id in overlays:
+                continue
+            render(region_id)
+
+        for region_id in self._outline.regions:
+            if region_id in overlays:
+                render(region_id)
+
+        # Selection overlay
+        for region_id in self._outline.regions:
+            if region_id not in hidden and self._value.get(region_id, 0) > 0:
+                render(region_id)
+
+        # Hover overlay
+        if self._hovered and self._hovered not in hidden:
+            render(self._hovered, is_hovered=True)
+
+        # Create SVG
+        root = svg.SVG(
+            width=str(vb[2]),  # type: ignore[arg-type]
+            height=str(vb[3]),  # type: ignore[arg-type]
+            viewBox=viewbox_str,  # type: ignore[arg-type]
+            elements=svg_elements,
         )
+        svg_str = str(root)
+
+        if output is not None:
+            Path(output).parent.mkdir(parents=True, exist_ok=True)
+            Path(output).write_text(svg_str, encoding="utf-8")
+            return None
+        return svg_str
 
 
 __all__ = ["StillLife"]

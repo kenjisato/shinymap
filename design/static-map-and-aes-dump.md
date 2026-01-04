@@ -1,8 +1,8 @@
 # Design: Unified MapBuilder for Static Analysis and Export
 
-**Status**: Phase 1 Complete (see Amendment below)
+**Status**: Phase 3 Complete (All phases done)
 **Created**: 2026-01-01
-**Updated**: 2026-01-02
+**Updated**: 2026-01-04
 
 > **Note**: The original design proposed adding static analysis methods to MapBuilder.
 > This was revised to use a separate `StillLife` class. See the [Amendment](#amendment-stilllife-class-for-static-analysis-2026-01-02) at the end of this document.
@@ -723,18 +723,18 @@ class StillLife:
 7. [x] Export `StillLife` from `shinymap/__init__.py`
 8. [x] Add unit tests
 
-### Phase 2: SVG Export
+### Phase 2: SVG Export ✅ COMPLETE
 
-1. [ ] Implement `StillLife.to_svg()` method
-2. [ ] Handle layer rendering order
-3. [ ] Apply resolved aesthetics to SVG elements
-4. [ ] Add unit tests
+1. [x] Implement `StillLife.to_svg()` method
+2. [x] Handle layer rendering order (underlay → base → overlay → selection → hover)
+3. [x] Apply resolved aesthetics to SVG elements
+4. [x] Add unit tests
 
-### Phase 3: Documentation
+### Phase 3: Documentation ✅ COMPLETE
 
-1. [ ] Update design documents
-2. [ ] Add examples
-3. [ ] Update CLAUDE.md with new API
+1. [x] Update design documents
+2. [x] Add examples (`examples/example_stilllife.py`)
+3. [x] Update CLAUDE.md with new API
 
 ## Module Structure
 
