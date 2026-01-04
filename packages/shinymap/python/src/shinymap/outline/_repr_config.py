@@ -81,7 +81,8 @@ def set_repr_options(
 
     Example::
 
-        from shinymap.outline import Outline, Circle, set_repr_options
+        from shinymap.outline import Outline, set_repr_options
+        from shinymap.svg import Circle
 
         outline = Outline(
             regions={f"r{i}": [Circle(cx=i*10, cy=i*10, r=5)] for i in range(20)},

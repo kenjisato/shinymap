@@ -1,6 +1,7 @@
 """Integration tests for export_svg() function."""
 
-from shinymap.outline import Circle, Outline, Path, Rect, Text, export_svg
+from shinymap.outline import Outline, export_svg
+from shinymap.svg import Circle, Path, Rect, Text
 
 
 class TestExportSvgBasic:

@@ -1,6 +1,7 @@
 """Tests for custom __repr__, __str__, attrs(), and as_svg() methods."""
 
-from shinymap.outline import Circle, Ellipse, Line, Outline, Path, Polygon, Rect, Text
+from shinymap.outline import Outline
+from shinymap.svg import Circle, Ellipse, Line, Path, Polygon, Rect, Text
 
 
 class TestElementRepr:

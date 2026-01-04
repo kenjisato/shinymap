@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import pytest
 
-from shinymap.outline._elements import Circle, Ellipse, Line, Path, Polygon, Rect, Text
+from shinymap.svg import Circle, Ellipse, Line, Path, Polygon, Rect, Text
 
 
 class TestCircleBounds:

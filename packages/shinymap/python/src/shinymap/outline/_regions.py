@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ._elements import Element
+    from ..svg import Element
 
 
 class Regions(dict[str, list["str | Element"]]):
@@ -16,7 +16,7 @@ class Regions(dict[str, list["str | Element"]]):
 
     Examples:
         ```pycon
-        >>> from shinymap.outline import Circle
+        >>> from shinymap.svg import Circle
         >>> regions = Regions({"r1": [Circle(cx=100, cy=100, r=50)]})
         >>> regions
         Regions({

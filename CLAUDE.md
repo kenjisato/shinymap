@@ -545,6 +545,7 @@ See [design/README.md](design/README.md) for topics needing detailed design docu
 - Python examples: [`packages/shinymap/python/examples/`](packages/shinymap/python/examples/)
 - React components: [`packages/shinymap/js/src/components/`](packages/shinymap/js/src/components/)
 - Python source: [`packages/shinymap/python/src/shinymap/`](packages/shinymap/python/src/shinymap/)
+- SVG element classes: [`packages/shinymap/python/src/shinymap/svg/`](packages/shinymap/python/src/shinymap/svg/)
 - Design documents: [`design/`](design/)
 - Contributing guidelines: [`CONTRIBUTING.md`](CONTRIBUTING.md)
 - Python Shiny practices: [`SHINY-FOR-PYTHON.md`](SHINY-FOR-PYTHON.md)
@@ -590,6 +591,7 @@ def __getattr__(name: str):
 | Old Import | New Import | Status |
 |------------|------------|--------|
 | `shinymap.geometry` | `shinymap.outline` | Active (raises ImportError) |
+| `shinymap.outline.Circle`, `Path`, `Line`, etc. | `shinymap.svg.Circle`, etc. | Active (raises ImportError) |
 
 ## Obsolete Patterns (Migration Guide)
 

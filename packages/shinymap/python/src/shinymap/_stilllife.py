@@ -317,7 +317,7 @@ class StillLife:
 
         import svg
 
-        from .outline._elements import Path as PathElement
+        from .svg import Path as PathElement
 
         # ViewBox
         vb = self._outline.viewbox()

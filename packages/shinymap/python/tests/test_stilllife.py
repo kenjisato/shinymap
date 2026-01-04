@@ -3,7 +3,8 @@
 import pytest
 
 from shinymap import PARENT, Map, StillLife, Wash, aes
-from shinymap.outline import Circle, Line, Outline, Path
+from shinymap.outline import Outline
+from shinymap.svg import Circle, Line, Path
 
 
 class TestStillLifeInit:

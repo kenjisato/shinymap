@@ -4,7 +4,7 @@ from __future__ import annotations
 
 __version__ = "0.3.0-dev"
 
-from . import aes, outline, types, ui, utils
+from . import aes, outline, svg, types, ui, utils
 from ._map import Map
 from ._stilllife import StillLife
 from .outline import Outline
@@ -53,6 +53,7 @@ __all__ = [
     "preview_region",
     # Subpackages
     "outline",  # Outline utilities
+    "svg",  # SVG element classes (Circle, Path, etc.)
     "types",  # Type definitions (MapBuilder, etc.)
     "ui",  # UI components (input_map, output_map, etc.)
     "utils",  # Utility functions (linspace, path_bb, strip_unit)

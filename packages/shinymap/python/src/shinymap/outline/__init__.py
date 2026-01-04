@@ -108,7 +108,6 @@ from ._core import (
     from_svg,
     infer_relabel,
 )
-from ._elements import Circle, Ellipse, Line, Path, Polygon, Rect, Text
 from ._export import export_svg
 from ._regions import Regions
 from ._repr_config import ReprConfig, get_repr_config, set_repr_options
@@ -121,14 +120,31 @@ __all__ = [
     "from_json",
     "export_svg",
     "infer_relabel",
-    "Circle",
-    "Ellipse",
-    "Line",
-    "Path",
-    "Polygon",
-    "Rect",
-    "Text",
     "ReprConfig",
     "get_repr_config",
     "set_repr_options",
 ]
+
+
+# End-of-Life stubs for moved SVG element classes
+_MOVED_TO_SVG = {
+    "Circle",
+    "Rect",
+    "Path",
+    "Polygon",
+    "Ellipse",
+    "Line",
+    "Text",
+    "Element",
+    "ELEMENT_TYPE_MAP",
+}
+
+
+def __getattr__(name: str):
+    if name in _MOVED_TO_SVG:
+        raise ImportError(
+            f"'{name}' has moved to shinymap.svg. "
+            f"Please update your import:\n"
+            f"  from shinymap.svg import {name}"
+        )
+    raise AttributeError(f"module 'shinymap.outline' has no attribute '{name}'")

@@ -1,12 +1,12 @@
 """Tests for repr configuration context manager."""
 
 from shinymap.outline import (
-    Circle,
     Outline,
     Regions,
     get_repr_config,
     set_repr_options,
 )
+from shinymap.svg import Circle
 
 
 class TestReprConfig:

@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any
 from ._regions import Regions
 
 if TYPE_CHECKING:
-    from ._elements import Element
+    from ..svg import Element
 
 
 @dataclass
@@ -41,7 +41,7 @@ class Outline:
         >>> geo = Outline.from_dict(data)
 
         >>> # v1.x format (polymorphic elements)
-        >>> from shinymap.outline import Circle
+        >>> from shinymap.svg import Circle
         >>> geo = Outline(regions={"r1": [Circle(cx=100, cy=100, r=50)]}, metadata={})
         ```
     """
@@ -90,7 +90,7 @@ class Outline:
             [Circle(cx=100, cy=100, r=50)]
             ```
         """
-        from ._element_mixins import JSONSerializableMixin
+        from ..svg._mixins import JSONSerializableMixin
 
         regions_dict: dict[str, list[str | Element]] = {}
         metadata = {}
@@ -185,7 +185,7 @@ class Outline:
             >>> geo.to_json("output.json")  # doctest: +SKIP
             ```
         """
-        from ._elements import Circle, Ellipse, Line, Path, Polygon, Rect, Text
+        from ..svg import Circle, Ellipse, Line, Path, Polygon, Rect, Text
 
         svg_path = PathType(svg_path).expanduser()
         if not svg_path.exists():
@@ -715,7 +715,7 @@ class Outline:
         Examples:
             ```pycon
             >>> # v1.x format with mixed elements
-            >>> from shinymap.outline import Circle, Line, Text, Path
+            >>> from shinymap.svg import Circle, Line, Text, Path
             >>> outline = Outline(regions={
             ...     "region": [Circle(cx=50, cy=50, r=30)],
             ...     "_divider": [Line(x1=0, y1=50, x2=100, y2=50)],
@@ -882,7 +882,7 @@ class Outline:
             {'region': ['M 0 0']}
 
             >>> # v1.x format (elements)
-            >>> from shinymap.outline import Circle
+            >>> from shinymap.svg import Circle
             >>> outline = Outline(regions={"r1": [Circle(cx=100, cy=100, r=50)]}, metadata={})
             >>> outline.to_dict()
             {'r1': [{'type': 'circle', 'cx': 100, 'cy': 100, 'r': 50}]}

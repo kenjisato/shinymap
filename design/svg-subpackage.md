@@ -1,6 +1,6 @@
 # Design: Move SVG Elements to `shinymap.svg` Subpackage
 
-**Status**: Proposed
+**Status**: Implemented
 **Created**: 2026-01-04
 
 ## Problem

@@ -15,7 +15,7 @@ Important note on aesthetics:
     with_fill_color(), etc.). Preserved values are for SVG export and reference only.
 
 Example:
-    >>> from shinymap.outline import Circle
+    >>> from shinymap.svg import Circle
     >>> circle = Circle(cx=100, cy=100, r=50, fill="#ff0000")
     >>> circle.bounds()
     (50.0, 50.0, 150.0, 150.0)
@@ -32,7 +32,7 @@ from typing import TYPE_CHECKING
 
 import svg
 
-from ._element_mixins import ShinymapElementMixin
+from ._mixins import ShinymapElementMixin
 
 if TYPE_CHECKING:
     pass
