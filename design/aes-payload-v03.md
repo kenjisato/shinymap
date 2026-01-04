@@ -1,6 +1,6 @@
 # Aesthetic Payload Format v0.3
 
-**Status**: In Progress
+**Status**: Current Architecture (v0.3)
 **Created**: 2025-12-30
 **Updated**: 2026-01-01
 **Supersedes**: Parts of [props-structure.md](props-structure.md), [aesthetic-hierarchy-system.md](aesthetic-hierarchy-system.md)

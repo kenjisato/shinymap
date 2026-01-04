@@ -3,8 +3,13 @@
 **Status**: IMPLEMENTED (v0.2.0)
 
 > **Note**: This document is kept for historical reference. The Outline class,
-> Map() function, and OOP geometry API are implemented. The class was renamed
-> from `Geometry` to `Outline`.
+> Map() function, and OOP geometry API are implemented.
+>
+> **API Changes since v0.2.0**:
+> - Class renamed from `Geometry` to `Outline`
+> - `active_ids` parameter removed; selection derived from `value > 0`
+> - `geometry` parameter renamed to `outline` (Python) / `regions` (TypeScript)
+> - See [static-map-and-aes-dump.md](static-map-and-aes-dump.md) for migration details
 
 ## Problem Statement
 

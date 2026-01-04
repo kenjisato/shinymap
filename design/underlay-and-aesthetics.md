@@ -5,6 +5,9 @@
 
 > **Note**: This document is kept for historical reference. Underlay layer,
 > non-scaling stroke, stroke-dasharray, and aesthetic builders are implemented.
+>
+> **API Changes since v0.2.0**: The `geometry` parameter shown in examples
+> has been renamed to `outline`. See CLAUDE.md for current API.
 
 ## Table of Contents
 

@@ -311,9 +311,13 @@ final = (
     .update_metadata({"source": "Custom", "license": "MIT"})
 )
 
-# Export
+# Export to JSON
 final.to_json("output.json")
 final_dict = final.to_dict()
+
+# Export to SVG (round-trip, preserves original aesthetics)
+from shinymap.outline import export_svg
+export_svg(final, "output.svg")
 
 # Access geometry data
 regions = geo.regions           # Dict[str, List[str]]
@@ -403,6 +407,40 @@ result = w.result  # WashResult with shape, line, text aesthetics
 - Separates aesthetic configuration from map creation
 - IDE autocomplete for aesthetic properties
 - Type-safe aesthetic composition
+
+### Static Analysis with StillLife (v0.3.0)
+
+The `StillLife` class provides static aesthetic analysis and SVG export, enabling:
+- Inspection of resolved aesthetics for any region
+- Static SVG export with specific selection/hover states (for thumbnails, documentation, print)
+
+```python
+from shinymap import Wash, StillLife, aes, Outline
+
+# Create builder via wash
+wc = Wash(shape=aes.ByState(
+    base=aes.Shape(fill_color="#e2e8f0"),
+    select=aes.Shape(fill_color="#3b82f6"),
+))
+outline = Outline.from_json("map.json")
+builder = wc.build(outline, value={"region_a": 1, "region_b": 0})
+
+# Create snapshot for analysis
+pic = StillLife(builder)
+pic.aes("region_a")["fill_color"]  # '#3b82f6' (selected)
+pic.aes("region_b")["fill_color"]  # '#e2e8f0' (not selected)
+pic.aes_table()                     # All regions' aesthetics
+
+# Export static SVG
+pic.to_svg()                        # Returns SVG string
+pic.to_svg(output="map.svg")        # Writes to file
+
+# With hover state
+pic_hovered = StillLife(builder, hovered="region_a")
+pic_hovered.to_svg(output="map_hover.svg")
+```
+
+**Note**: `StillLife.to_svg()` applies shinymap's resolved aesthetics (selection, hover states). For SVG round-tripping that preserves original aesthetics, use `export_svg()` from `shinymap.outline` instead.
 
 ### Partial Update API
 

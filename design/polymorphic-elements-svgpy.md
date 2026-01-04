@@ -843,8 +843,8 @@ This creates an annotated SVG you can open in a browser/editor to see which regi
 - [x] Update `load_geometry()` - marked as TEMPORARY for Phase 3 frontend refactor
 - [x] Update `infer_relabel()` to handle Element dicts with hashable tuple comparison
 - [x] Update all geometry tests to work with v1.x Element format (153 tests passing)
-- [ ] Create `export_svg()` function in `_export.py` - **NOT STARTED**
-- [ ] Write integration tests for export_svg - **NOT STARTED**
+- [x] Create `export_svg()` function in `_export.py`
+- [x] Write integration tests for export_svg (test_export_svg.py)
 
 ### Phase 3: TypeScript Frontend ❌ NOT STARTED
 

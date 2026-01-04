@@ -1,6 +1,6 @@
 # Design: Aesthetic Resolution Architecture
 
-**Status**: In Progress
+**Status**: Current Architecture (v0.3)
 **Created**: 2025-12-30
 **Updated**: 2026-01-01
 
@@ -27,7 +27,7 @@ Keep data as typed Python objects as long as possible. Serialization to dict/JSO
 Resolution and payload building are two distinct processes:
 
 1. **Resolution**: Takes user aesthetics + wash config → produces fully resolved aesthetics
-   - Used by: payload building, `static_map()`, tabular dump
+   - Used by: payload building, `StillLife` (static analysis/export), tabular dump
 2. **Payload building**: Takes resolved aesthetics → produces JSON for JavaScript
    - Used by: `_input_map()`, `_output_map()`
 

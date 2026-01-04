@@ -6,6 +6,11 @@
 > **Note**: This document is kept for historical reference. The wash() factory,
 > ByState/ByType/ByGroup containers, and PARENT proxy are all implemented.
 > For current architecture, see [aes-resolution.md](aes-resolution.md).
+>
+> **Update (v0.3.0)**: The `static_map` function mentioned in this document was
+> implemented differently as the `StillLife` class. See [static-map-and-aes-dump.md](static-map-and-aes-dump.md)
+> for the actual implementation which provides `StillLife.aes()` for aesthetic inspection
+> and `StillLife.to_svg()` for static SVG export.
 
 ## Table of Contents
 

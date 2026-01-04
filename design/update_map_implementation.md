@@ -4,6 +4,10 @@
 
 > **Note**: `update_map()` is implemented in `ui/_ui.py`. This document is
 > kept for historical reference.
+>
+> **API Changes since v0.2.0**: The `active_ids` parameter shown in examples
+> has been removed. Selection is now derived from `value > 0`. See
+> [static-map-and-aes-dump.md](static-map-and-aes-dump.md) for details.
 
 This document contains detailed implementation guidance for the `update_map()` function following Shiny's `update_*()` pattern.
 

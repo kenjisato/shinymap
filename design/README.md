@@ -21,7 +21,7 @@ Documents describing future features or improvements. **Read these if you're imp
 
 | Document | Description |
 |----------|-------------|
-| (none currently) | |
+| [svg-subpackage.md](svg-subpackage.md) | Move SVG elements to `shinymap.svg` subpackage |
 
 ### Implemented (Historical Reference)
 
@@ -35,12 +35,14 @@ Documents describing features that have been implemented. **You don't need to re
 | [props-structure.md](props-structure.md) | Nested props (mode, aes, layers) | Implemented in v0.2.0 |
 | [geometry-class-refactoring.md](geometry-class-refactoring.md) | Geometry OOP, Map() function | Implemented in v0.2.0 |
 | [update_map_implementation.md](update_map_implementation.md) | Partial update API | Implemented in v0.2.0; may need alignment check |
+| [static-map-and-aes-dump.md](static-map-and-aes-dump.md) | StillLife class for static analysis and SVG export | Implemented in v0.3.0 |
+| [reference-documentation.md](reference-documentation.md) | Documentation site (Quarto, quartodoc, typedoc) | Implemented in v0.3.0 |
 
 ### Partially Implemented
 
 | Document | Description | Notes |
 |----------|-------------|-------|
-| [polymorphic-elements-svgpy.md](polymorphic-elements-svgpy.md) | svg.py integration | Phase 1-2 done; Phase 3-4 (TypeScript, export_svg) pending |
+| [polymorphic-elements-svgpy.md](polymorphic-elements-svgpy.md) | svg.py integration | Phase 1-2 (Python + export_svg) done; Phase 3-4 (TypeScript frontend) pending |
 
 ### Abandoned / Superseded
 
@@ -62,8 +64,7 @@ These topics are mentioned in SPEC.md but don't yet have detailed design documen
 ## Near-term TODOs
 
 - **Converter app**: Needs functionality improvements
-- **`static_map()` function**: Python-only SVG rendering
-- **`export_svg()` function**: From [polymorphic-elements-svgpy.md](polymorphic-elements-svgpy.md)
+- **TypeScript polymorphic elements**: Phase 3-4 of [polymorphic-elements-svgpy.md](polymorphic-elements-svgpy.md)
 
 ## Contributing
 

@@ -1,5 +1,12 @@
 # Reference Documentation Strategy
 
+**Status**: IMPLEMENTED (v0.3.0)
+**Created**: 2025-12-28
+
+> **Note**: This document is kept for historical reference. The documentation
+> infrastructure (Quarto, quartodoc, typedoc) is fully implemented and working.
+> Use `make docs` to build, `make docs-preview` to preview locally.
+
 ## Overview
 
 This document outlines the strategy for creating a unified reference documentation site for shinymap, covering both the Python and TypeScript APIs.
@@ -83,11 +90,11 @@ docs/
 
 ## Implementation Phases
 
-### Phase 1: Python Doctest Infrastructure
+### Phase 1: Python Doctest Infrastructure ✅ COMPLETE
 
-**Status**: Partially working (41 pass, 41 fail)
+**Status**: ~~Partially working (41 pass, 41 fail)~~ Fixed in v0.3.0
 
-**Current issues**:
+**Original issues** (all resolved):
 1. Comments in expected output cause failures
 2. File I/O examples reference non-existent files
 3. Formatting mismatches
@@ -97,21 +104,21 @@ docs/
 2. Add `--doctest-modules` to pytest configuration
 3. Create test fixtures for file I/O examples
 
-### Phase 2: Quartodoc Setup
+### Phase 2: Quartodoc Setup ✅ COMPLETE
 
 1. Install quartodoc: `uv add quartodoc --dev`
 2. Create `docs/_quarto.yml` with quartodoc configuration
 3. Configure API reference generation
 4. Test local build
 
-### Phase 3: TypeDoc Setup
+### Phase 3: TypeDoc Setup ✅ COMPLETE
 
 1. Install typedoc: `npm install typedoc typedoc-plugin-markdown --save-dev`
 2. Configure `typedoc.json` for Markdown output
 3. Generate to `docs/typescript/reference/`
 4. Integrate with Quarto site
 
-### Phase 4: CI/CD Integration
+### Phase 4: CI/CD Integration ✅ COMPLETE
 
 1. GitHub Actions workflow for documentation build
 2. Deploy to GitHub Pages on push to `main`

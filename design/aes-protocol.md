@@ -1,6 +1,6 @@
 # Aesthetic (aes) Protocol
 
-**Status**: Implemented (core protocol complete, dump_table pending)
+**Status**: IMPLEMENTED (core protocol complete; dump_table implemented as `StillLife.aes_table()`)
 **Created**: 2025-12-30
 
 This document defines the canonical representation and conversion protocols for aesthetic configuration in shinymap.
