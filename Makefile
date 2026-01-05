@@ -1,4 +1,4 @@
-.PHONY: help build build-js build-bundle build-shiny clean test lint format install docs docs-python docs-typescript docs-preview
+.PHONY: help build build-js build-bundle build-shiny clean test lint format lint-python format-python check-python install docs docs-python docs-typescript docs-preview
 
 # Default target
 help:
@@ -10,9 +10,15 @@ help:
 	@echo "  make build-shiny  - Build Shiny bridge for Python package"
 	@echo "  make clean        - Remove build artifacts"
 	@echo "  make test         - Run tests"
-	@echo "  make lint         - Run linters"
-	@echo "  make format       - Format code"
 	@echo "  make install      - Install dependencies"
+	@echo ""
+	@echo "Code Quality Commands"
+	@echo ""
+	@echo "  make lint         - Lint TypeScript"
+	@echo "  make format       - Format TypeScript"
+	@echo "  make lint-python  - Lint Python (ruff check)"
+	@echo "  make format-python - Format Python (ruff format)"
+	@echo "  make check-python - Full Python check (lint + format + mypy)"
 	@echo ""
 	@echo "Documentation Commands"
 	@echo ""
@@ -69,6 +75,26 @@ format:
 	@echo "Formatting TypeScript..."
 	cd packages/shinymap/js && npm run format
 	@echo "✓ Formatting complete"
+
+# Lint Python
+lint-python:
+	@echo "Linting Python..."
+	uv run ruff check packages/shinymap/python
+	@echo "✓ Python linting complete"
+
+# Format Python
+format-python:
+	@echo "Formatting Python..."
+	uv run ruff format packages/shinymap/python
+	@echo "✓ Python formatting complete"
+
+# Full Python check (lint + format check + type check)
+check-python:
+	@echo "Running full Python checks..."
+	uv run ruff check packages/shinymap/python
+	uv run ruff format --check packages/shinymap/python
+	uv run mypy packages/shinymap/python/src
+	@echo "✓ All Python checks passed"
 
 # Install dependencies
 install:
