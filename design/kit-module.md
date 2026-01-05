@@ -429,10 +429,10 @@ uv run python -m shinymap.kit.review    # View/validate outline
 ## Implementation Checklist
 
 ### Phase 1: Add Outline Methods
-- [ ] Add `move_layer()` method to `Outline` class
-- [ ] Add `move_group()` method to `Outline` class
-- [ ] Add tests for new methods
-- [ ] Update CLAUDE.md with new method documentation
+- [x] Add `move_layer()` method to `Outline` class
+- [x] Add `move_group()` method to `Outline` class
+- [x] Add tests for new methods
+- [x] Update CLAUDE.md with new method documentation
 
 ### Phase 2: Create Kit Module
 - [ ] Create `kit/` directory with `__init__.py`
