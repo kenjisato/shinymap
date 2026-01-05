@@ -6,7 +6,7 @@ import json
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from pathlib import Path as PathType
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from ._regions import Regions
 
@@ -863,6 +863,129 @@ class Outline:
             new_metadata["hidden"] = layers["hidden"]
 
         return Outline(regions=Regions(dict(self.regions)), metadata=new_metadata)
+
+    def move_layer(
+        self,
+        layer: Literal["main", "underlay", "overlay", "hidden"],
+        *region_ids: str | list[str],
+    ) -> Outline:
+        """Move regions to the specified layer (returns new Outline object).
+
+        This is a fluent API for assigning regions to layers. Each region can
+        only be in one layer at a time - calling this method removes the region
+        from any previous layer assignment.
+
+        Use "main" to move regions back to the main (interactive) layer.
+
+        Args:
+            layer: Target layer ("main", "underlay", "overlay", or "hidden")
+            *region_ids: Region IDs to move. Can be:
+                - Multiple string args: move_layer("overlay", "id1", "id2")
+                - Single list arg: move_layer("overlay", ["id1", "id2"])
+
+        Returns:
+            New Outline with updated layer assignments
+
+        Examples:
+            ```pycon
+            >>> geo = Outline.from_dict({
+            ...     "region": ["M 0 0"],
+            ...     "_border": ["M 0 0 L 100 0"],
+            ...     "_grid": ["M 0 50 L 100 50"]
+            ... })
+            >>> # Move to overlay and underlay
+            >>> geo2 = (
+            ...     geo.move_layer("overlay", "_border")
+            ...        .move_layer("underlay", "_grid")
+            ... )
+            >>> geo2.overlay_ids()
+            ['_border']
+            >>> # Move back to main layer
+            >>> geo3 = geo2.move_layer("main", "_border")
+            >>> geo3.overlay_ids()
+            []
+            >>> # Pass list of IDs
+            >>> geo4 = geo.move_layer("overlay", ["_border", "_grid"])
+            >>> sorted(geo4.overlay_ids())
+            ['_border', '_grid']
+            ```
+        """
+        # Normalize region_ids: handle both varargs and single list
+        if len(region_ids) == 1 and isinstance(region_ids[0], list):
+            ids_to_move: set[str] = set(region_ids[0])
+        else:
+            ids_to_move = set(str(rid) for rid in region_ids)
+
+        new_metadata = dict(self.metadata)
+
+        # Remove from all layers first (a region can only be in one layer)
+        for layer_key in ("underlay", "overlay", "hidden"):
+            if layer_key in new_metadata:
+                new_metadata[layer_key] = [
+                    rid for rid in new_metadata[layer_key] if rid not in ids_to_move
+                ]
+                # Remove empty lists
+                if not new_metadata[layer_key]:
+                    del new_metadata[layer_key]
+
+        # Add to target layer (unless "main" - main means just remove from other layers)
+        if layer != "main":
+            existing = list(new_metadata.get(layer, []))
+            for region_id in ids_to_move:
+                if region_id not in existing:
+                    existing.append(region_id)
+            new_metadata[layer] = existing
+
+        return Outline(regions=Regions(dict(self.regions)), metadata=new_metadata)
+
+    def move_group(
+        self, group_id: str, *region_ids: str | list[str]
+    ) -> Outline:
+        """Rename a region or merge multiple regions into a group (returns new Outline).
+
+        This is a fluent API for relabeling. It's equivalent to calling
+        `outline.relabel({group_id: list(region_ids)})`.
+
+        Args:
+            group_id: New ID for the group
+            *region_ids: Region IDs to include. Can be:
+                - Multiple string args: move_group("new", "id1", "id2")
+                - Single list arg: move_group("new", ["id1", "id2"])
+
+        Returns:
+            New Outline with the group applied
+
+        Raises:
+            ValueError: If a region ID doesn't exist
+
+        Examples:
+            ```pycon
+            >>> geo = Outline.from_dict({
+            ...     "path_1": ["M 0 0 L 10 0"],
+            ...     "path_2": ["M 20 0 L 30 0"],
+            ...     "path_3": ["M 40 0 L 50 0"]
+            ... })
+            >>> # Merge multiple regions
+            >>> geo2 = geo.move_group("combined", "path_1", "path_2")
+            >>> sorted(geo2.region_ids())
+            ['combined', 'path_3']
+            >>> # Rename single region
+            >>> geo3 = geo.move_group("renamed", "path_3")
+            >>> "renamed" in geo3.region_ids()
+            True
+            >>> # Pass list of IDs
+            >>> geo4 = geo.move_group("merged", ["path_1", "path_2", "path_3"])
+            >>> list(geo4.region_ids())
+            ['merged']
+            ```
+        """
+        # Normalize region_ids: handle both varargs and single list
+        if len(region_ids) == 1 and isinstance(region_ids[0], list):
+            ids_list: list[str] = region_ids[0]
+        else:
+            ids_list = [str(rid) for rid in region_ids]
+
+        return self.relabel({group_id: ids_list})
 
     def to_dict(self) -> dict[str, Any]:
         """Export to dict in shinymap JSON format.

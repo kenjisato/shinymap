@@ -473,14 +473,29 @@ outline.underlay_ids()   # Region IDs in underlay layer
 outline.hidden_ids()     # Region IDs in hidden layer
 ```
 
-**Fluent API with `move_layer()`** (implemented):
+**Fluent API with `move_layer()` and `move_group()`**:
 
 ```python
+from shinymap.outline import Outline
+
+# move_layer() - move regions to underlay/overlay/hidden/main
 outline = (
     Outline.from_json("map.json")
     .move_layer("underlay", "_grid", "_background")
     .move_layer("overlay", "_border", "_dividers")
     .move_layer("hidden", "_construction_guides")
+    .move_layer("main", "_region_to_restore")  # Move back to main (interactive)
+)
+
+# Accepts varargs or a single list
+outline.move_layer("overlay", "_a", "_b", "_c")
+outline.move_layer("overlay", ["_a", "_b", "_c"])  # Equivalent
+
+# move_group() - rename or merge regions (fluent wrapper for relabel)
+outline = (
+    Outline.from_svg("map.svg")
+    .move_group("hokkaido", "path_1", "path_2", "path_3")  # Merge 3 paths
+    .move_group("tokyo", "path_4")                          # Rename single path
 )
 ```
 

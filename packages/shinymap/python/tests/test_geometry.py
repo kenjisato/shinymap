@@ -1038,3 +1038,216 @@ def test_geometry_oop_equivalence_with_functional(sample_svg_file):
 
     # Should be identical
     assert result_functional == result_oop
+
+
+# move_layer() tests
+
+
+@pytest.mark.unit
+def test_move_layer_overlay():
+    """Test move_layer() moves regions to overlay."""
+    from shinymap.outline import Outline
+
+    geo = Outline.from_dict({
+        "region": ["M 0 0"],
+        "_border": ["M 0 0 L 100 0"],
+    })
+    geo2 = geo.move_layer("overlay", "_border")
+
+    assert geo2.overlay_ids() == ["_border"]
+    # Original unchanged
+    assert geo.overlay_ids() == []
+
+
+@pytest.mark.unit
+def test_move_layer_underlay():
+    """Test move_layer() moves regions to underlay."""
+    from shinymap.outline import Outline
+
+    geo = Outline.from_dict({
+        "region": ["M 0 0"],
+        "_grid": ["M 0 50 L 100 50"],
+    })
+    geo2 = geo.move_layer("underlay", "_grid")
+
+    assert geo2.underlay_ids() == ["_grid"]
+
+
+@pytest.mark.unit
+def test_move_layer_hidden():
+    """Test move_layer() moves regions to hidden."""
+    from shinymap.outline import Outline
+
+    geo = Outline.from_dict({
+        "region": ["M 0 0"],
+        "_guides": ["M 0 0 L 50 50"],
+    })
+    geo2 = geo.move_layer("hidden", "_guides")
+
+    assert geo2.hidden_ids() == ["_guides"]
+
+
+@pytest.mark.unit
+def test_move_layer_main():
+    """Test move_layer('main') removes from all layers."""
+    from shinymap.outline import Outline
+
+    geo = Outline.from_dict({
+        "region": ["M 0 0"],
+        "_border": ["M 0 0 L 100 0"],
+        "_metadata": {"overlay": ["_border"]},
+    })
+    assert geo.overlay_ids() == ["_border"]
+
+    geo2 = geo.move_layer("main", "_border")
+    assert geo2.overlay_ids() == []
+
+
+@pytest.mark.unit
+def test_move_layer_multiple_varargs():
+    """Test move_layer() with multiple varargs."""
+    from shinymap.outline import Outline
+
+    geo = Outline.from_dict({
+        "region": ["M 0 0"],
+        "_a": ["M 0 0"],
+        "_b": ["M 0 0"],
+    })
+    geo2 = geo.move_layer("overlay", "_a", "_b")
+
+    assert sorted(geo2.overlay_ids()) == ["_a", "_b"]
+
+
+@pytest.mark.unit
+def test_move_layer_list_arg():
+    """Test move_layer() with single list argument."""
+    from shinymap.outline import Outline
+
+    geo = Outline.from_dict({
+        "region": ["M 0 0"],
+        "_a": ["M 0 0"],
+        "_b": ["M 0 0"],
+    })
+    geo2 = geo.move_layer("overlay", ["_a", "_b"])
+
+    assert sorted(geo2.overlay_ids()) == ["_a", "_b"]
+
+
+@pytest.mark.unit
+def test_move_layer_removes_from_previous():
+    """Test move_layer() removes region from previous layer."""
+    from shinymap.outline import Outline
+
+    geo = Outline.from_dict({
+        "region": ["M 0 0"],
+        "_border": ["M 0 0 L 100 0"],
+        "_metadata": {"overlay": ["_border"]},
+    })
+    # Move from overlay to underlay
+    geo2 = geo.move_layer("underlay", "_border")
+
+    assert geo2.overlay_ids() == []
+    assert geo2.underlay_ids() == ["_border"]
+
+
+@pytest.mark.unit
+def test_move_layer_chaining():
+    """Test move_layer() can be chained."""
+    from shinymap.outline import Outline
+
+    geo = Outline.from_dict({
+        "region": ["M 0 0"],
+        "_border": ["M 0 0 L 100 0"],
+        "_grid": ["M 0 50 L 100 50"],
+    })
+    geo2 = (
+        geo.move_layer("overlay", "_border")
+           .move_layer("underlay", "_grid")
+    )
+
+    assert geo2.overlay_ids() == ["_border"]
+    assert geo2.underlay_ids() == ["_grid"]
+
+
+# move_group() tests
+
+
+@pytest.mark.unit
+def test_move_group_rename():
+    """Test move_group() renames single region."""
+    from shinymap.outline import Outline
+
+    geo = Outline.from_dict({
+        "path_1": ["M 0 0 L 10 0"],
+        "path_2": ["M 20 0 L 30 0"],
+    })
+    geo2 = geo.move_group("renamed", "path_1")
+
+    assert "renamed" in geo2.regions
+    assert "path_1" not in geo2.regions
+    assert "path_2" in geo2.regions
+
+
+@pytest.mark.unit
+def test_move_group_merge_varargs():
+    """Test move_group() merges multiple regions with varargs."""
+    from shinymap.outline import Outline
+
+    geo = Outline.from_dict({
+        "path_1": ["M 0 0 L 10 0"],
+        "path_2": ["M 20 0 L 30 0"],
+        "path_3": ["M 40 0 L 50 0"],
+    })
+    geo2 = geo.move_group("combined", "path_1", "path_2")
+
+    assert sorted(geo2.regions.keys()) == ["combined", "path_3"]
+    # Combined has both paths
+    assert len(geo2.regions["combined"]) == 2
+
+
+@pytest.mark.unit
+def test_move_group_merge_list():
+    """Test move_group() merges regions with list argument."""
+    from shinymap.outline import Outline
+
+    geo = Outline.from_dict({
+        "path_1": ["M 0 0 L 10 0"],
+        "path_2": ["M 20 0 L 30 0"],
+        "path_3": ["M 40 0 L 50 0"],
+    })
+    geo2 = geo.move_group("all", ["path_1", "path_2", "path_3"])
+
+    assert list(geo2.regions.keys()) == ["all"]
+    assert len(geo2.regions["all"]) == 3
+
+
+@pytest.mark.unit
+def test_move_group_nonexistent_raises():
+    """Test move_group() raises ValueError for nonexistent region."""
+    from shinymap.outline import Outline
+
+    geo = Outline.from_dict({
+        "path_1": ["M 0 0 L 10 0"],
+    })
+
+    with pytest.raises(ValueError, match="Path 'nonexistent' not found"):
+        geo.move_group("new", "nonexistent")
+
+
+@pytest.mark.unit
+def test_move_group_chaining():
+    """Test move_group() can be chained."""
+    from shinymap.outline import Outline
+
+    geo = Outline.from_dict({
+        "path_1": ["M 0 0"],
+        "path_2": ["M 10 0"],
+        "path_3": ["M 20 0"],
+        "path_4": ["M 30 0"],
+    })
+    geo2 = (
+        geo.move_group("group_a", "path_1", "path_2")
+           .move_group("group_b", "path_3", "path_4")
+    )
+
+    assert sorted(geo2.regions.keys()) == ["group_a", "group_b"]
