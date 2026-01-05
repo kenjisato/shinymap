@@ -99,7 +99,9 @@ Tests: pass/fail
 
 ## Diversion Protocol
 
-Diversions can be feature-level or dev-level:
+Diversions can be feature-level or dev-level. **Never branch div/* from task/***.
+
+If you need a diversion while working on a task, checkpoint the task first, then create the diversion from the appropriate base (feature/* or dev).
 
 **Feature-level** (affects only this feature):
 ```bash
