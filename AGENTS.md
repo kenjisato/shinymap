@@ -52,23 +52,7 @@ make test
 
 If tests fail, fix them before moving on.
 
-## Build Commands
-
-**ALWAYS use Makefile** from repository root. NEVER run npm/tsc/esbuild directly.
-
-```bash
-make install       # Install dependencies
-make build         # Full build (TypeScript → bundle → Python assets)
-make test          # Run Python tests
-make lint          # Lint TypeScript
-make format        # Format TypeScript
-make lint-python   # Lint Python
-make format-python # Format Python
-```
-
-**Prohibitions**:
-- NEVER run `pip install` - use `uv sync` or `uv add`
-- NEVER run `npm install` manually - use `make install`
+See [contributing/build.md](contributing/build.md) for all commands.
 
 ## Ask Before Proceeding
 
@@ -83,22 +67,6 @@ make format-python # Format Python
 - Refactors strictly local to requested files
 - Test fixes consistent with spec
 - Doc updates to reflect actual behavior
-
-## Repo Map
-
-```
-shinymap/
-├── packages/shinymap/js/src/          # React/TypeScript source
-│   └── components/                    # InputMap, OutputMap
-├── packages/shinymap/python/
-│   ├── src/shinymap/                  # Python package source
-│   │   └── www/                       # Built JS assets land here
-│   ├── tests/                         # Python tests
-│   └── examples/                      # Example apps
-├── design/                            # Implementation plans
-├── contributing/                      # Detailed workflows
-└── SPEC.md                            # Technical specification
-```
 
 ## Context Management
 
@@ -117,7 +85,7 @@ COMMUNICATION files are per-branch:
 
 **Parking lot**: Record unrelated issues in COMMUNICATION rather than fixing now.
 
-See [contributing/git-strategy.md](contributing/git-strategy.md) for templates.
+See [contributing/agent-workflow.md](contributing/agent-workflow.md) for templates.
 
 ## What to Read
 
@@ -127,26 +95,11 @@ See [contributing/git-strategy.md](contributing/git-strategy.md) for templates.
 | [design/](design/) | Detailed implementation plans |
 | [contributing/](contributing/) | Build commands, git strategy, workflows |
 | [contributing/api-cookbook.md](contributing/api-cookbook.md) | Code patterns and examples |
-
-## Project Philosophy
-
-- **Pre-1.0.0**: Breaking changes acceptable; no backward-compatibility shims
-- **Input-first design**: These are form controls returning simple values (`str`, `list`, `dict`)
-- **Geometry-agnostic**: Works with any SVG paths, not geography-specific
-- **Unified value model**: `{region_id: int}` internally; `value > 0` means selected
+| [contributing/project-structure.md](contributing/project-structure.md) | Repository layout |
+| [contributing/dependencies.md](contributing/dependencies.md) | Dependency policy |
 
 ## Communication Style
 
 - Concise and direct
 - Technical accuracy over validation
 - No time estimates - provide concrete steps
-
-## Dependency Policy
-
-**Allowed licenses**: MIT, BSD-2-Clause, BSD-3-Clause, Apache-2.0
-**Avoid**: GPL, AGPL (unless explicitly approved)
-
-New dependency requires:
-1. Justification (why stdlib or existing deps won't work)
-2. Size/maintenance check
-3. License verification
