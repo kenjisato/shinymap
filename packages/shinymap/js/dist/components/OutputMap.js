@@ -58,8 +58,8 @@ export function OutputMap(props) {
         ? aesBaseRaw.fillColor
         : undefined;
     // Extract from nested layers config
-    const underlays = layers === null || layers === void 0 ? void 0 : layers.underlays;
-    const overlays = layers === null || layers === void 0 ? void 0 : layers.overlays;
+    const underlays = layers === null || layers === void 0 ? void 0 : layers.underlay;
+    const overlays = layers === null || layers === void 0 ? void 0 : layers.overlay;
     const hidden = layers === null || layers === void 0 ? void 0 : layers.hidden;
     // Normalize regions to Element[] format (handles both v0.x strings and v1.x polymorphic elements)
     const normalizedRegions = useMemo(() => normalizeRegions(regions), [regions]);

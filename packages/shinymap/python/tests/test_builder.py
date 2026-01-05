@@ -82,14 +82,14 @@ def test_map_builder_with_layers():
     geo = Outline.from_dict({"a": ["M0 0"], "b": ["M10 10"], "overlay": ["M0 0 L10 10"]})
 
     layers_config = {
-        "overlays": ["overlay"],
+        "overlay": ["overlay"],
         "hidden": ["b"],
     }
 
     builder = Map(geo).with_layers(layers_config)
     json_output = builder.as_json()
 
-    assert json_output["layers"]["overlays"] == ["overlay"]
+    assert json_output["layers"]["overlay"] == ["overlay"]
     assert json_output["layers"]["hidden"] == ["b"]
 
 

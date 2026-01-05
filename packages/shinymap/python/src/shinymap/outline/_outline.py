@@ -408,51 +408,51 @@ class Outline:
 
         return (min_x, min_y, width, height)
 
-    def overlays(self) -> list[str]:
-        """Get overlay region IDs from metadata.
+    def overlay_ids(self) -> list[str]:
+        """Get region IDs in the overlay layer.
 
         Returns:
-            List of region IDs marked as overlays
+            List of region IDs in the overlay layer
 
         Examples:
             ```pycon
             >>> geo = Outline.from_dict({
             ...     "region": ["M 0 0"],
             ...     "_border": ["M 0 0 L 100 0"],
-            ...     "_metadata": {"overlays": ["_border"]}
+            ...     "_metadata": {"overlay": ["_border"]}
             ... })
-            >>> geo.overlays()
+            >>> geo.overlay_ids()
             ['_border']
             ```
         """
-        overlays = self.metadata.get("overlays", [])
-        return list(overlays) if isinstance(overlays, list) else []
+        overlay = self.metadata.get("overlay", [])
+        return list(overlay) if isinstance(overlay, list) else []
 
-    def underlays(self) -> list[str]:
-        """Get underlay region IDs from metadata.
+    def underlay_ids(self) -> list[str]:
+        """Get region IDs in the underlay layer.
 
         Returns:
-            List of region IDs marked as underlays
+            List of region IDs in the underlay layer
 
         Examples:
             ```pycon
             >>> geo = Outline.from_dict({
             ...     "region": ["M 0 0"],
             ...     "_bg": ["M 0 0 L 100 0 L 100 100 L 0 100 Z"],
-            ...     "_metadata": {"underlays": ["_bg"]}
+            ...     "_metadata": {"underlay": ["_bg"]}
             ... })
-            >>> geo.underlays()
+            >>> geo.underlay_ids()
             ['_bg']
             ```
         """
-        underlays = self.metadata.get("underlays", [])
-        return list(underlays) if isinstance(underlays, list) else []
+        underlay = self.metadata.get("underlay", [])
+        return list(underlay) if isinstance(underlay, list) else []
 
-    def hidden(self) -> list[str]:
-        """Get hidden region IDs from metadata.
+    def hidden_ids(self) -> list[str]:
+        """Get region IDs in the hidden layer.
 
         Returns:
-            List of region IDs marked as hidden
+            List of region IDs in the hidden layer
 
         Examples:
             ```pycon
@@ -461,7 +461,7 @@ class Outline:
             ...     "_temp": ["M 0 0 L 100 0"],
             ...     "_metadata": {"hidden": ["_temp"]}
             ... })
-            >>> geo.hidden()
+            >>> geo.hidden_ids()
             ['_temp']
             ```
         """
@@ -471,7 +471,7 @@ class Outline:
     def layers_dict(self) -> dict[str, list[str]] | None:
         """Get layers configuration dict for JavaScript props.
 
-        Returns a dict with overlays, underlays, and hidden keys if any
+        Returns a dict with overlay, underlay, and hidden keys if any
         layer configuration is present in metadata. Returns None if no
         layer configuration exists.
 
@@ -483,31 +483,31 @@ class Outline:
             >>> geo = Outline.from_dict({
             ...     "region": ["M 0 0"],
             ...     "_border": ["M 0 0 L 100 0"],
-            ...     "_metadata": {"overlays": ["_border"], "underlays": ["_bg"]}
+            ...     "_metadata": {"overlay": ["_border"], "underlay": ["_bg"]}
             ... })
             >>> geo.layers_dict()
-            {'overlays': ['_border'], 'underlays': ['_bg']}
+            {'overlay': ['_border'], 'underlay': ['_bg']}
             ```
         """
-        overlays = self.overlays()
-        underlays = self.underlays()
-        hidden = self.hidden()
+        overlay = self.overlay_ids()
+        underlay = self.underlay_ids()
+        hidden = self.hidden_ids()
 
-        if not overlays and not underlays and not hidden:
+        if not overlay and not underlay and not hidden:
             return None
 
         result: dict[str, list[str]] = {}
-        if overlays:
-            result["overlays"] = overlays
-        if underlays:
-            result["underlays"] = underlays
+        if overlay:
+            result["overlay"] = overlay
+        if underlay:
+            result["underlay"] = underlay
         if hidden:
             result["hidden"] = hidden
 
         return result
 
     def main_regions(self) -> Regions:
-        """Get main regions (excluding overlays).
+        """Get main regions (excluding overlay layer).
 
         Returns:
             Regions object with main regions {regionId: [element1, ...]}
@@ -518,7 +518,7 @@ class Outline:
             >>> geo = Outline.from_dict({
             ...     "region": ["M 0 0"],
             ...     "_border": ["M 0 0 L 100 0"],
-            ...     "_metadata": {"overlays": ["_border"]}
+            ...     "_metadata": {"overlay": ["_border"]}
             ... })
             >>> geo.main_regions()
             Regions({
@@ -526,8 +526,8 @@ class Outline:
             })
             ```
         """
-        overlay_ids = set(self.overlays())
-        return Regions({k: v for k, v in self.regions.items() if k not in overlay_ids})
+        overlay = set(self.overlay_ids())
+        return Regions({k: v for k, v in self.regions.items() if k not in overlay})
 
     def overlay_regions(self) -> Regions:
         """Get overlay regions only.
@@ -541,7 +541,7 @@ class Outline:
             >>> geo = Outline.from_dict({
             ...     "region": ["M 0 0"],
             ...     "_border": ["M 0 0 L 100 0"],
-            ...     "_metadata": {"overlays": ["_border"]}
+            ...     "_metadata": {"overlay": ["_border"]}
             ... })
             >>> geo.overlay_regions()
             Regions({
@@ -549,8 +549,8 @@ class Outline:
             })
             ```
         """
-        overlay_ids = set(self.overlays())
-        return Regions({k: v for k, v in self.regions.items() if k in overlay_ids})
+        overlay = set(self.overlay_ids())
+        return Regions({k: v for k, v in self.regions.items() if k in overlay})
 
     def relabel(self, mapping: dict[str, str | list[str]]) -> Outline:
         """Rename or merge regions (returns new Outline object).
@@ -628,12 +628,12 @@ class Outline:
             ...     "_border": ["M 0 0 L 100 0"]
             ... })
             >>> geo2 = geo.set_overlays(["_border"])
-            >>> geo2.overlays()
+            >>> geo2.overlay_ids()
             ['_border']
             ```
         """
         new_metadata = dict(self.metadata)
-        new_metadata["overlays"] = overlay_ids
+        new_metadata["overlay"] = overlay_ids
         return Outline(regions=Regions(dict(self.regions)), metadata=new_metadata)
 
     def update_metadata(self, metadata: dict[str, Any]) -> Outline:
@@ -819,17 +819,17 @@ class Outline:
         return result if result else None
 
     def merge_layers(self, layers: dict[str, list[str]] | None) -> Outline:
-        """Merge provided layers with outline's metadata overlays.
+        """Merge provided layers with outline's metadata.
 
         Returns a new Outline with updated metadata containing the merged
-        layers configuration. Explicit layers take priority over metadata overlays.
+        layers configuration. Explicit layers take priority over existing metadata.
 
         This method follows the immutable pattern - the original Outline is
         unchanged and a new Outline is returned.
 
         Args:
             layers: Optional explicit layer configuration with keys:
-                    underlays, overlays, hidden
+                    underlay, overlay, hidden
 
         Returns:
             New Outline with merged layers in metadata
@@ -839,14 +839,14 @@ class Outline:
             >>> outline = Outline.from_dict({
             ...     "region": ["M 0 0"],
             ...     "_border": ["M 0 0 L 100 0"],
-            ...     "_metadata": {"overlays": ["_border"]}
+            ...     "_metadata": {"overlay": ["_border"]}
             ... })
-            >>> merged = outline.merge_layers({"underlays": ["_bg"]})
+            >>> merged = outline.merge_layers({"underlay": ["_bg"]})
             >>> merged.metadata
-            {'overlays': ['_border'], 'underlays': ['_bg']}
-            >>> merged = outline.merge_layers({"overlays": ["_custom"]})
+            {'overlay': ['_border'], 'underlay': ['_bg']}
+            >>> merged = outline.merge_layers({"overlay": ["_custom"]})
             >>> merged.metadata
-            {'overlays': ['_custom']}
+            {'overlay': ['_custom']}
             ```
         """
         if layers is None:
@@ -855,10 +855,10 @@ class Outline:
         new_metadata = dict(self.metadata)
 
         # Merge layers: explicit layers override metadata
-        if layers.get("underlays"):
-            new_metadata["underlays"] = layers["underlays"]
-        if layers.get("overlays"):
-            new_metadata["overlays"] = layers["overlays"]
+        if layers.get("underlay"):
+            new_metadata["underlay"] = layers["underlay"]
+        if layers.get("overlay"):
+            new_metadata["overlay"] = layers["overlay"]
         if layers.get("hidden"):
             new_metadata["hidden"] = layers["hidden"]
 

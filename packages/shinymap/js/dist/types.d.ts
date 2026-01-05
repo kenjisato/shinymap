@@ -364,9 +364,9 @@ export type AesConfig = LegacyAesConfig | AesPayload;
  */
 export type LayersConfig = {
     /** Group names to render in underlay layer (below base regions). */
-    underlays?: string[];
+    underlay?: string[];
     /** Group names to render in overlay layer (above base regions). */
-    overlays?: string[];
+    overlay?: string[];
     /** Group names to hide completely (not rendered). */
     hidden?: string[];
 };

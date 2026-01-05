@@ -43,8 +43,8 @@ export function InputMap(props) {
         ? undefined // v0.3 uses getAesForRegion instead
         : legacyAes === null || legacyAes === void 0 ? void 0 : legacyAes.group;
     // Extract from nested layers config
-    const underlays = layers === null || layers === void 0 ? void 0 : layers.underlays;
-    const overlays = layers === null || layers === void 0 ? void 0 : layers.overlays;
+    const underlays = layers === null || layers === void 0 ? void 0 : layers.underlay;
+    const overlays = layers === null || layers === void 0 ? void 0 : layers.overlay;
     const hidden = layers === null || layers === void 0 ? void 0 : layers.hidden;
     // Extract from nested mode config (supports both string shorthand and full config)
     const normalizedMode = typeof modeConfig === "string" ? { type: modeConfig } : modeConfig;

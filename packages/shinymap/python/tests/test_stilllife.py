@@ -572,8 +572,8 @@ class TestStillLifeToSvg:
             },
             metadata={
                 "viewBox": "0 0 100 100",
-                "underlays": ["_bg"],
-                "overlays": ["_border"],
+                "underlay": ["_bg"],
+                "overlay": ["_border"],
             },
         )
         wc = Wash(
@@ -656,10 +656,10 @@ class TestWashResultBuild:
             line=aes.Line(stroke_color="#94a3b8"),
         )
 
-        builder = wc.build(outline, layers={"overlays": ["_border"]})
+        builder = wc.build(outline, layers={"overlay": ["_border"]})
 
         # Layers should be merged into outline
-        assert "_border" in builder._outline.overlays()
+        assert "_border" in builder._outline.overlay_ids()
 
     @pytest.mark.unit
     def test_build_resolves_aes(self):

@@ -300,7 +300,7 @@ def main():
                 "okinawa_scale": scale_factor,
             },
             "viewBox": viewbox_str,
-            "overlays": ["_divider_lines"]
+            "overlay": ["_divider_lines"]
         },
         **geometry,
         "_divider_lines": [divider_line]

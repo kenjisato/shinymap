@@ -81,8 +81,8 @@ export function InputMap(props: InputMapProps) {
     : legacyAes?.group;
 
   // Extract from nested layers config
-  const underlays = layers?.underlays;
-  const overlays = layers?.overlays;
+  const underlays = layers?.underlay;
+  const overlays = layers?.overlay;
   const hidden = layers?.hidden;
 
   // Extract from nested mode config (supports both string shorthand and full config)

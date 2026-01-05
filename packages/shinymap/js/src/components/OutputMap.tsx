@@ -101,8 +101,8 @@ export function OutputMap(props: OutputMapProps) {
       : undefined;
 
   // Extract from nested layers config
-  const underlays = layers?.underlays;
-  const overlays = layers?.overlays;
+  const underlays = layers?.underlay;
+  const overlays = layers?.overlay;
   const hidden = layers?.hidden;
 
   // Normalize regions to Element[] format (handles both v0.x strings and v1.x polymorphic elements)

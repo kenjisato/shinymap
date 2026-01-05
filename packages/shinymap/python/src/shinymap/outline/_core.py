@@ -16,7 +16,7 @@ The shinymap outline format is designed for simplicity and transparency:
         "source": "Wikimedia Commons - File:Japan_template_large.svg",
         "license": "CC BY-SA 3.0",
         "viewBox": "0 0 1500 1500",
-        "overlays": ["_divider_lines", "_border"]
+        "overlay": ["_divider_lines", "_border"]
     },
     "region1": "M 0 0 L 100 0 L 100 100 Z",
     "region2": "M 100 0 L 200 0 L 200 100 Z",
@@ -30,7 +30,7 @@ The shinymap outline format is designed for simplicity and transparency:
 2. **Dict/list values** = metadata (ignored by loader)
 3. **Keys starting with underscore** = typically overlays or metadata
 4. **_metadata.viewBox** (optional) = preferred viewBox string
-5. **_metadata.overlays** (optional) = list of overlay keys
+5. **_metadata.overlay** (optional) = list of region IDs in overlay layer
 
 **Why this format?**
 - **Flat and transparent**: Easy to inspect, edit, version control

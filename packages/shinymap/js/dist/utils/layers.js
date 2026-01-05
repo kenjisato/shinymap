@@ -36,23 +36,23 @@ export function resolveGroups(groupNames, regions, metadata) {
  *
  * Layer priority (highest to lowest):
  * 1. hidden - not rendered at all
- * 2. overlays - rendered above base
- * 3. underlays - rendered below base
+ * 2. overlay - rendered above base
+ * 3. underlay - rendered below base
  * 4. base - default layer for all other regions
  *
  * A region appears in at most one layer.
  *
  * @param regions - The normalized regions map
- * @param underlays - Group names for underlay layer
- * @param overlays - Group names for overlay layer
+ * @param underlay - Group names for underlay layer
+ * @param overlay - Group names for overlay layer
  * @param hidden - Group names to hide
  * @param metadata - Optional outline metadata
  * @returns Layer assignment for each region
  */
-export function assignLayers(regions, underlays, overlays, hidden, metadata) {
+export function assignLayers(regions, underlay, overlay, hidden, metadata) {
     // Resolve group names to region IDs
-    const underlayRegions = resolveGroups(underlays, regions, metadata);
-    const overlayRegions = resolveGroups(overlays, regions, metadata);
+    const underlayRegions = resolveGroups(underlay, regions, metadata);
+    const overlayRegions = resolveGroups(overlay, regions, metadata);
     const hiddenRegions = resolveGroups(hidden, regions, metadata);
     const result = {
         underlay: new Set(),

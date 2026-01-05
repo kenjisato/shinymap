@@ -324,9 +324,9 @@ class StillLife:
         viewbox_str = f"{vb[0]} {vb[1]} {vb[2]} {vb[3]}"
 
         # Layer sets
-        overlays = set(self._outline.overlays())
-        underlays = set(self._outline.underlays())
-        hidden = set(self._outline.hidden())
+        overlays = set(self._outline.overlay_ids())
+        underlays = set(self._outline.underlay_ids())
+        hidden = set(self._outline.hidden_ids())
 
         # Helper to apply aesthetics to element
         def style_element(elem: Any, aes_dict: dict[str, Any]) -> svg.Element:

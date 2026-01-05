@@ -125,7 +125,7 @@ def from_json(
         # Result has merged and renamed paths
         final["region_north"]  # Merged path_1 + path_2
         final["_border"]  # Renamed from path_3
-        final["_metadata"]["overlays"]
+        final["_metadata"]["overlay"]
         # ['_border']
     """
     # Load from file or dict

@@ -21937,9 +21937,9 @@ var shinymap = (() => {
     }
     return result;
   }
-  function assignLayers(regions, underlays, overlays, hidden, metadata) {
-    const underlayRegions = resolveGroups(underlays, regions, metadata);
-    const overlayRegions = resolveGroups(overlays, regions, metadata);
+  function assignLayers(regions, underlay, overlay, hidden, metadata) {
+    const underlayRegions = resolveGroups(underlay, regions, metadata);
+    const overlayRegions = resolveGroups(overlay, regions, metadata);
     const hiddenRegions = resolveGroups(hidden, regions, metadata);
     const result = {
       underlay: /* @__PURE__ */ new Set(),
@@ -22135,8 +22135,8 @@ var shinymap = (() => {
     const aesHover = isV03Format ? aesPayload?.__all?.hover : legacyAes?.hover;
     const aesSelect = isV03Format ? aesPayload?.__all?.select : legacyAes?.select;
     const aesGroup = isV03Format ? void 0 : legacyAes?.group;
-    const underlays = layers?.underlays;
-    const overlays = layers?.overlays;
+    const underlays = layers?.underlay;
+    const overlays = layers?.overlay;
     const hidden = layers?.hidden;
     const normalizedMode = typeof modeConfig === "string" ? { type: modeConfig } : modeConfig;
     const modeType = normalizedMode?.type ?? "multiple";
@@ -22476,8 +22476,8 @@ var shinymap = (() => {
     const aesNotSelect = legacyAes?.notSelect;
     const aesGroup = isV03Format ? void 0 : legacyAes?.group;
     const aesBaseFillColorDict = typeof aesBaseRaw?.fillColor === "object" && aesBaseRaw.fillColor !== null ? aesBaseRaw.fillColor : void 0;
-    const underlays = layers?.underlays;
-    const overlays = layers?.overlays;
+    const underlays = layers?.underlay;
+    const overlays = layers?.overlay;
     const hidden = layers?.hidden;
     const normalizedRegions = (0, import_react2.useMemo)(() => normalizeRegions(regions), [regions]);
     const layerAssignment = (0, import_react2.useMemo)(

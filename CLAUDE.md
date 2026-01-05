@@ -456,22 +456,26 @@ outline = Outline.from_json("map.json").set_overlays(["_border", "_dividers"])
 
 # merge_layers() - set multiple layer types at once (implemented)
 outline = outline.merge_layers({
-    "underlays": ["_grid"],
-    "overlays": ["_border"],
+    "underlay": ["_grid"],
+    "overlay": ["_border"],
 })
 
 # Via layers parameter on input_map/output_map (implemented)
 input_map("id", outline, layers={
-    "underlays": ["_grid"],
-    "overlays": ["_border"],
+    "underlay": ["_grid"],
+    "overlay": ["_border"],
     "hidden": ["_guides"],
 })
+
+# Query layer membership
+outline.overlay_ids()    # Region IDs in overlay layer
+outline.underlay_ids()   # Region IDs in underlay layer
+outline.hidden_ids()     # Region IDs in hidden layer
 ```
 
-**TODO**: Implement `move_layer()` for a more fluent API:
+**Fluent API with `move_layer()`** (implemented):
 
 ```python
-# Planned API (not yet implemented)
 outline = (
     Outline.from_json("map.json")
     .move_layer("underlay", "_grid", "_background")

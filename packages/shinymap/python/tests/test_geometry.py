@@ -233,8 +233,8 @@ def test_from_json_overlay_ids(sample_intermediate_json):
     )
 
     assert "_metadata" in result
-    assert "overlays" in result["_metadata"]
-    assert result["_metadata"]["overlays"] == ["bottom"]
+    assert "overlay" in result["_metadata"]
+    assert result["_metadata"]["overlay"] == ["bottom"]
 
 
 @pytest.mark.unit
@@ -430,7 +430,7 @@ def test_convert_with_overlay_and_metadata(sample_svg_file):
         metadata={"source": "Test SVG", "license": "MIT"},
     )
 
-    assert result["_metadata"]["overlays"] == ["border"]
+    assert result["_metadata"]["overlay"] == ["border"]
     assert result["_metadata"]["source"] == "Test SVG"
     assert result["_metadata"]["license"] == "MIT"
     assert result["_metadata"]["viewBox"] == "0 0 100 100"  # Preserved
@@ -488,7 +488,7 @@ def test_interactive_workflow(sample_svg_file):
     # Verify final output
     assert "region_north" in final
     assert "_border" in final
-    assert final["_metadata"]["overlays"] == ["_border"]
+    assert final["_metadata"]["overlay"] == ["_border"]
     assert final["_metadata"]["source"] == "Custom"
 
 
@@ -826,11 +826,11 @@ def test_geometry_set_overlays(sample_intermediate_json):
     geo_overlays = geo.set_overlays(["bottom", "_border"])
 
     # Check original unchanged
-    assert "overlays" not in geo.metadata
+    assert "overlay" not in geo.metadata
 
-    # Check new object has overlays
-    assert "overlays" in geo_overlays.metadata
-    assert geo_overlays.metadata["overlays"] == ["bottom", "_border"]
+    # Check new object has overlay
+    assert "overlay" in geo_overlays.metadata
+    assert geo_overlays.metadata["overlay"] == ["bottom", "_border"]
     assert "viewBox" in geo_overlays.metadata  # Other metadata preserved
 
 
@@ -923,7 +923,7 @@ def test_outline_method_chaining(sample_intermediate_json):
     assert "top_merged" in geo.regions
     assert "path_1" not in geo.regions
     assert "path_2" not in geo.regions
-    assert geo.metadata["overlays"] == ["bottom"]
+    assert geo.metadata["overlay"] == ["bottom"]
     assert geo.metadata["source"] == "Test"
     assert geo.metadata["processed"] == "true"
     assert geo.metadata["viewBox"] == "0 0 100 100"  # Original preserved
@@ -948,13 +948,13 @@ def test_outline_immutability(sample_intermediate_json):
     assert set(original.metadata.keys()) == original_metadata_keys
     assert "path_1" in original.regions
     assert "new" not in original.regions
-    assert "overlays" not in original.metadata
+    assert "overlay" not in original.metadata
     assert "custom" not in original.metadata
 
     # Verify modified has changes
     assert "new" in modified.regions
     assert "path_1" not in modified.regions
-    assert "overlays" in modified.metadata
+    assert "overlay" in modified.metadata
     assert "custom" in modified.metadata
 
 
@@ -989,7 +989,7 @@ def test_geometry_oop_workflow(sample_svg_file):
         geo_reloaded = Outline.from_json(output_path)
         assert "top_merged" in geo_reloaded.regions
         assert "_border" in geo_reloaded.regions
-        assert geo_reloaded.metadata["overlays"] == ["_border"]
+        assert geo_reloaded.metadata["overlay"] == ["_border"]
         assert geo_reloaded.metadata["source"] == "Test SVG"
 
 
