@@ -183,7 +183,11 @@ def _render_map(fn=None):
             payload_dict = _build_payload(builder, static_params)
 
             # Add mode to payload (convert to dict here)
-            mode = static_params.get("mode")
+            # Default to Display() if mode not in static_params (can happen when
+            # output_map() is called without outline parameter)
+            from ..mode import Display
+
+            mode = static_params.get("mode") or Display()
             payload_dict["mode"] = mode.to_dict()
 
             # Get click_input_id from static params
