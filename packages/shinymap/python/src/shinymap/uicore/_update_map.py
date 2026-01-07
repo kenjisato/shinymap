@@ -7,6 +7,7 @@ map components without full re-render.
 from collections.abc import Mapping
 from typing import Any
 
+from shiny.module import resolve_id
 from shiny.session import Session, require_active_session
 
 from ..aes._core import BaseAesthetic, ByGroup, ByState
@@ -92,6 +93,9 @@ def update_map(
     if not updates:
         return  # Nothing to update
 
+    # Resolve ID for Shiny module namespacing
+    resolved = resolve_id(id)
+
     # Send custom message to JavaScript (JS handles snake_case to camelCase)
-    msg = {"id": id, "updates": updates}
+    msg = {"id": resolved, "updates": updates}
     session._send_message_sync({"custom": {"shinymap-update": msg}})

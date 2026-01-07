@@ -8,6 +8,7 @@ import json
 from collections.abc import MutableMapping
 
 from htmltools import TagList, css, div
+from shiny.module import resolve_id
 
 from ..aes._core import ByGroup
 from ..mode import ModeType, initial_value_from_mode, normalize_mode
@@ -94,12 +95,15 @@ def _input_map(
         }
     )
 
+    # Resolve ID for Shiny module namespacing
+    resolved = resolve_id(id)
+
     container = div(
-        id=id,
+        id=resolved,
         class_=_class_names("shinymap-input", class_),
         style=css(**_merge_styles(width, height, style)),
         data_shinymap_input="1",
-        data_shinymap_input_id=id,
+        data_shinymap_input_id=resolved,
         data_shinymap_input_mode=props["mode"]["type"],
         data_shinymap_props=json.dumps(props),
     )
