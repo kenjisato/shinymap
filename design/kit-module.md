@@ -435,35 +435,40 @@ uv run python -m shinymap.kit.review    # View/validate outline
 - [x] Update CLAUDE.md with new method documentation
 
 ### Phase 2: Create Kit Module
-- [ ] Create `kit/` directory with `__init__.py`
-- [ ] Create `kit/_app_sketch.py` (migrate from outline/converter)
-- [ ] Create `kit/_code_gen.py` (apply_mapping, generate_code)
-- [ ] Create `kit/_caption.py` (describe, glaze)
-- [ ] Create `kit/sketch/__main__.py`
-- [ ] Update all internal imports
-- [ ] Add EOL stub at old converter location
-- [ ] Update CLAUDE.md quick reference links
-- [ ] Add tests for module imports
+- [x] Create `kit/` directory with `__init__.py`
+- [x] Create `kit/_app_sketch.py` → implemented as `kit/sketch/app.py`
+- [x] Create `kit/_code_gen.py` (apply_mapping, generate_code)
+- [x] Create `kit/_caption.py` (describe, glaze)
+- [x] Create `kit/sketch/__main__.py`
+- [x] Update all internal imports
+- [x] Add EOL stub at old converter location
+- [x] Update CLAUDE.md quick reference links (N/A - CLAUDE.md is minimal)
+- [x] Add tests for module imports
 
-### Phase 3: Caption Tool
+### Phase 3: Clean up old locations
+- [x] Remove `from_svg`, `from_json`, `convert`, `infer_relabel` from `outline/__init__.py`
+- [x] Delete `outline/_conversion.py`
+- [x] Delete `outline/converter/` files (keep `__init__.py` EOL stub)
+
+### Phase 4: Caption Tool
 - [ ] Create `kit/caption/__main__.py` CLI
 - [ ] Add font-size and color CLI options
 - [ ] Add tests for describe() and glaze()
 
-### Phase 4: Layer Enhancement
+### Phase 5: Layer Enhancement
 - [ ] Add layer dropdown to sketch UI (hidden/underlay/main/overlay)
 - [ ] Update `relabel_rules` to track layer per region
 - [ ] Add visual layer indicators in region list
 - [ ] Implement bulk layer assignment for selections
 - [ ] Update code generation to include all layer types
 
-### Phase 5: Treat as Line
+### Phase 6: Treat as Line
 - [ ] Add `is_stroke_only_candidate()` detection
 - [ ] Add "Treat as Line" indicator in sketch UI
 - [ ] Add toggle to add/remove from `lines_as_path`
 - [ ] Update code generation to include `path_as_line()` calls
 
-### Phase 6: Review App
+### Phase 7: Review App
 - [ ] Create `kit/_app_review.py`
 - [ ] Create `kit/review/__main__.py`
 - [ ] Implement layer visualization (color-coded regions)
