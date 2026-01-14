@@ -103,6 +103,7 @@ export function OutputMap(props: OutputMapProps) {
   // Extract from nested layers config
   const underlays = layers?.underlay;
   const overlays = layers?.overlay;
+  const annotations = layers?.annotation;
   const hidden = layers?.hidden;
 
   // Normalize regions to Element[] format (handles both v0.x strings and v1.x polymorphic elements)
@@ -110,8 +111,9 @@ export function OutputMap(props: OutputMapProps) {
 
   // New layer system: assign regions to layers
   const layerAssignment = useMemo(
-    () => assignLayers(normalizedRegions, underlays, overlays, hidden, outlineMetadata),
-    [normalizedRegions, underlays, overlays, hidden, outlineMetadata]
+    () =>
+      assignLayers(normalizedRegions, underlays, overlays, annotations, hidden, outlineMetadata),
+    [normalizedRegions, underlays, overlays, annotations, hidden, outlineMetadata]
   );
 
   const [hovered, setHovered] = useState<RegionId | null>(null);
@@ -464,6 +466,9 @@ export function OutputMap(props: OutputMapProps) {
             );
           })()}
       </g>
+
+      {/* Layer 6: Annotation - always on top, even above hover */}
+      <g>{renderNonInteractiveLayer(layerAssignment.annotation, "annotation")}</g>
     </svg>
   );
 }

@@ -21937,19 +21937,23 @@ var shinymap = (() => {
     }
     return result;
   }
-  function assignLayers(regions, underlay, overlay, hidden, metadata) {
+  function assignLayers(regions, underlay, overlay, annotation, hidden, metadata) {
     const underlayRegions = resolveGroups(underlay, regions, metadata);
     const overlayRegions = resolveGroups(overlay, regions, metadata);
+    const annotationRegions = resolveGroups(annotation, regions, metadata);
     const hiddenRegions = resolveGroups(hidden, regions, metadata);
     const result = {
       underlay: /* @__PURE__ */ new Set(),
       base: /* @__PURE__ */ new Set(),
       overlay: /* @__PURE__ */ new Set(),
+      annotation: /* @__PURE__ */ new Set(),
       hidden: /* @__PURE__ */ new Set()
     };
     for (const id of Object.keys(regions)) {
       if (hiddenRegions.has(id)) {
         result.hidden.add(id);
+      } else if (annotationRegions.has(id)) {
+        result.annotation.add(id);
       } else if (overlayRegions.has(id)) {
         result.overlay.add(id);
       } else if (underlayRegions.has(id)) {
@@ -22137,6 +22141,7 @@ var shinymap = (() => {
     const aesGroup = isV03Format ? void 0 : legacyAes?.group;
     const underlays = layers?.underlay;
     const overlays = layers?.overlay;
+    const annotations = layers?.annotation;
     const hidden = layers?.hidden;
     const normalizedMode = typeof modeConfig === "string" ? { type: modeConfig } : modeConfig;
     const modeType = normalizedMode?.type ?? "multiple";
@@ -22145,8 +22150,8 @@ var shinymap = (() => {
     const aesIndexed = normalizedMode?.aesIndexed;
     const normalizedRegions = (0, import_react.useMemo)(() => normalizeRegions(regions), [regions]);
     const layerAssignment = (0, import_react.useMemo)(
-      () => assignLayers(normalizedRegions, underlays, overlays, hidden, outlineMetadata),
-      [normalizedRegions, underlays, overlays, hidden, outlineMetadata]
+      () => assignLayers(normalizedRegions, underlays, overlays, annotations, hidden, outlineMetadata),
+      [normalizedRegions, underlays, overlays, annotations, hidden, outlineMetadata]
     );
     const normalizedFillColor = (0, import_react.useMemo)(
       () => normalizeFillColor(fillColor, normalizedRegions),
@@ -22418,7 +22423,8 @@ var shinymap = (() => {
                 pointerEvents: "none"
               })
             );
-          })() })
+          })() }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("g", { children: renderNonInteractiveLayer(layerAssignment.annotation, "annotation") })
         ]
       }
     );
@@ -22478,11 +22484,12 @@ var shinymap = (() => {
     const aesBaseFillColorDict = typeof aesBaseRaw?.fillColor === "object" && aesBaseRaw.fillColor !== null ? aesBaseRaw.fillColor : void 0;
     const underlays = layers?.underlay;
     const overlays = layers?.overlay;
+    const annotations = layers?.annotation;
     const hidden = layers?.hidden;
     const normalizedRegions = (0, import_react2.useMemo)(() => normalizeRegions(regions), [regions]);
     const layerAssignment = (0, import_react2.useMemo)(
-      () => assignLayers(normalizedRegions, underlays, overlays, hidden, outlineMetadata),
-      [normalizedRegions, underlays, overlays, hidden, outlineMetadata]
+      () => assignLayers(normalizedRegions, underlays, overlays, annotations, hidden, outlineMetadata),
+      [normalizedRegions, underlays, overlays, annotations, hidden, outlineMetadata]
     );
     const [hovered, setHovered] = (0, import_react2.useState)(null);
     const activeSet = deriveActiveFromValue(value);
@@ -22724,7 +22731,8 @@ var shinymap = (() => {
                 pointerEvents: "none"
               })
             );
-          })() })
+          })() }),
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("g", { children: renderNonInteractiveLayer(layerAssignment.annotation, "annotation") })
         ]
       }
     );
