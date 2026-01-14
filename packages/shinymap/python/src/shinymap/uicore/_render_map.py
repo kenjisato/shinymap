@@ -10,6 +10,7 @@ from typing import Any
 
 from htmltools import Tag, TagList, div
 from shiny import render
+from shiny.module import resolve_id
 
 from ..aes._core import ByGroup
 from ..payload import build_aes_payload
@@ -176,7 +177,7 @@ def _render_map(fn=None):
             else:
                 raise TypeError(f"Expected MapBuilder, got {type(val)}")
 
-            output_id = func.__name__
+            output_id = resolve_id(func.__name__)
             static_params = _static_map_params.get(output_id, {})
 
             # Build payload with merged params
