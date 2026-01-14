@@ -83,6 +83,7 @@ export function InputMap(props: InputMapProps) {
   // Extract from nested layers config
   const underlays = layers?.underlay;
   const overlays = layers?.overlay;
+  const annotations = layers?.annotation;
   const hidden = layers?.hidden;
 
   // Extract from nested mode config (supports both string shorthand and full config)
@@ -97,8 +98,9 @@ export function InputMap(props: InputMapProps) {
 
   // New layer system: assign regions to layers
   const layerAssignment = useMemo(
-    () => assignLayers(normalizedRegions, underlays, overlays, hidden, outlineMetadata),
-    [normalizedRegions, underlays, overlays, hidden, outlineMetadata]
+    () =>
+      assignLayers(normalizedRegions, underlays, overlays, annotations, hidden, outlineMetadata),
+    [normalizedRegions, underlays, overlays, annotations, hidden, outlineMetadata]
   );
 
   const normalizedFillColor = useMemo(
@@ -497,6 +499,9 @@ export function InputMap(props: InputMapProps) {
             );
           })()}
       </g>
+
+      {/* Layer 6: Annotation - always on top, even above hover */}
+      <g>{renderNonInteractiveLayer(layerAssignment.annotation, "annotation")}</g>
     </svg>
   );
 }

@@ -468,12 +468,35 @@ class Outline:
         hidden = self.metadata.get("hidden", [])
         return list(hidden) if isinstance(hidden, list) else []
 
+    def annotation_ids(self) -> list[str]:
+        """Get region IDs in the annotation layer.
+
+        The annotation layer renders above hover/selection layers,
+        ensuring text labels and other annotations are always visible.
+
+        Returns:
+            List of region IDs in the annotation layer
+
+        Examples:
+            ```pycon
+            >>> geo = Outline.from_dict({
+            ...     "region": ["M 0 0"],
+            ...     "_label": [{"type": "text", "x": 50, "y": 50, "text": "A"}],
+            ...     "_metadata": {"annotation": ["_label"]}
+            ... })
+            >>> geo.annotation_ids()
+            ['_label']
+            ```
+        """
+        annotation = self.metadata.get("annotation", [])
+        return list(annotation) if isinstance(annotation, list) else []
+
     def layers_dict(self) -> dict[str, list[str]] | None:
         """Get layers configuration dict for JavaScript props.
 
-        Returns a dict with overlay, underlay, and hidden keys if any
-        layer configuration is present in metadata. Returns None if no
-        layer configuration exists.
+        Returns a dict with overlay, underlay, annotation, and hidden keys
+        if any layer configuration is present in metadata. Returns None if
+        no layer configuration exists.
 
         Returns:
             Dict with layer configuration or None
@@ -491,9 +514,10 @@ class Outline:
         """
         overlay = self.overlay_ids()
         underlay = self.underlay_ids()
+        annotation = self.annotation_ids()
         hidden = self.hidden_ids()
 
-        if not overlay and not underlay and not hidden:
+        if not overlay and not underlay and not annotation and not hidden:
             return None
 
         result: dict[str, list[str]] = {}
@@ -501,6 +525,8 @@ class Outline:
             result["overlay"] = overlay
         if underlay:
             result["underlay"] = underlay
+        if annotation:
+            result["annotation"] = annotation
         if hidden:
             result["hidden"] = hidden
 
@@ -829,7 +855,7 @@ class Outline:
 
         Args:
             layers: Optional explicit layer configuration with keys:
-                    underlay, overlay, hidden
+                    underlay, overlay, annotation, hidden
 
         Returns:
             New Outline with merged layers in metadata
@@ -859,6 +885,8 @@ class Outline:
             new_metadata["underlay"] = layers["underlay"]
         if layers.get("overlay"):
             new_metadata["overlay"] = layers["overlay"]
+        if layers.get("annotation"):
+            new_metadata["annotation"] = layers["annotation"]
         if layers.get("hidden"):
             new_metadata["hidden"] = layers["hidden"]
 
@@ -866,7 +894,7 @@ class Outline:
 
     def move_layer(
         self,
-        layer: Literal["main", "underlay", "overlay", "hidden"],
+        layer: Literal["main", "underlay", "overlay", "annotation", "hidden"],
         *region_ids: str | list[str],
     ) -> Outline:
         """Move regions to the specified layer (returns new Outline object).
@@ -878,7 +906,8 @@ class Outline:
         Use "main" to move regions back to the main (interactive) layer.
 
         Args:
-            layer: Target layer ("main", "underlay", "overlay", or "hidden")
+            layer: Target layer ("main", "underlay", "overlay", "annotation",
+                or "hidden"). The "annotation" layer renders above hover/selection.
             *region_ids: Region IDs to move. Can be:
                 - Multiple string args: move_layer("overlay", "id1", "id2")
                 - Single list arg: move_layer("overlay", ["id1", "id2"])
@@ -919,7 +948,7 @@ class Outline:
         new_metadata = dict(self.metadata)
 
         # Remove from all layers first (a region can only be in one layer)
-        for layer_key in ("underlay", "overlay", "hidden"):
+        for layer_key in ("underlay", "overlay", "annotation", "hidden"):
             if layer_key in new_metadata:
                 new_metadata[layer_key] = [
                     rid for rid in new_metadata[layer_key] if rid not in ids_to_move
@@ -938,9 +967,7 @@ class Outline:
 
         return Outline(regions=Regions(dict(self.regions)), metadata=new_metadata)
 
-    def move_group(
-        self, group_id: str, *region_ids: str | list[str]
-    ) -> Outline:
+    def move_group(self, group_id: str, *region_ids: str | list[str]) -> Outline:
         """Rename a region or merge multiple regions into a group (returns new Outline).
 
         This is a fluent API for relabeling. It's equivalent to calling

@@ -60,11 +60,12 @@ export function OutputMap(props) {
     // Extract from nested layers config
     const underlays = layers === null || layers === void 0 ? void 0 : layers.underlay;
     const overlays = layers === null || layers === void 0 ? void 0 : layers.overlay;
+    const annotations = layers === null || layers === void 0 ? void 0 : layers.annotation;
     const hidden = layers === null || layers === void 0 ? void 0 : layers.hidden;
     // Normalize regions to Element[] format (handles both v0.x strings and v1.x polymorphic elements)
     const normalizedRegions = useMemo(() => normalizeRegions(regions), [regions]);
     // New layer system: assign regions to layers
-    const layerAssignment = useMemo(() => assignLayers(normalizedRegions, underlays, overlays, hidden, outlineMetadata), [normalizedRegions, underlays, overlays, hidden, outlineMetadata]);
+    const layerAssignment = useMemo(() => assignLayers(normalizedRegions, underlays, overlays, annotations, hidden, outlineMetadata), [normalizedRegions, underlays, overlays, annotations, hidden, outlineMetadata]);
     const [hovered, setHovered] = useState(null);
     // Derive active/selected regions from value (value > 0 means selected)
     const activeSet = deriveActiveFromValue(value);
@@ -363,5 +364,5 @@ export function OutputMap(props) {
                                 pointerEvents: "none",
                             });
                         });
-                    })() })] }));
+                    })() }), _jsx("g", { children: renderNonInteractiveLayer(layerAssignment.annotation, "annotation") })] }));
 }

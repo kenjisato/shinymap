@@ -367,6 +367,8 @@ export type LayersConfig = {
     underlay?: string[];
     /** Group names to render in overlay layer (above base regions). */
     overlay?: string[];
+    /** Group names to render in annotation layer (above hover/selection, always on top). */
+    annotation?: string[];
     /** Group names to hide completely (not rendered). */
     hidden?: string[];
 };

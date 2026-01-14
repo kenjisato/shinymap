@@ -20,6 +20,7 @@ export type LayerAssignment = {
     underlay: Set<RegionId>;
     base: Set<RegionId>;
     overlay: Set<RegionId>;
+    annotation: Set<RegionId>;
     hidden: Set<RegionId>;
 };
 /**
@@ -27,20 +28,22 @@ export type LayerAssignment = {
  *
  * Layer priority (highest to lowest):
  * 1. hidden - not rendered at all
- * 2. overlay - rendered above base
- * 3. underlay - rendered below base
- * 4. base - default layer for all other regions
+ * 2. annotation - rendered above hover/selection (always on top)
+ * 3. overlay - rendered above base but below selection/hover
+ * 4. underlay - rendered below base
+ * 5. base - default layer for all other regions
  *
  * A region appears in at most one layer.
  *
  * @param regions - The normalized regions map
  * @param underlay - Group names for underlay layer
  * @param overlay - Group names for overlay layer
+ * @param annotation - Group names for annotation layer (renders above hover)
  * @param hidden - Group names to hide
  * @param metadata - Optional outline metadata
  * @returns Layer assignment for each region
  */
-export declare function assignLayers(regions: Record<RegionId, Element[]>, underlay?: string[], overlay?: string[], hidden?: string[], metadata?: OutlineMetadata): LayerAssignment;
+export declare function assignLayers(regions: Record<RegionId, Element[]>, underlay?: string[], overlay?: string[], annotation?: string[], hidden?: string[], metadata?: OutlineMetadata): LayerAssignment;
 /**
  * Resolves aesthetic for a region based on group membership.
  *
