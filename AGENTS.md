@@ -27,15 +27,17 @@ Essential guidance for AI assistants working on shinymap.
 **Merge to dev via PR** from `feature/*` (large) or `task/*` (small).
 
 **Rules**:
+- **Never edit `dev` branch directly** - always use a branch and PR
 - Checkpoint before any diversion
 - One intent per commit
 - Tasks squash to single commit
+- **Ask user for manual review before committing**
 
 See [contributing/git-strategy.md](contributing/git-strategy.md) for details.
 
 ## Definition of Done
 
-A task is NOT complete until these pass (run before any commit):
+A task is NOT ready for review until these pass:
 
 ```bash
 # If TypeScript touched:
@@ -51,6 +53,8 @@ make test
 ```
 
 If tests fail, fix them before moving on.
+
+**Important**: Agents never declare "task is complete". Always declare **"ready for review"** and let the user make the final determination.
 
 See [contributing/build.md](contributing/build.md) for all commands.
 
