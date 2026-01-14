@@ -129,11 +129,15 @@ git rebase feature/<name>
 
 ## Non-Negotiable Rules
 
-1. **Checkpoint before diversion**
-2. **One intent per commit**
-3. **Tasks squash to single commit**
-4. **Update COMMUNICATION at session boundaries**
-5. **PR to merge into `dev`**
+1. **Never edit `dev` directly** - always use a branch and PR
+2. **Create COMMUNICATION file when starting a branch**
+3. **Ask user for review before committing**
+4. **Checkpoint before diversion**
+5. **One intent per commit**
+6. **Tasks squash to single commit**
+7. **Update COMMUNICATION at session boundaries**
+8. **Delete COMMUNICATION files before creating PR**
+9. **PR to merge into `dev`**
 
 ## Command Reference
 

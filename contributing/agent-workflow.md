@@ -162,11 +162,20 @@ When you discover unrelated issues:
 - `COMMUNICATION.task.<item>.md` - Task-level (if multi-session)
 - `COMMUNICATION.div.<topic>-YYYYMMDD-HHMM.md` - Diversion
 
-### Cleanup After Merge
+### Cleanup Before PR
 
-After PR is merged, the COMMUNICATION file can be:
-- Deleted (if all info is in commit messages/PR)
-- Archived (move to `archive/` if you want history)
+**COMMUNICATION files must be deleted before creating a PR**. These are temporary files for internal agent-user communication and should not be merged into `dev`.
+
+```bash
+# Before creating PR, remove COMMUNICATION files
+rm COMMUNICATION.*.md
+git add -A
+git commit -m "chore: remove COMMUNICATION files"
+```
+
+### Cleanup After Merge (if forgotten)
+
+If COMMUNICATION files were accidentally merged, delete them in a follow-up commit.
 
 ### Don't Commit Sensitive Info
 
