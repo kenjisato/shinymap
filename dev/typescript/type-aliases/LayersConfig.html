@@ -132,6 +132,7 @@ ul.task-list li input[type="checkbox"] {
   <ul class="collapse">
   <li><a href="#properties" id="toc-properties" class="nav-link" data-scroll-target="#properties">Properties</a>
   <ul class="collapse">
+  <li><a href="#annotation" id="toc-annotation" class="nav-link" data-scroll-target="#annotation">annotation?</a></li>
   <li><a href="#hidden" id="toc-hidden" class="nav-link" data-scroll-target="#hidden">hidden?</a></li>
   <li><a href="#overlay" id="toc-overlay" class="nav-link" data-scroll-target="#overlay">overlay?</a></li>
   <li><a href="#underlay" id="toc-underlay" class="nav-link" data-scroll-target="#underlay">underlay?</a></li>
@@ -154,17 +155,26 @@ ul.task-list li input[type="checkbox"] {
 <blockquote class="blockquote">
 <p><strong>LayersConfig</strong> = <code>object</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/kenjisato/shinymap/blob/c2b8a67559d2fade070ab06475c6c51e382cee96/packages/shinymap/js/src/types.ts#L680">types.ts:680</a></p>
+<p>Defined in: <a href="https://github.com/kenjisato/shinymap/blob/4473c11dc96e418d6af0bc3f6d88f0e94c9467eb/packages/shinymap/js/src/types.ts#L680">types.ts:680</a></p>
 <p>Nested layer configuration (new API).</p>
 <p>Groups all layer settings under a single <code>layers</code> prop.</p>
 <section id="properties" class="level2">
 <h2 class="anchored" data-anchor-id="properties">Properties</h2>
+<section id="annotation" class="level3">
+<h3 class="anchored" data-anchor-id="annotation">annotation?</h3>
+<blockquote class="blockquote">
+<p><code>optional</code> <strong>annotation</strong>: <code>string</code>[]</p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/kenjisato/shinymap/blob/4473c11dc96e418d6af0bc3f6d88f0e94c9467eb/packages/shinymap/js/src/types.ts#L686">types.ts:686</a></p>
+<p>Group names to render in annotation layer (above hover/selection, always on top).</p>
+<hr>
+</section>
 <section id="hidden" class="level3">
 <h3 class="anchored" data-anchor-id="hidden">hidden?</h3>
 <blockquote class="blockquote">
 <p><code>optional</code> <strong>hidden</strong>: <code>string</code>[]</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/kenjisato/shinymap/blob/c2b8a67559d2fade070ab06475c6c51e382cee96/packages/shinymap/js/src/types.ts#L686">types.ts:686</a></p>
+<p>Defined in: <a href="https://github.com/kenjisato/shinymap/blob/4473c11dc96e418d6af0bc3f6d88f0e94c9467eb/packages/shinymap/js/src/types.ts#L688">types.ts:688</a></p>
 <p>Group names to hide completely (not rendered).</p>
 <hr>
 </section>
@@ -173,7 +183,7 @@ ul.task-list li input[type="checkbox"] {
 <blockquote class="blockquote">
 <p><code>optional</code> <strong>overlay</strong>: <code>string</code>[]</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/kenjisato/shinymap/blob/c2b8a67559d2fade070ab06475c6c51e382cee96/packages/shinymap/js/src/types.ts#L684">types.ts:684</a></p>
+<p>Defined in: <a href="https://github.com/kenjisato/shinymap/blob/4473c11dc96e418d6af0bc3f6d88f0e94c9467eb/packages/shinymap/js/src/types.ts#L684">types.ts:684</a></p>
 <p>Group names to render in overlay layer (above base regions).</p>
 <hr>
 </section>
@@ -182,7 +192,7 @@ ul.task-list li input[type="checkbox"] {
 <blockquote class="blockquote">
 <p><code>optional</code> <strong>underlay</strong>: <code>string</code>[]</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/kenjisato/shinymap/blob/c2b8a67559d2fade070ab06475c6c51e382cee96/packages/shinymap/js/src/types.ts#L682">types.ts:682</a></p>
+<p>Defined in: <a href="https://github.com/kenjisato/shinymap/blob/4473c11dc96e418d6af0bc3f6d88f0e94c9467eb/packages/shinymap/js/src/types.ts#L682">types.ts:682</a></p>
 <p>Group names to render in underlay layer (below base regions).</p>
 
 
