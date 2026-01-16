@@ -121,7 +121,8 @@ class TestDescribe:
         labels = describe(sample_outline)
 
         text = labels["_label_region_a"][0]
-        assert text.font_size == "3"
+        # Default is 3% of viewBox (100x100), so 3.0
+        assert text.font_size == "3.0"
         assert text.fill == "#333"
         assert text.text_anchor == "middle"
         assert text.dominant_baseline == "central"
@@ -359,3 +360,9 @@ class TestModuleImports:
         from shinymap.kit.sketch.app import app_run
 
         assert callable(app_run)
+
+    def test_import_caption_module(self):
+        """Test importing caption module."""
+        from shinymap.kit.caption.__main__ import main
+
+        assert callable(main)

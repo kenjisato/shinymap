@@ -27,8 +27,10 @@ def describe(
     Args:
         outline: Source outline to generate labels for
         exclude: Region IDs to skip (e.g., overlays, hidden regions)
-        **kwargs: Additional attributes passed to Text elements
-            (e.g., font_size="3", fill="#333", text_anchor="middle")
+        **kwargs: Additional attributes passed to Text elements.
+            font_size can be absolute (e.g., "5") or percentage of
+            smaller viewBox dimension (e.g., "3%"). Default is "3%".
+            Other options: fill, text_anchor, etc.
 
     Returns:
         Regions dict with Text elements keyed as "_label_{region_id}"
@@ -41,8 +43,11 @@ def describe(
         >>> labels = describe(outline, exclude=outline.overlay_ids())
         >>> labeled = glaze(outline, labels)
         >>>
-        >>> # Custom styling
+        >>> # Custom styling with absolute font size
         >>> labels = describe(outline, font_size="5", fill="red")
+        >>>
+        >>> # Percentage-based font size (2% of smaller viewBox dimension)
+        >>> labels = describe(outline, font_size="2%")
     """
     from ..utils import path_bb
 
@@ -53,10 +58,17 @@ def describe(
     text_attrs = {
         "text_anchor": "middle",
         "dominant_baseline": "central",
-        "font_size": "3",
+        "font_size": "3%",
         "fill": "#333",
     }
     text_attrs.update(kwargs)
+
+    # Resolve percentage-based font_size
+    font_size = text_attrs.get("font_size", "3%")
+    if isinstance(font_size, str) and font_size.endswith("%"):
+        pct = float(font_size[:-1]) / 100
+        vb = outline.viewbox()
+        text_attrs["font_size"] = str(round(min(vb[2], vb[3]) * pct, 2))
 
     for region_id, elements in outline.regions.items():
         if region_id in exclude_set:

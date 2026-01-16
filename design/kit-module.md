@@ -451,9 +451,9 @@ uv run python -m shinymap.kit.review    # View/validate outline
 - [x] Delete `outline/converter/` files (keep `__init__.py` EOL stub)
 
 ### Phase 4: Caption Tool
-- [ ] Create `kit/caption/__main__.py` CLI
-- [ ] Add font-size and color CLI options
-- [ ] Add tests for describe() and glaze()
+- [x] Create `kit/caption/__main__.py` CLI
+- [x] Add font-size and color CLI options
+- [x] Add tests for describe() and glaze() (already existed)
 
 ### Phase 5: Layer Enhancement
 - [ ] Add layer dropdown to sketch UI (hidden/underlay/main/overlay)
