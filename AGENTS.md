@@ -102,6 +102,25 @@ See [contributing/agent-workflow.md](contributing/agent-workflow.md) for templat
 | [contributing/project-structure.md](contributing/project-structure.md) | Repository layout |
 | [contributing/dependencies.md](contributing/dependencies.md) | Dependency policy |
 
+## Context Efficiency (Sub-Agents)
+
+Sub-agents run in separate context windows. Only their final result returns to the main conversation—not intermediate file reads, searches, or reasoning. Use them to preserve context for actual implementation work.
+
+**Available agents** (via Task tool):
+
+| Agent | Use For |
+|-------|---------|
+| `Explore` | Multi-file searches, codebase questions, understanding unfamiliar code |
+| `Plan` | Design strategy before implementing features touching 3+ files |
+| `Bash` | Shell commands (git, build, tests) |
+| `general-purpose` | Complex multi-step research |
+
+**Guidelines**:
+- Prefer `Explore` agent over direct file reads when exploring unfamiliar areas
+- Use `Plan` agent before non-trivial implementations to frontload decisions
+- Run long commands (full test suite, builds) in background when possible
+- Keep main context for coding—delegate research to sub-agents
+
 ## Communication Style
 
 - Concise and direct
