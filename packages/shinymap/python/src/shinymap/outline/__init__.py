@@ -1,113 +1,61 @@
 """Outline utilities for working with SVG paths.
 
-This subpackage provides tools for:
-- Converting SVG files to shinymap JSON format (convert, from_svg, from_json)
-- Inferring conversion code from original source (infer_relabel)
+This subpackage provides the Outline class for working with SVG outlines:
 
-## JSON Format
+## Loading Outlines
 
-Shinymap outline JSON files use a **list-based path format**:
-
-```json
-{
-  "_metadata": {
-    "viewBox": "0 0 100 100",
-    "source": "Custom SVG",
-    "license": "MIT"
-  },
-  "region_01": ["M 10 10 L 40 10 L 40 40 L 10 40 Z"],
-  "hokkaido": [
-    "M 0 0 L 100 0 L 100 100 Z",
-    "M 200 0 L 300 0 L 300 100 Z"
-  ]
-}
-```
-
-**Key points:**
-- Each region maps to a **list of SVG path strings**
-- Single-element list: single path (e.g., `"region_01": ["M 10 10..."]`)
-- Multi-element list: merged paths (e.g., `"hokkaido": ["M 0 0...", "M 200 0..."]`)
-- Paths are joined with spaces when rendered: `" ".join(path_list)`
-
-## Conversion Workflows
-
-**Interactive workflow** (two-step for manual inspection):
 ```python
-from shinymap.outline import from_svg, from_json
-
-# Step 1: Extract intermediate JSON with auto-generated IDs
-intermediate = from_svg("map.svg", "intermediate.json")
-# Result: {"_metadata": {...}, "path_1": ["M..."], "path_2": ["M..."], ...}
-
-# Inspect intermediate JSON, plan transformations
-print(list(intermediate.keys()))  # ['_metadata', 'path_1', 'path_2', ...]
-
-# Step 2: Apply transformations
-final = from_json(
-    intermediate,
-    "final.json",
-    relabel={
-        "region_01": "path_1",              # Rename: path_1 → region_01
-        "hokkaido": ["path_2", "path_3"],   # Merge: combine into hokkaido
-    },
-    overlay_ids=["_border"],
-    metadata={"source": "Custom", "license": "MIT"}
-)
-# Result: {"region_01": ["M..."], "hokkaido": ["M...", "M..."], ...}
-```
-
-**One-shot conversion** (scripting/reproducibility):
-```python
-from shinymap.outline import convert
+from shinymap import Outline
 
 # From SVG file
-result = convert(
+outline = Outline.from_svg("map.svg")
+
+# From JSON file
+outline = Outline.from_json("map.json")
+
+# From dict
+outline = Outline.from_dict({"region_01": ["M 10 10 L 40 10 Z"]})
+```
+
+## Transformations (Fluent API)
+
+```python
+outline = (
+    Outline.from_svg("map.svg")
+    .relabel({"tokyo": "path_1", "hokkaido": ["path_2", "path_3"]})
+    .move_layer("overlay", "_border")
+    .update_metadata({"source": "Custom SVG"})
+)
+outline.to_json("map.json")
+```
+
+## One-shot Conversion
+
+For scripted conversions, use `shinymap.kit.convert`:
+
+```python
+from shinymap.kit import convert
+
+convert(
     "map.svg",
     "map.json",
-    relabel={
-        "region_01": "path_1",              # Rename single path
-        "hokkaido": ["path_2", "path_3"],   # Merge multiple paths
-    },
+    relabel={"tokyo": "path_1"},
     overlay_ids=["_border"],
-    metadata={"source": "Custom", "license": "MIT"}
-)
-
-# From intermediate JSON file
-result = convert(
-    "intermediate.json",
-    "final.json",
-    relabel={"region_01": "path_1"},
 )
 ```
 
-**Infer conversion code** (reproducibility from manual work):
-```python
-from shinymap.outline import infer_relabel, convert
+## Interactive Conversion
 
-# After manually creating final.json, infer the transformations
-relabel = infer_relabel("original.svg", "final.json")
-# Returns: {"region_01": "path_1", "hokkaido": ["path_2", "path_3"]}
+For interactive SVG relabeling and layer assignment:
 
-# Generate reproducible code
-code = f'''
-convert(
-    "original.svg",
-    "final.json",
-    relabel={relabel},
-)
-'''
+```bash
+uv run python -m shinymap.kit.sketch
 ```
 """
 
 from __future__ import annotations
 
-from ._core import (
-    Outline,
-    convert,
-    from_json,
-    from_svg,
-    infer_relabel,
-)
+from ._core import Outline
 from ._export import export_svg
 from ._regions import Regions
 from ._repr_config import ReprConfig, get_repr_config, set_repr_options
@@ -115,15 +63,19 @@ from ._repr_config import ReprConfig, get_repr_config, set_repr_options
 __all__ = [
     "Outline",
     "Regions",
-    "convert",
-    "from_svg",
-    "from_json",
     "export_svg",
-    "infer_relabel",
     "ReprConfig",
     "get_repr_config",
     "set_repr_options",
 ]
+
+# EOL stubs for moved functions
+_MOVED_TO_KIT = {
+    "convert": "shinymap.kit.convert",
+    "from_svg": "Outline.from_svg",
+    "from_json": "Outline.from_json",
+    "infer_relabel": "shinymap.kit (or use sketch app)",
+}
 
 
 # End-of-Life stubs for moved SVG element classes
@@ -141,6 +93,11 @@ _MOVED_TO_SVG = {
 
 
 def __getattr__(name: str):
+    if name in _MOVED_TO_KIT:
+        replacement = _MOVED_TO_KIT[name]
+        raise ImportError(
+            f"'{name}' has been removed from shinymap.outline. Use {replacement} instead."
+        )
     if name in _MOVED_TO_SVG:
         raise ImportError(
             f"'{name}' has moved to shinymap.svg. "

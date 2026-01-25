@@ -11,9 +11,11 @@ from shiny import App, ui
 
 from shinymap import Map, Outline, output_map, render_map
 
-outline = Outline.from_dict({
-    "region_a": "M 0 0 L 50 0 L 50 50 L 0 50 Z",
-})
+outline = Outline.from_dict(
+    {
+        "region_a": "M 0 0 L 50 0 L 50 50 L 0 50 Z",
+    }
+)
 
 app_ui = ui.page_fluid(
     # output_map WITHOUT outline - mode is not registered in static_params

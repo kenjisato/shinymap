@@ -35,8 +35,8 @@ def _build_payload(
     Handles merging of builder params with static params from output_map(),
     and converts all objects to dicts.
     """
-    # Get outline from static params or builder
-    outline = static_params.get("outline")
+    # Get outline from static params or builder (builder._outline is set by Map())
+    outline = static_params.get("outline") or builder._outline
 
     # Get view_box
     view_box = builder._view_box if builder._view_box is not None else static_params.get("view_box")

@@ -1,8 +1,7 @@
 """Interactive SVG to shinymap JSON converter.
 
 Usage:
-    uv run python -m shinymap.outline.converter [options]
-    python -m shinymap.outline.converter [options]
+    uv run python -m shinymap.kit.sketch [options]
 
 Options:
     -H, --host TEXT           Bind socket to this host (default: 127.0.0.1)
@@ -12,30 +11,24 @@ Options:
 
 Examples:
     # Run on default host/port
-    uv run python -m shinymap.outline.converter
+    uv run python -m shinymap.kit.sketch
 
     # Run on custom port and open browser
-    uv run python -m shinymap.outline.converter -p 9000 -b
+    uv run python -m shinymap.kit.sketch -p 9000 -b
 
     # Pre-load an SVG file
-    uv run python -m shinymap.outline.converter -f path/to/file.svg -b
-
-    # Pre-load intermediate JSON
-    uv run python -m shinymap.outline.converter -f intermediate.json -b
-
-    # Bind to all interfaces
-    uv run python -m shinymap.outline.converter -H 0.0.0.0 -p 8080
+    uv run python -m shinymap.kit.sketch -f path/to/file.svg -b
 """
 
 import argparse
 from pathlib import Path
 
-from ._app import app_run
+from .app import app_run
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Interactive SVG to shinymap JSON converter",
-        prog="python -m shinymap.outline.converter",
+        prog="python -m shinymap.kit.sketch",
     )
     parser.add_argument(
         "-H",
@@ -67,8 +60,13 @@ if __name__ == "__main__":
 
     # CLI-provided file
     cli_file = Path(args.file) if args.file else None
-    if isinstance(cli_file, Path) and not cli_file.exists():
-        raise FileNotFoundError(f"{cli_file}")
+
+    if cli_file:
+        if cli_file.suffix.lower() not in [".json", ".svg"]:
+            raise ValueError(f"Unsupported file type: {cli_file.suffix.lower()}")
+
+        if not cli_file.exists():
+            raise FileNotFoundError(f"{cli_file}")
 
     app_run(
         initial_file=cli_file, host=args.host, port=args.port, launch_browser=args.launch_browser

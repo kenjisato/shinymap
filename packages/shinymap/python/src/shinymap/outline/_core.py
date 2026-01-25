@@ -47,23 +47,9 @@ The shinymap outline format is designed for simplicity and transparency:
 
 from __future__ import annotations
 
-# Re-export conversion functions
-from ._conversion import (
-    convert,
-    from_json,
-    from_svg,
-    infer_relabel,
-)
-
 # Re-export Outline class
 from ._outline import Outline
 
 __all__ = [
-    # Main class
     "Outline",
-    # Conversion functions
-    "from_svg",
-    "from_json",
-    "convert",
-    "infer_relabel",
 ]

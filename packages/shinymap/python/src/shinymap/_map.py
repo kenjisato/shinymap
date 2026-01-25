@@ -216,10 +216,12 @@ def Map(
         main_regions = outline.main_regions()
 
         # Create MapBuilder with extracted data
+        # Pass _outline for aes group expansion in _build_payload
         builder = MapBuilder(
             main_regions,
             view_box=view_box or outline.viewbox(),
             tooltips=tooltips,
+            _outline=outline,
         )
 
     # Apply optional parameters
