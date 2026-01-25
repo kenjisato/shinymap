@@ -1,10 +1,14 @@
 """Visual layer/action chooser module using shinymap output_map.
 
-Provides a clickable button-like interface for:
-- Assigning selected regions to layers (Interactive, Overlay, Underlay, Hidden)
-- Unregistering selected regions
+This is an example/demonstration of how to create a visual clickable
+button interface using shinymap's output_map with Display mode.
 
-Each click shows a confirmation modal before executing the action.
+Features:
+- Clickable button-like interface for assigning regions to layers
+- Uses shinymap's output_map with Display mode
+- Shows confirmation modals before executing actions
+
+Run with: python -m examples.app_layer_chooser
 """
 
 from __future__ import annotations
@@ -14,18 +18,19 @@ from collections.abc import Callable
 from shiny import module, reactive, ui
 from shiny.module import resolve_id
 
-from ... import Map, aes
-from ...mode import Display
-from ...outline import Outline
-from ...svg import Rect, Text
-from ...ui import output_map, render_map
+from shinymap import Map, aes
+from shinymap.mode import Display
+from shinymap.outline import Outline
+from shinymap.svg import Rect, Text
+from shinymap.ui import output_map, render_map
 
 ## Button configuration
 # Colors chosen for colorblind accessibility (avoids red-green confusion)
 BUTTON_CONFIG = {
-    "interactive": {"label": "■ Interactive", "color": "#FF4B00"},
+    "interactive": {"label": "■ Main", "color": "#FF4B00"},
     "overlay": {"label": "▲ Overlay", "color": "#005AFF"},
     "underlay": {"label": "▼ Underlay", "color": "#FFF100"},
+    "annotation": {"label": "★ Annotation", "color": "#03AF7A"},  # green
     "hidden": {"label": "○ Hidden", "color": "#6b7280"},
     "unregister": {"label": "✕ Unregister", "color": "#dc2626"},  # red-600
 }
@@ -121,7 +126,7 @@ _aes = _create_aes()
 @module.ui
 def layer_chooser_ui(
     width: str = "200px",
-    height: str = "290px",
+    height: str = "330px",
 ):
     """UI for the layer/action chooser.
 
@@ -263,7 +268,7 @@ def get_layer_symbol(layer: str) -> str:
     """Get the symbol for a layer type.
 
     Args:
-        layer: Layer name ("interactive", "overlay", "underlay", "hidden")
+        layer: Layer name ("interactive", "overlay", "underlay", "annotation", "hidden")
 
     Returns:
         Unicode symbol representing the layer
@@ -272,6 +277,7 @@ def get_layer_symbol(layer: str) -> str:
         "interactive": "■",
         "overlay": "▲",
         "underlay": "▼",
+        "annotation": "★",
         "hidden": "○",
         "unregister": "✕",
     }

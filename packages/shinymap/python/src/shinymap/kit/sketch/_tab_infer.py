@@ -104,14 +104,26 @@ def server_tab_infer(input, globals):
         # Infer relabel mapping by comparing original and current outlines
         relabel = _infer_relabel(original, current)
 
-        # Get layer assignments
+        # Get layer assignments (tracked by OLD IDs)
         overlay_ids = list(globals.overlay_ids()) if globals.overlay_ids() else None
         underlay_ids = list(globals.underlay_ids()) if globals.underlay_ids() else None
         hidden_ids = list(globals.hidden_ids()) if globals.hidden_ids() else None
+        annotation_ids = list(globals.annotation_ids()) if globals.annotation_ids() else None
+
+        # Get metadata groups
+        metadata_groups = dict(globals.metadata_groups()) if globals.metadata_groups() else None
 
         # Get metadata from current outline (excluding internal keys)
         metadata = {}
-        internal_keys = {"viewBox", "overlay", "underlay", "hidden", "original_source"}
+        internal_keys = {
+            "viewBox",
+            "overlay",
+            "underlay",
+            "hidden",
+            "annotation",
+            "original_source",
+            "groups",
+        }
         for key, value in current.metadata.items():
             if not key.startswith("_") and key not in internal_keys:
                 metadata[key] = value
@@ -152,6 +164,18 @@ def server_tab_infer(input, globals):
             lines.append("")
             lines.append("# Set hidden layer")
             lines.append(f"outline = outline.move_layer('hidden', {hidden_ids!r})")
+
+        if annotation_ids:
+            lines.append("")
+            lines.append("# Set annotation layer")
+            lines.append(f"outline = outline.move_layer('annotation', {annotation_ids!r})")
+
+        if metadata_groups:
+            lines.append("")
+            lines.append("# Set metadata groups")
+            lines.append("outline = outline.update_metadata({")
+            lines.append(f'    "groups": {metadata_groups!r},')
+            lines.append("})")
 
         if metadata:
             lines.append("")
