@@ -15,10 +15,10 @@ class TestStillLifeInit:
         """StillLife requires a MapBuilder created via WashResult.build()."""
         outline = Outline(regions={"a": [Circle(cx=50, cy=50, r=30)]}, metadata={})
 
-        # Map() creates a MapBuilder without _outline and _resolved_aes
+        # Map() creates a MapBuilder without _resolved_aes (required by StillLife)
         builder = Map(outline)
 
-        with pytest.raises(ValueError, match="lacks _outline"):
+        with pytest.raises(ValueError, match="lacks _resolved_aes"):
             StillLife(builder)
 
     @pytest.mark.unit

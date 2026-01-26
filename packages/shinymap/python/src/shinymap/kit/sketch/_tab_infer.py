@@ -104,14 +104,32 @@ def server_tab_infer(input, globals):
         # Infer relabel mapping by comparing original and current outlines
         relabel = _infer_relabel(original, current)
 
-        # Get layer assignments (tracked by OLD IDs)
-        overlay_ids = list(globals.overlay_ids()) if globals.overlay_ids() else None
-        underlay_ids = list(globals.underlay_ids()) if globals.underlay_ids() else None
-        hidden_ids = list(globals.hidden_ids()) if globals.hidden_ids() else None
-        annotation_ids = list(globals.annotation_ids()) if globals.annotation_ids() else None
+        # Get layer assignments - only include IDs that are NEW (not already in original)
+        original_overlay = set(original.metadata.get("overlay", []))
+        original_underlay = set(original.metadata.get("underlay", []))
+        original_hidden = set(original.metadata.get("hidden", []))
+        original_annotation = set(original.metadata.get("annotation", []))
 
-        # Get metadata groups
-        metadata_groups = dict(globals.metadata_groups()) if globals.metadata_groups() else None
+        current_overlay = globals.overlay_ids() or set()
+        current_underlay = globals.underlay_ids() or set()
+        current_hidden = globals.hidden_ids() or set()
+        current_annotation = globals.annotation_ids() or set()
+
+        # Only emit move_layer for IDs that changed from their original layer
+        new_overlay = current_overlay - original_overlay
+        new_underlay = current_underlay - original_underlay
+        new_hidden = current_hidden - original_hidden
+        new_annotation = current_annotation - original_annotation
+
+        overlay_ids = list(new_overlay) if new_overlay else None
+        underlay_ids = list(new_underlay) if new_underlay else None
+        hidden_ids = list(new_hidden) if new_hidden else None
+        annotation_ids = list(new_annotation) if new_annotation else None
+
+        # Get metadata groups - only include if different from original
+        original_groups = original.metadata.get("groups", {})
+        current_groups = dict(globals.metadata_groups()) if globals.metadata_groups() else {}
+        metadata_groups = current_groups if current_groups != original_groups else None
 
         # Get metadata from current outline (excluding internal keys)
         metadata = {}

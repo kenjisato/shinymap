@@ -462,7 +462,7 @@ uv run python -m shinymap.kit.review    # View/validate outline
 - [x] Implement layer assignment UI (layer-specific views with selection)
 - [x] Apply layer assignments in final JSON export
 - [x] Preserve and display original file's layer metadata and groups
-- [ ] Update code generation to include all layer types
+- [x] Update code generation to include all layer types
 
 ### Phase 6: Treat as Line
 - [ ] Add `is_stroke_only_candidate()` detection

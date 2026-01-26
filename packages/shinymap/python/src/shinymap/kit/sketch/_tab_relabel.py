@@ -60,15 +60,14 @@ def _layer_panel(layer: str, label: str):
 ui_tab_relabeling = ui.nav_panel(
     "Relabeling",
     ui.navset_pill(
-        # Sub-tab 1: Renaming & Grouping
+        # Sub-tab 1: Renaming
         ui.nav_panel(
             "Rename",
             ui.layout_sidebar(
                 ui.sidebar(
-                    ui.input_action_button("apply_relabel", "Apply Renames", class_="btn-success"),
                     ui.div(
-                        ui.help_text("Pending renames"),
-                        ui.output_text_verbatim("pending_renames_display", placeholder=True),
+                        ui.help_text("Applied renames (new ← original)"),
+                        ui.output_text_verbatim("applied_renames_display", placeholder=True),
                     ),
                 ),
                 ui.layout_columns(
@@ -83,9 +82,6 @@ ui_tab_relabeling = ui.nav_panel(
                             ui.input_text("rename_new_id", ""),
                         ),
                         ui.input_action_button("do_rename", "Rename", class_="btn-primary"),
-                        ui.input_action_button(
-                            "undo_rename", "Undo Selected", class_="btn-outline-secondary"
-                        ),
                     ),
                     col_widths=(8, 4),
                 ),
@@ -164,102 +160,66 @@ def server_relabeling(input, globals):
     @reactive.effect
     @reactive.event(input.do_rename)
     def handle_rename():
-        """Handle 1:1 rename operation."""
+        """Handle 1:1 rename operation - applies immediately."""
         new_id = input.rename_new_id().strip()
         if not new_id:
             ui.notification_show("Please enter a New ID.", type="warning")
             return
 
-        # Get current selection from input map (single select)
-        current_selected = list(input.rename_map())
-        if not current_selected:
+        # Get current selection from input map (single select mode returns str or None)
+        old_id = input.rename_map()
+        if not old_id:
             ui.notification_show("No region selected.", type="warning")
             return
 
-        if len(current_selected) > 1:
-            ui.notification_show("Please select only one region for rename.", type="warning")
-            return
-
-        old_id = current_selected[0]
-
         # Check if new_id already exists
         outline = globals.outline()
-        if outline and new_id in outline.regions and new_id != old_id:
+        if not outline:
+            return
+        if new_id in outline.regions and new_id != old_id:
             ui.notification_show(f"ID '{new_id}' already exists.", type="error")
             return
 
-        # Update relabel_rules with 1:1 mapping
+        # Apply rename immediately to outline
+        outline = outline.relabel({new_id: old_id})
+        globals.outline.set(outline)
+
+        # Track the mapping: new_id -> original_id
+        # relabel_rules now stores {current_id: original_id} for display
         current_rules = dict(globals.relabel_rules())
 
-        # Remove old_id from any existing mapping
-        for existing_new_id, old_ids in list(current_rules.items()):
-            if old_id in old_ids:
-                remaining = [oid for oid in old_ids if oid != old_id]
-                if remaining:
-                    current_rules[existing_new_id] = remaining
-                else:
-                    del current_rules[existing_new_id]
-                break
+        # If old_id was a renamed ID (key in rules), get its original and update
+        if old_id in current_rules:
+            original_id = current_rules.pop(old_id)
+            current_rules[new_id] = original_id
+        else:
+            # old_id was an original ID
+            current_rules[new_id] = old_id
 
-        # Add 1:1 mapping
-        current_rules[new_id] = [old_id]
         globals.relabel_rules.set(current_rules)
 
-        # Mark as registered
-        current_registered = globals.registered_ids()
-        globals.registered_ids.set(current_registered | {old_id})
+        # Update metadata_groups to replace old_id with new_id
+        current_groups = dict(globals.metadata_groups())
+        for group_name, members in current_groups.items():
+            if old_id in members:
+                current_groups[group_name] = [new_id if m == old_id else m for m in members]
+        globals.metadata_groups.set(current_groups)
+
+        # Update layer assignments to replace old_id with new_id
+        for layer_getter, layer_setter in [
+            (globals.overlay_ids, globals.overlay_ids.set),
+            (globals.underlay_ids, globals.underlay_ids.set),
+            (globals.hidden_ids, globals.hidden_ids.set),
+            (globals.annotation_ids, globals.annotation_ids.set),
+        ]:
+            layer_ids = layer_getter()
+            if old_id in layer_ids:
+                layer_ids = (layer_ids - {old_id}) | {new_id}
+                layer_setter(layer_ids)
 
         # Clear selection and input
         update_map("rename_map", value={})
         ui.update_text("rename_new_id", value="", session=session)
-
-    @reactive.effect
-    @reactive.event(input.undo_rename)
-    def handle_undo_rename():
-        """Undo rename for selected region."""
-        current_selected = set(input.rename_map())
-        if not current_selected:
-            return
-
-        current_rules = dict(globals.relabel_rules())
-        current_registered = globals.registered_ids()
-        to_unregister = set()
-
-        # Remove selected IDs from relabel_rules
-        for new_id, old_ids in list(current_rules.items()):
-            remaining = [oid for oid in old_ids if oid not in current_selected]
-            if remaining:
-                current_rules[new_id] = remaining
-            else:
-                del current_rules[new_id]
-            to_unregister.update(set(old_ids) & current_selected)
-
-        globals.relabel_rules.set(current_rules)
-        globals.registered_ids.set(current_registered - to_unregister)
-        update_map("rename_map", value={})
-
-    @reactive.effect
-    @reactive.event(input.apply_relabel)
-    def handle_apply():
-        """Apply relabeling changes to globals.outline()."""
-        current_rules = globals.relabel_rules()
-
-        if not current_rules:
-            return
-
-        outline = globals.outline()
-        if not outline:
-            return
-
-        # Apply relabeling
-        outline = outline.relabel(current_rules)
-
-        # Update globals.outline with the transformed outline
-        globals.outline.set(outline)
-
-        # Clear relabeling state
-        globals.relabel_rules.set({})
-        globals.registered_ids.set(set())
 
     @render.ui
     def map_rename():
@@ -268,15 +228,16 @@ def server_relabeling(input, globals):
         if not outline or not outline.regions:
             return ui.p("No data loaded")
 
-        current_registered = globals.registered_ids()
+        # Get renamed IDs (current IDs that have been renamed from originals)
+        renamed_ids = set(globals.relabel_rules().keys())
 
-        # Create groups for styling
-        layer_groups = {"_registered": [], "_unregistered": []}
+        # Create groups for styling: renamed vs original
+        layer_groups = {"_renamed": [], "_original": []}
         for rid in outline.regions.keys():
-            if rid in current_registered:
-                layer_groups["_registered"].append(rid)
+            if rid in renamed_ids:
+                layer_groups["_renamed"].append(rid)
             else:
-                layer_groups["_unregistered"].append(rid)
+                layer_groups["_original"].append(rid)
 
         outline_with_groups = outline.update_metadata({"groups": layer_groups})
 
@@ -286,8 +247,8 @@ def server_relabeling(input, globals):
                 select=aes.Shape(stroke_width=6, stroke_color="#ef4444"),
                 hover=aes.Shape(fill_color="#fef08a", fill_opacity=0.6, stroke_width=0),
             ),
-            "_unregistered": aes.Shape(fill_color="#cbd5e1", stroke_color="#64748b"),
-            "_registered": aes.Shape(fill_color="#bbf7d0", stroke_color="#22c55e"),
+            "_original": aes.Shape(fill_color="#cbd5e1", stroke_color="#64748b"),
+            "_renamed": aes.Shape(fill_color="#bbf7d0", stroke_color="#22c55e"),
         }
 
         return input_map(
@@ -300,16 +261,15 @@ def server_relabeling(input, globals):
         return selected if selected else "(none)"
 
     @render.text
-    def pending_renames_display():
-        """Display pending renames."""
+    def applied_renames_display():
+        """Display applied renames (new_id <- original_id)."""
         current_rules = globals.relabel_rules()
         if not current_rules:
-            return "No pending renames."
+            return "No renames applied."
 
         lines = []
-        for new_id, old_ids in sorted(current_rules.items()):
-            old_ids_str = ", ".join(sorted(old_ids))
-            lines.append(f"{new_id} ← {old_ids_str}")
+        for new_id, original_id in sorted(current_rules.items()):
+            lines.append(f"{new_id} ← {original_id}")
         return "\n".join(lines)
 
     # ========================================================================

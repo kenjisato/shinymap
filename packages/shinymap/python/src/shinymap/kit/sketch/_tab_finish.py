@@ -44,18 +44,7 @@ ui_tab_finish = ui.nav_panel(
 def server_tab_finish(input, globals):
     @render.ui
     def pending_changes_warning():
-        """Show warning if there are registered but unapplied changes."""
-        registered = globals.registered_ids()
-        if registered:
-            count = len(registered)
-            return ui.div(
-                ui.p(
-                    f"⚠️ {count} region(s) registered but not applied. "
-                    "Go to Relabeling tab and click Apply to include them in the output.",
-                    style="margin: 0;",
-                ),
-                class_="alert alert-warning",
-            )
+        """Placeholder for any warnings (renames are now applied immediately)."""
         return None
 
     @reactive.calc
