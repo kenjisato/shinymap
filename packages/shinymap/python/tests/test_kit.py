@@ -215,6 +215,37 @@ class TestConvert:
 
         assert "bottom" in result["_metadata"].get("overlay", [])
 
+    def test_convert_with_underlay(self, sample_svg_file):
+        """Test conversion with underlay assignment."""
+        result = convert(sample_svg_file, underlay_ids=["bottom"])
+
+        assert "bottom" in result["_metadata"].get("underlay", [])
+
+    def test_convert_with_hidden(self, sample_svg_file):
+        """Test conversion with hidden assignment."""
+        result = convert(sample_svg_file, hidden_ids=["bottom"])
+
+        assert "bottom" in result["_metadata"].get("hidden", [])
+
+    def test_convert_with_annotation(self, sample_svg_file):
+        """Test conversion with annotation assignment."""
+        result = convert(sample_svg_file, annotation_ids=["bottom"])
+
+        assert "bottom" in result["_metadata"].get("annotation", [])
+
+    def test_convert_with_all_layers(self, sample_svg_file):
+        """Test conversion with all layer types."""
+        result = convert(
+            sample_svg_file,
+            overlay_ids=["path_1"],
+            underlay_ids=["path_2"],
+            hidden_ids=["bottom"],
+        )
+
+        assert "path_1" in result["_metadata"].get("overlay", [])
+        assert "path_2" in result["_metadata"].get("underlay", [])
+        assert "bottom" in result["_metadata"].get("hidden", [])
+
     def test_convert_with_metadata(self, sample_svg_file):
         """Test conversion with metadata."""
         result = convert(sample_svg_file, metadata={"source": "test"})
@@ -325,6 +356,43 @@ class TestGenerateCode:
 
         assert "overlay_ids=" in code
         assert "_border" in code
+
+    def test_generate_code_with_underlay(self):
+        """Test code generation with underlay_ids."""
+        code = generate_code("input.svg", "output.json", underlay_ids=["_background"])
+
+        assert "underlay_ids=" in code
+        assert "_background" in code
+
+    def test_generate_code_with_hidden(self):
+        """Test code generation with hidden_ids."""
+        code = generate_code("input.svg", "output.json", hidden_ids=["_guides"])
+
+        assert "hidden_ids=" in code
+        assert "_guides" in code
+
+    def test_generate_code_with_annotation(self):
+        """Test code generation with annotation_ids."""
+        code = generate_code("input.svg", "output.json", annotation_ids=["_labels"])
+
+        assert "annotation_ids=" in code
+        assert "_labels" in code
+
+    def test_generate_code_with_all_layers(self):
+        """Test code generation with all layer types."""
+        code = generate_code(
+            "input.svg",
+            "output.json",
+            overlay_ids=["_border"],
+            underlay_ids=["_background"],
+            hidden_ids=["_guides"],
+            annotation_ids=["_labels"],
+        )
+
+        assert "overlay_ids=" in code
+        assert "underlay_ids=" in code
+        assert "hidden_ids=" in code
+        assert "annotation_ids=" in code
 
     def test_generate_code_with_metadata(self):
         """Test code generation with metadata."""

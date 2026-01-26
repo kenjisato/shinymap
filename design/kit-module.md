@@ -456,11 +456,13 @@ uv run python -m shinymap.kit.review    # View/validate outline
 - [x] Add tests for describe() and glaze() (already existed)
 
 ### Phase 5: Layer Enhancement
-- [ ] Add layer dropdown to sketch UI (hidden/underlay/main/overlay)
-- [ ] Update `relabel_rules` to track layer per region
-- [ ] Add visual layer indicators in region list
-- [ ] Implement bulk layer assignment for selections
-- [ ] Update code generation to include all layer types
+- [x] Add layer navigation to sketch UI (pills for hidden/underlay/main/overlay/annotation)
+- [x] Track layer assignments via globals (overlay_ids, underlay_ids, hidden_ids, annotation_ids)
+- [x] Add visual layer indicators in region list (▲ ▼ ○ ★ ■ symbols)
+- [x] Implement layer assignment UI (layer-specific views with selection)
+- [x] Apply layer assignments in final JSON export
+- [x] Preserve and display original file's layer metadata and groups
+- [x] Update code generation to include all layer types
 
 ### Phase 6: Treat as Line
 - [ ] Add `is_stroke_only_candidate()` detection
