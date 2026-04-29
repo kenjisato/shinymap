@@ -51,9 +51,9 @@ def server_tab_finish(input, globals):
     def final_outline():
         """Get the final outline with all transformations applied.
 
-        This applies layer assignments (overlay, underlay, hidden, annotation)
-        and metadata groups that are tracked separately from globals.outline()
-        to keep regions interactive in the Relabeling tab.
+        This applies layer assignments (overlay, underlay, hidden, annotation),
+        lines_as_path, and metadata groups that are tracked separately from
+        globals.outline() to keep regions interactive in the Relabeling tab.
         """
         outline = globals.outline()
         if not outline:
@@ -75,6 +75,11 @@ def server_tab_finish(input, globals):
         annotation_ids = globals.annotation_ids()
         if annotation_ids:
             outline = outline.move_layer("annotation", list(annotation_ids))
+
+        # Apply lines_as_path
+        lines_as_path_ids = globals.lines_as_path_ids()
+        if lines_as_path_ids:
+            outline = outline.path_as_line(*lines_as_path_ids)
 
         # Apply metadata groups
         metadata_groups = globals.metadata_groups()
