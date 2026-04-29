@@ -52,6 +52,9 @@ class Globals:
     annotation_ids: set[str]
         OLD IDs assigned to annotation layer.
 
+    lines_as_path_ids: set[str]
+        OLD IDs marked as lines (stroke-only rendering).
+
     metadata_groups: dict[str, list[str]]
         Metadata groups for styling. Format: {"group_name": ["region_id1", "region_id2"]}
 
@@ -81,6 +84,9 @@ class Globals:
         self.underlay_ids = reactive.value(set())
         self.hidden_ids = reactive.value(set())
         self.annotation_ids = reactive.value(set())
+
+        # Lines as path (stroke-only rendering)
+        self.lines_as_path_ids = reactive.value(set())
 
         # Metadata groups for styling
         self.metadata_groups = reactive.value({})
@@ -121,6 +127,9 @@ class Globals:
             self.underlay_ids.set(set(outline.metadata.get("underlay", [])))
             self.hidden_ids.set(set(outline.metadata.get("hidden", [])))
             self.annotation_ids.set(set(outline.metadata.get("annotation", [])))
+
+            # Extract lines_as_path from metadata
+            self.lines_as_path_ids.set(set(outline.metadata.get("lines_as_path", [])))
 
             # Extract metadata groups (for styling)
             original_groups = outline.metadata.get("groups", {})

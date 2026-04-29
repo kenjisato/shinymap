@@ -4,6 +4,7 @@ This module provides sub-tabs within the Relabeling tab:
 - Sub-tab 1: Rename - 1:1 rename
 - Sub-tab 2: Groups - metadata groups
 - Sub-tab 3: Layers - assign regions to layers (main, overlay, underlay, etc.)
+- Sub-tab 4: Lines - mark regions as lines (stroke-only rendering)
 """
 
 from __future__ import annotations
@@ -150,6 +151,43 @@ ui_tab_relabeling = ui.nav_panel(
                 border=False,
             ),
         ),
+        # Sub-tab 4: Lines (stroke-only regions)
+        ui.nav_panel(
+            "Lines",
+            ui.layout_sidebar(
+                ui.sidebar(
+                    ui.div(
+                        ui.help_text("Regions marked as lines"),
+                        ui.output_text_verbatim("lines_as_path_display", placeholder=True),
+                    ),
+                    ui.hr(),
+                    ui.div(
+                        ui.help_text("Auto-detected candidates"),
+                        ui.output_text_verbatim("line_candidates_display", placeholder=True),
+                    ),
+                ),
+                ui.layout_columns(
+                    ui.output_ui("map_lines"),
+                    ui.TagList(
+                        ui.div(
+                            ui.help_text("Selected regions"),
+                            ui.output_text_verbatim("selected_for_lines", placeholder=True),
+                            style="height: 80px; overflow: scroll;",
+                        ),
+                        ui.input_action_button(
+                            "do_mark_as_line", "Mark as Line", class_="btn-primary"
+                        ),
+                        ui.input_action_button(
+                            "do_unmark_as_line",
+                            "Unmark as Line",
+                            class_="btn-outline-secondary",
+                        ),
+                    ),
+                    col_widths=(8, 4),
+                ),
+                border=False,
+            ),
+        ),
     ),
 )
 
@@ -221,6 +259,11 @@ def server_relabeling(input, globals):
             if old_id in layer_ids:
                 layer_ids = (layer_ids - {old_id}) | {new_id}
                 layer_setter(layer_ids)
+
+        # Update lines_as_path_ids to replace old_id with new_id
+        lines_ids = globals.lines_as_path_ids()
+        if old_id in lines_ids:
+            globals.lines_as_path_ids.set((lines_ids - {old_id}) | {new_id})
 
         # Clear selection and input
         update_map("rename_map", value={})
@@ -328,26 +371,50 @@ def server_relabeling(input, globals):
 
     @render.ui
     def map_groups():
-        """Render map for group assignment (multi-select)."""
+        """Render map for group assignment (multi-select).
+
+        Only main layer regions are interactive. Overlay/underlay/hidden/annotation
+        regions are rendered as faded context so they don't block main regions.
+        """
         outline = globals.outline()
         if not outline or not outline.regions:
             return ui.p("No data loaded")
 
         current_groups = globals.metadata_groups()
 
-        # Create groups for styling - regions in any group vs ungrouped
+        # Get main layer IDs (interactive) vs non-main (context)
+        all_ids = set(outline.regions.keys())
+        non_main_ids = (
+            globals.overlay_ids()
+            | globals.underlay_ids()
+            | globals.hidden_ids()
+            | globals.annotation_ids()
+        )
+        main_ids = all_ids - non_main_ids
+        context_ids = list(non_main_ids)
+
+        # Create groups for styling - grouped vs ungrouped (within main layer only)
         grouped_ids = set()
         for members in current_groups.values():
             grouped_ids.update(members)
 
-        layer_groups = {"_grouped": [], "_ungrouped": []}
-        for rid in outline.regions.keys():
+        layer_groups = {"_grouped": [], "_ungrouped": [], "_context": context_ids}
+        for rid in main_ids:
             if rid in grouped_ids:
                 layer_groups["_grouped"].append(rid)
             else:
                 layer_groups["_ungrouped"].append(rid)
 
-        outline_with_groups = outline.update_metadata({"groups": layer_groups})
+        # Put non-main regions as underlay so they don't block interactive regions
+        outline_with_groups = outline.update_metadata(
+            {
+                "underlay": context_ids,
+                "overlay": [],
+                "hidden": [],
+                "annotation": [],
+                "groups": layer_groups,
+            }
+        )
 
         group_aes = {
             "__all": aes.ByState(
@@ -357,6 +424,13 @@ def server_relabeling(input, globals):
             ),
             "_ungrouped": aes.Shape(fill_color="#cbd5e1", stroke_color="#64748b"),
             "_grouped": aes.Shape(fill_color="#c7d2fe", stroke_color="#6366f1"),
+            # Context regions: very light, non-blocking
+            "_context": aes.Shape(
+                fill_color="#f8fafc",
+                fill_opacity=0.3,
+                stroke_color="#e2e8f0",
+                stroke_width=0.5,
+            ),
         }
 
         return input_map(
@@ -591,3 +665,131 @@ def server_relabeling(input, globals):
             f"○ Hidden: {hidden_count}",
         ]
         return "\n".join(lines)
+
+    # ========================================================================
+    # Sub-tab 4: Lines (stroke-only regions)
+    # ========================================================================
+
+    @reactive.effect
+    @reactive.event(input.do_mark_as_line)
+    def handle_mark_as_line():
+        """Mark selected regions as lines (stroke-only)."""
+        current_selected = set(input.map_lines())
+        if not current_selected:
+            ui.notification_show("No regions selected.", type="warning")
+            return
+
+        current_lines = globals.lines_as_path_ids()
+        globals.lines_as_path_ids.set(current_lines | current_selected)
+        update_map("map_lines", value={})
+
+    @reactive.effect
+    @reactive.event(input.do_unmark_as_line)
+    def handle_unmark_as_line():
+        """Remove selected regions from lines (restore as shapes)."""
+        current_selected = set(input.map_lines())
+        if not current_selected:
+            ui.notification_show("No regions selected.", type="warning")
+            return
+
+        current_lines = globals.lines_as_path_ids()
+        globals.lines_as_path_ids.set(current_lines - current_selected)
+        update_map("map_lines", value={})
+
+    @render.ui
+    def map_lines():
+        """Render map for line assignment (multi-select).
+
+        Marked lines are rendered as overlay (non-interactive, stroke-only) so
+        underlying shapes can be clicked. Shapes and candidates are interactive.
+        """
+        from ...svg import is_stroke_only_candidate
+
+        outline = globals.outline()
+        if not outline or not outline.regions:
+            return ui.p("No data loaded")
+
+        current_lines = globals.lines_as_path_ids()
+
+        # Create groups for styling: lines (overlay), candidates, shapes
+        layer_groups = {"_lines": [], "_candidates": [], "_shapes": []}
+        for rid, elements in outline.regions.items():
+            if rid in current_lines:
+                layer_groups["_lines"].append(rid)
+            elif is_stroke_only_candidate(elements):
+                layer_groups["_candidates"].append(rid)
+            else:
+                layer_groups["_shapes"].append(rid)
+
+        # All regions remain interactive (no layer changes)
+        outline_with_groups = outline.update_metadata({"groups": layer_groups})
+
+        # Lines need ByState to explicitly set no fill for ALL states
+        # (base, select, hover) - otherwise __all hover will add fill
+        line_aesthetic = aes.ByState(
+            base=aes.Shape(
+                fill_color="transparent", fill_opacity=0, stroke_color="#14b8a6", stroke_width=3
+            ),
+            select=aes.Shape(
+                fill_color="transparent", fill_opacity=0, stroke_color="#ef4444", stroke_width=4
+            ),
+            hover=aes.Shape(
+                fill_color="transparent", fill_opacity=0, stroke_color="#0d9488", stroke_width=4
+            ),
+        )
+
+        group_aes = {
+            "__all": aes.ByState(
+                base=aes.Shape(stroke_width=4),
+                select=aes.Shape(stroke_width=6, stroke_color="#ef4444"),
+                hover=aes.Shape(fill_color="#fef08a", fill_opacity=0.6, stroke_width=0),
+            ),
+            # Shapes: default gray
+            "_shapes": aes.Shape(fill_color="#cbd5e1", stroke_color="#64748b"),
+            # Candidates: amber/orange, semi-transparent to hint stroke-only
+            "_candidates": aes.Shape(
+                fill_color="#fed7aa", fill_opacity=0.3, stroke_color="#f97316", stroke_width=2
+            ),
+            # Marked as lines: stroke-only with explicit ByState for all states
+            "_lines": line_aesthetic,
+        }
+
+        return input_map(
+            "map_lines",
+            outline_with_groups,
+            mode="multiple",
+            aes=aes.ByGroup(**group_aes),
+        )
+
+    @render.text
+    def selected_for_lines():
+        return "\n".join(input.map_lines())
+
+    @render.text
+    def lines_as_path_display():
+        """Display regions marked as lines."""
+        current_lines = globals.lines_as_path_ids()
+        if not current_lines:
+            return "No regions marked as lines."
+
+        return "\n".join(f"━ {rid}" for rid in sorted(current_lines))
+
+    @render.text
+    def line_candidates_display():
+        """Display auto-detected line candidates."""
+        from ...svg import is_stroke_only_candidate
+
+        outline = globals.outline()
+        if not outline:
+            return "No data loaded."
+
+        current_lines = globals.lines_as_path_ids()
+        candidates = []
+        for rid, elements in outline.regions.items():
+            if rid not in current_lines and is_stroke_only_candidate(elements):
+                candidates.append(rid)
+
+        if not candidates:
+            return "No candidates detected."
+
+        return "\n".join(f"? {rid}" for rid in sorted(candidates))

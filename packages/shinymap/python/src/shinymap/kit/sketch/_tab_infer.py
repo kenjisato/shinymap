@@ -126,6 +126,12 @@ def server_tab_infer(input, globals):
         hidden_ids = list(new_hidden) if new_hidden else None
         annotation_ids = list(new_annotation) if new_annotation else None
 
+        # Get lines_as_path - only include IDs that are NEW
+        original_lines = set(original.metadata.get("lines_as_path", []))
+        current_lines = globals.lines_as_path_ids() or set()
+        new_lines = current_lines - original_lines
+        lines_as_path_ids = list(new_lines) if new_lines else None
+
         # Get metadata groups - only include if different from original
         original_groups = original.metadata.get("groups", {})
         current_groups = dict(globals.metadata_groups()) if globals.metadata_groups() else {}
@@ -139,6 +145,7 @@ def server_tab_infer(input, globals):
             "underlay",
             "hidden",
             "annotation",
+            "lines_as_path",
             "original_source",
             "groups",
         }
@@ -187,6 +194,11 @@ def server_tab_infer(input, globals):
             lines.append("")
             lines.append("# Set annotation layer")
             lines.append(f"outline = outline.move_layer('annotation', {annotation_ids!r})")
+
+        if lines_as_path_ids:
+            lines.append("")
+            lines.append("# Mark regions as lines (stroke-only)")
+            lines.append(f"outline = outline.path_as_line(*{lines_as_path_ids!r})")
 
         if metadata_groups:
             lines.append("")

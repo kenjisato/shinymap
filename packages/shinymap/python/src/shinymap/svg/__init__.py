@@ -28,6 +28,7 @@ from ._elements import (
     Polygon,
     Rect,
     Text,
+    is_stroke_only_candidate,
 )
 
 __all__ = [
@@ -40,4 +41,5 @@ __all__ = [
     "Text",
     "Element",
     "ELEMENT_TYPE_MAP",
+    "is_stroke_only_candidate",
 ]

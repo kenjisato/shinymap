@@ -254,6 +254,66 @@ ELEMENT_TYPE_MAP: dict[str, type[Circle | Rect | Path | Polygon | Ellipse | Line
     "text": Text,
 }
 
+
+def is_stroke_only_candidate(elements: list) -> bool:
+    """Detect if elements are likely intended as lines rather than filled shapes.
+
+    Uses heuristics to suggest paths that might be lines:
+    1. Native Line elements (SVG <line>)
+    2. Elements with fill="none" or fill="transparent"
+    3. Open paths (path data not ending with 'z' or 'Z')
+
+    Args:
+        elements: List of SVG elements for a region
+
+    Returns:
+        True if the region appears to be stroke-only
+
+    Examples:
+        ```pycon
+        >>> is_stroke_only_candidate([Line(x1=0, y1=0, x2=100, y2=100)])
+        True
+        >>> is_stroke_only_candidate([Path(d="M 0 0 L 100 100")])
+        True
+        >>> is_stroke_only_candidate([Path(d="M 0 0 L 100 0 L 100 100 Z")])
+        False
+        ```
+    """
+    if not elements:
+        return False
+
+    first_elem = elements[0]
+
+    # Check 1: Native Line element
+    if isinstance(first_elem, Line):
+        return True
+
+    # Check 2: fill="none" or fill="transparent"
+    fill = getattr(first_elem, "fill", None)
+    if fill is not None:
+        fill_lower = str(fill).lower().strip()
+        if fill_lower in ("none", "transparent"):
+            return True
+
+    # Check 3: Open path (d attribute not ending with Z)
+    if isinstance(first_elem, Path):
+        d = first_elem.d
+        if d is not None:
+            # Handle both string and list formats
+            if isinstance(d, str):
+                path_str = d
+            else:
+                # List of PathData commands - convert to string
+                path_str = " ".join(str(cmd) for cmd in d)
+
+            # Check if path is open (doesn't end with z/Z)
+            path_str_stripped = path_str.strip()
+            if path_str_stripped and path_str_stripped[-1].lower() != "z":
+                return True
+
+    return False
+
+
 __all__ = [
     "Circle",
     "Rect",
@@ -264,4 +324,5 @@ __all__ = [
     "Text",
     "Element",
     "ELEMENT_TYPE_MAP",
+    "is_stroke_only_candidate",
 ]
