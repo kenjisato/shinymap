@@ -641,7 +641,7 @@ Start with `wash()` as the single watercolor-inspired name. Observe how users re
 
 ## References
 
-- [PARENT proxy implementation](../packages/shinymap/python/src/shinymap/relative.py)
+- [PARENT proxy implementation](../../packages/shinymap/python/src/shinymap/relative.py)
 - [Current aesthetic system](./underlay-and-aesthetics.md)
 - [Polymorphic elements design](./polymorphic-elements-svgpy.md)
 

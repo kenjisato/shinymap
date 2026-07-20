@@ -6,7 +6,7 @@ This repository now hosts a multi-package workspace:
 - `packages/shinymapjp/` – Japan-prefecture geometry assets (JS + Python façades).
 - `archive/legacy/` – the previous implementation preserved for reference while the new modular design is built out.
 
-See `SPEC.md` for the current roadmap and design goals.
+See `dev/SPEC.md` for the current roadmap and design goals.
 
 > The repository is pre-1.0.0. Breaking changes are expected while we focus on clarity and performance.
 

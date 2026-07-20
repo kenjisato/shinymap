@@ -26,7 +26,7 @@ This document contains detailed implementation guidance for the `update_map()` f
 
 ## Current Implementation
 
-Tooltips are currently implemented as simple SVG `<title>` elements in [OutputMap.tsx:88](../packages/shinymap/js/src/components/OutputMap.tsx#L88):
+Tooltips are currently implemented as simple SVG `<title>` elements in [OutputMap.tsx:88](../../packages/shinymap/js/src/components/OutputMap.tsx#L88):
 
 ```tsx
 {tooltip ? <title>{tooltip}</title> : null}

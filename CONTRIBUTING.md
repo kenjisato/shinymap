@@ -21,18 +21,19 @@ make test
 shinymap/
 ├── packages/shinymap/js/       # React/TypeScript components
 ├── packages/shinymap/python/   # Python Shiny adapter + bundled JS
-├── design/                     # Implementation plans
-└── contributing/               # Detailed guides (see below)
+├── docs/                       # User-facing documentation site (Quarto)
+├── specs/                      # Feature specs and task progress (Spec Kit)
+└── dev/                        # Internal docs: SPEC, PROPOSAL, design/, contributing/
 ```
 
 ## Detailed Guides
 
 | Guide | Purpose |
 |-------|---------|
-| [contributing/build.md](contributing/build.md) | Build commands, quality gates, working directories |
-| [contributing/git-strategy.md](contributing/git-strategy.md) | Branching, releases, hotfixes |
-| [contributing/agent-workflow.md](contributing/agent-workflow.md) | Context management, checkpoints (for AI assistants) |
-| [contributing/api-cookbook.md](contributing/api-cookbook.md) | Code patterns and examples |
+| [dev/contributing/build.md](dev/contributing/build.md) | Build commands, quality gates, working directories |
+| [dev/contributing/git-strategy.md](dev/contributing/git-strategy.md) | Branching, releases, hotfixes |
+| [dev/contributing/agent-workflow.md](dev/contributing/agent-workflow.md) | Spec-driven workflow (for AI assistants) |
+| [dev/contributing/api-cookbook.md](dev/contributing/api-cookbook.md) | Code patterns and examples |
 
 ## Essential Commands
 
@@ -56,7 +57,7 @@ make check-python   # Full Python check (lint + format + mypy)
 3. Create PR to `dev` (not `main`)
 4. After review, merge to `dev`
 
-See [contributing/git-strategy.md](contributing/git-strategy.md) for full details.
+See [dev/contributing/git-strategy.md](dev/contributing/git-strategy.md) for full details.
 
 ## Code of Conduct
 
