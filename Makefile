@@ -76,10 +76,11 @@ format:
 	cd packages/shinymap/js && npm run format
 	@echo "✓ Formatting complete"
 
-# Lint Python
+# Lint Python (ruff + mypy, matches CI)
 lint-python:
 	@echo "Linting Python..."
 	uv run ruff check packages/shinymap/python
+	uv run mypy packages/shinymap/python/src
 	@echo "✓ Python linting complete"
 
 # Format Python
