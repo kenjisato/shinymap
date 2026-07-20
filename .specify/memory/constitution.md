@@ -51,6 +51,14 @@ approval before implementation.
   Python Shiny bindings (`packages/shinymap/python`), R Shiny planned.
   TypeScript components and Python adapters must stay in sync.
 
+## Documentation Placement
+
+- `docs/` is the **user-facing Quarto documentation site only**. Never
+  place internal/engineering documents there.
+- Internal docs live in `dev/` (SPEC.md, PROPOSAL.md, design/ archive,
+  contributing/). Feature artifacts live in `specs/NNN-<slug>/`.
+  Spec Kit assets live in `.specify/`; agent skills/subagents in `.claude/`.
+
 ## Development Workflow
 
 ### Spec-Driven Development
