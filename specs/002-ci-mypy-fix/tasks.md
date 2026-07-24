@@ -64,5 +64,5 @@ All errors verified on dev @ 6c03e8c (2026-07-20). Total: 36 mypy errors in
   uv run ruff format --check packages/shinymap/python
   make test             # expect 353 passed, 2 skipped, 1 xfailed
   ```
-- [ ] T005 Ask user for review, then commit and open PR to `dev`
+- [X] T005 Ask user for review, then commit and open PR to `dev`
   (title: `fix: resolve mypy and formatting errors in kit module`)
