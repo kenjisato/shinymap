@@ -126,21 +126,22 @@ class Globals:
             original_groups = outline.metadata.get("groups", {})
             if isinstance(original_groups, dict):
                 # Convert lists to ensure consistency
-                self.metadata_groups.set({
-                    k: list(v) for k, v in original_groups.items()
-                    if isinstance(v, (list, tuple))
-                })
+                self.metadata_groups.set(
+                    {k: list(v) for k, v in original_groups.items() if isinstance(v, (list, tuple))}
+                )
             else:
                 self.metadata_groups.set({})
 
             # Create working outline with layer metadata cleared
             # (update_metadata merges, so set to empty lists to override)
-            working_outline = outline.update_metadata({
-                "overlay": [],
-                "underlay": [],
-                "hidden": [],
-                "annotation": [],
-            })
+            working_outline = outline.update_metadata(
+                {
+                    "overlay": [],
+                    "underlay": [],
+                    "hidden": [],
+                    "annotation": [],
+                }
+            )
 
             self.outline.set(working_outline)
 

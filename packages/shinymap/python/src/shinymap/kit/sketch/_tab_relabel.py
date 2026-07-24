@@ -8,11 +8,16 @@ This module provides sub-tabs within the Relabeling tab:
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from shiny import reactive, render, ui
 from shiny.session import require_active_session
 
 from ... import aes
 from ...ui import input_map, update_map
+
+if TYPE_CHECKING:
+    from ...aes._core import ShapeAesthetic
 
 # Layer configuration
 LAYERS = ["main", "overlay", "underlay", "annotation", "hidden"]
@@ -500,19 +505,21 @@ def server_relabeling(input, globals):
         # Create modified metadata: target layer as interactive, others as underlay
         # Also create groups for styling distinction
         # (update_metadata merges, so set layer keys to empty/override to clear them)
-        modified_outline = outline.update_metadata({
-            "underlay": other_ids,
-            "overlay": [],
-            "hidden": [],
-            "annotation": [],
-            "groups": {
-                "_interactive": list(layer_ids),
-                "_context": other_ids,
-            },
-        })
+        modified_outline = outline.update_metadata(
+            {
+                "underlay": other_ids,
+                "overlay": [],
+                "hidden": [],
+                "annotation": [],
+                "groups": {
+                    "_interactive": list(layer_ids),
+                    "_context": other_ids,
+                },
+            }
+        )
 
         # Style: interactive regions distinct, context regions very faded
-        group_aes = {
+        group_aes: dict[str, aes.ByState | ShapeAesthetic] = {
             "__all": aes.ByState(
                 base=aes.Shape(stroke_width=2),
                 select=aes.Shape(stroke_width=4, stroke_color="#dc2626"),  # red-600

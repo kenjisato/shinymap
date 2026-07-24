@@ -5,7 +5,7 @@ All errors verified on dev @ 6c03e8c (2026-07-20). Total: 36 mypy errors in
 
 ## Phase 1: mypy fixes
 
-- [ ] T001 Fix 35 errors in `packages/shinymap/python/src/shinymap/kit/_caption.py`
+- [X] T001 Fix 35 errors in `packages/shinymap/python/src/shinymap/kit/_caption.py`
   - **Error group A (34 errors at line 105)**: `text_attrs` is inferred as
     `dict[str, str]` and spread into `svg.Text(**text_attrs)`, whose
     parameters are narrowly typed (Literals, Length, etc.).
@@ -31,7 +31,7 @@ All errors verified on dev @ 6c03e8c (2026-07-20). Total: 36 mypy errors in
     ```
     `Element` is already exported from `shinymap.svg` (`svg/__init__.py:24`).
 
-- [ ] T002 Fix 1 error in `packages/shinymap/python/src/shinymap/kit/sketch/_tab_relabel.py:540`
+- [X] T002 Fix 1 error in `packages/shinymap/python/src/shinymap/kit/sketch/_tab_relabel.py:540`
   - `group_aes` (defined around line 514) mixes `aes.ByState(...)` and
     `aes.Shape(...)` values, so it is inferred `dict[str, object]`;
     `aes.ByGroup(**group_aes)` expects values of type
@@ -47,7 +47,7 @@ All errors verified on dev @ 6c03e8c (2026-07-20). Total: 36 mypy errors in
 
 ## Phase 2: formatting
 
-- [ ] T003 Run `make format-python`. Expected to reformat exactly:
+- [X] T003 Run `make format-python`. Expected to reformat exactly:
   - `packages/shinymap/python/src/shinymap/kit/sketch/app.py`
   - `packages/shinymap/python/src/shinymap/kit/sketch/_tab_original.py`
   - `packages/shinymap/python/src/shinymap/kit/sketch/_tab_relabel.py`
@@ -58,11 +58,11 @@ All errors verified on dev @ 6c03e8c (2026-07-20). Total: 36 mypy errors in
 
 ## Phase 3: verify
 
-- [ ] T004 Run full gates and confirm acceptance criteria in spec.md:
+- [X] T004 Run full gates and confirm acceptance criteria in spec.md:
   ```bash
   make lint-python      # ruff check + mypy, 0 errors
   uv run ruff format --check packages/shinymap/python
   make test             # expect 353 passed, 2 skipped, 1 xfailed
   ```
-- [ ] T005 Ask user for review, then commit and open PR to `dev`
+- [X] T005 Ask user for review, then commit and open PR to `dev`
   (title: `fix: resolve mypy and formatting errors in kit module`)
