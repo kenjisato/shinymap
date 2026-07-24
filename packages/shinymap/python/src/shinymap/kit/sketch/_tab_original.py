@@ -96,13 +96,15 @@ def server_tab_original(input, globals):
         # Clear layer metadata by setting to empty lists (update_metadata merges,
         # so we can't delete keys - we must override them with empty values)
         # This ensures all regions are rendered as main layer
-        display_outline = outline.update_metadata({
-            "overlay": [],
-            "underlay": [],
-            "hidden": [],
-            "annotation": [],
-            "groups": groups,
-        })
+        display_outline = outline.update_metadata(
+            {
+                "overlay": [],
+                "underlay": [],
+                "hidden": [],
+                "annotation": [],
+                "groups": groups,
+            }
+        )
 
         # Style: main=blue, overlay=orange, underlay=yellow, hidden=gray, annotation=green
         group_aes = {

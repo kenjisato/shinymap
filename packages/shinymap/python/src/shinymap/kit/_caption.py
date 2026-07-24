@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..outline import Outline, Regions
-from ..svg import Text
+from ..svg import Element, Text
 
 
 def describe(
@@ -52,10 +52,10 @@ def describe(
     from ..utils import path_bb
 
     exclude_set = set(exclude) if exclude else set()
-    labels: dict[str, list[Text]] = {}
+    labels: dict[str, list[str | Element]] = {}
 
     # Default text attributes
-    text_attrs = {
+    text_attrs: dict[str, Any] = {
         "text_anchor": "middle",
         "dominant_baseline": "central",
         "font_size": "3%",
