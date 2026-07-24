@@ -500,7 +500,7 @@ def my_map():
 ### Python (Phase 2)
 - ✅ `packages/shinymap/python/src/shinymap/geometry/_core.py`
 - ✅ `packages/shinymap/python/src/shinymap/geometry/__init__.py`
-- ⏳ [packages/shinymap/python/src/shinymap/_ui.py](packages/shinymap/python/src/shinymap/_ui.py)
+- ⏳ [packages/shinymap/python/src/shinymap/_ui.py](../../packages/shinymap/python/src/shinymap/_ui.py)
   - Rename fields throughout `MapBuilder`
   - Remove `Map = MapBuilder` alias
   - Add `Map()` function

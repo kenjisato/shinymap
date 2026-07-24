@@ -13,9 +13,15 @@ shinymap/
 │   │   └── www/                       # Built JS assets (generated)
 │   ├── tests/                         # Python tests
 │   └── examples/                      # Example Shiny apps
-├── design/                            # Implementation plans
-├── contributing/                      # Development guides
-├── SPEC.md                            # Technical specification
+├── docs/                              # User-facing documentation site (Quarto)
+├── specs/                             # Feature specs + task progress (Spec Kit)
+├── dev/                               # Internal docs
+│   ├── SPEC.md                        # Technical specification
+│   ├── PROPOSAL.md                    # Project proposal (JOSS)
+│   ├── design/                        # Legacy design documents (archive)
+│   └── contributing/                  # Development guides
+├── .specify/                          # Spec Kit templates, scripts, constitution
+├── .claude/                           # Claude Code skills and subagents
 ├── AGENTS.md                          # AI agent instructions
 └── CONTRIBUTING.md                    # Getting started
 ```
@@ -28,7 +34,8 @@ shinymap/
 | Python source | `packages/shinymap/python/src/shinymap/` |
 | Tests | `packages/shinymap/python/tests/` |
 | Example apps | `packages/shinymap/python/examples/` |
-| Design documents | `design/` |
+| Feature specs (active) | `specs/` |
+| Design documents (archive) | `dev/design/` |
 | Built JS assets | `packages/shinymap/python/src/shinymap/www/` |
 
 ## Working Directories
