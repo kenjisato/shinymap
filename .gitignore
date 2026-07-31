@@ -29,3 +29,6 @@ docs/_site/
 docs/.quarto/
 docs/python/
 docs/typescript/
+
+# Playwright MCP session artifacts
+.playwright-mcp/
