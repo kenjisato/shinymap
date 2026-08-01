@@ -32,7 +32,7 @@ model routing.
   - All optional; rendered output unchanged when unset
   - Verify: `make build && make lint`
 
-- [ ] T003 Create `packages/shinymap/js/src/a11y.ts` [P with T002]
+- [X] T003 Create `packages/shinymap/js/src/a11y.ts` [P with T002]
   - `KEY_BINDINGS`: maps `event.key` values → actions
     (next: ArrowRight/ArrowDown; prev: ArrowLeft/ArrowUp; first: Home;
     last: End; activate: Enter/" "; increment: "+"/"="; decrement: "-")
