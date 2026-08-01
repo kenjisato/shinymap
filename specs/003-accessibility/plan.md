@@ -61,9 +61,22 @@ One shared `handleKeyDown(id, event)` attached to each region:
 
 ### D4. ARIA attributes
 - Root `<svg>`: for InputMap — `role="radiogroup"` (single) or
-  `role="group"` (others); keep `aria-label` sourcing as investigation
-  task T-inv (Shiny label wiring); until resolved, set `aria-label`
-  fallback = Shiny input id? No — leave unset pending T-inv (spec Q2).
+  `role="group"` (others); accessible name resolved by T001 — see finding
+  below.
+
+**T001 finding (2026-08-01, verified on `dev` @ 7e72938)**: there is no
+label wiring to reference. `input_map()` has no `label` parameter at any
+layer (`ui/_ui.py` → `Wash.input_map()` at `uicore/_wash.py:369` →
+`_input_map()` at `uicore/_input_map.py:28`), and `_input_map` emits only
+`div#<resolved_id>.shinymap-input[data-shinymap-props]` — no `<label>`,
+heading, or sibling text node. The JS payload carries `regions`,
+`tooltips`, `view_box`, `outline_metadata`, `value`, `mode`, `aes`,
+`layers`, `raw` — no name field. The container div also has no `**kwargs`
+passthrough, so app authors cannot supply `aria-label` themselves today.
+**Decision**: root svg gets `role` but **no accessible name in v1**;
+regions carry names via `aria-label` (spec R2). Adding an `aria_label`
+parameter (or generic attribute passthrough) requires a spec amendment —
+recorded in the Parking Lot, user gate.
 - Per region (via new optional fields in renderElement commonProps):
   - `role`: "radio" / "checkbox" / "button" per spec R2 table
   - `aria-checked`: single/multiple only, from `counts[id] > 0`

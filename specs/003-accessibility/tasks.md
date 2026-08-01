@@ -8,7 +8,10 @@ model routing.
 
 ## Phase 0: Investigation
 
-- [ ] T001 Investigate container accessible-name wiring (plan D4 / spec Q2)
+- [X] T001 Investigate container accessible-name wiring (plan D4 / spec Q2)
+  - **Result**: no label wiring exists. Root svg gets `role` but no
+    accessible name in v1; `aria_label` parameter deferred to a spec
+    amendment (Parking Lot). Full finding recorded in plan.md D4.
   - Read `packages/shinymap/python/src/shinymap/_ui.py` `input_map()`:
     does it render a Shiny label element with an id near the map container?
   - If yes: plan to reference it via `aria-labelledby` on the root svg
@@ -73,8 +76,8 @@ model routing.
 - [ ] T007 ARIA attributes (depends: T005; can develop with T006 in parallel
   only if working in the same branch — otherwise sequential, same file)
   - Root svg (InputMap.tsx:225-229): `role="radiogroup"` (single) /
-    `role="group"` (multiple/count/cycle); apply T001 finding for
-    accessible name
+    `role="group"` (multiple/count/cycle); **no `aria-label` on the root**
+    per T001 finding (plan.md D4)
   - Regions: `role` + `aria-checked` per spec R2 table;
     `aria-label = tooltips[id] ?? id`, count/cycle append `, ${count}`
   - Verify: `make build && make lint`; DOM inspection in demo app
@@ -120,6 +123,8 @@ model routing.
 
 ## Parking Lot
 
+- [ ] Container accessible name (`aria_label` parameter or generic attribute
+  passthrough on `input_map()`) — needs a spec amendment, user gate (T001)
 - [ ] JS unit test runner (Vitest) — new dev dependency, needs user approval
 - [ ] `aes` focus state (user-configurable focus aesthetics) — separate spec
 - [ ] Spatial (geometric) arrow navigation — future enhancement
