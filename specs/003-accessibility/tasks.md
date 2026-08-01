@@ -23,7 +23,7 @@ model routing.
 
 ## Phase 1: Foundation
 
-- [ ] T002 renderElement passthrough
+- [X] T002 renderElement passthrough
   (`packages/shinymap/js/src/utils/renderElement.tsx`)
   - Extend the props consumed at renderElement.tsx:39-40 and commonProps
     (87-102) with optional: `tabIndex`, `role`, `ariaChecked`
@@ -94,6 +94,11 @@ model routing.
 ## Phase 4: Tests
 
 - [ ] T009 Playwright integration tests (depends: T008)
+  - **First** run `make build` and commit the regenerated bundles
+    (`js/dist/`, `python/src/shinymap/www/`) as one `chore:` commit —
+    T002-T008 deliberately keep generated artifacts out of task commits so
+    each source diff stays reviewable; the Playwright tests load the
+    Python package's bundle and need it current
   - New file `packages/shinymap/python/tests/test_a11y.py` following
     `test_integration.py` fixtures/conventions (markers: integration)
   - Cover AC1-AC7 from spec.md; map each test name to its AC in a comment

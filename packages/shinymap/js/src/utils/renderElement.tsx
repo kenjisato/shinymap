@@ -39,6 +39,18 @@ export type RenderElementProps = {
   onFocus?: () => void;
   /** Blur handler */
   onBlur?: () => void;
+  /** Key down handler (keyboard navigation and activation) */
+  onKeyDown?: React.KeyboardEventHandler<SVGElement>;
+  /** Tab order position (0 = focusable, -1 = focusable only via script) */
+  tabIndex?: number;
+  /** ARIA role (e.g., "radio", "checkbox", "button") */
+  role?: string;
+  /** ARIA checked state (rendered as aria-checked) */
+  ariaChecked?: boolean;
+  /** Accessible name (rendered as aria-label) */
+  ariaLabel?: string;
+  /** Ref callback receiving the rendered SVG element (for programmatic focus) */
+  elementRef?: (element: SVGElement | null) => void;
   /** Tooltip content (rendered as <title> inside SVG element) */
   tooltip?: string;
   /** Additional SVG props (spread onto element) */
@@ -76,6 +88,12 @@ export function renderElement(props: RenderElementProps): React.ReactElement {
     onMouseLeave,
     onFocus,
     onBlur,
+    onKeyDown,
+    tabIndex,
+    role,
+    ariaChecked,
+    ariaLabel,
+    elementRef,
     tooltip,
     extraProps,
   } = props;
@@ -99,6 +117,12 @@ export function renderElement(props: RenderElementProps): React.ReactElement {
     onMouseLeave,
     onFocus,
     onBlur,
+    onKeyDown,
+    tabIndex,
+    role,
+    "aria-checked": ariaChecked,
+    "aria-label": ariaLabel,
+    ref: elementRef,
     ...extraProps,
   };
 
