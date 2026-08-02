@@ -16,6 +16,10 @@ from playwright.sync_api import Page
 
 EXAMPLES_DIR = Path(__file__).parent.parent / "examples"
 
+# Marks a rendered map, whatever its ARIA role. Input maps are radiogroup or
+# group depending on mode; only non-clickable output maps stay role="img".
+MAP_READY_SELECTOR = "svg[role='radiogroup'], svg[role='group'], svg[role='img']"
+
 
 def find_free_port() -> int:
     """Find a free port on localhost."""
@@ -45,7 +49,7 @@ def shiny_app_basic(page: Page) -> Generator[Page, None, None]:
             try:
                 page.goto(url, timeout=1000)
                 # Wait for the Shiny app to fully load
-                page.wait_for_selector("svg[role='img']", timeout=5000)
+                page.wait_for_selector(MAP_READY_SELECTOR, timeout=5000)
                 break
             except Exception:
                 time.sleep(1)
@@ -78,7 +82,7 @@ def shiny_app_output(page: Page) -> Generator[Page, None, None]:
         for _ in range(30):
             try:
                 page.goto(url, timeout=1000)
-                page.wait_for_selector("svg[role='img']", timeout=5000)
+                page.wait_for_selector(MAP_READY_SELECTOR, timeout=5000)
                 break
             except Exception:
                 time.sleep(1)
@@ -119,7 +123,7 @@ def shiny_app(request: pytest.FixtureRequest, page: Page) -> Generator[Page, Non
         for _ in range(30):
             try:
                 page.goto(url, timeout=1000)
-                page.wait_for_selector("svg[role='img']", timeout=5000)
+                page.wait_for_selector(MAP_READY_SELECTOR, timeout=5000)
                 break
             except Exception:
                 time.sleep(1)
