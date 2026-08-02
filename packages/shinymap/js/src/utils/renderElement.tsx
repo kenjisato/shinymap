@@ -102,6 +102,14 @@ export function renderElement(props: RenderElementProps): React.ReactElement {
   // When true, stroke-width is in screen pixels regardless of viewBox scaling
   const vectorEffect = nonScalingStroke !== false ? "non-scaling-stroke" : undefined;
 
+  // Focusable elements suppress the UA focus ring: shinymap draws its own
+  // focus overlay, which is not obscured by neighboring regions' fills.
+  const focusable = tabIndex !== undefined;
+  const style =
+    cursor || focusable
+      ? { ...(cursor ? { cursor } : {}), ...(focusable ? { outline: "none" } : {}) }
+      : undefined;
+
   // Common props for all SVG elements
   const commonProps = {
     fill,
@@ -110,7 +118,7 @@ export function renderElement(props: RenderElementProps): React.ReactElement {
     strokeWidth,
     strokeDasharray,
     vectorEffect,
-    style: cursor ? { cursor } : undefined,
+    style,
     pointerEvents,
     onClick,
     onMouseEnter,

@@ -18,6 +18,7 @@ import {
   isAesPayload,
   resolveIndexedAesthetic,
 } from "../types";
+import { DEFAULT_FOCUS_AESTHETIC } from "../a11y";
 import { normalizeRegions } from "../utils/regions";
 import { assignLayers, resolveGroupAesthetic } from "../utils/layers";
 import { renderElement } from "../utils/renderElement";
@@ -108,6 +109,9 @@ export function InputMap(props: InputMapProps) {
     [fillColor, normalizedRegions]
   );
   const [hovered, setHovered] = useState<RegionId | null>(null);
+  // Keyboard focus is tracked separately from hover: the two states are
+  // independent and can be visible at the same time (spec AC6).
+  const [focusedRegion, setFocusedRegion] = useState<RegionId | null>(null);
   // Use internal state for counts, initialized from value prop
   const [counts, setCounts] = useState<Record<RegionId, number>>(value ?? {});
   const selected = useMemo(() => buildSelected(counts), [counts]);
@@ -318,6 +322,8 @@ export function InputMap(props: InputMapProps) {
 
           const handleMouseEnter = () => setHovered(id);
           const handleMouseLeave = () => setHovered((current) => (current === id ? null : current));
+          const handleFocus = () => setFocusedRegion(id);
+          const handleBlur = () => setFocusedRegion((current) => (current === id ? null : current));
 
           // Render each element in the region
           return elements.map((element, index) =>
@@ -333,8 +339,8 @@ export function InputMap(props: InputMapProps) {
               cursor: "pointer",
               onMouseEnter: handleMouseEnter,
               onMouseLeave: handleMouseLeave,
-              onFocus: handleMouseEnter,
-              onBlur: handleMouseLeave,
+              onFocus: handleFocus,
+              onBlur: handleBlur,
               onClick: () => handleClick(id),
               tooltip,
               extraProps: extraProps as Record<string, unknown>,
@@ -500,7 +506,26 @@ export function InputMap(props: InputMapProps) {
           })()}
       </g>
 
-      {/* Layer 6: Annotation - always on top, even above hover */}
+      {/* Layer 6: Focus layer - keyboard-focused region only, non-interactive */}
+      {/* Above hover so the focus ring is never obscured; independent of it */}
+      <g>
+        {focusedRegion &&
+          layerAssignment.base.has(focusedRegion) &&
+          normalizedRegions[focusedRegion]?.map((element, index) =>
+            renderElement({
+              element,
+              key: `focus-overlay-${focusedRegion}-${index}`,
+              fill: DEFAULT_FOCUS_AESTHETIC.fillColor,
+              stroke: DEFAULT_FOCUS_AESTHETIC.strokeColor,
+              strokeWidth: DEFAULT_FOCUS_AESTHETIC.strokeWidth,
+              strokeDasharray: DEFAULT_FOCUS_AESTHETIC.strokeDasharray,
+              nonScalingStroke: DEFAULT_FOCUS_AESTHETIC.nonScalingStroke,
+              pointerEvents: "none",
+            })
+          )}
+      </g>
+
+      {/* Layer 7: Annotation - always on top, even above focus */}
       <g>{renderNonInteractiveLayer(layerAssignment.annotation, "annotation")}</g>
     </svg>
   );
