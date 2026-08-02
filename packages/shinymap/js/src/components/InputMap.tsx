@@ -258,6 +258,20 @@ export function InputMap(props: InputMapProps) {
     }
   };
 
+  // ARIA roles per spec R2. Single selection is a radio group; every other
+  // input mode is a plain group, because no native role captures "counter"
+  // or "cycling state" semantics.
+  const rootRole = modeType === "single" ? "radiogroup" : "group";
+  const regionRole =
+    modeType === "single" ? "radio" : modeType === "multiple" ? "checkbox" : "button";
+  // Only radio and checkbox carry a checked state. For count and cycle the
+  // value goes into the accessible name instead ("Tokyo, 3"), since a button
+  // has nothing to be checked about.
+  const usesCheckedState = modeType === "single" || modeType === "multiple";
+
+  // The root svg has no accessible name: input_map() has no label to point
+  // at (see plan.md D4 / T001). Regions are named individually below.
+
   // Helper to determine element type for a region from _metadata
   const getElementType = (regionId: RegionId): "shape" | "line" | "text" => {
     const metadata = aesPayload?._metadata;
@@ -314,7 +328,7 @@ export function InputMap(props: InputMapProps) {
 
   return (
     <svg
-      role="img"
+      role={rootRole}
       className={className}
       style={{ width: "100%", height: "100%", ...containerStyle }}
       viewBox={viewBox}
@@ -426,6 +440,12 @@ export function InputMap(props: InputMapProps) {
             // assistive technology.
             const isFocusTarget = index === 0;
 
+            // Fall back to the region id when no tooltip is supplied: an
+            // imperfect name beats an unnamed control.
+            const accessibleName = usesCheckedState
+              ? (tooltip ?? id)
+              : `${tooltip ?? id}, ${count}`;
+
             return renderElement({
               element,
               key: `${id}-${index}`,
@@ -443,6 +463,9 @@ export function InputMap(props: InputMapProps) {
               onClick: () => handleClick(id),
               onKeyDown: isFocusTarget ? (event) => handleKeyDown(id, event) : undefined,
               tabIndex: isFocusTarget ? (id === effectiveTabTarget ? 0 : -1) : undefined,
+              role: isFocusTarget ? regionRole : undefined,
+              ariaChecked: isFocusTarget && usesCheckedState ? isSelected : undefined,
+              ariaLabel: isFocusTarget ? accessibleName : undefined,
               elementRef: isFocusTarget
                 ? (el) => {
                     if (el) regionRefs.current.set(id, el);
