@@ -55,7 +55,7 @@ model routing.
   - `outline: none` style on region elements
   - Verify: `make build && make lint`; manual: focus via JS console shows ring
 
-- [ ] T005 Roving tabindex + navigation keys (depends: T004)
+- [X] T005 Roving tabindex + navigation keys (depends: T004)
   - `tabTarget` state per plan D2 (initial: first selected region for
     single mode, else first interactive region); regions get
     `tabIndex={id === tabTarget ? 0 : -1}`
@@ -80,6 +80,11 @@ model routing.
     per T001 finding (plan.md D4)
   - Regions: `role` + `aria-checked` per spec R2 table;
     `aria-label = tooltips[id] ?? id`, count/cycle append `, ${count}`
+  - **Also update the test fixtures**: `tests/conftest.py` waits on
+    `svg[role='img']` in all three fixtures, and
+    `test_integration.py::test_svg_has_accessibility_role` asserts
+    `role="img"`. Changing the InputMap root role breaks both. OutputMap
+    keeps `role="img"` (spec AC7), so split the assertion by component.
   - Verify: `make build && make lint`; DOM inspection in demo app
 
 ## Phase 3: OutputMap (`packages/shinymap/js/src/components/OutputMap.tsx`)
