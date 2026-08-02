@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import type {
   AestheticStyle,
@@ -18,7 +18,7 @@ import {
   isAesPayload,
   resolveIndexedAesthetic,
 } from "../types";
-import { DEFAULT_FOCUS_AESTHETIC } from "../a11y";
+import { DEFAULT_FOCUS_AESTHETIC, KEY_BINDINGS } from "../a11y";
 import { normalizeRegions } from "../utils/regions";
 import { assignLayers, resolveGroupAesthetic } from "../utils/layers";
 import { renderElement } from "../utils/renderElement";
@@ -112,9 +112,36 @@ export function InputMap(props: InputMapProps) {
   // Keyboard focus is tracked separately from hover: the two states are
   // independent and can be visible at the same time (spec AC6).
   const [focusedRegion, setFocusedRegion] = useState<RegionId | null>(null);
+  // Roving tabindex: exactly one region is reachable by Tab; arrow keys move
+  // between regions inside the widget. null until the user focuses a region,
+  // at which point the effective target below takes over.
+  const [tabTarget, setTabTarget] = useState<RegionId | null>(null);
+  // First rendered SVG element per region, for programmatic focus
+  const regionRefs = useRef<Map<RegionId, SVGElement>>(new Map());
   // Use internal state for counts, initialized from value prop
   const [counts, setCounts] = useState<Record<RegionId, number>>(value ?? {});
   const selected = useMemo(() => buildSelected(counts), [counts]);
+
+  // Keyboard navigation order: base-layer regions in DOM order. Overlay,
+  // underlay, hidden and annotation regions are excluded by construction,
+  // as are base regions that render no elements.
+  const interactiveIds = useMemo(
+    () => Array.from(layerAssignment.base).filter((id) => normalizedRegions[id]?.length),
+    [layerAssignment.base, normalizedRegions]
+  );
+
+  // The single region with tabIndex=0. Until the user focuses one, Tab lands
+  // on the first selected region (radio convention), else the first region.
+  const effectiveTabTarget =
+    (tabTarget !== null && interactiveIds.includes(tabTarget) ? tabTarget : null) ??
+    interactiveIds.find((id) => selected.has(id)) ??
+    interactiveIds[0] ??
+    null;
+
+  const focusRegion = (id: RegionId) => {
+    setTabTarget(id);
+    regionRefs.current.get(id)?.focus();
+  };
 
   // Sync internal state when value prop changes (for update_map)
   useEffect(() => {
@@ -169,6 +196,39 @@ export function InputMap(props: InputMapProps) {
     const next = { ...counts, [id]: nextCount };
     setCounts(next);
     onChange?.(next);
+  };
+
+  const handleKeyDown = (id: RegionId, event: React.KeyboardEvent<SVGElement>) => {
+    const action = KEY_BINDINGS[event.key];
+    // Unbound keys must fall through untouched so browser and screen-reader
+    // shortcuts keep working.
+    if (!action) return;
+
+    const index = interactiveIds.indexOf(id);
+    if (index === -1) return;
+    const total = interactiveIds.length;
+
+    switch (action) {
+      case "next":
+        event.preventDefault();
+        focusRegion(interactiveIds[(index + 1) % total]);
+        break;
+      case "prev":
+        event.preventDefault();
+        focusRegion(interactiveIds[(index - 1 + total) % total]);
+        break;
+      case "first":
+        event.preventDefault();
+        focusRegion(interactiveIds[0]);
+        break;
+      case "last":
+        event.preventDefault();
+        focusRegion(interactiveIds[total - 1]);
+        break;
+      default:
+        // activate / increment / decrement are handled in T006
+        break;
+    }
   };
 
   // Helper to determine element type for a region from _metadata
@@ -322,12 +382,24 @@ export function InputMap(props: InputMapProps) {
 
           const handleMouseEnter = () => setHovered(id);
           const handleMouseLeave = () => setHovered((current) => (current === id ? null : current));
-          const handleFocus = () => setFocusedRegion(id);
+          // Focusing a region also makes it the roving tab target, so Tab
+          // re-entry returns to wherever the user last was — including after
+          // a mouse click, which focuses the element it hits.
+          const handleFocus = () => {
+            setFocusedRegion(id);
+            setTabTarget(id);
+          };
           const handleBlur = () => setFocusedRegion((current) => (current === id ? null : current));
 
           // Render each element in the region
-          return elements.map((element, index) =>
-            renderElement({
+          return elements.map((element, index) => {
+            // A region may consist of several elements (e.g. a mainland plus
+            // islands). Only the first carries the keyboard affordances, so
+            // the region is one stop for arrow navigation and one node for
+            // assistive technology.
+            const isFocusTarget = index === 0;
+
+            return renderElement({
               element,
               key: `${id}-${index}`,
               fill: region.aesthetic.fillColor,
@@ -342,10 +414,18 @@ export function InputMap(props: InputMapProps) {
               onFocus: handleFocus,
               onBlur: handleBlur,
               onClick: () => handleClick(id),
+              onKeyDown: isFocusTarget ? (event) => handleKeyDown(id, event) : undefined,
+              tabIndex: isFocusTarget ? (id === effectiveTabTarget ? 0 : -1) : undefined,
+              elementRef: isFocusTarget
+                ? (el) => {
+                    if (el) regionRefs.current.set(id, el);
+                    else regionRefs.current.delete(id);
+                  }
+                : undefined,
               tooltip,
               extraProps: extraProps as Record<string, unknown>,
-            })
-          );
+            });
+          });
         })}
       </g>
 
