@@ -10,6 +10,10 @@ import re
 import pytest
 from playwright.sync_api import Page, expect
 
+# app_basic.py renders two input maps; their root svg role now depends on
+# mode (radiogroup / group), so select by container instead of by role.
+INPUT_MAP_SELECTOR = ".shinymap-input svg"
+
 
 @pytest.mark.integration
 class TestInputMapBasic:
@@ -20,7 +24,7 @@ class TestInputMapBasic:
         page = shiny_app_basic
 
         # Should have SVG elements
-        svgs = page.locator("svg[role='img']")
+        svgs = page.locator(INPUT_MAP_SELECTOR)
         expect(svgs.first).to_be_visible()
 
         # Should have path elements for regions
@@ -32,7 +36,7 @@ class TestInputMapBasic:
         page = shiny_app_basic
 
         # Find the first SVG (single select mode)
-        svg = page.locator("svg[role='img']").first
+        svg = page.locator(INPUT_MAP_SELECTOR).first
 
         # Click on the circle region (first path)
         circle_path = svg.locator("path").first
@@ -49,7 +53,7 @@ class TestInputMapBasic:
         """Test single selection - clicking same region deselects it."""
         page = shiny_app_basic
 
-        svg = page.locator("svg[role='img']").first
+        svg = page.locator(INPUT_MAP_SELECTOR).first
         circle_path = svg.locator("path").first
 
         # Select
@@ -71,7 +75,7 @@ class TestInputMapBasic:
         page = shiny_app_basic
 
         # Find the second SVG (multiple select mode)
-        svgs = page.locator("svg[role='img']")
+        svgs = page.locator(INPUT_MAP_SELECTOR)
         svg = svgs.nth(1)
 
         paths = svg.locator("path")
@@ -94,7 +98,7 @@ class TestInputMapBasic:
         """Test that hovering shows visual feedback."""
         page = shiny_app_basic
 
-        svg = page.locator("svg[role='img']").first
+        svg = page.locator(INPUT_MAP_SELECTOR).first
         path = svg.locator("path").first
 
         # Hover over the region
@@ -115,7 +119,7 @@ class TestInputMapSelectHighlight:
         """Verify selected regions show select aesthetic (blue fill)."""
         page = shiny_app_basic
 
-        svg = page.locator("svg[role='img']").first
+        svg = page.locator(INPUT_MAP_SELECTOR).first
         path = svg.locator("path").first
 
         # Click to select
@@ -136,23 +140,29 @@ class TestSVGStructure:
         """Verify SVG has proper viewBox attribute."""
         page = shiny_app_basic
 
-        svg = page.locator("svg[role='img']").first
+        svg = page.locator(INPUT_MAP_SELECTOR).first
         viewbox = svg.get_attribute("viewBox")
         assert viewbox is not None
         assert viewbox  # Not empty
 
     def test_svg_has_accessibility_role(self, shiny_app_basic: Page):
-        """Verify SVG has role='img' for accessibility."""
+        """Verify each input map exposes a group role matching its mode.
+
+        app_basic.py renders a single-selection map followed by a
+        multiple-selection one (spec R2).
+        """
         page = shiny_app_basic
 
-        svg = page.locator("svg[role='img']")
-        expect(svg.first).to_be_visible()
+        svgs = page.locator(INPUT_MAP_SELECTOR)
+        expect(svgs.first).to_be_visible()
+        assert svgs.nth(0).get_attribute("role") == "radiogroup"
+        assert svgs.nth(1).get_attribute("role") == "group"
 
     def test_paths_have_cursor_pointer(self, shiny_app_basic: Page):
         """Verify interactive regions show pointer cursor."""
         page = shiny_app_basic
 
-        svg = page.locator("svg[role='img']").first
+        svg = page.locator(INPUT_MAP_SELECTOR).first
         # Find a path with cursor pointer (interactive regions have it)
         path = svg.locator("path").first
         cursor = path.evaluate("el => getComputedStyle(el).cursor")
