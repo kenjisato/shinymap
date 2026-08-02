@@ -65,7 +65,7 @@ model routing.
   - Navigation order = base-layer region array (already excludes
     overlay/underlay/hidden/annotation)
 
-- [ ] T006 Activation keys (depends: T005)
+- [X] T006 Activation keys (depends: T005)
   - Enter/Space → `e.preventDefault()` + existing `handleClick(id)`
     (InputMap.tsx:142-168) — no separate state path
   - count mode: "+"/"=" increment (same as click), "-" decrement
