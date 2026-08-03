@@ -96,6 +96,24 @@ model routing.
   - Fix onFocus/onBlur hover conflation (OutputMap.tsx:317-318) same as T004
   - Non-clickable: verify zero change (`role="img"`, no tabIndex) — spec AC7
 
+- [ ] T014 Accessibility example app (depends: T008)
+  - **Added 2026-08-03, after plan approval** (user request). Not in the
+    original spec/plan: keyboard behavior is hard to see without a screen
+    that shows it, and T012's manual Firefox/Safari pass would otherwise
+    mean touring six separate examples.
+  - New `packages/shinymap/python/examples/app_a11y.py` following the
+    house convention: export `ui_a11y` / `server_a11y`, register a nav
+    panel in `examples/app.py`
+  - Show all four input modes plus `Display(clickable=True)` on one page,
+    with a live readout of the focused region id, its `role`,
+    `aria-checked` and value, so a reviewer can watch the attributes
+    change while operating the map by keyboard
+  - Document the key bindings on the page itself (Tab, arrows, Home/End,
+    Enter/Space, `+`/`-`), sourced from the same behavior as
+    `js/src/a11y.ts`
+  - Verify: `uv run pytest -m unit` (examples are covered by
+    `tests/test_examples.py`), plus manual keyboard operation
+
 ## Phase 4: Tests
 
 - [ ] T009 Playwright integration tests (depends: T008)
@@ -124,9 +142,11 @@ model routing.
     behavior, D1 rationale (selection does not follow focus), documented
     limitations (DOM-order navigation, few-hundred-regions guidance)
   - CHANGELOG.md entry under Unreleased/0.3.0
-- [ ] T012 Manual cross-browser check (depends: T010) [P with T011]
+- [ ] T012 Manual cross-browser check (depends: T010, T014) [P with T011]
   - Firefox + Safari: Tab reaches map, ring visible, arrows/Enter work
     (CI is chromium-only); record results here
+  - Use the T014 example app — it puts every mode and a live attribute
+    readout on one page
 - [ ] T013 Review + PR (depends: T011, T012)
   - Run spec-reviewer subagent on `git diff dev...feature/003-accessibility`
   - User review → PR to dev referencing specs/003-accessibility/
