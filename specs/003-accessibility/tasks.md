@@ -44,7 +44,7 @@ model routing.
 
 ## Phase 2: InputMap (`packages/shinymap/js/src/components/InputMap.tsx`)
 
-- [ ] T004 Separate focus from hover + focus overlay (depends: T002, T003)
+- [X] T004 Separate focus from hover + focus overlay (depends: T002, T003)
   - New `focusedRegion` state; change onFocus/onBlur (currently
     InputMap.tsx:336-337 reusing hover) to set `focusedRegion`; hover
     becomes mouse-only
