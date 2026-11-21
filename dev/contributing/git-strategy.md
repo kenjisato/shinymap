@@ -77,6 +77,23 @@ git rebase feature/<name>
 **Before any diversion**: checkpoint commit on current branch, and note the
 diversion in the feature's tasks.md.
 
+## Release Cadence
+
+Work reaches users only through PyPI, so `dev` and `main` must not stall
+behind long-running features.
+
+- **`dev`: every few days.** Prefer small PRs that land soon over a feature
+  branch that holds work for weeks.
+- **`main`: about every two weeks.** Open a release PR `dev` → `main` that
+  bumps `version` in `packages/shinymap/python/pyproject.toml` (drop `-dev`)
+  and adds a CHANGELOG entry. On merge, `tag-on-merge.yml` tags `vX.Y.Z` and
+  `python-publish.yml` publishes to PyPI. Then set `dev` back to the next
+  `-dev` version.
+- **Do not hold a release for an unfinished feature.** It ships in a later
+  release. Patch releases (`0.3.1`, `0.3.2`, ...) are fine while pre-1.0.
+- After a release, check that the version appears on PyPI; a tag alone does
+  not mean it was published.
+
 ## Non-Negotiable Rules
 
 1. **Never edit `dev` directly** - always use a branch and PR
