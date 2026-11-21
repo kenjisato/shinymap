@@ -73,7 +73,7 @@ model routing.
     via new `adjustCount(id, delta)` firing the same onChange
   - Keys other than KEY_BINDINGS: no preventDefault
 
-- [ ] T007 ARIA attributes (depends: T005; can develop with T006 in parallel
+- [X] T007 ARIA attributes (depends: T005; can develop with T006 in parallel
   only if working in the same branch — otherwise sequential, same file)
   - Root svg (InputMap.tsx:225-229): `role="radiogroup"` (single) /
     `role="group"` (multiple/count/cycle); **no `aria-label` on the root**
@@ -114,7 +114,7 @@ model routing.
 - [ ] T010 Gates + regression (depends: T009)
   - `make lint && make format && make build` (TS)
   - `make lint-python && make format-python`
-  - `make test` — all existing tests pass unchanged (AC8), new tests green
+  - `make test` — all existing tests pass with actions and expectations unchanged (AC8), new tests green
   - Check spec.md AC checkboxes that are now verified
 
 ## Phase 5: Docs and wrap-up

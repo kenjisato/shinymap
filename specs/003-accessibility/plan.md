@@ -127,7 +127,8 @@ needed, that becomes a follow-up spec amendment — user gate.)
   value updates (assert via Shiny output like existing click tests),
   focus indicator presence (focus overlay path exists), role/aria DOM
   assertions per mode (AC1-AC7).
-- **Regression**: existing mouse tests untouched and passing (AC8).
+- **Regression**: existing mouse tests keep their actions and expectations and pass;
+  only selectors change (AC8).
 
 ## Risks
 
