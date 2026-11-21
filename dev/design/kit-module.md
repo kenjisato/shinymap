@@ -465,10 +465,10 @@ uv run python -m shinymap.kit.review    # View/validate outline
 - [x] Update code generation to include all layer types
 
 ### Phase 6: Treat as Line
-- [ ] Add `is_stroke_only_candidate()` detection
-- [ ] Add "Treat as Line" indicator in sketch UI
-- [ ] Add toggle to add/remove from `lines_as_path`
-- [ ] Update code generation to include `path_as_line()` calls
+- [x] Add `is_stroke_only_candidate()` detection
+- [x] Add "Treat as Line" indicator in sketch UI
+- [x] Add toggle to add/remove from `lines_as_path`
+- [x] Update code generation to include `path_as_line()` calls
 
 ### Phase 7: Review App
 - [ ] Create `kit/_app_review.py`
