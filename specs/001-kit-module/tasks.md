@@ -12,11 +12,15 @@ spec in PR descriptions.
 - [X] Phase 4: Caption tool (commit a4a8f62)
 - [X] Phase 5: Sketch layer enhancement (PR #17, #18 — merged 2026-01-25)
 - [X] Phase 6: Treat as Line — implemented on branch `task/phase6-treat-as-line`
-  (commit 93bd0c3), **not yet merged** (see T601)
+  (commit 93bd0c3), landed in dev via T601
 
 ## Phase 6 Wrap-Up
 
-- [ ] T601 Land `task/phase6-treat-as-line` into dev
+- [X] T601 Land `task/phase6-treat-as-line` into dev
+  - **Result (2026-11-22)**: rebase onto dev had no conflicts; the
+    COMMUNICATION files were never tracked, so step 2 was a no-op. Step 3
+    was driven with Playwright on `examples/data/Japan_template_large.svg`:
+    all items pass except "unmark", which was not exercised. Gates green.
   - Prerequisite: specs/002-ci-mypy-fix merged to dev (avoids format conflicts
     in `_tab_relabel.py` / `app.py` / `_tab_original.py`)
   - Steps:
