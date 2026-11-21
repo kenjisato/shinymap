@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      actions: write  # dispatch python-publish.yml
 
     steps:
       - uses: actions/checkout@v4
@@ -56,3 +57,11 @@ jobs:
           git tag -a "v$VERSION" -m "Release v$VERSION"
           git push origin "v$VERSION"
           echo "Created and pushed tag v$VERSION"
+
+      # A tag pushed with GITHUB_TOKEN does not trigger python-publish.yml's
+      # `push: tags`, so start it explicitly on the new tag.
+      - name: Trigger publish
+        if: steps.check_release.outputs.is_release == 'true' && steps.check_tag.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run python-publish.yml --ref "v${{ steps.get_version.outputs.version }}"
