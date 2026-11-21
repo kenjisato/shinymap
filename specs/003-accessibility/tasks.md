@@ -102,8 +102,8 @@ model routing.
     that shows it, and T012's manual Firefox/Safari pass would otherwise
     mean touring six separate examples.
   - New `packages/shinymap/python/examples/app_a11y.py` following the
-    house convention: export `ui_a11y` / `server_a11y`, register a nav
-    panel in `examples/app.py`
+    house convention: export `ui_a11y` / `server_a11y` and a standalone
+    `app`, register a nav panel in `examples/app.py`
   - Show all four input modes plus `Display(clickable=True)` on one page,
     with a live readout of the focused region id, its `role`,
     `aria-checked` and value, so a reviewer can watch the attributes
@@ -111,8 +111,10 @@ model routing.
   - Document the key bindings on the page itself (Tab, arrows, Home/End,
     Enter/Space, `+`/`-`), sourced from the same behavior as
     `js/src/a11y.ts`
-  - Verify: `uv run pytest -m unit` (examples are covered by
-    `tests/test_examples.py`), plus manual keyboard operation
+  - Add `test_import_app_a11y` to `tests/test_examples.py` (each example
+    is imported by its own hand-written test; new files are not picked up
+    automatically)
+  - Verify: `uv run pytest -m unit`, plus manual keyboard operation
 
 ## Phase 4: Tests
 
