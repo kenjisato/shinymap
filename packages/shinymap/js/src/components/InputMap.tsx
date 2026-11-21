@@ -198,6 +198,22 @@ export function InputMap(props: InputMapProps) {
     onChange?.(next);
   };
 
+  // Step a region's value by delta without going through the click path.
+  // Only count and cycle modes expose this (spec R1); count is unbounded
+  // upward and floors at 0, cycle wraps modulo n.
+  const adjustCount = (id: RegionId, delta: number) => {
+    const current = counts[id] ?? 0;
+    const next =
+      modeType === "cycle"
+        ? (((current + delta) % effectiveCycle) + effectiveCycle) % effectiveCycle
+        : Math.max(0, current + delta);
+    if (next === current) return;
+
+    const updated = { ...counts, [id]: next };
+    setCounts(updated);
+    onChange?.(updated);
+  };
+
   const handleKeyDown = (id: RegionId, event: React.KeyboardEvent<SVGElement>) => {
     const action = KEY_BINDINGS[event.key];
     // Unbound keys must fall through untouched so browser and screen-reader
@@ -225,8 +241,19 @@ export function InputMap(props: InputMapProps) {
         event.preventDefault();
         focusRegion(interactiveIds[total - 1]);
         break;
-      default:
-        // activate / increment / decrement are handled in T006
+      case "activate":
+        // Same code path as a mouse click, so every mode behaves identically
+        // whether it was reached by pointer or keyboard (spec R1).
+        event.preventDefault();
+        handleClick(id);
+        break;
+      case "increment":
+      case "decrement":
+        // +/- only mean something where a region holds a value. Elsewhere
+        // they stay unhandled so the keystroke reaches the browser.
+        if (modeType !== "count" && modeType !== "cycle") return;
+        event.preventDefault();
+        adjustCount(id, action === "increment" ? 1 : -1);
         break;
     }
   };
