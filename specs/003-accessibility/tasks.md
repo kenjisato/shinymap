@@ -114,7 +114,7 @@ model routing.
 - [ ] T010 Gates + regression (depends: T009)
   - `make lint && make format && make build` (TS)
   - `make lint-python && make format-python`
-  - `make test` — all existing tests pass unchanged (AC8), new tests green
+  - `make test` — all existing tests pass with actions and expectations unchanged (AC8), new tests green
   - Check spec.md AC checkboxes that are now verified
 
 ## Phase 5: Docs and wrap-up

@@ -98,7 +98,9 @@ plus JS unit/snapshot tests:
 - [ ] AC6: Focused region shows the default focus indicator; hovering a
   different region shows hover styling simultaneously (states independent)
 - [ ] AC7: Non-clickable OutputMap keeps `role="img"` and gains no tab stops
-- [ ] AC8: Existing mouse interaction tests still pass unchanged
+- [ ] AC8: Existing mouse interaction tests still pass with their actions
+  and expected values unchanged (only element selectors may change, since
+  the InputMap root role is no longer `img`)
 - [ ] AC9: Quality gates pass (constitution: make lint/format/build for TS,
   lint-python/format-python, test)
 
