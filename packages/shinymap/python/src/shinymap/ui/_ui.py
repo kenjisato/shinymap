@@ -74,6 +74,23 @@ default_wash = Wash(
     ),
 )
 
+"""The look every map gets unless you make your own `Wash`.
+
+`shinymap.input_map`, `output_map` and `render_map` are its methods. Use it
+where a function takes a wash, for example to draw a static picture with the
+default look:
+
+Examples:
+    ```pycon
+    >>> from shinymap import Outline, StillLife, default_wash
+    >>> outline = Outline.from_dict({"a": "M 0 0 L 10 0 L 10 10 Z"})
+    >>> svg = StillLife(default_wash.build(outline, value={"a": 1})).to_svg()
+    >>> svg.startswith("<svg")
+    True
+
+    ```
+"""
+
 # Public API functions use the default wash
 input_map = default_wash.input_map
 output_map = default_wash.output_map
