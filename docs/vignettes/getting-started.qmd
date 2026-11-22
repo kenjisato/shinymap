@@ -45,10 +45,26 @@ def server(input, output, session):
 app = App(app_ui, server)
 ```
 
+Run it with `shiny run app.py`. The three squares are the regions; the map works
+like a set of radio buttons:
+
+::: {layout-ncol=3}
+![Start: nothing selected](../images/generated/gs-before.svg){fig-alt="Three gray squares" width="100%"}
+
+![Pointer over `region_b`](../images/generated/gs-hover.svg){fig-alt="The top-right square with a darker border" width="100%"}
+
+![After clicking `region_b`](../images/generated/gs-after.svg){fig-alt="The top-right square filled in light blue" width="100%"}
+:::
+
+After the click, `input.selection()` is `"region_b"` and the text below the map reads
+"Selected: region_b".
+
 ## Next Steps
 
-- Selection modes (`Single`, `Multiple`, `Cycle`, `Count`) and aesthetics are
-  documented in the [Python API reference](../python/index.qmd)
+- [Selection modes](modes.qmd): single, multiple, cycle and count, and what each returns
+- [Aesthetics](aesthetics.qmd): colors per state, per group and per region, and coloring by value
+- [Layers and lines](layers.qmd): backgrounds, borders and lines drawn above or below the regions
 - Prepare your own SVG with `python -m shinymap.kit.sketch -f map.svg`
+- The [Python API reference](../python/index.qmd) lists every function and class
 - Runnable examples live in
   [`packages/shinymap/python/examples/`](https://github.com/kenjisato/shinymap/tree/main/packages/shinymap/python/examples)

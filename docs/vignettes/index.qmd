@@ -8,6 +8,12 @@ Tutorials and practical examples for common use cases.
 
 - [Getting Started](getting-started.qmd) - Basic setup and first map
 
+## Concepts
+
+- [Selection Modes](modes.qmd) - Single, multiple, cycle and count
+- [Aesthetics](aesthetics.qmd) - States, groups, precedence and color scales
+- [Layers and Lines](layers.qmd) - Drawing order, backgrounds, borders and lines
+
 ## Use Cases
 
 *Coming soon*

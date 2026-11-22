@@ -1,0 +1,73 @@
+---
+title: "Layers and Lines"
+---
+
+An SVG draws later elements on top of earlier ones. shinymap uses that to keep
+important outlines visible: it draws the map in layers, and it redraws selected and
+hovered regions on top so that their borders are never covered by a neighbour.
+
+## The layers, bottom to top
+
+Each picture adds one layer to the previous one.
+
+::: {layout-ncol=3}
+![1. underlay](../images/generated/layer-1-underlay.svg){fig-alt="A light blue background rectangle" width="100%"}
+
+![2. base](../images/generated/layer-2-base.svg){fig-alt="Hexagon grid on the background" width="100%"}
+
+![3. overlay](../images/generated/layer-3-overlay.svg){fig-alt="A blue river line drawn over the grid" width="100%"}
+
+![4. selection](../images/generated/layer-4-select.svg){fig-alt="Two selected hexagons drawn over the river" width="100%"}
+
+![5. hover](../images/generated/layer-5-hover.svg){fig-alt="A hovered hexagon outlined above the selection" width="100%"}
+
+![6. annotation](../images/generated/layer-6-annotation.svg){fig-alt="An orange marker drawn above the hovered hexagon" width="100%"}
+:::
+
+| Layer | What goes there | Clickable |
+|---|---|---|
+| underlay | backgrounds, sea, frames | no |
+| base | the regions users click | **yes** |
+| overlay | borders, dividers, rivers, grids | no |
+| selection | copies of the selected regions, in the select look | no (clicks pass through) |
+| hover | a copy of the hovered region, in the hover look | no (clicks pass through) |
+| annotation | labels and marks that must stay on top of everything | no |
+
+Regions in the `hidden` layer are not drawn at all.
+
+## Putting regions on a layer
+
+A region's layer is recorded in the outline's metadata; its ID does not matter. Use
+`move_layer` to set it:
+
+```python
+outline = (
+    Outline.from_svg("map.svg")
+    .move_layer("underlay", "_background")
+    .move_layer("overlay", "_river", "_borders")
+)
+```
+
+`layers=` on `input_map()` / `output_map()` does the same for one map:
+`layers={"overlay": ["_river"]}`. The keys are singular: `underlay`, `overlay`,
+`annotation`, `hidden`.
+
+## Lines need `path_as_line`
+
+An SVG `<path>` can be a filled shape or a line; the path data alone does not say
+which. Unless told otherwise, shinymap fills paths as shapes. An open path such as a
+river then turns into a filled area:
+
+::: {layout-ncol=2}
+![Without `path_as_line`](../images/generated/line-as-shape.svg){fig-alt="The river path filled in gray, covering part of the grid" width="100%"}
+
+![With `path_as_line("_river")`](../images/generated/line-as-line.svg){fig-alt="The river drawn as a blue line" width="100%"}
+:::
+
+```python
+outline = outline.path_as_line("_river").move_layer("overlay", "_river")
+```
+
+Lines get the line look (`aes.Line`, or `Wash(line=...)`) and no fill. The sketch app
+(`python -m shinymap.kit.sketch`) suggests likely lines for you: open paths and paths
+with `fill="none"`.
