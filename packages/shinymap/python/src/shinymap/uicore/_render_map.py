@@ -12,52 +12,11 @@ from htmltools import Tag, TagList, div
 from shiny import render
 from shiny.module import resolve_id
 
-from ..aes._core import BaseAesthetic, ByGroup, ByState
 from ..payload import build_aes_payload
 from ..types import MapBuilder
 from ._registry import _static_map_params
 from ._util import _normalize_outline
-from ._wash import element_kind
-
-
-def _merge_bygroup(a: ByGroup, b: ByGroup) -> ByGroup:
-    """Merge two ByGroup objects. Keys in b take precedence over a."""
-    merged_groups = dict(a._groups)
-    merged_groups.update(b._groups)
-    return ByGroup(**merged_groups)
-
-
-def _normalize_builder_aes(aes: Any, outline: Any, wash_config: Any) -> ByGroup | None:
-    """Normalize the aes given to Map() into a ByGroup.
-
-    ByState and single aesthetics apply to every region. They are resolved through
-    the wash (the one output_map() used, else the default) so they also override
-    the wash's type default (e.g. ``__shape``), which JS looks up before ``__all``.
-    Only the entries the user affected are kept, so output_map()'s group and
-    region entries survive the merge.
-    Raw dicts are rejected: since 0.3 the payload is built from aes objects only.
-    """
-    if aes is None or isinstance(aes, ByGroup):
-        return aes
-    if isinstance(aes, (ByState, BaseAesthetic)):
-        if outline is None:
-            return ByGroup(__all=aes)
-        if wash_config is None:
-            from ..ui._ui import _default_wash
-
-            wash_config = _default_wash.config
-        resolved = wash_config.apply(aes, outline)
-        keep = {"__all"}
-        kind = element_kind(aes)
-        if kind is not None:
-            keep.add(f"__{kind}")
-        return ByGroup(**{k: v for k, v in resolved.items() if k in keep})
-    if isinstance(aes, dict):
-        raise TypeError(
-            "Map(aes=...) no longer accepts a dict. Use aes objects instead, e.g. "
-            "aes.ByGroup(region_id=aes.Shape(fill_color='#f00')) or aes.Shape(...)."
-        )
-    raise TypeError(f"Unsupported aes type for Map(): {type(aes).__name__}")
+from ._wash import layer_user_aes
 
 
 def _build_payload(
@@ -90,18 +49,25 @@ def _build_payload(
     if regions is None and outline is not None:
         regions = outline.regions
 
-    # Merge aes: static from output_map, builder from Map()
-    static_aes = static_params.get("resolved_aes")  # ByGroup object
-    builder_aes = _normalize_builder_aes(builder._aes, outline, static_params.get("wash_config"))
+    # Merge aes: Map(aes=...) is layered over output_map(aes=...) and the result is
+    # resolved once through the same wash, so user entries always outrank the
+    # wash's defaults (JS looks up type defaults before __all).
+    static_aes = static_params.get("resolved_aes")  # ByGroup resolved by output_map()
     merged_aes: Any = None
 
-    if static_aes is not None and builder_aes is not None:
-        # Both exist: merge (builder keys take precedence)
-        merged_aes = _merge_bygroup(static_aes, builder_aes)
-    elif builder_aes is not None:
-        merged_aes = builder_aes
-    elif static_aes is not None:
+    if builder._aes is None:
         merged_aes = static_aes
+    else:
+        combined = layer_user_aes(static_params.get("user_aes"), builder._aes)
+        if outline is not None:
+            wash_config = static_params.get("wash_config")
+            if wash_config is None:
+                from ..ui._ui import _default_wash
+
+                wash_config = _default_wash.config
+            merged_aes = wash_config.apply(combined, outline)
+        else:
+            merged_aes = combined
 
     # Build aes payload dict
     aes_dict = None

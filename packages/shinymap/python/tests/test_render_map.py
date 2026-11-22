@@ -155,3 +155,105 @@ class TestWashApplyAllOverridesTypeDefault:
 
         assert resolved["__shape"].base.fill_color == default_fill
         assert resolved["__line"].base.stroke_color == "#ff0000"
+
+
+class TestMapAesLayering:
+    """Map(aes=...) is layered over output_map(aes=...) and resolved through one wash."""
+
+    OUTLINE_DICT = {"a": "M0 0 L10 0 L10 10 Z", "b": "M20 0 L30 0 L30 10 Z"}
+
+    def _payload(self, output_map_fn, map_aes, outline_in_output_map: bool = True):
+        from shinymap import Map
+        from shinymap.outline import Outline
+        from shinymap.uicore._render_map import _build_payload
+
+        outline = Outline.from_dict(self.OUTLINE_DICT)
+        test_id = "_test_map_aes_layering"
+        if outline_in_output_map:
+            output_map_fn(test_id, outline)
+            builder = Map(aes=map_aes)
+        else:
+            output_map_fn(test_id)
+            builder = Map(outline, aes=map_aes)
+        static = _static_map_params.pop(test_id, {})
+        return _build_payload(builder, static)["aes"]
+
+    @pytest.mark.unit
+    def test_bygroup_all_reaches_type_entry(self):
+        from shinymap import aes
+
+        payload = self._payload(output_map, aes.ByGroup(__all=aes.Shape(fill_color="#ff0000")))
+
+        assert payload["__shape"]["base"]["fill_color"] == "#ff0000"
+
+    @pytest.mark.unit
+    def test_output_map_fields_survive_map_aes(self):
+        from functools import partial
+
+        from shinymap import aes
+
+        om = partial(output_map, aes=aes.Shape(stroke_width=3))
+        payload = self._payload(om, aes.Shape(fill_color="#ff0000"))
+
+        assert payload["__shape"]["base"]["fill_color"] == "#ff0000"
+        assert payload["__shape"]["base"]["stroke_width"] == 3
+
+    @pytest.mark.unit
+    def test_output_map_hover_none_survives_map_aes(self):
+        from functools import partial
+
+        from shinymap import aes
+
+        om = partial(output_map, aes=aes.ByState(hover=None))
+        payload = self._payload(om, aes.Shape(fill_color="#ff0000"))
+
+        assert payload["__shape"]["hover"] is None
+
+    @pytest.mark.unit
+    @pytest.mark.parametrize("outline_in_output_map", [True, False])
+    def test_custom_wash_is_used(self, outline_in_output_map):
+        from shinymap import Wash, aes
+
+        wc = Wash(shape=aes.Shape(fill_color="#111111"))
+        payload = self._payload(
+            wc.output_map, aes.Shape(stroke_width=2), outline_in_output_map=outline_in_output_map
+        )
+
+        assert payload["__shape"]["base"]["fill_color"] == "#111111"
+        assert payload["__shape"]["base"]["stroke_width"] == 2
+
+    @pytest.mark.unit
+    def test_select_only_bystate_keeps_base_default(self):
+        from shinymap import aes
+        from shinymap.ui._ui import _default_wash
+
+        payload = self._payload(output_map, aes.ByState(select=aes.Shape(fill_color="#ff0000")))
+        default_fill = _default_wash.config.shape.base.fill_color
+
+        assert payload["__shape"]["select"]["fill_color"] == "#ff0000"
+        assert payload["__shape"]["base"]["fill_color"] == default_fill
+
+
+class TestElementKind:
+    @pytest.mark.unit
+    def test_kinds(self):
+        from shinymap import aes
+        from shinymap.uicore._wash import element_kind
+
+        assert element_kind(aes.Shape()) == "shape"
+        assert element_kind(aes.Line()) == "line"
+        assert element_kind(aes.Text()) == "text"
+        assert element_kind(aes.Path()) == "shape"
+        assert element_kind(aes.Path(kind="line")) == "line"
+        assert element_kind(aes.ByState(hover=aes.Line())) == "line"
+
+    @pytest.mark.unit
+    def test_text_aes_reaches_text_entry(self):
+        from shinymap import aes
+        from shinymap.outline import Outline
+        from shinymap.ui._ui import _default_wash
+
+        outline = Outline.from_dict({"a": "M0 0 L10 0 L10 10 Z"})
+        resolved = _default_wash.config.apply(aes.Text(fill_color="#ff0000"), outline)
+
+        assert resolved["__text"].base.fill_color == "#ff0000"

@@ -37,6 +37,7 @@ def _output_map(
     class_: str | None,
     style: MutableMapping[str, str] | None,
     wash_config: Any = None,
+    user_aes: Any = None,
 ) -> TagList:
     """Create an output map container.
 
@@ -55,8 +56,9 @@ def _output_map(
         height: Container height (CSS).
         class_: Additional CSS classes.
         style: Additional inline styles.
-        wash_config: WashConfig that resolved ``resolved_aes``; @render_map uses it to
-            resolve Map(aes=...) consistently.
+        wash_config: WashConfig that resolved ``resolved_aes``.
+        user_aes: The unresolved aes given to output_map(). @render_map layers
+            Map(aes=...) over it and resolves the result with ``wash_config``.
 
     Returns:
         TagList with the output container.
@@ -85,6 +87,7 @@ def _output_map(
                 "resolved_aes": resolved_aes,
                 "click_input_id": click_input_id,
                 "wash_config": wash_config,
+                "user_aes": user_aes,
             }
         )
     elif view_box is not None:
@@ -96,8 +99,13 @@ def _output_map(
                 "mode": mode,
                 "click_input_id": click_input_id,
                 "wash_config": wash_config,
+                "user_aes": user_aes,
             }
         )
+
+    else:
+        # Still record the wash so Map(aes=...) resolves against the right one
+        static_params = _strip_none({"wash_config": wash_config, "user_aes": user_aes})
 
     if static_params:
         _static_map_params[resolved] = static_params
