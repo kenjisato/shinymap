@@ -22235,6 +22235,18 @@ var shinymap = (() => {
         );
       });
     };
+    const stateAesFor = (id) => {
+      if (isV03Format && aesPayload) {
+        const byState = getAesForRegion(id, getElementType(id), aesPayload);
+        return {
+          base: byState?.base,
+          select: byState?.select,
+          hover: byState && "hover" in byState ? byState.hover : aesHover
+        };
+      }
+      const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
+      return { base: { ...aesBase, ...groupAes ?? {} }, select: aesSelect, hover: aesHover };
+    };
     return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(
       "svg",
       {
@@ -22326,16 +22338,14 @@ var shinymap = (() => {
             );
           }) }),
           /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("g", { children: renderNonInteractiveLayer(layerAssignment.overlay, "overlay") }),
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("g", { children: !aesIndexed && aesSelect && Array.from(selected).flatMap((id) => {
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("g", { children: !aesIndexed && Array.from(selected).flatMap((id) => {
             if (!layerAssignment.base.has(id)) return [];
             const elements = normalizedRegions[id];
             if (!elements) return [];
             const count = counts[id] ?? 0;
-            let baseAes = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
-            const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
-            if (groupAes) {
-              baseAes = { ...baseAes, ...groupAes };
-            }
+            const regionAes = stateAesFor(id);
+            if (!regionAes.select) return [];
+            let baseAes = { ...DEFAULT_AESTHETIC_VALUES, ...regionAes.base };
             if (normalizedFillColor && normalizedFillColor[id]) {
               baseAes.fillColor = normalizedFillColor[id];
             }
@@ -22353,7 +22363,7 @@ var shinymap = (() => {
               }
             }
             const baseRegion = createRenderedRegion(id, baseAes);
-            const selectAes = { ...aesSelect };
+            const selectAes = { ...regionAes.select };
             const selectRegion = createRenderedRegion(id, selectAes, baseRegion);
             return elements.map(
               (element, index) => renderElement({
@@ -22369,13 +22379,11 @@ var shinymap = (() => {
               })
             );
           }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("g", { children: hovered && aesHover !== null && layerAssignment.base.has(hovered) && (() => {
-            const effectiveHover = aesHover ?? DEFAULT_HOVER_AESTHETIC;
-            let baseAes = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
-            const groupAes = resolveGroupAesthetic(hovered, aesGroup, outlineMetadata);
-            if (groupAes) {
-              baseAes = { ...baseAes, ...groupAes };
-            }
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("g", { children: hovered && layerAssignment.base.has(hovered) && (() => {
+            const regionAes = stateAesFor(hovered);
+            if (regionAes.hover === null) return null;
+            const effectiveHover = regionAes.hover ?? DEFAULT_HOVER_AESTHETIC;
+            let baseAes = { ...DEFAULT_AESTHETIC_VALUES, ...regionAes.base };
             const count = counts[hovered] ?? 0;
             const indexedData = getIndexedDataForRegion(aesIndexed, hovered, outlineMetadata);
             if (indexedData) {
@@ -22408,8 +22416,8 @@ var shinymap = (() => {
             }
             const baseRegion = createRenderedRegion(hovered, baseAes);
             let parentRegion = baseRegion;
-            if (!aesIndexed && selected.has(hovered) && aesSelect) {
-              parentRegion = createRenderedRegion(hovered, aesSelect, baseRegion);
+            if (!aesIndexed && selected.has(hovered) && regionAes.select) {
+              parentRegion = createRenderedRegion(hovered, regionAes.select, baseRegion);
             }
             const hoverRegion = createRenderedRegion(hovered, effectiveHover, parentRegion);
             return normalizedRegions[hovered]?.map(
@@ -22545,6 +22553,18 @@ var shinymap = (() => {
         );
       });
     };
+    const stateAesFor = (id) => {
+      if (isV03Format && aesPayload) {
+        const byState = getAesForRegion(id, getElementType(id), aesPayload);
+        return {
+          base: byState?.base,
+          select: byState?.select,
+          hover: byState && "hover" in byState ? byState.hover : aesHover
+        };
+      }
+      const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
+      return { base: { ...aesBase, ...groupAes ?? {} }, select: aesSelect, hover: aesHover };
+    };
     return /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(
       "svg",
       {
@@ -22596,8 +22616,9 @@ var shinymap = (() => {
               ...normalizedStrokeColor?.[id] ? { strokeColor: normalizedStrokeColor[id] } : {},
               ...normalizedFillOpacity?.[id] !== void 0 ? { fillOpacity: normalizedFillOpacity[id] } : {}
             };
-            if (isActive && aesSelect) {
-              baseAes = { ...baseAes, ...aesSelect };
+            const regionSelect = stateAesFor(id).select;
+            if (isActive && regionSelect) {
+              baseAes = { ...baseAes, ...regionSelect };
             } else if (!isActive && aesNotSelect) {
               baseAes = { ...baseAes, ...aesNotSelect };
             }
@@ -22644,21 +22665,19 @@ var shinymap = (() => {
             );
           }) }),
           /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("g", { children: renderNonInteractiveLayer(layerAssignment.overlay, "overlay") }),
-          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("g", { children: aesSelect && Array.from(activeSet).flatMap((id) => {
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("g", { children: Array.from(activeSet).flatMap((id) => {
             if (!layerAssignment.base.has(id)) return [];
             const elements = normalizedRegions[id];
             if (!elements) return [];
             const count = countMap[id] ?? 0;
+            const regionAes = stateAesFor(id);
+            if (!regionAes.select) return [];
             let baseAes = {
               ...DEFAULT_AESTHETIC_VALUES,
-              ...aesBase
+              ...regionAes.base
             };
-            if (aesBaseFillColorDict?.[id]) {
+            if (!isV03Format && aesBaseFillColorDict?.[id]) {
               baseAes = { ...baseAes, fillColor: aesBaseFillColorDict[id] };
-            }
-            const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
-            if (groupAes) {
-              baseAes = { ...baseAes, ...groupAes };
             }
             baseAes = {
               ...baseAes,
@@ -22668,10 +22687,7 @@ var shinymap = (() => {
               ...normalizedFillOpacity?.[id] !== void 0 ? { fillOpacity: normalizedFillOpacity[id] } : {}
             };
             const baseRegion = createRenderedRegion(id, baseAes);
-            let selectAes = {};
-            if (aesSelect) {
-              selectAes = { ...aesSelect };
-            }
+            let selectAes = { ...regionAes.select };
             if (resolveAesthetic) {
               const overrides = resolveAesthetic({
                 id,
@@ -22697,15 +22713,13 @@ var shinymap = (() => {
               })
             );
           }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("g", { children: hovered && aesHover !== null && layerAssignment.base.has(hovered) && (() => {
-            const effectiveHover = aesHover ?? DEFAULT_HOVER_AESTHETIC;
-            let baseAes = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
-            if (aesBaseFillColorDict?.[hovered]) {
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("g", { children: hovered && layerAssignment.base.has(hovered) && (() => {
+            const regionAes = stateAesFor(hovered);
+            if (regionAes.hover === null) return null;
+            const effectiveHover = regionAes.hover ?? DEFAULT_HOVER_AESTHETIC;
+            let baseAes = { ...DEFAULT_AESTHETIC_VALUES, ...regionAes.base };
+            if (!isV03Format && aesBaseFillColorDict?.[hovered]) {
               baseAes = { ...baseAes, fillColor: aesBaseFillColorDict[hovered] };
-            }
-            const groupAes = resolveGroupAesthetic(hovered, aesGroup, outlineMetadata);
-            if (groupAes) {
-              baseAes = { ...baseAes, ...groupAes };
             }
             baseAes = {
               ...baseAes,
@@ -22716,8 +22730,8 @@ var shinymap = (() => {
             };
             const baseRegion = createRenderedRegion(hovered, baseAes);
             let parentRegion = baseRegion;
-            if (activeSet.has(hovered) && aesSelect) {
-              parentRegion = createRenderedRegion(hovered, aesSelect, baseRegion);
+            if (activeSet.has(hovered) && regionAes.select) {
+              parentRegion = createRenderedRegion(hovered, regionAes.select, baseRegion);
             }
             const hoverRegion = createRenderedRegion(hovered, effectiveHover, parentRegion);
             return normalizedRegions[hovered]?.map(

@@ -225,6 +225,24 @@ export function InputMap(props: InputMapProps) {
     });
   };
 
+  // Per-region base/select/hover looks. v0.3 payloads resolve region → group →
+  // type (__shape/__line/__text) → __all, the same lookup as the base layer;
+  // legacy configs use the global looks plus group overrides.
+  const stateAesFor = (
+    id: RegionId
+  ): { base?: AestheticStyle; select?: AestheticStyle | null; hover?: AestheticStyle | null } => {
+    if (isV03Format && aesPayload) {
+      const byState = getAesForRegion(id, getElementType(id), aesPayload);
+      return {
+        base: byState?.base,
+        select: byState?.select,
+        hover: byState && "hover" in byState ? byState.hover : aesHover,
+      };
+    }
+    const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
+    return { base: { ...aesBase, ...(groupAes ?? {}) }, select: aesSelect, hover: aesHover };
+  };
+
   return (
     <svg
       role="img"
@@ -355,7 +373,6 @@ export function InputMap(props: InputMapProps) {
       {/* Also skip when no aesSelect is defined - resolveAesthetic handles styling in base layer */}
       <g>
         {!aesIndexed &&
-          aesSelect &&
           Array.from(selected).flatMap((id) => {
             // Only render selection overlay for regions in base layer
             if (!layerAssignment.base.has(id)) return [];
@@ -364,13 +381,11 @@ export function InputMap(props: InputMapProps) {
             if (!elements) return [];
 
             const count = counts[id] ?? 0;
+            const regionAes = stateAesFor(id);
+            if (!regionAes.select) return [];
 
             // Build base aesthetic
-            let baseAes: AestheticStyle = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
-            const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
-            if (groupAes) {
-              baseAes = { ...baseAes, ...groupAes };
-            }
+            let baseAes: AestheticStyle = { ...DEFAULT_AESTHETIC_VALUES, ...regionAes.base };
             if (normalizedFillColor && normalizedFillColor[id]) {
               baseAes.fillColor = normalizedFillColor[id];
             }
@@ -394,7 +409,7 @@ export function InputMap(props: InputMapProps) {
             const baseRegion = createRenderedRegion(id, baseAes);
 
             // Build selection aesthetic on top of base
-            const selectAes: AestheticStyle = { ...aesSelect };
+            const selectAes: AestheticStyle = { ...regionAes.select };
 
             // Create selection RenderedRegion with base as parent
             const selectRegion = createRenderedRegion(id, selectAes, baseRegion);
@@ -419,19 +434,16 @@ export function InputMap(props: InputMapProps) {
       {/* aesHover: undefined = default, null = disabled, object = custom */}
       <g>
         {hovered &&
-          aesHover !== null &&
           layerAssignment.base.has(hovered) &&
           (() => {
+            const regionAes = stateAesFor(hovered);
+            if (regionAes.hover === null) return null;
             // Determine effective hover aesthetic
-            const effectiveHover = aesHover ?? DEFAULT_HOVER_AESTHETIC;
+            const effectiveHover = regionAes.hover ?? DEFAULT_HOVER_AESTHETIC;
 
             // Build the parent chain for the hovered region
             // Step 1: Create base RenderedRegion
-            let baseAes: AestheticStyle = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
-            const groupAes = resolveGroupAesthetic(hovered, aesGroup, outlineMetadata);
-            if (groupAes) {
-              baseAes = { ...baseAes, ...groupAes };
-            }
+            let baseAes: AestheticStyle = { ...DEFAULT_AESTHETIC_VALUES, ...regionAes.base };
 
             // Apply indexed aesthetic if available (for Cycle/Count modes)
             const count = counts[hovered] ?? 0;
@@ -479,8 +491,8 @@ export function InputMap(props: InputMapProps) {
 
             // Step 2: If selected and not using indexed aesthetics, create selection RenderedRegion
             let parentRegion: RenderedRegion = baseRegion;
-            if (!aesIndexed && selected.has(hovered) && aesSelect) {
-              parentRegion = createRenderedRegion(hovered, aesSelect, baseRegion);
+            if (!aesIndexed && selected.has(hovered) && regionAes.select) {
+              parentRegion = createRenderedRegion(hovered, regionAes.select, baseRegion);
             }
 
             // Step 3: Create hover RenderedRegion with parent chain

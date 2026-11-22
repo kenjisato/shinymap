@@ -73,8 +73,7 @@ When several entries apply to a region, the most specific one wins:
 
 **region ID** › **group** › **type** (`__shape`, `__line`, `__text`) › **everything** (`__all`)
 
-This order applies to the base and selected looks. The hover look currently comes
-from `__all` only.
+The same order applies to each state: base, select and hover.
 
 A single aesthetic passed to `aes=` counts as `__all` for the element type it is
 written for. Each picture below adds one more specific entry:
