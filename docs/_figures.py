@@ -23,15 +23,19 @@ def hex_grid(cols: int, rows: int, r: float = 10.0) -> Outline:
             cx = w * (col + 0.5 * (row % 2)) + w / 2 + 1
             cy = 1.5 * r * row + r + 1
             pts = [
-                (cx + r * math.cos(math.radians(30 + 60 * k)),
-                 cy + r * math.sin(math.radians(30 + 60 * k)))
+                (
+                    cx + r * math.cos(math.radians(30 + 60 * k)),
+                    cy + r * math.sin(math.radians(30 + 60 * k)),
+                )
                 for k in range(6)
             ]
             d = "M" + " L".join(f"{x:.2f} {y:.2f}" for x, y in pts) + " Z"
             regions[f"r{row * cols + col}"] = [d]
     width = w * (cols + 0.5) + 2
     height = 1.5 * r * (rows - 1) + 2 * r + 2
-    return Outline.from_dict({**regions, "_metadata": {"viewBox": f"0 0 {width:.1f} {height:.1f}"}})
+    return Outline.from_dict(
+        {**regions, "_metadata": {"viewBox": f"0 0 {width:.1f} {height:.1f}"}}
+    )
 
 
 OUTLINE = hex_grid(cols=5, rows=4)
@@ -40,7 +44,9 @@ IDS = list(OUTLINE.regions)
 WASH = Wash(
     shape=aes.ByState(
         base=aes.Shape(fill_color="#e2e8f0", stroke_color="#ffffff", stroke_width=1.5),
-        select=aes.Shape(fill_color="#3b82f6", stroke_color="#1e40af", stroke_width=1.5),
+        select=aes.Shape(
+            fill_color="#3b82f6", stroke_color="#1e40af", stroke_width=1.5
+        ),
         hover=aes.Shape(stroke_color="#0f172a", stroke_width=2.5),
     )
 )
@@ -67,7 +73,10 @@ def main() -> None:
     # output_map: a choropleth from counts
     counts = {rid: (i * 7) % 6 for i, rid in enumerate(IDS)}
     fills = scale_sequential(counts, IDS, max_count=5)
-    save("choropleth", aes=aes.ByGroup(**{rid: aes.Shape(fill_color=c) for rid, c in fills.items()}))
+    save(
+        "choropleth",
+        aes=aes.ByGroup(**{rid: aes.Shape(fill_color=c) for rid, c in fills.items()}),
+    )
 
 
 if __name__ == "__main__":
