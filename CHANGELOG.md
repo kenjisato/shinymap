@@ -7,20 +7,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Planned as 0.4.0: the breaking changes below follow from fixes, not redesigns.
+
+### Breaking changes
+
+- **Plural layer keys raise `ValueError`** (`overlays`, `underlays`, `annotations`) in an
+  outline's `_metadata`, `Outline.merge_layers()` and `Map(layers=)`; the message names
+  the singular key. In 0.3.0 they were silently ignored, which turned overlay regions
+  into clickable main regions (#52).
+- `Map().with_value()` validates its values like `Map(value=)` and `input_map(value=)`:
+  floats, strings and negative values raise (#58).
+- `import shinymap.geometry` raises the migration `ImportError` on import, not only on
+  attribute access (#58).
+
 ### Added
 
+- `aes.color.scale_continuous(values, region_ids, vmin=..., vmax=...)` colors data
+  values such as populations or ratios: it takes floats, clamps to `vmin`/`vmax`, and
+  gives regions without a value a neutral gray. `scale_sequential` stays the scale for
+  counts (#63).
+- `Map(fill_color={region_id: color})` and `MapBuilder.with_fill_color()` color regions
+  by value, e.g. with a color scale's output, layered over `aes=` (#64).
+- `shinymap.default_wash`: the library's default look as a `Wash`; `input_map`,
+  `output_map` and `render_map` are its methods (#62).
 - `Wash.build(..., mode=...)` and `StillLife` render indexed aesthetics (`Cycle` / `Count` /
   `Display` with `aes.Indexed`, also per group via `aes.ByGroup`) the same way the
   browser does: Cycle wraps, other modes clamp to the last entry, and indexed modes draw
-  no selection layer.
-- `StillLife.to_svg()` draws the annotation layer on top of hover.
+  no selection layer (#50).
+- `StillLife.to_svg()` draws the annotation layer on top of hover (#50).
+- Documentation: Modes, Aesthetics and Layers pages; the figures on the site are drawn
+  by shinymap when the site is built (#47, #48).
+
+### Changed
+
+- The JavaScript bundle is React's production build, minified: `shinymap.global.js`
+  goes from 1.17 MB to 211 KB (#59).
 
 ### Fixed
 
+- `Single(allow_deselect=False)` is honoured: clicking the selected region keeps it
+  selected (#27, #61).
+- `Count(max_count=...)` caps the indexed aesthetic, in the browser and in `StillLife`;
+  before, it had no effect (#53).
+- The selection and hover overlays use each region's own `select` / `hover` looks, and a
+  region's `hover=None` turns its hover off; before, they used the `__all` looks (#57).
+- `output_map(..., mode=Display(clickable=True))` without an outline keeps its mode and
+  click input when `@render_map` supplies the outline (#56).
+- Values accept numpy integers and bools (converted to `int`), so values built from a
+  pandas DataFrame work (#58).
 - A click on an `input_map()` right after the page loads is no longer reset to the
-  initial value by the bridge's retry that waits for Shiny.
+  initial value by the bridge's retry that waits for Shiny (#51).
 - `StillLife.to_svg()` no longer draws annotation regions in the base layer, and draws
-  selection copies only for base-layer regions.
+  selection copies only for base-layer regions (#50).
+- The sdist no longer includes `examples/data/scripts/README.md` (#58).
 
 ## [0.3.0] - 2026-11-22
 

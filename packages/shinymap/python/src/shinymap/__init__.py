@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-__version__ = "0.3.1-dev"
+__version__ = "0.4.0-dev"
 
 from . import aes, outline, svg, types, ui, utils
 from ._map import Map
