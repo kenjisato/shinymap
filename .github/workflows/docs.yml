@@ -12,11 +12,11 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
+# GitHub Pages serves the gh-pages branch: main at the root, dev under /dev/.
+# One group for both refs so their pushes to gh-pages never race.
 concurrency:
-  group: "pages-${{ github.ref_name }}"
+  group: pages
   cancel-in-progress: false
 
 jobs:
@@ -68,18 +68,42 @@ jobs:
         with:
           path: docs/_site
 
-  # Deploy main branch to root of GitHub Pages
+  # Deploy main branch to the root of gh-pages, keeping dev/
   deploy-release:
     if: github.ref_name == 'main'
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: build
+    permissions:
+      contents: write
     steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 0
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: github-pages
+          path: artifact
+
+      - name: Extract and deploy to root
+        run: |
+          mkdir -p release-docs
+          tar -xf artifact/artifact.tar -C release-docs
+          rm -rf artifact
+
+          # Replace everything at the root except dev/ and .git
+          find . -mindepth 1 -maxdepth 1 ! -name .git ! -name dev ! -name release-docs -exec rm -rf {} +
+          cp -a release-docs/. .
+          rm -rf release-docs
+          touch .nojekyll
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --staged --quiet || git commit -m "Update release docs from ${{ github.sha }}"
+          git push
 
   # Deploy dev branch to /dev/ subdirectory
   deploy-dev:
