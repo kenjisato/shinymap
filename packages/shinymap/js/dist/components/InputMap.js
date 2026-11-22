@@ -53,6 +53,9 @@ export function InputMap(props) {
     const cycle = normalizedMode === null || normalizedMode === void 0 ? void 0 : normalizedMode.n;
     const maxSelection = normalizedMode === null || normalizedMode === void 0 ? void 0 : normalizedMode.maxSelection;
     const aesIndexed = normalizedMode === null || normalizedMode === void 0 ? void 0 : normalizedMode.aesIndexed;
+    // Count(max_count=k): counts above k use the same indexed aesthetic as k
+    const maxCount = modeType === "count" ? normalizedMode === null || normalizedMode === void 0 ? void 0 : normalizedMode.maxCount : undefined;
+    const indexCount = (count) => maxCount !== undefined ? Math.min(count, maxCount) : count;
     // Normalize regions to Element[] format (handles both v0.x strings and v1.x polymorphic elements)
     const normalizedRegions = useMemo(() => normalizeRegions(regions), [regions]);
     // New layer system: assign regions to layers
@@ -186,7 +189,7 @@ export function InputMap(props) {
                     // Apply indexed aesthetic if available (for Cycle/Count modes)
                     const indexedData = getIndexedDataForRegion(aesIndexed, id, outlineMetadata);
                     if (indexedData) {
-                        const indexedAes = resolveIndexedAesthetic(indexedData, count, cycle);
+                        const indexedAes = resolveIndexedAesthetic(indexedData, indexCount(count), cycle);
                         // Merge indexed aesthetic - only override properties that are defined
                         baseAes = {
                             ...baseAes,
@@ -324,7 +327,7 @@ export function InputMap(props) {
                         const count = (_a = counts[hovered]) !== null && _a !== void 0 ? _a : 0;
                         const indexedData = getIndexedDataForRegion(aesIndexed, hovered, outlineMetadata);
                         if (indexedData) {
-                            const indexedAes = resolveIndexedAesthetic(indexedData, count, cycle);
+                            const indexedAes = resolveIndexedAesthetic(indexedData, indexCount(count), cycle);
                             baseAes = {
                                 ...baseAes,
                                 ...(indexedAes.fillColor !== undefined ? { fillColor: indexedAes.fillColor } : {}),

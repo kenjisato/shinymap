@@ -815,3 +815,19 @@ class TestStillLifeAnnotation:
         assert svg_str.count('r="5"') == 1
         # The annotation comes after the hover copy of "region"
         assert svg_str.rindex('r="30"') < svg_str.index('r="5"')
+
+
+class TestStillLifeCountMaxCount:
+    @pytest.mark.unit
+    def test_max_count_caps_the_index(self):
+        from shinymap.mode import Count
+
+        palette = ["#000000", "#111111", "#222222", "#333333"]
+        outline = Outline.from_dict(
+            {"a": "M0 0 L10 0 L10 10 Z", "_metadata": {"viewBox": "0 0 10 10"}}
+        )
+        wc = Wash(shape=aes.Shape(fill_color="#ffffff"))
+        mode = Count(max_count=1, aes=aes.Indexed(fill_color=palette))
+        pic = StillLife(wc.build(outline, mode=mode, value={"a": 5}))
+
+        assert pic.aes("a")["fill_color"] == palette[1]

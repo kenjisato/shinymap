@@ -92,6 +92,10 @@ export function InputMap(props: InputMapProps) {
   const cycle = normalizedMode?.n;
   const maxSelection = normalizedMode?.maxSelection;
   const aesIndexed = normalizedMode?.aesIndexed;
+  // Count(max_count=k): counts above k use the same indexed aesthetic as k
+  const maxCount = modeType === "count" ? normalizedMode?.maxCount : undefined;
+  const indexCount = (count: number): number =>
+    maxCount !== undefined ? Math.min(count, maxCount) : count;
 
   // Normalize regions to Element[] format (handles both v0.x strings and v1.x polymorphic elements)
   const normalizedRegions = useMemo(() => normalizeRegions(regions), [regions]);
@@ -263,7 +267,7 @@ export function InputMap(props: InputMapProps) {
           // Apply indexed aesthetic if available (for Cycle/Count modes)
           const indexedData = getIndexedDataForRegion(aesIndexed, id, outlineMetadata);
           if (indexedData) {
-            const indexedAes = resolveIndexedAesthetic(indexedData, count, cycle);
+            const indexedAes = resolveIndexedAesthetic(indexedData, indexCount(count), cycle);
             // Merge indexed aesthetic - only override properties that are defined
             baseAes = {
               ...baseAes,
@@ -433,7 +437,7 @@ export function InputMap(props: InputMapProps) {
             const count = counts[hovered] ?? 0;
             const indexedData = getIndexedDataForRegion(aesIndexed, hovered, outlineMetadata);
             if (indexedData) {
-              const indexedAes = resolveIndexedAesthetic(indexedData, count, cycle);
+              const indexedAes = resolveIndexedAesthetic(indexedData, indexCount(count), cycle);
               baseAes = {
                 ...baseAes,
                 ...(indexedAes.fillColor !== undefined ? { fillColor: indexedAes.fillColor } : {}),

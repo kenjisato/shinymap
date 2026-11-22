@@ -86,6 +86,7 @@ input_map(
 ::: {}
 Each click adds one, without a cap. The color stops at the last entry of
 `aes.Indexed`, so with six colors every count of 5 or more shares the darkest one.
+`Count(max_count=k)` stops it earlier, at entry `k`.
 
 `input.votes()` → `{"r6": 3, "r7": 5, ...}`
 :::
