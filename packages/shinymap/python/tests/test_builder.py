@@ -207,3 +207,41 @@ class TestValueValidation:
         # Should not raise
         builder = Map(geo, value=None)
         assert builder._value is None
+
+
+class TestValueCoercion:
+    """Integer-like values (e.g. numpy ints from pandas) are accepted as plain ints."""
+
+    @pytest.mark.unit
+    def test_numpy_ints_are_coerced(self):
+        import json
+
+        np = pytest.importorskip("numpy")
+
+        geo = Outline.from_dict({"a": ["M0 0"], "b": ["M10 10"]})
+        builder = Map(geo, value={"a": np.int64(3), "b": np.int32(0)})
+
+        assert builder._value == {"a": 3, "b": 0}
+        assert all(type(v) is int for v in builder._value.values())
+        json.dumps(builder._value)  # serializable for the payload
+
+    @pytest.mark.unit
+    def test_with_value_is_validated(self):
+        with pytest.raises(ValueError, match=r"value\['a'\] must be non-negative"):
+            Map().with_value({"a": -1})
+
+    @pytest.mark.unit
+    def test_with_value_coerces(self):
+        np = pytest.importorskip("numpy")
+
+        assert Map().with_value({"a": np.int64(2)})._value == {"a": 2}
+
+    @pytest.mark.unit
+    def test_bools_become_0_and_1(self):
+        assert Map().with_value({"a": True, "b": False})._value == {"a": 1, "b": 0}
+
+    @pytest.mark.unit
+    @pytest.mark.parametrize("bad", [0.5, "1", None])
+    def test_non_integers_rejected(self, bad):
+        with pytest.raises(ValueError, match="must be an integer"):
+            Map().with_value({"a": bad})

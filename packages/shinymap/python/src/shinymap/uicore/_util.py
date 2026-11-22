@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import numbers
 from collections.abc import Mapping, MutableMapping
 from typing import Any
 
@@ -71,26 +72,36 @@ def _strip_none(data: dict[str, Any]) -> dict[str, Any]:
 
 
 def _validate_value(
-    value: Mapping[str, int] | None,
+    value: Mapping[str, Any] | None,
     param_name: str = "value",
-) -> None:
-    """Validate that a value map contains only non-negative integers.
+) -> dict[str, int] | None:
+    """Check a value map and return it with plain ``int`` values.
+
+    Accepts any integer-like value (``numbers.Integral``: ``int``, ``bool``,
+    numpy integers from pandas, ...) and converts it to ``int`` so the payload
+    is JSON-serializable. Rejects non-integers and negative values.
 
     Args:
         value: The value map to validate (or None)
         param_name: Name of the parameter for error messages
 
+    Returns:
+        A new dict with ``int`` values, or None.
+
     Raises:
         ValueError: If any value is negative or not an integer
     """
     if value is None:
-        return
+        return None
 
+    result: dict[str, int] = {}
     for region_id, count in value.items():
-        if not isinstance(count, int):
+        if not isinstance(count, numbers.Integral):
             raise ValueError(
                 f"{param_name}[{region_id!r}] must be an integer, "
                 f"got {type(count).__name__}: {count!r}"
             )
         if count < 0:
             raise ValueError(f"{param_name}[{region_id!r}] must be non-negative, got {count}")
+        result[region_id] = int(count)
+    return result

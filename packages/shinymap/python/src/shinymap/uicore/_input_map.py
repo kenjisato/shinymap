@@ -64,7 +64,7 @@ def _input_map(
         TagList containing the input component.
     """
     # Validate initial value (must be non-negative integers)
-    _validate_value(value, "value")
+    value = _validate_value(value, "value")
 
     # Merge layers into outline metadata
     outline = outline.merge_layers(layers)
