@@ -230,12 +230,45 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ss">f"Selected: </span><span class="sc">{</span><span class="bu">input</span><span class="sc">.</span>selection()<span class="sc">}</span><span class="ss">"</span></span>
 <span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>app <span class="op">=</span> App(app_ui, server)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Run it with <code>shiny run app.py</code>. The three squares are the regions; the map works like a set of radio buttons:</p>
+<div class="quarto-layout-panel" data-layout-ncol="3">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/generated/gs-before.svg" class="img-fluid figure-img" style="width:100.0%" alt="Three gray squares"></p>
+<figcaption>Start: nothing selected</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/generated/gs-hover.svg" class="img-fluid figure-img" style="width:100.0%" alt="The top-right square with a darker border"></p>
+<figcaption>Pointer over <code>region_b</code></figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/generated/gs-after.svg" class="img-fluid figure-img" style="width:100.0%" alt="The top-right square filled in light blue"></p>
+<figcaption>After clicking <code>region_b</code></figcaption>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<p>After the click, <code>input.selection()</code> is <code>"region_b"</code> and the text below the map reads “Selected: region_b”.</p>
 </section>
 <section id="next-steps" class="level2">
 <h2 class="anchored" data-anchor-id="next-steps">Next Steps</h2>
 <ul>
-<li>Selection modes (<code>Single</code>, <code>Multiple</code>, <code>Cycle</code>, <code>Count</code>) and aesthetics are documented in the <a href="../python/index.html">Python API reference</a></li>
+<li><a href="../vignettes/modes.html">Selection modes</a>: single, multiple, cycle and count, and what each returns</li>
+<li><a href="../vignettes/aesthetics.html">Aesthetics</a>: colors per state, per group and per region, and coloring by value</li>
+<li><a href="../vignettes/layers.html">Layers and lines</a>: backgrounds, borders and lines drawn above or below the regions</li>
 <li>Prepare your own SVG with <code>python -m shinymap.kit.sketch -f map.svg</code></li>
+<li>The <a href="../python/index.html">Python API reference</a> lists every function and class</li>
 <li>Runnable examples live in <a href="https://github.com/kenjisato/shinymap/tree/main/packages/shinymap/python/examples"><code>packages/shinymap/python/examples/</code></a></li>
 </ul>
 
