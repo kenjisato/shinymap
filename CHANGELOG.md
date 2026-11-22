@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Breaking changes
+
+- **`geometry` → `outline`**: `Geometry` is now `Outline`, `shinymap.geometry` is now
+  `shinymap.outline`, and the `geometry` parameter of `input_map()`, `output_map()` and
+  `export_svg()` is now `outline`.
+  Importing from `shinymap.geometry` raises an `ImportError` that names the replacement.
+- **SVG element classes moved to `shinymap.svg`** (`Circle`, `Path`, `Line`, ...).
+  Old import paths raise an `ImportError` with migration instructions.
+- **Layer keys are singular**: `overlay`, `underlay`, `hidden` (was `overlays`,
+  `underlays`) in metadata and `layers=`. `Outline` accessors are `overlay_ids()`,
+  `underlay_ids()` and `hidden_ids()`.
+- **`Map(active=...)` removed**: selection is derived from `value > 0`.
+- Initial values passed to `Map()` / `input_map()` must be non-negative integers;
+  negative or float values now raise.
+
+### Added
+
+- `output_map(mode=Display(...))`: display mode with `clickable=True` to emit clicks
+  (optionally to a custom `input_id`) and `aes.Indexed` for value-to-color mapping.
+- `input_map(raw=True)` returns the `dict[str, int]` value in every mode.
+- Annotation layer, rendered above hover and selection (#7).
+- `Outline.move_layer()` and `Outline.move_group()` for assigning layers and merging
+  regions fluently.
+- `StillLife` for inspecting resolved aesthetics outside a Shiny session, and
+  `StillLife.to_svg()` for static SVG export.
+- `shinymap.kit`: `python -m shinymap.kit.sketch` converts an SVG into an outline
+  (rename, groups, layers, and marking stroke-only paths as lines) and generates the
+  Python code to reproduce it; `python -m shinymap.kit.caption` writes a reference SVG
+  with region IDs overlaid.
+
+### Fixed
+
+- `input_map()` and `output_map()` work inside Shiny modules (ids are resolved
+  through the module namespace) (#8, #10).
+- `output_map()` without an `outline` no longer raises `AttributeError`.
+
 ## [0.2.2] - 2025-12-28
 
 ### Added
