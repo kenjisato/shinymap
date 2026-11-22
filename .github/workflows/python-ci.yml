@@ -23,6 +23,9 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
         python-version: ['3.12', '3.13']
+    env:
+      # Make every uv command use the matrix Python, not the newest available
+      UV_PYTHON: ${{ matrix.python-version }}
 
     steps:
       - uses: actions/checkout@v4
