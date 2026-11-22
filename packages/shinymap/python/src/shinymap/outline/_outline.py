@@ -14,6 +14,25 @@ if TYPE_CHECKING:
     from ..svg import Element
 
 
+_PLURAL_LAYER_KEYS = {"overlays": "overlay", "underlays": "underlay", "annotations": "annotation"}
+
+
+def reject_plural_layer_keys(mapping: Any, where: str) -> None:
+    """Raise if a layer mapping uses the plural keys from before 0.3.0.
+
+    They used to be accepted; silently ignoring them turns overlays into
+    clickable regions, so fail with the replacement instead.
+    """
+    if not isinstance(mapping, dict):
+        return
+    for plural, singular in _PLURAL_LAYER_KEYS.items():
+        if plural in mapping:
+            raise ValueError(
+                f"Layer keys are singular since shinymap 0.3.0: rename '{plural}' "
+                f"to '{singular}' in {where}."
+            )
+
+
 @dataclass
 class Outline:
     """Canonical outline representation with polymorphic elements.
@@ -53,6 +72,7 @@ class Outline:
         """Convert regions to Regions object if needed."""
         if not isinstance(self.regions, Regions):
             self.regions = Regions(self.regions)
+        reject_plural_layer_keys(self.metadata, "the outline's _metadata")
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Outline:
@@ -877,6 +897,7 @@ class Outline:
         """
         if layers is None:
             return self
+        reject_plural_layer_keys(layers, "layers=")
 
         new_metadata = dict(self.metadata)
 
