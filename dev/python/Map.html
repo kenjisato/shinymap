@@ -81,7 +81,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-f35a81a4717690815b2013502477d714.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-cb61c712ca1a7fe70a83faed8e4da2d7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -192,8 +192,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    tooltips<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    value<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    aes<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    layers<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    fill_color<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    layers<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Create map from Outline object.</p>
 <p>When used with output_map() that provides static outline, you can call Map() without arguments. Otherwise, provide an Outline object.</p>
 <section id="parameters" class="level2 doc-section doc-section-parameters">
@@ -201,7 +202,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <table class="caption-top table">
 <colgroup>
 <col style="width: 4%">
-<col style="width: 18%">
+<col style="width: 17%">
 <col style="width: 73%">
 <col style="width: 4%">
 </colgroup>
@@ -245,6 +246,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><code>None</code></td>
 </tr>
 <tr class="even">
+<td>fill_color</td>
+<td>Mapping[str, str] | None</td>
+<td>Mapping of region ID to fill color, e.g.&nbsp;from <code>aes.color.scale_sequential</code>. Layered over <code>aes</code>.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
 <td>layers</td>
 <td>Mapping[str, list[str] | None] | None</td>
 <td>Layer configuration (nested dict: underlay, overlay, hidden)</td>
@@ -264,6 +271,11 @@ output_map("my_map", OUTLINE, tooltips=TOOLTIPS)
 @render_map
 def my_map():
     return Map().with_value(counts)
+
+# Coloring by value
+@render_map
+def my_map():
+    return Map(fill_color=scale_continuous(rates, region_ids, vmin=0, vmax=100))
 </code></pre>
 <p>Returns: MapBuilder instance for method chaining</p>
 
