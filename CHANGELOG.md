@@ -18,7 +18,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Layer keys are singular**: `overlay`, `underlay`, `hidden` (was `overlays`,
   `underlays`) in metadata and `layers=`. `Outline` accessors are `overlay_ids()`,
   `underlay_ids()` and `hidden_ids()`.
-- **`Map(active=...)` removed**: selection is derived from `value > 0`.
+- **`Map(active=...)` removed**: selection is derived from `value > 0`. On the builder,
+  `with_active()` is removed and `with_geometry_metadata()` is now `with_outline_metadata()`.
+- `input_radio_buttons()` and `input_checkbox_group()` also take `outline` (was `geometry`).
+- **Top-level API reorganized**:
+  - `wash()` is now the class `Wash`; `configure_theme()` is removed (use `Wash`).
+  - `shinymap.color` and `shinymap.linestyle` moved to `shinymap.aes.color` and
+    `shinymap.aes.line`.
+  - `MapBuilder`, `MISSING`, `BaseAesthetic`, `WashConfig` and `WashResult` are no longer
+    exported from `shinymap`; import them from `shinymap.types`.
+  - The `DEFAULT_*_AESTHETIC` constants are removed; defaults come from `Wash`.
+- **SVG conversion moved**: `shinymap.geometry.convert` and the converter app are now in
+  `shinymap.kit` (`kit.convert`, `python -m shinymap.kit.sketch`); `from_svg` / `from_json`
+  are `Outline.from_svg()` / `Outline.from_json()`.
+- `Map(aes=...)` no longer accepts a raw dict; pass `aes` objects.
 - Initial values passed to `Map()` / `input_map()` must be non-negative integers;
   negative or float values now raise.
 
@@ -78,7 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Mode classes**: `Single`, `Multiple`, `Cycle`, `Count` classes replace string-based mode configuration
   - Each mode class accepts an optional `aes` parameter for customization
   - `Cycle(n=4, aes=aes.Indexed(fill_color=[...]))` for visual state cycling
-  - `Count(max=10, aes=aes.Indexed(fill_color=[...]))` for count visualization
+  - `Count(max_count=10, aes=aes.Indexed(fill_color=[...]))` for count visualization
 - **Layer system**: Support for underlays, overlays, and hidden layers in geometry
   - Automatic detection of layer types from region ID prefixes (`_underlay_`, `_overlay_`, `_hidden_`)
   - `path_as_line()` method to mark regions containing line paths for stroke-only rendering
