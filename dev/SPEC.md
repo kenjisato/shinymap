@@ -121,8 +121,18 @@ style = aes.Indexed(
 - `aes.Indexed()`: Array-indexed aesthetics for count/cycle modes
 - `linestyle.SOLID`, `linestyle.DASHED`, `linestyle.DOTTED`, `linestyle.DASH_DOT`: Line style constants
 
+**Precedence**: for each region and each state (base, select, hover), the most
+specific entry wins: region ID › group › type (`__shape`, `__line`, `__text`) › `__all`.
+- A single aesthetic or `ByState` passed as `aes=` (and `ByGroup(__all=...)`) counts as
+  `__all` and also as the type entry it is written for (`Shape`/`Path` → `__shape`,
+  `Line` → `__line`, `Text` → `__text`), so it overrides the wash's type default.
+- The JS base layer, the selection and hover overlays, and `StillLife` all use this
+  lookup. A region's own `select`/`hover` is used for its overlays, and its
+  `hover=None` turns its hover overlay off.
+- `aes=` takes aes objects only; a plain `dict` raises `TypeError`.
+
 **Hover implementation**:
-- Hover aesthetics defined in `aes.ByState(hover=...)` or via `aes_hover` parameter
+- Hover aesthetics come from `aes.ByState(hover=...)`, resolved per region (see Precedence)
 - Rendered as separate overlay layer on top of all regions (solves SVG z-index border visibility)
 - `pointer-events: none` ensures clicks pass through to base regions
 - Snake_case keys in Python automatically converted to camelCase for React
@@ -377,17 +387,18 @@ Provide built-in color scaling functions for common statistical visualization pa
 
 - **`scale_qualitative(categories, region_ids, palette=QUALITATIVE)`**: Maps categorical data to distinct colors, cycling through the palette if needed.
 
+Each scale returns `{region_id: color}`, which `Map(fill_color=...)` takes directly (see Static vs Dynamic Parameters).
+
 All utilities use the internal `lerp_hex()` helper for color interpolation. Pre-defined palettes (SEQUENTIAL_BLUE, SEQUENTIAL_GREEN, SEQUENTIAL_ORANGE, QUALITATIVE) are provided but customizable.
 
 ### Wash API (v0.2.0)
 
-The `wash()` function provides a factory pattern for creating themed map components with consistent aesthetics:
+`Wash()` creates themed map functions with consistent default aesthetics:
 
 ```python
-from shinymap import wash, aes
+from shinymap import Wash, aes
 
-# Create themed map factory
-w = wash(
+wc = Wash(
     shape=aes.ByState(
         base=aes.Shape(fill_color="#e2e8f0", stroke_color="#94a3b8"),
         hover=aes.Shape(stroke_color="#1e40af", stroke_width=2),
@@ -396,13 +407,17 @@ w = wash(
     line=aes.Line(stroke_color="#666", stroke_width=1),
 )
 
-# Use themed factory to create maps
-w.input_map("region", outline, mode="single")
-w.output_map("display", outline)
-
-# Access resolved aesthetics
-result = w.result  # WashResult with shape, line, text aesthetics
+wc.input_map("region", outline, mode="single")
+wc.output_map("display", outline)
+# wc.render_map decorates the server function; wc.build() feeds StillLife
 ```
+
+A `Wash` replaces the library defaults rather than extending them: a state it does
+not set (e.g. `select`) has no look, and a property it does not set falls back to a
+plain built-in value, not to the library default. The library defaults are themselves
+a wash, `shinymap.default_wash`: the top-level `input_map`, `output_map` and
+`render_map` are its methods, and `default_wash.build()` gives a static picture with
+the default look.
 
 **Benefits**:
 - Consistent styling across multiple map components
@@ -441,6 +456,12 @@ pic.to_svg(output="map.svg")        # Writes to file
 pic_hovered = StillLife(builder, hovered="region_a")
 pic_hovered.to_svg(output="map_hover.svg")
 ```
+
+`build(..., mode=...)` takes the mode the picture represents. With indexed aesthetics
+(`mode.aes` is one `aes.Indexed` or an `aes.ByGroup` of them), `StillLife` follows the JS
+components: Cycle uses `count % n`, other modes clamp to the last entry; looks apply as
+base → indexed value → hover; and no region gets the select look or a selection copy.
+`to_svg()` draws the layers in the JS order (see Render order).
 
 **Note**: `StillLife.to_svg()` applies shinymap's resolved aesthetics (selection, hover states). For SVG round-tripping that preserves original aesthetics, use `export_svg()` from `shinymap.outline` instead.
 
@@ -549,16 +570,16 @@ Regions can be assigned to non-interactive layers via Outline methods or the `la
 from shinymap import input_map, aes
 from shinymap.outline import Outline
 
-# Method 1: Use set_overlays() on Outline (currently implemented)
+# Method 1: Use set_overlays() on Outline
 outline = Outline.from_json("map.json").set_overlays(["_border", "_dividers"])
 
-# Method 2: Use merge_layers() for multiple layer types (currently implemented)
+# Method 2: Use merge_layers() for multiple layer types
 outline = outline.merge_layers({
-    "underlays": ["_grid"],
-    "overlays": ["_border"],
+    "underlay": ["_grid"],
+    "overlay": ["_border"],
 })
 
-# Method 3: Planned - move_layer() for fluent API (not yet implemented)
+# Method 3: move_layer() for a fluent API
 outline = (
     Outline.from_json("map.json")
     .move_layer("underlay", "_grid", "_background")
@@ -571,12 +592,17 @@ input_map(
     "map_id",
     outline,
     layers={
-        "underlays": ["grid_lines"],
-        "overlays": ["border_lines"],
+        "underlay": ["grid_lines"],
+        "overlay": ["border_lines"],
         "hidden": ["construction_guides"],
     },
 )
 ```
+
+Layer keys are singular: `underlay`, `overlay`, `annotation`, `hidden`. The pre-0.3
+plural keys (`underlays`, `overlays`, `annotations`) raise `ValueError` naming the
+singular key, wherever they appear: the outline's `_metadata`, `merge_layers()`,
+`layers=` on `Map()`. Silently ignoring them turned overlays into clickable regions.
 
 **Line regions** (v0.2.0):
 
@@ -590,12 +616,13 @@ outline = outline.path_as_line("_divider_lines", "_grid")
 # (fill="none", stroke applied from default line aesthetic)
 ```
 
-**Render order** (5 layers, bottom to top):
+**Render order** (6 layers, bottom to top; the same in JS and `StillLife.to_svg()`):
 1. **Underlay** - Background elements (grids, reference lines)
 2. **Base regions** - Interactive regions with click/hover handling
-3. **Overlay** - Non-interactive annotations (borders, labels)
-4. **Selection overlay** - Selected regions (border visibility)
-5. **Hover overlay** - Hovered region (always on top)
+3. **Overlay** - Non-interactive annotations (borders, dividers)
+4. **Selection overlay** - Selected base regions (border visibility); skipped with indexed aesthetics
+5. **Hover overlay** - Hovered region
+6. **Annotation** - Non-interactive, always on top, even above hover (labels)
 
 **Type-safe Aesthetic Builders**:
 
@@ -628,22 +655,13 @@ text_style = aes.Text(
 ```python
 @render_map
 def prefecture_map():
-    return (
-        MapSelection(
-            GEOMETRY,
-            selected=input.selected_prefectures(),
-            tooltips=TOOLTIPS,
-            view_box="0.0 0.0 1270.0 1524.0",
-        )
-        .with_fill_color("#e5e7eb")
-        .with_fill_color_selected("#3b82f6")
-    )
+    return Map().with_value({pid: 1 for pid in input.selected_prefectures()})
 
 # Static layer configuration in output_map (v0.2.0)
 output_map(
     "prefecture_map",
     GEOMETRY,
-    layers={"underlays": ["grid"], "overlays": ["dividers"]},
+    layers={"underlay": ["grid"], "overlay": ["dividers"]},
     aes=aes.ByGroup(
         grid=aes.Line(stroke_color="#eee", stroke_dasharray="5,5"),
         dividers=aes.Line(stroke_color="#999", stroke_width=2),
@@ -667,7 +685,7 @@ app_ui = ui.page_fluid(
         OUTLINE,                     # Static - defined once
         tooltips=TOOLTIPS,           # Static - defined once
         aes=aes.ByState(...),        # Static - defined once
-        layers={"overlays": [...]},  # Static - defined once
+        layers={"overlay": [...]},   # Static - defined once
     ),
 )
 
@@ -685,6 +703,24 @@ def my_map():
 4. **Consistent with Shiny patterns**: Similar to how `output_plot(width=, height=)` defines figure size in UI, not in render function
 
 Static parameters defined in `output_map()` are merged with dynamic parameters from `Map()` builders.
+
+**Layering `Map()` over `output_map()`**: `output_map()` records its unresolved `aes` and
+its wash. `@render_map` layers `Map(aes=...)` over that aes, state by state, then resolves
+the result through the wash once:
+- `base` inherits field by field
+- `select` / `hover` replace when given
+- an unset field keeps the lower value; `None` turns the state off
+
+`Map(fill_color={region_id: color})` and `MapBuilder.with_fill_color()` color regions
+by value, e.g. with a color scale's output. Each entry becomes
+`aes.Shape(fill_color=...)` for that region, layered over `aes=` the same way, so the
+region's other properties are kept:
+
+```python
+@render_map
+def my_map():
+    return Map(fill_color=scale_continuous(rates, region_ids, vmin=0, vmax=100))
+```
 
 ## Shiny for R (Future Work)
 
