@@ -122,6 +122,9 @@ class MapBuilder:
         Args:
             layers: Nested dict with keys 'underlay', 'overlay', 'hidden'
         """
+        from .outline._outline import reject_plural_layer_keys
+
+        reject_plural_layer_keys(layers, "layers=")
         self._layers = layers
         return self
 

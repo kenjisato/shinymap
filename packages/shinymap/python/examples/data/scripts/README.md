@@ -149,7 +149,7 @@ The generated JSON has this structure:
       "okinawa_scale": 1.4
     },
     "viewBox": "62.6 85.0 1323.4 1452.0",
-    "overlays": ["_divider_lines"]
+    "overlay": ["_divider_lines"]
   },
   "01": "M 892 467 C ...",  // Hokkaido (with merged Hopporyodo)
   "02": "M 880 546 C ...",  // Aomori
