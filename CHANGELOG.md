@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `Wash.build(..., mode=...)` and `StillLife` render indexed aesthetics (`Cycle` / `Count` /
+  `Display` with `aes.Indexed`, also per group via `aes.ByGroup`) the same way the
+  browser does: Cycle wraps, other modes clamp to the last entry, and indexed modes draw
+  no selection layer.
+- `StillLife.to_svg()` draws the annotation layer on top of hover.
+
+### Fixed
+
+- `StillLife.to_svg()` no longer draws annotation regions in the base layer, and draws
+  selection copies only for base-layer regions.
+
 ## [0.3.0] - 2026-11-22
 
 ### Breaking changes

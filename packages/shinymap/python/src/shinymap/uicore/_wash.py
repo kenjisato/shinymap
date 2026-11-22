@@ -19,7 +19,7 @@ from ..aes._core import (
     ShapeAesthetic,
     TextAesthetic,
 )
-from ..mode import Display, ModeType
+from ..mode import Display, ModeType, normalize_mode
 from ..types import MISSING, MissingType
 
 if TYPE_CHECKING:
@@ -394,6 +394,7 @@ class WashResult:
         self,
         outline: Outline,
         *,
+        mode: ModeType | Display | None = None,
         aes: AesParam = MISSING,
         value: dict[str, int] | None = None,
         tooltips: dict[str, str] | None = None,
@@ -409,8 +410,11 @@ class WashResult:
 
         Args:
             outline: Outline object with regions and metadata
+            mode: Mode the picture represents (e.g. ``Cycle(n=4, aes=aes.Indexed(...))``).
+                Needed for indexed aesthetics; selection-only pictures can omit it.
             aes: Aesthetic overrides (merged with wash defaults)
-            value: Region values (determines selection state)
+            value: Region values (determines selection state, or the index for
+                indexed aesthetics)
             tooltips: Region tooltips
             view_box: Override viewBox tuple
             layers: Layer configuration
@@ -442,6 +446,7 @@ class WashResult:
             view_box=view_box or outline.viewbox(),
             _outline=merged_outline,
             _resolved_aes=resolved_aes,
+            _mode=normalize_mode(mode) if isinstance(mode, str) else mode,
         )
 
         if value is not None:

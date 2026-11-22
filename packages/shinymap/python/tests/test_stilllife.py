@@ -693,3 +693,125 @@ class TestWashResultBuild:
         line_entry = builder._resolved_aes.get("__line")
         assert line_entry is not None
         assert line_entry.base.stroke_color == "#94a3b8"
+
+
+class TestStillLifeIndexed:
+    """Cycle/Count/Display with aes.Indexed, mirroring the JS components."""
+
+    PALETTE = ["#000000", "#111111", "#222222"]
+
+    def _outline(self, groups=None):
+        meta = {"viewBox": "0 0 100 100"}
+        if groups:
+            meta["groups"] = groups
+        return Outline.from_dict(
+            {"a": "M0 0 L10 0 L10 10 Z", "b": "M20 0 L30 0 L30 10 Z", "_metadata": meta}
+        )
+
+    @pytest.mark.unit
+    def test_cycle_wraps_index(self):
+        from shinymap.mode import Cycle
+
+        wc = Wash(shape=aes.Shape(fill_color="#ffffff"))
+        mode = Cycle(n=3, aes=aes.Indexed(fill_color=self.PALETTE))
+        pic = StillLife(wc.build(self._outline(), mode=mode, value={"a": 4}))
+
+        assert pic.aes("a")["fill_color"] == self.PALETTE[4 % 3]
+        assert pic.aes("b")["fill_color"] == self.PALETTE[0]
+
+    @pytest.mark.unit
+    def test_count_clamps_to_last_color(self):
+        from shinymap.mode import Count
+
+        wc = Wash(shape=aes.Shape(fill_color="#ffffff"))
+        mode = Count(aes=aes.Indexed(fill_color=self.PALETTE))
+        pic = StillLife(wc.build(self._outline(), mode=mode, value={"a": 10, "b": 1}))
+
+        assert pic.aes("a")["fill_color"] == self.PALETTE[-1]
+        assert pic.aes("b")["fill_color"] == self.PALETTE[1]
+
+    @pytest.mark.unit
+    def test_indexed_by_group_applies_to_members_only(self):
+        from shinymap.mode import Count
+
+        wc = Wash(shape=aes.Shape(fill_color="#ffffff"))
+        mode = Count(aes=aes.ByGroup(g=aes.Indexed(fill_color=self.PALETTE)))
+        outline = self._outline(groups={"g": ["a"]})
+        pic = StillLife(wc.build(outline, mode=mode, value={"a": 2, "b": 2}))
+
+        assert pic.aes("a")["fill_color"] == self.PALETTE[2]
+        # Like the JS components: an indexed mode never shows the select look
+        assert pic.aes("b")["fill_color"] == "#ffffff"
+
+    @pytest.mark.unit
+    def test_indexed_by_group_non_members_get_no_select_look(self):
+        from shinymap.mode import Count
+
+        wc = Wash(
+            shape=aes.ByState(
+                base=aes.Shape(fill_color="#ffffff"), select=aes.Shape(fill_color="#ff0000")
+            )
+        )
+        mode = Count(aes=aes.ByGroup(g=aes.Indexed(fill_color=self.PALETTE)))
+        outline = self._outline(groups={"g": ["a"]})
+        pic = StillLife(wc.build(outline, mode=mode, value={"a": 1, "b": 1}))
+
+        assert pic.aes("b")["fill_color"] == "#ffffff"
+        assert "#ff0000" not in pic.to_svg()
+
+    @pytest.mark.unit
+    def test_indexed_skips_selection_overlay(self):
+        from shinymap.mode import Count
+
+        wc = Wash(
+            shape=aes.ByState(
+                base=aes.Shape(fill_color="#ffffff"), select=aes.Shape(fill_color="#ff0000")
+            )
+        )
+        mode = Count(aes=aes.Indexed(fill_color=self.PALETTE))
+        svg_str = StillLife(wc.build(self._outline(), mode=mode, value={"a": 1})).to_svg()
+
+        assert svg_str.count("<path") == 2  # base layer only, no selection copy
+        assert "#ff0000" not in svg_str
+
+    @pytest.mark.unit
+    def test_hover_keeps_indexed_fill(self):
+        from shinymap.mode import Cycle
+
+        wc = Wash(
+            shape=aes.ByState(
+                base=aes.Shape(fill_color="#ffffff", stroke_width=1),
+                hover=aes.Shape(stroke_width=3),
+            )
+        )
+        mode = Cycle(n=3, aes=aes.Indexed(fill_color=self.PALETTE))
+        pic = StillLife(wc.build(self._outline(), mode=mode, value={"a": 2}), hovered="a")
+
+        hovered = pic.aes("a")
+        assert hovered["fill_color"] == self.PALETTE[2]
+        assert hovered["stroke_width"] == 3
+
+    @pytest.mark.unit
+    def test_string_mode_is_accepted(self):
+        wc = Wash(shape=aes.Shape(fill_color="#ffffff"))
+        pic = StillLife(wc.build(self._outline(), mode="single", value={"a": 1}))
+
+        assert pic.aes("b")["fill_color"] == "#ffffff"
+
+
+class TestStillLifeAnnotation:
+    @pytest.mark.unit
+    def test_annotation_drawn_last_and_not_in_base(self):
+        outline = Outline(
+            regions={
+                "region": [Circle(cx=50, cy=50, r=30)],
+                "label": [Circle(cx=50, cy=50, r=5)],
+            },
+            metadata={"viewBox": "0 0 100 100", "annotation": ["label"]},
+        )
+        wc = Wash(shape=aes.Shape(fill_color="#e2e8f0"))
+        svg_str = StillLife(wc.build(outline), hovered="region").to_svg()
+
+        assert svg_str.count('r="5"') == 1
+        # The annotation comes after the hover copy of "region"
+        assert svg_str.rindex('r="30"') < svg_str.index('r="5"')

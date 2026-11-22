@@ -16,7 +16,7 @@ from dataclasses import fields
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from .aes._core import BaseAesthetic, ByGroup, ByState
+from .aes._core import BaseAesthetic, ByGroup, ByState, IndexedAesthetic
 from .relative import AestheticConfig, RegionState, resolve_region
 from .types import MISSING, MissingType
 
@@ -95,6 +95,70 @@ class StillLife:
         self._resolved_aes: ByGroup = builder._resolved_aes
         self._value: Mapping[str, int] = value if value is not None else (builder._value or {})
         self._hovered: str | None = hovered
+        self._mode: Any = getattr(builder, "_mode", None)
+
+    def _region_group(self, region_id: str) -> str | None:
+        for group_name, region_ids in self._outline.groups().items():
+            if region_id in region_ids:
+                return group_name
+        return None
+
+    def _uses_indexed(self) -> bool:
+        """Whether the mode carries indexed aesthetics (JS then skips selection)."""
+        return isinstance(getattr(self._mode, "aes", None), (IndexedAesthetic, ByGroup))
+
+    def _indexed_for(self, region_id: str) -> IndexedAesthetic | None:
+        """The indexed aesthetic that applies to a region, as in the JS components.
+
+        ``mode.aes`` is either one ``aes.Indexed`` for every region, or an
+        ``aes.ByGroup`` of them keyed by region ID or group name.
+        """
+        mode_aes = getattr(self._mode, "aes", None)
+        if isinstance(mode_aes, IndexedAesthetic):
+            return mode_aes
+        if isinstance(mode_aes, ByGroup):
+            direct = mode_aes.get(region_id, MISSING)
+            if isinstance(direct, IndexedAesthetic):
+                return direct
+            group = self._region_group(region_id)
+            if group is not None:
+                by_group = mode_aes.get(group, MISSING)
+                if isinstance(by_group, IndexedAesthetic):
+                    return by_group
+        return None
+
+    def _apply_indexed(
+        self, aesthetic: BaseAesthetic, indexed: IndexedAesthetic, count: int
+    ) -> BaseAesthetic:
+        """Override the properties ``indexed`` defines, picked by ``count``.
+
+        Cycle wraps (``count % n``, then modulo the list length); other modes
+        clamp to the last entry. This mirrors ``resolveIndexedAesthetic`` in JS.
+        """
+        import dataclasses
+
+        n = getattr(self._mode, "n", None)
+        wrap = isinstance(n, int) and n > 0
+        index = count % n if isinstance(n, int) and n > 0 else count
+
+        names = {f.name for f in dataclasses.fields(aesthetic)}
+        overrides: dict[str, Any] = {}
+        for name in (
+            "fill_color",
+            "fill_opacity",
+            "stroke_color",
+            "stroke_width",
+            "stroke_dasharray",
+        ):
+            value = getattr(indexed, name)
+            if value is None or name not in names:
+                continue
+            if isinstance(value, list):
+                if not value:
+                    continue
+                value = value[index % len(value)] if wrap else value[min(index, len(value) - 1)]
+            overrides[name] = value
+        return dataclasses.replace(aesthetic, **overrides)  # type: ignore[type-var]
 
     def _lookup_by_state(self, region_id: str) -> ByState:
         """Look up the ByState for a region following the resolution hierarchy.
@@ -221,13 +285,28 @@ class StillLife:
         else:
             hovered = self._hovered == region
 
-        # Get group for region
-        groups = self._outline.groups()
-        region_group = None
-        for group_name, region_ids in groups.items():
-            if region in region_ids:
-                region_group = group_name
-                break
+        region_group = self._region_group(region)
+
+        if self._uses_indexed():
+            # Indexed modes show state through the base look and draw no select
+            # layer, for every region: base -> indexed values (if any) -> hover,
+            # as in the JS components
+            base_state = RegionState(
+                region_id=region, value=0, is_hovered=False, group=region_group
+            )
+            base: BaseAesthetic = resolve_region(base_state, config)
+            indexed = self._indexed_for(region)
+            if indexed is not None:
+                base = self._apply_indexed(base, indexed, value)
+            if not hovered:
+                return self._aesthetic_to_dict(base)
+            hover_config = AestheticConfig(
+                aes_base=base, aes_select=None, aes_hover=config.aes_hover
+            )
+            hover_state = RegionState(
+                region_id=region, value=0, is_hovered=True, group=region_group
+            )
+            return self._aesthetic_to_dict(resolve_region(hover_state, hover_config))
 
         # Build state
         state = RegionState(
@@ -304,7 +383,9 @@ class StillLife:
     ) -> str | None:
         """Generate static SVG with resolved aesthetics.
 
-        Renders layers in order: underlay → base → overlay → selection → hover.
+        Renders layers in order: underlay → base → overlay → selection → hover
+        → annotation. Regions with an indexed aesthetic show their state in the
+        base layer and get no selection copy, as in the JS components.
 
         Args:
             output: If provided, write SVG to file and return None.
@@ -327,6 +408,7 @@ class StillLife:
         overlays = set(self._outline.overlay_ids())
         underlays = set(self._outline.underlay_ids())
         hidden = set(self._outline.hidden_ids())
+        annotations = set(self._outline.annotation_ids())
 
         # Helper to apply aesthetics to element
         def style_element(elem: Any, aes_dict: dict[str, Any]) -> svg.Element:
@@ -368,7 +450,7 @@ class StillLife:
                 render(region_id)
 
         for region_id in self._outline.regions:
-            if region_id in hidden or region_id in underlays or region_id in overlays:
+            if region_id in hidden | underlays | overlays | annotations:
                 continue
             render(region_id)
 
@@ -378,12 +460,21 @@ class StillLife:
 
         # Selection overlay
         for region_id in self._outline.regions:
-            if region_id not in hidden and self._value.get(region_id, 0) > 0:
+            if (
+                region_id not in hidden | underlays | overlays | annotations
+                and self._value.get(region_id, 0) > 0
+                and not self._uses_indexed()
+            ):
                 render(region_id)
 
         # Hover overlay
         if self._hovered and self._hovered not in hidden:
             render(self._hovered, is_hovered=True)
+
+        # Annotation: always on top, even above hover
+        for region_id in self._outline.regions:
+            if region_id in annotations and region_id not in hidden:
+                render(region_id)
 
         # Create SVG
         root = svg.SVG(
