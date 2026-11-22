@@ -13,7 +13,12 @@ from pathlib import Path
 
 from shinymap import Outline, StillLife, Wash, aes
 from shinymap.mode import Count, Cycle
-from shinymap.aes.color import scale_diverging, scale_qualitative, scale_sequential
+from shinymap.aes.color import (
+    scale_continuous,
+    scale_diverging,
+    scale_qualitative,
+    scale_sequential,
+)
 from shinymap import default_wash  # the look users get by default
 
 OUT = Path(__file__).parent / "images" / "generated"
@@ -191,6 +196,8 @@ def aesthetics() -> None:
     # Color scales
     counts = {rid: (i * 7) % 6 for i, rid in enumerate(IDS)}
     save("scale-sequential", aes=fills(scale_sequential(counts, IDS, max_count=5)))
+    data = {rid: 10.0 + (i * 37) % 90 for i, rid in enumerate(IDS) if i % 9 != 4}
+    save("scale-continuous", aes=fills(scale_continuous(data, IDS, vmin=0, vmax=100)))
     values = {rid: (i % 5) - 2.0 for i, rid in enumerate(IDS)}
     save("scale-diverging", aes=fills(scale_diverging(values, IDS)))
     cats = {rid: ["A", "B", "C", None][i % 4] for i, rid in enumerate(IDS)}
