@@ -147,7 +147,7 @@ class WashConfig:
     def apply(
         self,
         aes: ByGroup | ByState | BaseAesthetic | None | MissingType,
-        geometry: Outline,
+        outline: Outline,
     ) -> ByGroup:
         """Apply user aesthetic on top of this wash config's defaults.
 
@@ -157,7 +157,7 @@ class WashConfig:
 
         Args:
             aes: User's aesthetic (ByGroup, ByState, BaseAesthetic, None, or MISSING)
-            geometry: Outline object with regions and metadata
+            outline: Outline object with regions and metadata
 
         Returns:
             Fully resolved ByGroup with all entries having complete ByState values.
@@ -179,9 +179,9 @@ class WashConfig:
             >>> # hover.stroke_width is still RelativeExpr (not resolved)
             ```
         """
-        # Get region types and groups from geometry
-        region_types = geometry.region_types()
-        geo_groups = geometry.groups()
+        # Get region types and groups from outline
+        region_types = outline.region_types()
+        geo_groups = outline.groups()
 
         def resolve_path_kind(aesthetic: BaseAesthetic) -> BaseAesthetic:
             """Resolve PathAesthetic.kind against wash config defaults."""
@@ -288,7 +288,7 @@ class WashConfig:
                 result_entries[group_name] = resolve_by_state(user_group, "shape")
 
         # 4. Add individual region entries
-        for region_id in geometry.regions:
+        for region_id in outline.regions:
             user_region = user_by_group.get(region_id, MISSING)
             if not isinstance(user_region, MissingType):
                 elem_type = region_types.get(region_id, "shape")
@@ -369,7 +369,7 @@ class WashResult:
     def input_map(
         self,
         id: str,
-        geometry: Outline,
+        outline: Outline,
         mode: Literal["single", "multiple"] | ModeType,
         *,
         tooltips: dict[str, str] | None = None,
@@ -387,7 +387,7 @@ class WashResult:
 
         Args:
             id: Input ID for Shiny
-            geometry: Outline object
+            outline: Outline object
             mode: Interaction mode ("single", "multiple", or Mode class instance)
             tooltips: Region tooltips as {region_id: tooltip_text}
             aes: Aesthetic overrides (ByGroup, ByState, or BaseAesthetic).
@@ -409,11 +409,11 @@ class WashResult:
         from ._input_map import _input_map
 
         # Resolve aes against wash config
-        resolved_aes = self.config.apply(aes, geometry)
+        resolved_aes = self.config.apply(aes, outline)
 
         return _input_map(
             id,
-            geometry,
+            outline,
             mode,
             resolved_aes,
             tooltips,
@@ -430,7 +430,7 @@ class WashResult:
     def output_map(
         self,
         id: str,
-        geometry: Outline | None = None,
+        outline: Outline | None = None,
         *,
         mode: Display | None = None,
         aes: AesParam = MISSING,
@@ -446,7 +446,7 @@ class WashResult:
 
         Args:
             id: Output ID (must match @render_map function name)
-            geometry: Outline object
+            outline: Outline object
             mode: Display mode with optional indexed aesthetics.
                   Use Display(aes=aes.Indexed(...)) to prepopulate the
                   value-to-color mapping in the UI declaration.
@@ -484,16 +484,16 @@ class WashResult:
         if mode is None:
             mode = Display()
 
-        # Resolve aes against wash config (geometry required for resolution)
-        if geometry is not None:
-            resolved_aes = self.config.apply(aes, geometry)
+        # Resolve aes against wash config (outline required for resolution)
+        if outline is not None:
+            resolved_aes = self.config.apply(aes, outline)
         else:
-            # No geometry - create empty ByGroup (will be populated later)
+            # No outline - create empty ByGroup (will be populated later)
             resolved_aes = ByGroup()
 
         return _output_map(
             id,
-            geometry,
+            outline,
             mode,
             resolved_aes,
             tooltips,
