@@ -257,3 +257,43 @@ class TestElementKind:
         resolved = _default_wash.config.apply(aes.Text(fill_color="#ff0000"), outline)
 
         assert resolved["__text"].base.fill_color == "#ff0000"
+
+
+app_click_with_render_ui = create_app_fixture("apps/app_click_with_render_ui.py")
+
+
+class TestInitialValueRace:
+    @pytest.mark.integration
+    def test_click_right_after_load_is_kept(self, page, app_click_with_render_ui):
+        """A pending initial-value retry must not overwrite the user's first click.
+
+        The bridge retries setInputValue(id, initial) every 50 ms until Shiny is
+        ready. To open that window deterministically, hide Shiny.setInputValue
+        from the bridge until the test says so, then click right away.
+        """
+        page.add_init_script(
+            """
+            let real;
+            Object.defineProperty(window, "Shiny", {
+              configurable: true,
+              get() { return real; },
+              set(v) {
+                real = new Proxy(v, {
+                  get(t, k) {
+                    if (k === "setInputValue" && !window.__shinyReady) return undefined;
+                    return Reflect.get(t, k);
+                  },
+                });
+              },
+            });
+            """
+        )
+        page.goto(app_click_with_render_ui.url)
+        page.wait_for_selector("#pick svg path", state="attached", timeout=10000)
+        page.evaluate(
+            "() => { window.__shinyReady = true;"
+            " document.querySelectorAll('#pick svg > g')[1].querySelectorAll('path')[1]"
+            ".dispatchEvent(new MouseEvent('click', {bubbles: true})); }"
+        )
+        page.wait_for_timeout(1500)
+        assert page.locator("#picked").inner_text() == "picked: b"

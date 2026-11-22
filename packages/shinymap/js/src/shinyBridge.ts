@@ -157,7 +157,12 @@ function bootstrap(start = performance.now()): void {
       return selected;
     };
 
+    // Once the user has interacted, a pending initial-value retry must not
+    // overwrite their choice with the initial value.
+    let userChanged = false;
+
     const onChange = (value: Record<RegionId, number>): void => {
+      userChanged = true;
       if (window.Shiny && typeof window.Shiny.setInputValue === "function" && inputId) {
         const transformed = transformValue(value);
         window.Shiny.setInputValue(inputId, transformed, { priority: "event" });
@@ -174,6 +179,9 @@ function bootstrap(start = performance.now()): void {
       const maxAttempts = 50;
       const trySetValue = (): boolean => {
         attempts++;
+        if (userChanged) {
+          return true;
+        }
         if (window.Shiny && typeof window.Shiny.setInputValue === "function") {
           window.Shiny.setInputValue(inputId, initialValue);
           log("[shinymap] Set initial value for", inputId, initialValue, `(attempt ${attempts})`);
