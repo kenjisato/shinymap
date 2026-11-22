@@ -61,6 +61,24 @@ def _normalize_to_by_state[T: BaseAesthetic](
     return ByState(base=value)
 
 
+def element_kind(aes: Any) -> str | None:
+    """Element type ("shape", "line", "text") an aesthetic is written for, if known."""
+    if isinstance(aes, ByState):
+        for state in (aes.base, aes.select, aes.hover):
+            if isinstance(state, BaseAesthetic):
+                return element_kind(state)
+        return None
+    if isinstance(aes, PathAesthetic):
+        return aes.kind if isinstance(aes.kind, str) else None
+    if isinstance(aes, ShapeAesthetic):
+        return "shape"
+    if isinstance(aes, LineAesthetic):
+        return "line"
+    if isinstance(aes, TextAesthetic):
+        return "text"
+    return None
+
+
 @dataclass
 class WashConfig:
     """Configuration created by Wash() for use by map functions.
@@ -273,6 +291,15 @@ class WashConfig:
         ]:
             user_type = user_by_group.get(type_key, MISSING)
             elem_type = type_key[2:]  # Remove "__" prefix
+
+            # A user-level __all (e.g. aes=aes.Shape(...)) must beat the wash's
+            # type default, which JS looks up before __all.
+            if (
+                isinstance(user_type, MissingType)
+                and not isinstance(user_all, MissingType)
+                and element_kind(user_all) == elem_type
+            ):
+                user_type = user_all
 
             # Add entry if:
             # - user explicitly provided it, OR
@@ -503,6 +530,7 @@ class WashResult:
             height,
             class_,
             style,
+            wash_config=self.config,
         )
 
     def render_map(self, fn: Callable | None = None) -> Callable:

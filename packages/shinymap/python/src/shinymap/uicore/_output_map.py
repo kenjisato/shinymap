@@ -36,6 +36,7 @@ def _output_map(
     height: str | None,
     class_: str | None,
     style: MutableMapping[str, str] | None,
+    wash_config: Any = None,
 ) -> TagList:
     """Create an output map container.
 
@@ -49,11 +50,13 @@ def _output_map(
         resolved_aes: Pre-resolved ByGroup aesthetic (from WashConfig.apply).
         tooltips: Region tooltips as {region_id: tooltip_text}.
         view_box: Override viewBox tuple (x, y, width, height).
-        layers: Layer configuration dict with keys: underlays, overlays, hidden.
+        layers: Layer configuration dict with keys: underlay, overlay, hidden.
         width: Container width (CSS).
         height: Container height (CSS).
         class_: Additional CSS classes.
         style: Additional inline styles.
+        wash_config: WashConfig that resolved ``resolved_aes``; @render_map uses it to
+            resolve Map(aes=...) consistently.
 
     Returns:
         TagList with the output container.
@@ -81,6 +84,7 @@ def _output_map(
                 "mode": mode,
                 "resolved_aes": resolved_aes,
                 "click_input_id": click_input_id,
+                "wash_config": wash_config,
             }
         )
     elif view_box is not None:
@@ -91,6 +95,7 @@ def _output_map(
                 "view_box": view_box,
                 "mode": mode,
                 "click_input_id": click_input_id,
+                "wash_config": wash_config,
             }
         )
 

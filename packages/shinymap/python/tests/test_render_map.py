@@ -60,3 +60,98 @@ class TestRenderMapModeDefault:
         # Cleanup
         if test_id in _static_map_params:
             del _static_map_params[test_id]
+
+
+class TestMapAesForms:
+    """Map(aes=...) accepts ByGroup, ByState and single aesthetics (regression in 0.3.0-dev)."""
+
+    OUTLINE_DICT = {"a": "M0 0 L10 0 L10 10 Z", "b": "M20 0 L30 0 L30 10 Z"}
+
+    def _payload(self, map_aes, with_output_map: bool):
+        from shinymap import Map
+        from shinymap.outline import Outline
+        from shinymap.uicore._render_map import _build_payload
+
+        outline = Outline.from_dict(self.OUTLINE_DICT)
+        static: dict = {}
+        if with_output_map:
+            test_id = "_test_map_aes_forms"
+            output_map(test_id, outline)
+            static = _static_map_params.pop(test_id)
+        return _build_payload(Map(outline, aes=map_aes), static)
+
+    @pytest.mark.unit
+    @pytest.mark.parametrize("with_output_map", [False, True])
+    @pytest.mark.parametrize("form", ["bystate", "shape"])
+    def test_non_bygroup_aes_applies_to_all_regions(self, form, with_output_map):
+        from shinymap import aes
+
+        shape = aes.Shape(fill_color="#ff0000")
+        map_aes = aes.ByState(base=shape) if form == "bystate" else shape
+
+        payload = self._payload(map_aes, with_output_map)
+
+        assert payload["aes"]["__all"]["base"]["fill_color"] == "#ff0000"
+        # JS looks up __shape before __all, so the type default must carry it too
+        assert payload["aes"]["__shape"]["base"]["fill_color"] == "#ff0000"
+        # Wash select/hover defaults are kept
+        assert payload["aes"]["__shape"]["select"] is not None
+
+    @pytest.mark.unit
+    def test_map_aes_keeps_output_map_region_entries(self):
+        from shinymap import Map, aes
+        from shinymap.outline import Outline
+        from shinymap.uicore._render_map import _build_payload
+
+        outline = Outline.from_dict(self.OUTLINE_DICT)
+        test_id = "_test_map_aes_keeps_regions"
+        output_map(test_id, outline, aes=aes.ByGroup(a=aes.Shape(fill_color="#123456")))
+        static = _static_map_params.pop(test_id)
+
+        payload = _build_payload(Map(aes=aes.Shape(fill_color="#abcdef")), static)
+
+        assert payload["aes"]["a"]["base"]["fill_color"] == "#123456"
+        assert payload["aes"]["__shape"]["base"]["fill_color"] == "#abcdef"
+
+    @pytest.mark.unit
+    @pytest.mark.parametrize("with_output_map", [False, True])
+    def test_bygroup_aes_keys_reach_payload(self, with_output_map):
+        from shinymap import aes
+
+        payload = self._payload(aes.ByGroup(a=aes.Shape(fill_color="#ff0000")), with_output_map)
+
+        assert payload["aes"]["a"]["base"]["fill_color"] == "#ff0000"
+
+    @pytest.mark.unit
+    def test_dict_aes_is_rejected(self):
+        with pytest.raises(TypeError, match="no longer accepts a dict"):
+            self._payload({"a": {"fill_color": "#ff0000"}}, with_output_map=False)
+
+
+class TestWashApplyAllOverridesTypeDefault:
+    """aes=ByState/Shape on input_map/output_map must beat the wash's type default."""
+
+    @pytest.mark.unit
+    def test_shape_aes_reaches_shape_type_entry(self):
+        from shinymap import aes
+        from shinymap.outline import Outline
+        from shinymap.ui._ui import _default_wash
+
+        outline = Outline.from_dict({"a": "M0 0 L10 0 L10 10 Z"})
+        resolved = _default_wash.config.apply(aes.Shape(fill_color="#ff0000"), outline)
+
+        assert resolved["__shape"].base.fill_color == "#ff0000"
+        assert resolved["__all"].base.fill_color == "#ff0000"
+
+    @pytest.mark.unit
+    def test_line_aes_does_not_touch_shape_entry(self):
+        from shinymap import aes
+        from shinymap.outline import Outline
+        from shinymap.ui._ui import _default_wash
+
+        outline = Outline.from_dict({"a": "M0 0 L10 0 L10 10 Z"})
+        default_fill = _default_wash.config.apply(None, outline)["__shape"].base.fill_color
+        resolved = _default_wash.config.apply(aes.Line(stroke_color="#ff0000"), outline)
+
+        assert resolved["__shape"].base.fill_color == default_fill
+        assert resolved["__line"].base.stroke_color == "#ff0000"
