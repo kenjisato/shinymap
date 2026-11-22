@@ -6,6 +6,7 @@ with output_map for data visualization.
 
 from __future__ import annotations
 
+import math
 from collections.abc import Mapping
 
 from .neutral import NEUTRALS
@@ -84,6 +85,72 @@ def scale_sequential(
 
             fills[region_id] = lerp_hex(palette[lower_idx], palette[upper_idx], blend_factor)
 
+    return fills
+
+
+def scale_continuous(
+    values: Mapping[str, float | None],
+    region_ids: list[str],
+    palette: list[str] = SEQUENTIAL_BLUE,
+    neutral_color: str = NEUTRALS["fill"],
+    vmin: float | None = None,
+    vmax: float | None = None,
+) -> dict[str, str]:
+    """Color data values (populations, ratios, ...) along a sequential palette.
+
+    For data rather than click counts: values may be floats, the range is set
+    by ``vmin`` / ``vmax`` (values outside are clamped), and regions without a
+    value (missing, ``None`` or NaN) get ``neutral_color``, so "no data" stays
+    distinguishable from the lowest value. For counts from a Count input, use
+    ``scale_sequential``, which treats a missing region as zero.
+
+    Args:
+        values: Mapping of region_id to a number (int, float, numpy scalars).
+        region_ids: All region IDs to include.
+        palette: Color palette to use (default: SEQUENTIAL_BLUE).
+        neutral_color: Color for regions without a value.
+        vmin: Value mapped to ``palette[0]``. Default: the minimum value.
+        vmax: Value mapped to ``palette[-1]``. Default: the maximum value.
+
+    Returns:
+        Mapping of region_id to hex color.
+
+    Examples:
+        ```pycon
+        >>> from shinymap.aes.color import scale_continuous
+        >>> fills = scale_continuous({"a": 1.5, "b": 4.5}, ["a", "b", "c"])
+        >>> fills["a"], fills["b"], fills["c"]
+        ('#eff6ff', '#1d4ed8', '#e2e8f0')
+
+        ```
+    """
+    present: dict[str, float] = {}
+    for region_id, value in values.items():
+        if value is None:
+            continue
+        number = float(value)
+        if math.isnan(number):
+            continue
+        present[region_id] = number
+
+    if vmin is None:
+        vmin = min(present.values(), default=0.0)
+    if vmax is None:
+        vmax = max(present.values(), default=0.0)
+
+    fills = {}
+    for region_id in region_ids:
+        if region_id not in present:
+            fills[region_id] = neutral_color
+            continue
+        if vmax <= vmin:
+            t = 1.0 if present[region_id] >= vmax else 0.0
+        else:
+            t = max(0.0, min(1.0, (present[region_id] - vmin) / (vmax - vmin)))
+        palette_pos = t * (len(palette) - 1)
+        lower_idx = int(palette_pos)
+        upper_idx = min(lower_idx + 1, len(palette) - 1)
+        fills[region_id] = lerp_hex(palette[lower_idx], palette[upper_idx], palette_pos - lower_idx)
     return fills
 
 

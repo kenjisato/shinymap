@@ -99,7 +99,9 @@ aes.ByGroup(
 ## Coloring by value
 
 `shinymap.aes.color` turns data into one color per region. Pass the result through
-`aes.ByGroup`, typically from `@render_map` so the colors follow your data:
+`aes.ByGroup`, typically from `@render_map` so the colors follow your data.
+`scale_sequential` is for counts from a Count input: regions not in the dict count as
+zero and get the lightest color.
 
 ```python
 from shinymap import Map, aes, output_map, render_map
@@ -113,8 +115,21 @@ def result():
     return Map(aes=aes.ByGroup(**{rid: aes.Shape(fill_color=c) for rid, c in colors.items()}))
 ```
 
-::: {layout-ncol=3}
+For data such as populations or ratios, use `scale_continuous`. It takes floats, maps
+`vmin` to the lightest color and `vmax` to the darkest, and gives regions without a
+value a neutral gray, so "no data" does not look like the lowest value:
+
+```python
+from shinymap.aes.color import scale_continuous
+
+rates = {"r0": 12.5, "r1": 48.0, "r2": None}  # r2 and regions not listed: no data
+colors = scale_continuous(rates, region_ids, vmin=0, vmax=100)
+```
+
+::: {layout-ncol=2}
 ![`scale_sequential`: counts](../images/generated/scale-sequential.svg){fig-alt="Hexagons in light to dark blue" width="100%"}
+
+![`scale_continuous`: data, gray where missing](../images/generated/scale-continuous.svg){fig-alt="Hexagons in shades of blue, a few in gray" width="100%"}
 
 ![`scale_diverging`: below / above a midpoint](../images/generated/scale-diverging.svg){fig-alt="Hexagons from red through gray to blue" width="100%"}
 
