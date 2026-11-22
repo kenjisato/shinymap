@@ -154,6 +154,76 @@
     "text": "from shinymap import aes\nfrom shinymap.ui import update_map\n\n# Update aesthetics with ByGroup (per-region colors)\nupdate_map(\"my_map\", aes=aes.ByGroup(\n    region1=aes.Shape(fill_color=\"#ff0000\"),\n    region2=aes.Shape(fill_color=\"#00ff00\"),\n))\n\n# Update with ByState (base/select/hover)\nupdate_map(\"my_map\", aes=aes.ByState(\n    base=aes.Shape(fill_color=\"#e2e8f0\"),\n    select=aes.Shape(fill_color=\"#bfdbfe\"),\n))\n\n# Clear all selections (input_map only)\nupdate_map(\"my_map\", value={})\n\n# Set specific selections (input_map only)\nupdate_map(\"my_map\", value={\"region1\": 1, \"region2\": 1})\nNote: - Uses shallow merge semantics: new properties override existing ones - Properties not specified are left unchanged - For output_map data updates, use @render_map re-execution instead"
   },
   {
+    "objectID": "python/svg.Text.html",
+    "href": "python/svg.Text.html",
+    "title": "svg.Text",
+    "section": "",
+    "text": "svg.Text()\nText element with bounds calculation and JSON serialization.\nInherits all attributes from svg.Text: x: Text anchor x coordinate y: Text anchor y coordinate text: Text content (via Element.text field) font_size: Font size (preserved but not used by shinymap) font_family: Font family (preserved but not used by shinymap) fill: Text color (preserved but not used by shinymap) … and all other svg.Text attributes\n\n\nBounds calculation for text is approximate (position only). True text bounds require font metrics which are not available without a text layout engine. This is sufficient for annotation layers but not for precise interactive text regions.\n\n\n\n&gt;&gt;&gt; text = Text(x=100, y=100, text=\"Hello\")\n&gt;&gt;&gt; text.bounds()  # Approximate bounds\n(100.0, 100.0, 101.0, 101.0)"
+  },
+  {
+    "objectID": "python/svg.Text.html#note",
+    "href": "python/svg.Text.html#note",
+    "title": "svg.Text",
+    "section": "",
+    "text": "Bounds calculation for text is approximate (position only). True text bounds require font metrics which are not available without a text layout engine. This is sufficient for annotation layers but not for precise interactive text regions."
+  },
+  {
+    "objectID": "python/svg.Text.html#examples",
+    "href": "python/svg.Text.html#examples",
+    "title": "svg.Text",
+    "section": "",
+    "text": "&gt;&gt;&gt; text = Text(x=100, y=100, text=\"Hello\")\n&gt;&gt;&gt; text.bounds()  # Approximate bounds\n(100.0, 100.0, 101.0, 101.0)"
+  },
+  {
+    "objectID": "python/svg.Polygon.html",
+    "href": "python/svg.Polygon.html",
+    "title": "svg.Polygon",
+    "section": "",
+    "text": "svg.Polygon()\nPolygon element with bounds calculation and JSON serialization.\nInherits all attributes from svg.Polygon: points: List of coordinates [x1, y1, x2, y2, …] fill: Fill color (preserved but not used by shinymap) stroke: Stroke color (preserved but not used by shinymap) … and all other svg.Polygon attributes\n\n\n&gt;&gt;&gt; polygon = Polygon(points=[0, 0, 100, 0, 100, 100, 0, 100])\n&gt;&gt;&gt; polygon.bounds()\n(0.0, 0.0, 100.0, 100.0)"
+  },
+  {
+    "objectID": "python/svg.Polygon.html#examples",
+    "href": "python/svg.Polygon.html#examples",
+    "title": "svg.Polygon",
+    "section": "",
+    "text": "&gt;&gt;&gt; polygon = Polygon(points=[0, 0, 100, 0, 100, 100, 0, 100])\n&gt;&gt;&gt; polygon.bounds()\n(0.0, 0.0, 100.0, 100.0)"
+  },
+  {
+    "objectID": "python/svg.Line.html",
+    "href": "python/svg.Line.html",
+    "title": "svg.Line",
+    "section": "",
+    "text": "svg.Line()\nLine element with bounds calculation and JSON serialization.\nInherits all attributes from svg.Line: x1: Start x coordinate y1: Start y coordinate x2: End x coordinate y2: End y coordinate stroke: Stroke color (preserved but not used by shinymap) stroke_width: Stroke width (preserved but not used by shinymap) … and all other svg.Line attributes\n\n\n&gt;&gt;&gt; line = Line(x1=0, y1=0, x2=100, y2=100)\n&gt;&gt;&gt; line.bounds()\n(0.0, 0.0, 100.0, 100.0)"
+  },
+  {
+    "objectID": "python/svg.Line.html#examples",
+    "href": "python/svg.Line.html#examples",
+    "title": "svg.Line",
+    "section": "",
+    "text": "&gt;&gt;&gt; line = Line(x1=0, y1=0, x2=100, y2=100)\n&gt;&gt;&gt; line.bounds()\n(0.0, 0.0, 100.0, 100.0)"
+  },
+  {
+    "objectID": "python/svg.Circle.html",
+    "href": "python/svg.Circle.html",
+    "title": "svg.Circle",
+    "section": "",
+    "text": "svg.Circle()\nCircle element with bounds calculation and JSON serialization.\nInherits all attributes from svg.Circle: cx: Center x coordinate cy: Center y coordinate r: Radius fill: Fill color (preserved but not used by shinymap) stroke: Stroke color (preserved but not used by shinymap) stroke_width: Stroke width (preserved but not used by shinymap) … and all other svg.Circle attributes\n\n\nAesthetic attributes (fill, stroke, etc.) are preserved from SVG but NOT used by shinymap for rendering. Use Python API parameters (default_aesthetic, with_fill_color(), etc.) to control appearance.\n\n\n\n&gt;&gt;&gt; circle = Circle(cx=100, cy=100, r=50)\n&gt;&gt;&gt; circle.bounds()\n(50.0, 50.0, 150.0, 150.0)"
+  },
+  {
+    "objectID": "python/svg.Circle.html#note",
+    "href": "python/svg.Circle.html#note",
+    "title": "svg.Circle",
+    "section": "",
+    "text": "Aesthetic attributes (fill, stroke, etc.) are preserved from SVG but NOT used by shinymap for rendering. Use Python API parameters (default_aesthetic, with_fill_color(), etc.) to control appearance."
+  },
+  {
+    "objectID": "python/svg.Circle.html#examples",
+    "href": "python/svg.Circle.html#examples",
+    "title": "svg.Circle",
+    "section": "",
+    "text": "&gt;&gt;&gt; circle = Circle(cx=100, cy=100, r=50)\n&gt;&gt;&gt; circle.bounds()\n(50.0, 50.0, 150.0, 150.0)"
+  },
+  {
     "objectID": "python/render_map.html",
     "href": "python/render_map.html",
     "title": "render_map",
@@ -168,88 +238,165 @@
     "text": "output_map\noutput_map"
   },
   {
-    "objectID": "python/mode.Single.html",
-    "href": "python/mode.Single.html",
-    "title": "mode.Single",
+    "objectID": "python/outline.Regions.html",
+    "href": "python/outline.Regions.html",
+    "title": "outline.Regions",
     "section": "",
-    "text": "mode.Single(selected=None, allow_deselect=True, aes=None)\nSingle selection mode with customization options.\nUse when you need options beyond the simple mode=“single” string: - Initial selection - Disable deselection - Custom two-state aesthetics\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nselected\nstr | None\nInitially selected region ID.\nNone\n\n\nallow_deselect\nbool\nIf True (default), clicking selected region deselects it.\nTrue\n\n\naes\nIndexedAesthetic | ByGroup | None\nTwo-state aesthetic [unselected, selected]. Can be aes.Indexed (global) or aes.ByGroup wrapping aes.Indexed.\nNone\n\n\n\n\n\n\n&gt;&gt;&gt; from shinymap.mode import Single\n&gt;&gt;&gt; from shinymap import aes\n\n&gt;&gt;&gt; # Pre-select a region\n&gt;&gt;&gt; mode = Single(selected=\"region_a\")\n\n&gt;&gt;&gt; # Disable deselection (must always have one selected)\n&gt;&gt;&gt; mode = Single(allow_deselect=False)\n\n&gt;&gt;&gt; # Custom selection colors\n&gt;&gt;&gt; mode = Single(\n...     aes=aes.Indexed(\n...         fill_color=[\"#e5e7eb\", \"#3b82f6\"],  # gray -&gt; blue\n...     )\n... )\n\n\n\n\n\n\nName\nDescription\n\n\n\n\nto_dict\nSerialize for JavaScript (snake_case, JS converts to camelCase).\n\n\n\n\n\nmode.Single.to_dict()\nSerialize for JavaScript (snake_case, JS converts to camelCase)."
+    "text": "outline.Regions()\nDictionary subclass with clean repr for region data.\nThis class wraps the regions dictionary to provide a more readable repr output while maintaining full dictionary compatibility.\n\n\n&gt;&gt;&gt; from shinymap.svg import Circle\n&gt;&gt;&gt; regions = Regions({\"r1\": [Circle(cx=100, cy=100, r=50)]})\n&gt;&gt;&gt; regions\nRegions({\n  'r1': [Circle(cx=100, cy=100, r=50)],\n})"
   },
   {
-    "objectID": "python/mode.Single.html#parameters",
-    "href": "python/mode.Single.html#parameters",
-    "title": "mode.Single",
+    "objectID": "python/outline.Regions.html#examples",
+    "href": "python/outline.Regions.html#examples",
+    "title": "outline.Regions",
     "section": "",
-    "text": "Name\nType\nDescription\nDefault\n\n\n\n\nselected\nstr | None\nInitially selected region ID.\nNone\n\n\nallow_deselect\nbool\nIf True (default), clicking selected region deselects it.\nTrue\n\n\naes\nIndexedAesthetic | ByGroup | None\nTwo-state aesthetic [unselected, selected]. Can be aes.Indexed (global) or aes.ByGroup wrapping aes.Indexed.\nNone"
+    "text": "&gt;&gt;&gt; from shinymap.svg import Circle\n&gt;&gt;&gt; regions = Regions({\"r1\": [Circle(cx=100, cy=100, r=50)]})\n&gt;&gt;&gt; regions\nRegions({\n  'r1': [Circle(cx=100, cy=100, r=50)],\n})"
   },
   {
-    "objectID": "python/mode.Single.html#examples",
-    "href": "python/mode.Single.html#examples",
-    "title": "mode.Single",
+    "objectID": "python/mode.Multiple.html",
+    "href": "python/mode.Multiple.html",
+    "title": "mode.Multiple",
     "section": "",
-    "text": "&gt;&gt;&gt; from shinymap.mode import Single\n&gt;&gt;&gt; from shinymap import aes\n\n&gt;&gt;&gt; # Pre-select a region\n&gt;&gt;&gt; mode = Single(selected=\"region_a\")\n\n&gt;&gt;&gt; # Disable deselection (must always have one selected)\n&gt;&gt;&gt; mode = Single(allow_deselect=False)\n\n&gt;&gt;&gt; # Custom selection colors\n&gt;&gt;&gt; mode = Single(\n...     aes=aes.Indexed(\n...         fill_color=[\"#e5e7eb\", \"#3b82f6\"],  # gray -&gt; blue\n...     )\n... )"
+    "text": "mode.Multiple(selected=None, max_selection=None, aes=None)\nMultiple selection mode with customization options.\nUse when you need options beyond the simple mode=“multiple” string: - Initial selections - Selection limit (max_selection) - Custom two-state aesthetics\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nselected\nlist[str] | None\nInitially selected region IDs.\nNone\n\n\nmax_selection\nint | None\nMaximum number of selections allowed. None = unlimited.\nNone\n\n\naes\nIndexedAesthetic | ByGroup | None\nTwo-state aesthetic [unselected, selected]. Can be aes.Indexed (global) or aes.ByGroup wrapping aes.Indexed.\nNone\n\n\n\n\n\n\n&gt;&gt;&gt; from shinymap.mode import Multiple\n&gt;&gt;&gt; from shinymap import aes\n\n&gt;&gt;&gt; # Limit to 3 selections\n&gt;&gt;&gt; mode = Multiple(max_selection=3)\n\n&gt;&gt;&gt; # Pre-select regions\n&gt;&gt;&gt; mode = Multiple(selected=[\"region_a\", \"region_b\"])\n\n&gt;&gt;&gt; # Custom selection colors with limit\n&gt;&gt;&gt; mode = Multiple(\n...     max_selection=5,\n...     aes=aes.Indexed(\n...         fill_color=[\"#e5e7eb\", \"#10b981\"],  # gray -&gt; green\n...     )\n... )\n\n\n\n\n\n\nName\nDescription\n\n\n\n\nto_dict\nSerialize for JavaScript (snake_case, JS converts to camelCase).\n\n\n\n\n\nmode.Multiple.to_dict()\nSerialize for JavaScript (snake_case, JS converts to camelCase)."
   },
   {
-    "objectID": "python/mode.Single.html#methods",
-    "href": "python/mode.Single.html#methods",
-    "title": "mode.Single",
+    "objectID": "python/mode.Multiple.html#parameters",
+    "href": "python/mode.Multiple.html#parameters",
+    "title": "mode.Multiple",
     "section": "",
-    "text": "Name\nDescription\n\n\n\n\nto_dict\nSerialize for JavaScript (snake_case, JS converts to camelCase).\n\n\n\n\n\nmode.Single.to_dict()\nSerialize for JavaScript (snake_case, JS converts to camelCase)."
+    "text": "Name\nType\nDescription\nDefault\n\n\n\n\nselected\nlist[str] | None\nInitially selected region IDs.\nNone\n\n\nmax_selection\nint | None\nMaximum number of selections allowed. None = unlimited.\nNone\n\n\naes\nIndexedAesthetic | ByGroup | None\nTwo-state aesthetic [unselected, selected]. Can be aes.Indexed (global) or aes.ByGroup wrapping aes.Indexed.\nNone"
   },
   {
-    "objectID": "python/mode.Display.html",
-    "href": "python/mode.Display.html",
-    "title": "mode.Display",
+    "objectID": "python/mode.Multiple.html#examples",
+    "href": "python/mode.Multiple.html#examples",
+    "title": "mode.Multiple",
     "section": "",
-    "text": "mode.Display(aes=None, clickable=False, input_id=None)\nDisplay-only mode for output_map.\nRegions respond to hover but not click by default. Value determines which indexed aesthetic to use, enabling declarative value-to-color mapping.\nThis mode is specifically for output_map, allowing you to prepopulate the color scale in the UI declaration rather than computing it in the render function.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\naes\nIndexedAesthetic | ByGroup | None\nIndexed aesthetic mapping values to colors. Can be aes.Indexed (global) or aes.ByGroup wrapping aes.Indexed. Index is computed as: min(value, len(list) - 1) (clamping).\nNone\n\n\nclickable\nbool\nIf True, clicking a region emits an input event with the region ID. Use with @reactive.event to trigger actions like showing modals. Default is False.\nFalse\n\n\ninput_id\nstr | None\nCustom input ID for click events. If None (default), uses “{output_map_id}_click”. Only used when clickable=True.\nNone\n\n\n\nExample:: from shinymap.mode import Display from shinymap import aes, output_map, render_map, Outline\noutline = Outline.from_dict({\n    \"question_1\": \"M 5 5 L 5 10 L 10 10 L 10 5 Z\",\n    \"question_2\": \"M 7 7 L 7 9 L 9 9 L 9 7 Z\"\n})\n\n# Traffic light colors for status values\n_ = output_map(\n    \"status_map\",\n    outline,\n    mode=Display(aes=aes.Indexed(\n        fill_color=[\"#f3f4f6\", \"#22c55e\", \"#f59e0b\", \"#ef4444\"]\n    ))\n)\n\n@render_map\ndef status_map():\n    # value 0=unknown, 1=good, 2=warning, 3=error\n    return Map(outline, value=status_values)\n\n# Clickable display map for triggering actions\n_ = output_map(\n    \"clickable_map\",\n    outline,\n    mode=Display(clickable=True)\n)\n\n@reactive.effect\n@reactive.event(input.clickable_map_click)\ndef show_region_modal():\n    region_id = input.clickable_map_click()\n    # Show modal with region details\n\n# Custom input ID\n_ = output_map(\n    \"my_map\",\n    outline,\n    mode=Display(clickable=True, input_id=\"region_clicked\")\n)\n\n\n\n\n\n\nName\nDescription\n\n\n\n\nget_click_input_id\nGet the click input ID for this mode.\n\n\nto_dict\nSerialize for JavaScript (snake_case, JS converts to camelCase).\n\n\n\n\n\nmode.Display.get_click_input_id(output_id)\nGet the click input ID for this mode.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\noutput_id\nstr\nThe output map’s ID\nrequired\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nstr | None\nThe input ID for click events, or None if not clickable\n\n\n\n\n\n\n\nmode.Display.to_dict()\nSerialize for JavaScript (snake_case, JS converts to camelCase)."
+    "text": "&gt;&gt;&gt; from shinymap.mode import Multiple\n&gt;&gt;&gt; from shinymap import aes\n\n&gt;&gt;&gt; # Limit to 3 selections\n&gt;&gt;&gt; mode = Multiple(max_selection=3)\n\n&gt;&gt;&gt; # Pre-select regions\n&gt;&gt;&gt; mode = Multiple(selected=[\"region_a\", \"region_b\"])\n\n&gt;&gt;&gt; # Custom selection colors with limit\n&gt;&gt;&gt; mode = Multiple(\n...     max_selection=5,\n...     aes=aes.Indexed(\n...         fill_color=[\"#e5e7eb\", \"#10b981\"],  # gray -&gt; green\n...     )\n... )"
   },
   {
-    "objectID": "python/mode.Display.html#parameters",
-    "href": "python/mode.Display.html#parameters",
-    "title": "mode.Display",
+    "objectID": "python/mode.Multiple.html#methods",
+    "href": "python/mode.Multiple.html#methods",
+    "title": "mode.Multiple",
     "section": "",
-    "text": "Name\nType\nDescription\nDefault\n\n\n\n\naes\nIndexedAesthetic | ByGroup | None\nIndexed aesthetic mapping values to colors. Can be aes.Indexed (global) or aes.ByGroup wrapping aes.Indexed. Index is computed as: min(value, len(list) - 1) (clamping).\nNone\n\n\nclickable\nbool\nIf True, clicking a region emits an input event with the region ID. Use with @reactive.event to trigger actions like showing modals. Default is False.\nFalse\n\n\ninput_id\nstr | None\nCustom input ID for click events. If None (default), uses “{output_map_id}_click”. Only used when clickable=True.\nNone\n\n\n\nExample:: from shinymap.mode import Display from shinymap import aes, output_map, render_map, Outline\noutline = Outline.from_dict({\n    \"question_1\": \"M 5 5 L 5 10 L 10 10 L 10 5 Z\",\n    \"question_2\": \"M 7 7 L 7 9 L 9 9 L 9 7 Z\"\n})\n\n# Traffic light colors for status values\n_ = output_map(\n    \"status_map\",\n    outline,\n    mode=Display(aes=aes.Indexed(\n        fill_color=[\"#f3f4f6\", \"#22c55e\", \"#f59e0b\", \"#ef4444\"]\n    ))\n)\n\n@render_map\ndef status_map():\n    # value 0=unknown, 1=good, 2=warning, 3=error\n    return Map(outline, value=status_values)\n\n# Clickable display map for triggering actions\n_ = output_map(\n    \"clickable_map\",\n    outline,\n    mode=Display(clickable=True)\n)\n\n@reactive.effect\n@reactive.event(input.clickable_map_click)\ndef show_region_modal():\n    region_id = input.clickable_map_click()\n    # Show modal with region details\n\n# Custom input ID\n_ = output_map(\n    \"my_map\",\n    outline,\n    mode=Display(clickable=True, input_id=\"region_clicked\")\n)"
+    "text": "Name\nDescription\n\n\n\n\nto_dict\nSerialize for JavaScript (snake_case, JS converts to camelCase).\n\n\n\n\n\nmode.Multiple.to_dict()\nSerialize for JavaScript (snake_case, JS converts to camelCase)."
   },
   {
-    "objectID": "python/mode.Display.html#methods",
-    "href": "python/mode.Display.html#methods",
-    "title": "mode.Display",
+    "objectID": "python/mode.Cycle.html",
+    "href": "python/mode.Cycle.html",
+    "title": "mode.Cycle",
     "section": "",
-    "text": "Name\nDescription\n\n\n\n\nget_click_input_id\nGet the click input ID for this mode.\n\n\nto_dict\nSerialize for JavaScript (snake_case, JS converts to camelCase).\n\n\n\n\n\nmode.Display.get_click_input_id(output_id)\nGet the click input ID for this mode.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\noutput_id\nstr\nThe output map’s ID\nrequired\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nstr | None\nThe input ID for click events, or None if not clickable\n\n\n\n\n\n\n\nmode.Display.to_dict()\nSerialize for JavaScript (snake_case, JS converts to camelCase)."
+    "text": "mode.Cycle(n, values=None, aes=None)\nCycle mode - finite state cycling (e.g., traffic light survey).\nEach click cycles through n states: 0 -&gt; 1 -&gt; 2 -&gt; … -&gt; n-1 -&gt; 0. Use with aes.Indexed to define visual appearance for each state.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nn\nint\nNumber of states (e.g., 4 for gray-&gt;red-&gt;yellow-&gt;green-&gt;gray).\nrequired\n\n\nvalues\ndict[str, int] | None\nInitial state per region {id: state_index}. Default: all 0.\nNone\n\n\naes\nIndexedAesthetic | ByGroup | None\nIndexed aesthetic with styles for each state. Can be aes.Indexed (global) or aes.ByGroup wrapping aes.Indexed. Index is computed as: count % n (wrapping).\nNone\n\n\n\n\n\n\n&gt;&gt;&gt; from shinymap.mode import Cycle\n&gt;&gt;&gt; from shinymap import aes\n&gt;&gt;&gt; from shinymap.aes.color import HUE_CYCLE_4\n\n&gt;&gt;&gt; # Traffic light survey (4 states)\n&gt;&gt;&gt; mode = Cycle(\n...     n=4,\n...     aes=aes.Indexed(fill_color=HUE_CYCLE_4),\n... )\n\n&gt;&gt;&gt; # Per-group palettes (color coordination quiz)\n&gt;&gt;&gt; mode = Cycle(\n...     n=2,\n...     aes=aes.ByGroup(\n...         question_1=aes.Indexed(fill_color=[\"#bfdbfe\", \"#2563eb\"]),\n...         question_2=aes.Indexed(fill_color=[\"#bbf7d0\", \"#16a34a\"]),\n...     ),\n... )\n\n\n\n\n\n\nName\nDescription\n\n\n\n\nto_dict\nSerialize for JavaScript (snake_case, JS converts to camelCase).\n\n\n\n\n\nmode.Cycle.to_dict()\nSerialize for JavaScript (snake_case, JS converts to camelCase)."
   },
   {
-    "objectID": "python/mode.Count.html",
-    "href": "python/mode.Count.html",
-    "title": "mode.Count",
+    "objectID": "python/mode.Cycle.html#parameters",
+    "href": "python/mode.Cycle.html#parameters",
+    "title": "mode.Cycle",
     "section": "",
-    "text": "mode.Count(values=None, max_count=None, aes=None)\nCount mode - unbounded counting.\nEach click increments the count. Use with aes.Indexed to define visual appearance based on count (with clamping for index lookup).\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nvalues\ndict[str, int] | None\nInitial counts per region {id: count}. Default: all 0.\nNone\n\n\nmax_count\nint | None\nOptional cap for aesthetic indexing (clamping). If None, uses len(aes list) - 1 as the cap.\nNone\n\n\naes\nIndexedAesthetic | ByGroup | None\nIndexed aesthetic for visual feedback. Can be aes.Indexed (global) or aes.ByGroup wrapping aes.Indexed. Index is computed as: min(count, len(list) - 1) (clamping).\nNone\n\n\n\n\n\n\n&gt;&gt;&gt; from shinymap.mode import Count\n&gt;&gt;&gt; from shinymap import aes\n&gt;&gt;&gt; from shinymap.utils import linspace\n\n&gt;&gt;&gt; # Heat map with opacity gradient\n&gt;&gt;&gt; mode = Count(\n...     aes=aes.Indexed(\n...         fill_color=\"#f97316\",\n...         fill_opacity=linspace(0.0, 1.0, num=6),\n...     ),\n... )\n\n&gt;&gt;&gt; # Per-group palettes\n&gt;&gt;&gt; mode = Count(\n...     aes=aes.ByGroup(\n...         group_a=aes.Indexed(\n...             fill_color=\"#ef4444\", fill_opacity=linspace(0.2, 1.0, num=5)\n...         ),\n...         group_b=aes.Indexed(\n...             fill_color=\"#3b82f6\", fill_opacity=linspace(0.2, 1.0, num=5)\n...         ),\n...     ),\n... )\n\n\n\n\n\n\nName\nDescription\n\n\n\n\nto_dict\nSerialize for JavaScript (snake_case, JS converts to camelCase).\n\n\n\n\n\nmode.Count.to_dict()\nSerialize for JavaScript (snake_case, JS converts to camelCase)."
+    "text": "Name\nType\nDescription\nDefault\n\n\n\n\nn\nint\nNumber of states (e.g., 4 for gray-&gt;red-&gt;yellow-&gt;green-&gt;gray).\nrequired\n\n\nvalues\ndict[str, int] | None\nInitial state per region {id: state_index}. Default: all 0.\nNone\n\n\naes\nIndexedAesthetic | ByGroup | None\nIndexed aesthetic with styles for each state. Can be aes.Indexed (global) or aes.ByGroup wrapping aes.Indexed. Index is computed as: count % n (wrapping).\nNone"
   },
   {
-    "objectID": "python/mode.Count.html#parameters",
-    "href": "python/mode.Count.html#parameters",
-    "title": "mode.Count",
+    "objectID": "python/mode.Cycle.html#examples",
+    "href": "python/mode.Cycle.html#examples",
+    "title": "mode.Cycle",
     "section": "",
-    "text": "Name\nType\nDescription\nDefault\n\n\n\n\nvalues\ndict[str, int] | None\nInitial counts per region {id: count}. Default: all 0.\nNone\n\n\nmax_count\nint | None\nOptional cap for aesthetic indexing (clamping). If None, uses len(aes list) - 1 as the cap.\nNone\n\n\naes\nIndexedAesthetic | ByGroup | None\nIndexed aesthetic for visual feedback. Can be aes.Indexed (global) or aes.ByGroup wrapping aes.Indexed. Index is computed as: min(count, len(list) - 1) (clamping).\nNone"
+    "text": "&gt;&gt;&gt; from shinymap.mode import Cycle\n&gt;&gt;&gt; from shinymap import aes\n&gt;&gt;&gt; from shinymap.aes.color import HUE_CYCLE_4\n\n&gt;&gt;&gt; # Traffic light survey (4 states)\n&gt;&gt;&gt; mode = Cycle(\n...     n=4,\n...     aes=aes.Indexed(fill_color=HUE_CYCLE_4),\n... )\n\n&gt;&gt;&gt; # Per-group palettes (color coordination quiz)\n&gt;&gt;&gt; mode = Cycle(\n...     n=2,\n...     aes=aes.ByGroup(\n...         question_1=aes.Indexed(fill_color=[\"#bfdbfe\", \"#2563eb\"]),\n...         question_2=aes.Indexed(fill_color=[\"#bbf7d0\", \"#16a34a\"]),\n...     ),\n... )"
   },
   {
-    "objectID": "python/mode.Count.html#examples",
-    "href": "python/mode.Count.html#examples",
-    "title": "mode.Count",
+    "objectID": "python/mode.Cycle.html#methods",
+    "href": "python/mode.Cycle.html#methods",
+    "title": "mode.Cycle",
     "section": "",
-    "text": "&gt;&gt;&gt; from shinymap.mode import Count\n&gt;&gt;&gt; from shinymap import aes\n&gt;&gt;&gt; from shinymap.utils import linspace\n\n&gt;&gt;&gt; # Heat map with opacity gradient\n&gt;&gt;&gt; mode = Count(\n...     aes=aes.Indexed(\n...         fill_color=\"#f97316\",\n...         fill_opacity=linspace(0.0, 1.0, num=6),\n...     ),\n... )\n\n&gt;&gt;&gt; # Per-group palettes\n&gt;&gt;&gt; mode = Count(\n...     aes=aes.ByGroup(\n...         group_a=aes.Indexed(\n...             fill_color=\"#ef4444\", fill_opacity=linspace(0.2, 1.0, num=5)\n...         ),\n...         group_b=aes.Indexed(\n...             fill_color=\"#3b82f6\", fill_opacity=linspace(0.2, 1.0, num=5)\n...         ),\n...     ),\n... )"
+    "text": "Name\nDescription\n\n\n\n\nto_dict\nSerialize for JavaScript (snake_case, JS converts to camelCase).\n\n\n\n\n\nmode.Cycle.to_dict()\nSerialize for JavaScript (snake_case, JS converts to camelCase)."
   },
   {
-    "objectID": "python/mode.Count.html#methods",
-    "href": "python/mode.Count.html#methods",
-    "title": "mode.Count",
+    "objectID": "python/kit.glaze.html",
+    "href": "python/kit.glaze.html",
+    "title": "kit.glaze",
     "section": "",
-    "text": "Name\nDescription\n\n\n\n\nto_dict\nSerialize for JavaScript (snake_case, JS converts to camelCase).\n\n\n\n\n\nmode.Count.to_dict()\nSerialize for JavaScript (snake_case, JS converts to camelCase)."
+    "text": "kit.glaze(outline, regions, as_underlay=False)\nAdd regions as overlay (default) or underlay to an existing outline.\nMerges additional regions into an outline and assigns them to the specified layer. Useful for adding annotations, labels, or other decorations to an existing map.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\noutline\nOutline\nBase outline to add regions to\nrequired\n\n\nregions\nRegions | Outline\nRegions to add (Regions dict or Outline object)\nrequired\n\n\nas_underlay\nbool\nIf True, add as underlay; if False (default), add as overlay\nFalse\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nOutline\nNew Outline with regions merged and layer assigned\n\n\n\n\n\n\n&gt;&gt;&gt; from shinymap import Outline, Regions\n&gt;&gt;&gt; from shinymap.svg import Text\n&gt;&gt;&gt; from shinymap.kit import glaze\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Add labels as overlay (default)\n&gt;&gt;&gt; outline = Outline.from_svg(\"map.svg\")\n&gt;&gt;&gt; labels = Regions({\"_note\": [Text(x=50, y=50, text=\"Note\")]})\n&gt;&gt;&gt; annotated = glaze(outline, labels)\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Add background as underlay\n&gt;&gt;&gt; background = Regions({\"_bg\": [...]})\n&gt;&gt;&gt; with_bg = glaze(outline, background, as_underlay=True)"
+  },
+  {
+    "objectID": "python/kit.glaze.html#parameters",
+    "href": "python/kit.glaze.html#parameters",
+    "title": "kit.glaze",
+    "section": "",
+    "text": "Name\nType\nDescription\nDefault\n\n\n\n\noutline\nOutline\nBase outline to add regions to\nrequired\n\n\nregions\nRegions | Outline\nRegions to add (Regions dict or Outline object)\nrequired\n\n\nas_underlay\nbool\nIf True, add as underlay; if False (default), add as overlay\nFalse"
+  },
+  {
+    "objectID": "python/kit.glaze.html#returns",
+    "href": "python/kit.glaze.html#returns",
+    "title": "kit.glaze",
+    "section": "",
+    "text": "Name\nType\nDescription\n\n\n\n\n\nOutline\nNew Outline with regions merged and layer assigned"
+  },
+  {
+    "objectID": "python/kit.glaze.html#examples",
+    "href": "python/kit.glaze.html#examples",
+    "title": "kit.glaze",
+    "section": "",
+    "text": "&gt;&gt;&gt; from shinymap import Outline, Regions\n&gt;&gt;&gt; from shinymap.svg import Text\n&gt;&gt;&gt; from shinymap.kit import glaze\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Add labels as overlay (default)\n&gt;&gt;&gt; outline = Outline.from_svg(\"map.svg\")\n&gt;&gt;&gt; labels = Regions({\"_note\": [Text(x=50, y=50, text=\"Note\")]})\n&gt;&gt;&gt; annotated = glaze(outline, labels)\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Add background as underlay\n&gt;&gt;&gt; background = Regions({\"_bg\": [...]})\n&gt;&gt;&gt; with_bg = glaze(outline, background, as_underlay=True)"
+  },
+  {
+    "objectID": "python/kit.describe.html",
+    "href": "python/kit.describe.html",
+    "title": "kit.describe",
+    "section": "",
+    "text": "kit.describe(outline, exclude=None, **kwargs)\nGenerate Text elements with region IDs at each region’s center.\nCreates a Regions dict containing Text elements positioned at the center of each region’s bounding box. These can be added to the outline using glaze() to create a reference SVG with ID labels.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\noutline\nOutline\nSource outline to generate labels for\nrequired\n\n\nexclude\nlist[str] | None\nRegion IDs to skip (e.g., overlays, hidden regions)\nNone\n\n\n**kwargs\nAny\nAdditional attributes passed to Text elements. font_size can be absolute (e.g., “5”) or percentage of smaller viewBox dimension (e.g., “3%”). Default is “3%”. Other options: fill, text_anchor, etc.\n{}\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nRegions\nRegions dict with Text elements keyed as “label{region_id}”\n\n\n\n\n\n\n&gt;&gt;&gt; from shinymap import Outline\n&gt;&gt;&gt; from shinymap.kit import describe, glaze\n&gt;&gt;&gt;\n&gt;&gt;&gt; outline = Outline.from_svg(\"map.svg\")\n&gt;&gt;&gt; labels = describe(outline, exclude=outline.overlay_ids())\n&gt;&gt;&gt; labeled = glaze(outline, labels)\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Custom styling with absolute font size\n&gt;&gt;&gt; labels = describe(outline, font_size=\"5\", fill=\"red\")\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Percentage-based font size (2% of smaller viewBox dimension)\n&gt;&gt;&gt; labels = describe(outline, font_size=\"2%\")"
+  },
+  {
+    "objectID": "python/kit.describe.html#parameters",
+    "href": "python/kit.describe.html#parameters",
+    "title": "kit.describe",
+    "section": "",
+    "text": "Name\nType\nDescription\nDefault\n\n\n\n\noutline\nOutline\nSource outline to generate labels for\nrequired\n\n\nexclude\nlist[str] | None\nRegion IDs to skip (e.g., overlays, hidden regions)\nNone\n\n\n**kwargs\nAny\nAdditional attributes passed to Text elements. font_size can be absolute (e.g., “5”) or percentage of smaller viewBox dimension (e.g., “3%”). Default is “3%”. Other options: fill, text_anchor, etc.\n{}"
+  },
+  {
+    "objectID": "python/kit.describe.html#returns",
+    "href": "python/kit.describe.html#returns",
+    "title": "kit.describe",
+    "section": "",
+    "text": "Name\nType\nDescription\n\n\n\n\n\nRegions\nRegions dict with Text elements keyed as “label{region_id}”"
+  },
+  {
+    "objectID": "python/kit.describe.html#examples",
+    "href": "python/kit.describe.html#examples",
+    "title": "kit.describe",
+    "section": "",
+    "text": "&gt;&gt;&gt; from shinymap import Outline\n&gt;&gt;&gt; from shinymap.kit import describe, glaze\n&gt;&gt;&gt;\n&gt;&gt;&gt; outline = Outline.from_svg(\"map.svg\")\n&gt;&gt;&gt; labels = describe(outline, exclude=outline.overlay_ids())\n&gt;&gt;&gt; labeled = glaze(outline, labels)\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Custom styling with absolute font size\n&gt;&gt;&gt; labels = describe(outline, font_size=\"5\", fill=\"red\")\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Percentage-based font size (2% of smaller viewBox dimension)\n&gt;&gt;&gt; labels = describe(outline, font_size=\"2%\")"
+  },
+  {
+    "objectID": "python/kit.apply_mapping.html",
+    "href": "python/kit.apply_mapping.html",
+    "title": "kit.apply_mapping",
+    "section": "",
+    "text": "kit.apply_mapping(outline, mapping)\nApply a mapping dict to convert an outline.\nOne-shot conversion that applies groups, layers, lines_as_path, and metadata from a mapping dictionary. Useful for batch conversion from a mapping file generated by the sketch app.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\noutline\nOutline\nSource outline to transform\nrequired\n\n\nmapping\ndict[str, Any]\nMapping dict with optional keys: - groups: Dict mapping new_id to old_id(s) for relabeling - layers: Dict with “overlay”, “underlay”, “hidden” lists - lines_as_path: List of region IDs to treat as lines - metadata: Dict of metadata to merge\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nOutline\nNew Outline with all transformations applied\n\n\n\n\n\n\n&gt;&gt;&gt; from shinymap import Outline\n&gt;&gt;&gt; from shinymap.kit import apply_mapping\n&gt;&gt;&gt;\n&gt;&gt;&gt; outline = Outline.from_svg(\"map.svg\")\n&gt;&gt;&gt; mapping = {\n...     \"groups\": {\n...         \"hokkaido\": [\"path_1\", \"path_2\"],\n...         \"tokyo\": \"path_4\",\n...     },\n...     \"layers\": {\n...         \"overlay\": [\"_border\"],\n...         \"hidden\": [\"_guides\"],\n...     },\n...     \"lines_as_path\": [\"_divider\"],\n...     \"metadata\": {\"source\": \"...\", \"license\": \"...\"},\n... }\n&gt;&gt;&gt; result = apply_mapping(outline, mapping)"
+  },
+  {
+    "objectID": "python/kit.apply_mapping.html#parameters",
+    "href": "python/kit.apply_mapping.html#parameters",
+    "title": "kit.apply_mapping",
+    "section": "",
+    "text": "Name\nType\nDescription\nDefault\n\n\n\n\noutline\nOutline\nSource outline to transform\nrequired\n\n\nmapping\ndict[str, Any]\nMapping dict with optional keys: - groups: Dict mapping new_id to old_id(s) for relabeling - layers: Dict with “overlay”, “underlay”, “hidden” lists - lines_as_path: List of region IDs to treat as lines - metadata: Dict of metadata to merge\nrequired"
+  },
+  {
+    "objectID": "python/kit.apply_mapping.html#returns",
+    "href": "python/kit.apply_mapping.html#returns",
+    "title": "kit.apply_mapping",
+    "section": "",
+    "text": "Name\nType\nDescription\n\n\n\n\n\nOutline\nNew Outline with all transformations applied"
+  },
+  {
+    "objectID": "python/kit.apply_mapping.html#examples",
+    "href": "python/kit.apply_mapping.html#examples",
+    "title": "kit.apply_mapping",
+    "section": "",
+    "text": "&gt;&gt;&gt; from shinymap import Outline\n&gt;&gt;&gt; from shinymap.kit import apply_mapping\n&gt;&gt;&gt;\n&gt;&gt;&gt; outline = Outline.from_svg(\"map.svg\")\n&gt;&gt;&gt; mapping = {\n...     \"groups\": {\n...         \"hokkaido\": [\"path_1\", \"path_2\"],\n...         \"tokyo\": \"path_4\",\n...     },\n...     \"layers\": {\n...         \"overlay\": [\"_border\"],\n...         \"hidden\": [\"_guides\"],\n...     },\n...     \"lines_as_path\": [\"_divider\"],\n...     \"metadata\": {\"source\": \"...\", \"license\": \"...\"},\n... }\n&gt;&gt;&gt; result = apply_mapping(outline, mapping)"
   },
   {
     "objectID": "python/index.html",
     "href": "python/index.html",
     "title": "Python API Reference",
     "section": "",
-    "text": "Main UI components for creating interactive maps\n\n\n\ninput_map\n\n\n\noutput_map\n\n\n\nrender_map\n\n\n\nupdate_map\nUpdate an input_map or output_map without full re-render.\n\n\nMap\nCreate map from Outline object.\n\n\nOutline\nCanonical outline representation with polymorphic elements.\n\n\nWash\nCreate configured map functions with custom default aesthetics.\n\n\n\n\n\n\nMode classes controlling selection behavior\n\n\n\nmode.Single\nSingle selection mode with customization options.\n\n\nmode.Multiple\nMultiple selection mode with customization options.\n\n\nmode.Cycle\nCycle mode - finite state cycling (e.g., traffic light survey).\n\n\nmode.Count\nCount mode - unbounded counting.\n\n\nmode.Display\nDisplay-only mode for output_map.\n\n\n\n\n\n\nClasses for styling map regions\n\n\n\naes.Shape\nCreate shape aesthetic (fill and stroke).\n\n\naes.Line\nCreate line aesthetic (stroke only, no fill).\n\n\naes.ByState\nContainer for element aesthetics across interaction states.\n\n\naes.ByGroup\nContainer for aesthetics by group/region name.\n\n\naes.Indexed\nCreate indexed aesthetic for multi-state modes (Cycle, Count).\n\n\n\n\n\n\nFunctions for generating fill colors\n\n\n\naes.color.scale_sequential\nCreate a sequential color scale based on counts.\n\n\naes.color.scale_diverging\nCreate a diverging color scale (red-white-blue style).\n\n\naes.color.scale_qualitative\nCreate a qualitative color scale for categorical data.\n\n\n\n\n\n\nPARENT proxy for relative aesthetic values\n\n\n\nPARENT\n\n\n\nRelativeExpr\nA deferred expression that references a parent property.\n\n\nresolve_region\nResolve the final aesthetic for a region given its state.\n\n\npreview_region\nPreview the aesthetic resolution for a region with verbose output.\n\n\n\n\n\n\nTools for working with SVG geometry\n\n\n\noutline.Outline\nCanonical outline representation with polymorphic elements.\n\n\n\n\n\n\nMode classes for static pictures\n\n\n\nStillLife\nStatic snapshot of a map for aesthetic analysis and SVG export."
+    "text": "Main UI components for creating interactive maps\n\n\n\ninput_map\n\n\n\noutput_map\n\n\n\nrender_map\n\n\n\nupdate_map\nUpdate an input_map or output_map without full re-render.\n\n\nMap\nCreate map from Outline object.\n\n\nOutline\nCanonical outline representation with polymorphic elements.\n\n\nWash\nCreate configured map functions with custom default aesthetics.\n\n\n\n\n\n\nMode classes controlling selection behavior\n\n\n\nmode.Single\nSingle selection mode with customization options.\n\n\nmode.Multiple\nMultiple selection mode with customization options.\n\n\nmode.Cycle\nCycle mode - finite state cycling (e.g., traffic light survey).\n\n\nmode.Count\nCount mode - unbounded counting.\n\n\nmode.Display\nDisplay-only mode for output_map.\n\n\n\n\n\n\nClasses for styling map regions\n\n\n\naes.Shape\nCreate shape aesthetic (fill and stroke).\n\n\naes.Line\nCreate line aesthetic (stroke only, no fill).\n\n\naes.ByState\nContainer for element aesthetics across interaction states.\n\n\naes.ByGroup\nContainer for aesthetics by group/region name.\n\n\naes.Indexed\nCreate indexed aesthetic for multi-state modes (Cycle, Count).\n\n\n\n\n\n\nFunctions for generating fill colors\n\n\n\naes.color.scale_sequential\nCreate a sequential color scale based on counts.\n\n\naes.color.scale_diverging\nCreate a diverging color scale (red-white-blue style).\n\n\naes.color.scale_qualitative\nCreate a qualitative color scale for categorical data.\n\n\n\n\n\n\nPARENT proxy for relative aesthetic values\n\n\n\nPARENT\n\n\n\nRelativeExpr\nA deferred expression that references a parent property.\n\n\nresolve_region\nResolve the final aesthetic for a region given its state.\n\n\npreview_region\nPreview the aesthetic resolution for a region with verbose output.\n\n\n\n\n\n\nTools for working with SVG outlines\n\n\n\noutline.Regions\nDictionary subclass with clean repr for region data.\n\n\noutline.export_svg\nExport shinymap outline to SVG file.\n\n\n\n\n\n\nElement classes that make up an outline\n\n\n\nsvg.Circle\nCircle element with bounds calculation and JSON serialization.\n\n\nsvg.Ellipse\nEllipse element with bounds calculation and JSON serialization.\n\n\nsvg.Line\nLine element with bounds calculation and JSON serialization.\n\n\nsvg.Path\nPath element with bounds calculation and JSON serialization.\n\n\nsvg.Polygon\nPolygon element with bounds calculation and JSON serialization.\n\n\nsvg.Rect\nRectangle element with bounds calculation and JSON serialization.\n\n\nsvg.Text\nText element with bounds calculation and JSON serialization.\n\n\nsvg.is_stroke_only_candidate\nDetect if elements are likely intended as lines rather than filled shapes.\n\n\n\n\n\n\nInspect resolved aesthetics and export static SVG without a Shiny session\n\n\n\nStillLife\nStatic snapshot of a map for aesthetic analysis and SVG export.\n\n\n\n\n\n\nProgrammatic counterparts of the sketch app (python -m shinymap.kit.sketch)\n\n\n\nkit.convert\nConvert SVG or JSON file to shinymap JSON format.\n\n\nkit.apply_mapping\nApply a mapping dict to convert an outline.\n\n\nkit.generate_code\nGenerate Python code for the conversion.\n\n\nkit.describe\nGenerate Text elements with region IDs at each region’s center.\n\n\nkit.glaze\nAdd regions as overlay (default) or underlay to an existing outline."
   },
   {
     "objectID": "python/index.html#core-components",
@@ -291,14 +438,28 @@
     "href": "python/index.html#outline-utilities",
     "title": "Python API Reference",
     "section": "",
-    "text": "Tools for working with SVG geometry\n\n\n\noutline.Outline\nCanonical outline representation with polymorphic elements."
+    "text": "Tools for working with SVG outlines\n\n\n\noutline.Regions\nDictionary subclass with clean repr for region data.\n\n\noutline.export_svg\nExport shinymap outline to SVG file."
+  },
+  {
+    "objectID": "python/index.html#svg-elements",
+    "href": "python/index.html#svg-elements",
+    "title": "Python API Reference",
+    "section": "",
+    "text": "Element classes that make up an outline\n\n\n\nsvg.Circle\nCircle element with bounds calculation and JSON serialization.\n\n\nsvg.Ellipse\nEllipse element with bounds calculation and JSON serialization.\n\n\nsvg.Line\nLine element with bounds calculation and JSON serialization.\n\n\nsvg.Path\nPath element with bounds calculation and JSON serialization.\n\n\nsvg.Polygon\nPolygon element with bounds calculation and JSON serialization.\n\n\nsvg.Rect\nRectangle element with bounds calculation and JSON serialization.\n\n\nsvg.Text\nText element with bounds calculation and JSON serialization.\n\n\nsvg.is_stroke_only_candidate\nDetect if elements are likely intended as lines rather than filled shapes."
   },
   {
     "objectID": "python/index.html#static-analysis-and-export",
     "href": "python/index.html#static-analysis-and-export",
     "title": "Python API Reference",
     "section": "",
-    "text": "Mode classes for static pictures\n\n\n\nStillLife\nStatic snapshot of a map for aesthetic analysis and SVG export."
+    "text": "Inspect resolved aesthetics and export static SVG without a Shiny session\n\n\n\nStillLife\nStatic snapshot of a map for aesthetic analysis and SVG export."
+  },
+  {
+    "objectID": "python/index.html#kit-preparing-svg-files",
+    "href": "python/index.html#kit-preparing-svg-files",
+    "title": "Python API Reference",
+    "section": "",
+    "text": "Programmatic counterparts of the sketch app (python -m shinymap.kit.sketch)\n\n\n\nkit.convert\nConvert SVG or JSON file to shinymap JSON format.\n\n\nkit.apply_mapping\nApply a mapping dict to convert an outline.\n\n\nkit.generate_code\nGenerate Python code for the conversion.\n\n\nkit.describe\nGenerate Text elements with region IDs at each region’s center.\n\n\nkit.glaze\nAdd regions as overlay (default) or underlay to an existing outline."
   },
   {
     "objectID": "python/aes.color.scale_qualitative.html",
@@ -466,7 +627,7 @@
     "href": "index.html",
     "title": "shinymap",
     "section": "",
-    "text": "Interactive SVG map components for Shiny (Python and R)."
+    "text": "Interactive SVG map components for Shiny for Python."
   },
   {
     "objectID": "index.html#overview",
@@ -693,95 +854,158 @@
     "text": "input_map\ninput_map"
   },
   {
-    "objectID": "python/mode.Cycle.html",
-    "href": "python/mode.Cycle.html",
-    "title": "mode.Cycle",
+    "objectID": "python/kit.convert.html",
+    "href": "python/kit.convert.html",
+    "title": "kit.convert",
     "section": "",
-    "text": "mode.Cycle(n, values=None, aes=None)\nCycle mode - finite state cycling (e.g., traffic light survey).\nEach click cycles through n states: 0 -&gt; 1 -&gt; 2 -&gt; … -&gt; n-1 -&gt; 0. Use with aes.Indexed to define visual appearance for each state.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nn\nint\nNumber of states (e.g., 4 for gray-&gt;red-&gt;yellow-&gt;green-&gt;gray).\nrequired\n\n\nvalues\ndict[str, int] | None\nInitial state per region {id: state_index}. Default: all 0.\nNone\n\n\naes\nIndexedAesthetic | ByGroup | None\nIndexed aesthetic with styles for each state. Can be aes.Indexed (global) or aes.ByGroup wrapping aes.Indexed. Index is computed as: count % n (wrapping).\nNone\n\n\n\n\n\n\n&gt;&gt;&gt; from shinymap.mode import Cycle\n&gt;&gt;&gt; from shinymap import aes\n&gt;&gt;&gt; from shinymap.aes.color import HUE_CYCLE_4\n\n&gt;&gt;&gt; # Traffic light survey (4 states)\n&gt;&gt;&gt; mode = Cycle(\n...     n=4,\n...     aes=aes.Indexed(fill_color=HUE_CYCLE_4),\n... )\n\n&gt;&gt;&gt; # Per-group palettes (color coordination quiz)\n&gt;&gt;&gt; mode = Cycle(\n...     n=2,\n...     aes=aes.ByGroup(\n...         question_1=aes.Indexed(fill_color=[\"#bfdbfe\", \"#2563eb\"]),\n...         question_2=aes.Indexed(fill_color=[\"#bbf7d0\", \"#16a34a\"]),\n...     ),\n... )\n\n\n\n\n\n\nName\nDescription\n\n\n\n\nto_dict\nSerialize for JavaScript (snake_case, JS converts to camelCase).\n\n\n\n\n\nmode.Cycle.to_dict()\nSerialize for JavaScript (snake_case, JS converts to camelCase)."
+    "text": "kit.convert(\n    input_path,\n    output_path=None,\n    relabel=None,\n    overlay_ids=None,\n    underlay_ids=None,\n    hidden_ids=None,\n    annotation_ids=None,\n    lines_as_path_ids=None,\n    metadata=None,\n    extract_viewbox=True,\n)\nConvert SVG or JSON file to shinymap JSON format.\nOne-shot conversion that loads an SVG/JSON file and applies transformations.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\ninput_path\nPath | str\nPath to input SVG or JSON file\nrequired\n\n\noutput_path\nPath | str | None\nOptional path to write JSON output\nNone\n\n\nrelabel\ndict[str, str | list[str]] | None\nDict mapping new_id to old_id(s) for relabeling/merging\nNone\n\n\noverlay_ids\nlist[str] | None\nList of region IDs to mark as overlays\nNone\n\n\nunderlay_ids\nlist[str] | None\nList of region IDs to mark as underlays\nNone\n\n\nhidden_ids\nlist[str] | None\nList of region IDs to mark as hidden\nNone\n\n\nannotation_ids\nlist[str] | None\nList of region IDs to mark as annotations\nNone\n\n\nlines_as_path_ids\nlist[str] | None\nList of region IDs to mark as lines (stroke-only)\nNone\n\n\nmetadata\ndict[str, Any] | None\nDict of metadata to merge\nNone\n\n\nextract_viewbox\nbool\nIf True, extract viewBox from SVG (ignored for JSON input)\nTrue\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ndict[str, Any]\nDict in shinymap JSON format\n\n\n\n\n\n\n&gt;&gt;&gt; from shinymap.kit import convert\n&gt;&gt;&gt;\n&gt;&gt;&gt; result = convert(\n...     \"map.svg\",\n...     \"map.json\",\n...     relabel={\"tokyo\": \"path_1\", \"hokkaido\": [\"path_2\", \"path_3\"]},\n...     overlay_ids=[\"_border\"],\n...     underlay_ids=[\"_background\"],\n...     hidden_ids=[\"_guides\"],\n...     lines_as_path_ids=[\"_divider\"],\n...     metadata={\"source\": \"Custom SVG\"},\n... )"
   },
   {
-    "objectID": "python/mode.Cycle.html#parameters",
-    "href": "python/mode.Cycle.html#parameters",
-    "title": "mode.Cycle",
+    "objectID": "python/kit.convert.html#parameters",
+    "href": "python/kit.convert.html#parameters",
+    "title": "kit.convert",
     "section": "",
-    "text": "Name\nType\nDescription\nDefault\n\n\n\n\nn\nint\nNumber of states (e.g., 4 for gray-&gt;red-&gt;yellow-&gt;green-&gt;gray).\nrequired\n\n\nvalues\ndict[str, int] | None\nInitial state per region {id: state_index}. Default: all 0.\nNone\n\n\naes\nIndexedAesthetic | ByGroup | None\nIndexed aesthetic with styles for each state. Can be aes.Indexed (global) or aes.ByGroup wrapping aes.Indexed. Index is computed as: count % n (wrapping).\nNone"
+    "text": "Name\nType\nDescription\nDefault\n\n\n\n\ninput_path\nPath | str\nPath to input SVG or JSON file\nrequired\n\n\noutput_path\nPath | str | None\nOptional path to write JSON output\nNone\n\n\nrelabel\ndict[str, str | list[str]] | None\nDict mapping new_id to old_id(s) for relabeling/merging\nNone\n\n\noverlay_ids\nlist[str] | None\nList of region IDs to mark as overlays\nNone\n\n\nunderlay_ids\nlist[str] | None\nList of region IDs to mark as underlays\nNone\n\n\nhidden_ids\nlist[str] | None\nList of region IDs to mark as hidden\nNone\n\n\nannotation_ids\nlist[str] | None\nList of region IDs to mark as annotations\nNone\n\n\nlines_as_path_ids\nlist[str] | None\nList of region IDs to mark as lines (stroke-only)\nNone\n\n\nmetadata\ndict[str, Any] | None\nDict of metadata to merge\nNone\n\n\nextract_viewbox\nbool\nIf True, extract viewBox from SVG (ignored for JSON input)\nTrue"
   },
   {
-    "objectID": "python/mode.Cycle.html#examples",
-    "href": "python/mode.Cycle.html#examples",
-    "title": "mode.Cycle",
+    "objectID": "python/kit.convert.html#returns",
+    "href": "python/kit.convert.html#returns",
+    "title": "kit.convert",
     "section": "",
-    "text": "&gt;&gt;&gt; from shinymap.mode import Cycle\n&gt;&gt;&gt; from shinymap import aes\n&gt;&gt;&gt; from shinymap.aes.color import HUE_CYCLE_4\n\n&gt;&gt;&gt; # Traffic light survey (4 states)\n&gt;&gt;&gt; mode = Cycle(\n...     n=4,\n...     aes=aes.Indexed(fill_color=HUE_CYCLE_4),\n... )\n\n&gt;&gt;&gt; # Per-group palettes (color coordination quiz)\n&gt;&gt;&gt; mode = Cycle(\n...     n=2,\n...     aes=aes.ByGroup(\n...         question_1=aes.Indexed(fill_color=[\"#bfdbfe\", \"#2563eb\"]),\n...         question_2=aes.Indexed(fill_color=[\"#bbf7d0\", \"#16a34a\"]),\n...     ),\n... )"
+    "text": "Name\nType\nDescription\n\n\n\n\n\ndict[str, Any]\nDict in shinymap JSON format"
   },
   {
-    "objectID": "python/mode.Cycle.html#methods",
-    "href": "python/mode.Cycle.html#methods",
-    "title": "mode.Cycle",
+    "objectID": "python/kit.convert.html#examples",
+    "href": "python/kit.convert.html#examples",
+    "title": "kit.convert",
     "section": "",
-    "text": "Name\nDescription\n\n\n\n\nto_dict\nSerialize for JavaScript (snake_case, JS converts to camelCase).\n\n\n\n\n\nmode.Cycle.to_dict()\nSerialize for JavaScript (snake_case, JS converts to camelCase)."
+    "text": "&gt;&gt;&gt; from shinymap.kit import convert\n&gt;&gt;&gt;\n&gt;&gt;&gt; result = convert(\n...     \"map.svg\",\n...     \"map.json\",\n...     relabel={\"tokyo\": \"path_1\", \"hokkaido\": [\"path_2\", \"path_3\"]},\n...     overlay_ids=[\"_border\"],\n...     underlay_ids=[\"_background\"],\n...     hidden_ids=[\"_guides\"],\n...     lines_as_path_ids=[\"_divider\"],\n...     metadata={\"source\": \"Custom SVG\"},\n... )"
   },
   {
-    "objectID": "python/mode.Multiple.html",
-    "href": "python/mode.Multiple.html",
-    "title": "mode.Multiple",
+    "objectID": "python/kit.generate_code.html",
+    "href": "python/kit.generate_code.html",
+    "title": "kit.generate_code",
     "section": "",
-    "text": "mode.Multiple(selected=None, max_selection=None, aes=None)\nMultiple selection mode with customization options.\nUse when you need options beyond the simple mode=“multiple” string: - Initial selections - Selection limit (max_selection) - Custom two-state aesthetics\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nselected\nlist[str] | None\nInitially selected region IDs.\nNone\n\n\nmax_selection\nint | None\nMaximum number of selections allowed. None = unlimited.\nNone\n\n\naes\nIndexedAesthetic | ByGroup | None\nTwo-state aesthetic [unselected, selected]. Can be aes.Indexed (global) or aes.ByGroup wrapping aes.Indexed.\nNone\n\n\n\n\n\n\n&gt;&gt;&gt; from shinymap.mode import Multiple\n&gt;&gt;&gt; from shinymap import aes\n\n&gt;&gt;&gt; # Limit to 3 selections\n&gt;&gt;&gt; mode = Multiple(max_selection=3)\n\n&gt;&gt;&gt; # Pre-select regions\n&gt;&gt;&gt; mode = Multiple(selected=[\"region_a\", \"region_b\"])\n\n&gt;&gt;&gt; # Custom selection colors with limit\n&gt;&gt;&gt; mode = Multiple(\n...     max_selection=5,\n...     aes=aes.Indexed(\n...         fill_color=[\"#e5e7eb\", \"#10b981\"],  # gray -&gt; green\n...     )\n... )\n\n\n\n\n\n\nName\nDescription\n\n\n\n\nto_dict\nSerialize for JavaScript (snake_case, JS converts to camelCase).\n\n\n\n\n\nmode.Multiple.to_dict()\nSerialize for JavaScript (snake_case, JS converts to camelCase)."
+    "text": "kit.generate_code(\n    input_filename,\n    output_filename,\n    relabel=None,\n    overlay_ids=None,\n    underlay_ids=None,\n    hidden_ids=None,\n    annotation_ids=None,\n    lines_as_path_ids=None,\n    metadata=None,\n)\nGenerate Python code for the conversion.\nGenerates reproducible Python code using the fluent Outline API.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\ninput_filename\nstr\nName of the input SVG/JSON file\nrequired\n\n\noutput_filename\nstr\nName of the output JSON file\nrequired\n\n\nrelabel\ndict[str, str | list[str]] | None\nDict mapping new_id to old_id(s)\nNone\n\n\noverlay_ids\nlist[str] | None\nList of region IDs to mark as overlays\nNone\n\n\nunderlay_ids\nlist[str] | None\nList of region IDs to mark as underlays\nNone\n\n\nhidden_ids\nlist[str] | None\nList of region IDs to mark as hidden\nNone\n\n\nannotation_ids\nlist[str] | None\nList of region IDs to mark as annotations\nNone\n\n\nlines_as_path_ids\nlist[str] | None\nList of region IDs to mark as lines (stroke-only)\nNone\n\n\nmetadata\ndict[str, str] | None\nDict of metadata to include\nNone\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nstr\nPython code as a string\n\n\n\n\n\n\n&gt;&gt;&gt; code = generate_code(\n...     \"map.svg\",\n...     \"map.json\",\n...     relabel={\"tokyo\": \"path_1\"},\n...     overlay_ids=[\"_border\"],\n...     underlay_ids=[\"_background\"],\n...     lines_as_path_ids=[\"_divider\"],\n... )\n&gt;&gt;&gt; print(code)\n# Generated by shinymap kit\nfrom shinymap.kit import convert\n..."
   },
   {
-    "objectID": "python/mode.Multiple.html#parameters",
-    "href": "python/mode.Multiple.html#parameters",
-    "title": "mode.Multiple",
+    "objectID": "python/kit.generate_code.html#parameters",
+    "href": "python/kit.generate_code.html#parameters",
+    "title": "kit.generate_code",
     "section": "",
-    "text": "Name\nType\nDescription\nDefault\n\n\n\n\nselected\nlist[str] | None\nInitially selected region IDs.\nNone\n\n\nmax_selection\nint | None\nMaximum number of selections allowed. None = unlimited.\nNone\n\n\naes\nIndexedAesthetic | ByGroup | None\nTwo-state aesthetic [unselected, selected]. Can be aes.Indexed (global) or aes.ByGroup wrapping aes.Indexed.\nNone"
+    "text": "Name\nType\nDescription\nDefault\n\n\n\n\ninput_filename\nstr\nName of the input SVG/JSON file\nrequired\n\n\noutput_filename\nstr\nName of the output JSON file\nrequired\n\n\nrelabel\ndict[str, str | list[str]] | None\nDict mapping new_id to old_id(s)\nNone\n\n\noverlay_ids\nlist[str] | None\nList of region IDs to mark as overlays\nNone\n\n\nunderlay_ids\nlist[str] | None\nList of region IDs to mark as underlays\nNone\n\n\nhidden_ids\nlist[str] | None\nList of region IDs to mark as hidden\nNone\n\n\nannotation_ids\nlist[str] | None\nList of region IDs to mark as annotations\nNone\n\n\nlines_as_path_ids\nlist[str] | None\nList of region IDs to mark as lines (stroke-only)\nNone\n\n\nmetadata\ndict[str, str] | None\nDict of metadata to include\nNone"
   },
   {
-    "objectID": "python/mode.Multiple.html#examples",
-    "href": "python/mode.Multiple.html#examples",
-    "title": "mode.Multiple",
+    "objectID": "python/kit.generate_code.html#returns",
+    "href": "python/kit.generate_code.html#returns",
+    "title": "kit.generate_code",
     "section": "",
-    "text": "&gt;&gt;&gt; from shinymap.mode import Multiple\n&gt;&gt;&gt; from shinymap import aes\n\n&gt;&gt;&gt; # Limit to 3 selections\n&gt;&gt;&gt; mode = Multiple(max_selection=3)\n\n&gt;&gt;&gt; # Pre-select regions\n&gt;&gt;&gt; mode = Multiple(selected=[\"region_a\", \"region_b\"])\n\n&gt;&gt;&gt; # Custom selection colors with limit\n&gt;&gt;&gt; mode = Multiple(\n...     max_selection=5,\n...     aes=aes.Indexed(\n...         fill_color=[\"#e5e7eb\", \"#10b981\"],  # gray -&gt; green\n...     )\n... )"
+    "text": "Name\nType\nDescription\n\n\n\n\n\nstr\nPython code as a string"
   },
   {
-    "objectID": "python/mode.Multiple.html#methods",
-    "href": "python/mode.Multiple.html#methods",
-    "title": "mode.Multiple",
+    "objectID": "python/kit.generate_code.html#examples",
+    "href": "python/kit.generate_code.html#examples",
+    "title": "kit.generate_code",
     "section": "",
-    "text": "Name\nDescription\n\n\n\n\nto_dict\nSerialize for JavaScript (snake_case, JS converts to camelCase).\n\n\n\n\n\nmode.Multiple.to_dict()\nSerialize for JavaScript (snake_case, JS converts to camelCase)."
+    "text": "&gt;&gt;&gt; code = generate_code(\n...     \"map.svg\",\n...     \"map.json\",\n...     relabel={\"tokyo\": \"path_1\"},\n...     overlay_ids=[\"_border\"],\n...     underlay_ids=[\"_background\"],\n...     lines_as_path_ids=[\"_divider\"],\n... )\n&gt;&gt;&gt; print(code)\n# Generated by shinymap kit\nfrom shinymap.kit import convert\n..."
   },
   {
-    "objectID": "python/outline.Outline.html",
-    "href": "python/outline.Outline.html",
-    "title": "outline.Outline",
+    "objectID": "python/mode.Count.html",
+    "href": "python/mode.Count.html",
+    "title": "mode.Count",
     "section": "",
-    "text": "outline.Outline(regions, metadata=dict())\nCanonical outline representation with polymorphic elements.\nThis class encapsulates SVG outline with metadata. It supports both: - v0.x format: String-based paths (for backward compatibility) - v1.x format: Polymorphic element objects (Circle, Rect, Path, etc.)\nThe class automatically converts between formats for seamless migration.\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\nregions\nRegions\nRegions object (dict subclass) mapping region IDs to lists of elements (str for v0.x compatibility, Element objects for v1.x)\n\n\nmetadata\ndict[str, Any]\nOptional metadata dict (viewBox, overlays, source, license, etc.)\n\n\n\n\n\n\nSVG elements preserve aesthetic attributes (fill, stroke, etc.) but these are NOT used by shinymap for rendering. Interactive appearance is controlled via Python API. Preserved values are for SVG export and reference only.\n\n\n\n&gt;&gt;&gt; # v0.x format (backward compatible)\n&gt;&gt;&gt; data = {\"region1\": [\"M 0 0 L 10 0\"], \"_metadata\": {\"viewBox\": \"0 0 100 100\"}}\n&gt;&gt;&gt; geo = Outline.from_dict(data)\n\n&gt;&gt;&gt; # v1.x format (polymorphic elements)\n&gt;&gt;&gt; from shinymap.svg import Circle\n&gt;&gt;&gt; geo = Outline(regions={\"r1\": [Circle(cx=100, cy=100, r=50)]}, metadata={})\n\n\n\n\n\n\nName\nDescription\n\n\n\n\nannotation_ids\nGet region IDs in the annotation layer.\n\n\nfrom_dict\nLoad outline from dict (supports v0.x strings and v1.x element dicts).\n\n\nfrom_json\nLoad outline from JSON file.\n\n\nfrom_svg\nExtract outline from SVG file (all element types).\n\n\ngroups\nGet group membership from metadata.\n\n\nhidden_ids\nGet region IDs in the hidden layer.\n\n\nlayers_dict\nGet layers configuration dict for JavaScript props.\n\n\nmain_regions\nGet main regions (excluding overlay layer).\n\n\nmerge_layers\nMerge provided layers with outline’s metadata.\n\n\nmetadata_dict\nBuild outline metadata dict for JavaScript props.\n\n\nmove_group\nRename a region or merge multiple regions into a group (returns new Outline).\n\n\nmove_layer\nMove regions to the specified layer (returns new Outline object).\n\n\noverlay_ids\nGet region IDs in the overlay layer.\n\n\noverlay_regions\nGet overlay regions only.\n\n\npath_as_line\nMark regions as lines described in path notation.\n\n\nregion_types\nGet aesthetic element type for each region.\n\n\nrelabel\nRename or merge regions (returns new Outline object).\n\n\nset_overlays\nSet overlay region IDs in metadata (returns new Outline object).\n\n\nto_dict\nExport to dict in shinymap JSON format.\n\n\nto_json\nWrite outline to JSON file.\n\n\nunderlay_ids\nGet region IDs in the underlay layer.\n\n\nupdate_metadata\nUpdate metadata (returns new Outline object).\n\n\nviewbox\nGet viewBox from metadata, or compute from outline coordinates.\n\n\n\n\n\noutline.Outline.annotation_ids()\nGet region IDs in the annotation layer.\nThe annotation layer renders above hover/selection layers, ensuring text labels and other annotations are always visible.\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[str]\nList of region IDs in the annotation layer\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_dict({\n...     \"region\": [\"M 0 0\"],\n...     \"_label\": [{\"type\": \"text\", \"x\": 50, \"y\": 50, \"text\": \"A\"}],\n...     \"_metadata\": {\"annotation\": [\"_label\"]}\n... })\n&gt;&gt;&gt; geo.annotation_ids()\n['_label']\n\n\n\n\noutline.Outline.from_dict(data)\nLoad outline from dict (supports v0.x strings and v1.x element dicts).\nAutomatically detects format and converts: - v0.x: String paths → kept as strings (backward compatible) - v1.x: Element dicts → deserialized to Element objects\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\ndata\ndict[str, Any]\nDictionary with regions and optional _metadata key\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nOutline\nOutline object with normalized list-based regions\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nValueError\nIf _metadata exists but is not a dict\n\n\n\n\n\n\n&gt;&gt;&gt; # v0.x string format (backward compatible)\n&gt;&gt;&gt; outline = Outline.from_dict({\"a\": \"M 0 0 L 10 0\"})\n&gt;&gt;&gt; list(outline.regions.keys())\n['a']\n\n&gt;&gt;&gt; # v0.x list format\n&gt;&gt;&gt; outline = Outline.from_dict({\"a\": [\"M 0 0\", \"L 10 0\"]})\n&gt;&gt;&gt; outline.regions[\"a\"]\n['M 0 0', 'L 10 0']\n\n&gt;&gt;&gt; # v1.x element format\n&gt;&gt;&gt; data = {\"a\": [{\"type\": \"circle\", \"cx\": 100, \"cy\": 100, \"r\": 50}]}\n&gt;&gt;&gt; outline = Outline.from_dict(data)\n&gt;&gt;&gt; outline.regions[\"a\"]\n[Circle(cx=100, cy=100, r=50)]\n\n\n\n\noutline.Outline.from_json(json_path)\nLoad outline from JSON file.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\njson_path\nstr | PathType\nPath to JSON file in shinymap format\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nOutline\nOutline object with normalized list-based paths\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_json(\"japan_prefectures.json\")  # doctest: +SKIP\n&gt;&gt;&gt; geo.regions.keys()  # doctest: +SKIP\ndict_keys(['01', '02', ...])\n\n\n\n\noutline.Outline.from_svg(svg_path, extract_viewbox=True)\nExtract outline from SVG file (all element types).\nExtracts all supported SVG shape elements (path, circle, rect, polygon, ellipse, line, text) and generates auto-IDs for elements without IDs. This is v1.0 behavior - returns polymorphic Element objects instead of path strings.\nPreserves SVG aesthetics (fill, stroke, etc.) but these are NOT used by shinymap for rendering. See class docstring for details.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nsvg_path\nstr | PathType\nPath to input SVG file\nrequired\n\n\nextract_viewbox\nbool\nIf True, extract viewBox from SVG root element\nTrue\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nOutline\nOutline object with extracted elements (v1.x format)\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nFileNotFoundError\nIf svg_path does not exist\n\n\n\nValueError\nIf SVG parsing fails\n\n\n\n\n\n\n&gt;&gt;&gt; # Basic extraction (all element types)\n&gt;&gt;&gt; geo = Outline.from_svg(\"design.svg\")  # doctest: +SKIP\n&gt;&gt;&gt; geo.regions.keys()  # doctest: +SKIP\ndict_keys(['circle_1', 'rect_1', 'path_1', 'text_1'])\n\n&gt;&gt;&gt; # With transformations\n&gt;&gt;&gt; geo = Outline.from_svg(\"map.svg\")  # doctest: +SKIP\n&gt;&gt;&gt; geo.relabel({\"hokkaido\": [\"circle_1\", \"circle_2\"]})  # doctest: +SKIP\n&gt;&gt;&gt; geo.set_overlays([\"_border\"])  # doctest: +SKIP\n&gt;&gt;&gt; geo.to_json(\"output.json\")  # doctest: +SKIP\n\n\n\n\noutline.Outline.groups()\nGet group membership from metadata.\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ndict[str, list[str]]\nDict mapping group names to lists of region IDs\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_dict({\n...     \"region1\": [\"M 0 0\"],\n...     \"region2\": [\"M 10 0\"],\n...     \"_metadata\": {\"groups\": {\"coastal\": [\"region1\", \"region2\"]}}\n... })\n&gt;&gt;&gt; geo.groups()\n{'coastal': ['region1', 'region2']}\n\n\n\n\noutline.Outline.hidden_ids()\nGet region IDs in the hidden layer.\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[str]\nList of region IDs in the hidden layer\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_dict({\n...     \"region\": [\"M 0 0\"],\n...     \"_temp\": [\"M 0 0 L 100 0\"],\n...     \"_metadata\": {\"hidden\": [\"_temp\"]}\n... })\n&gt;&gt;&gt; geo.hidden_ids()\n['_temp']\n\n\n\n\noutline.Outline.layers_dict()\nGet layers configuration dict for JavaScript props.\nReturns a dict with overlay, underlay, annotation, and hidden keys if any layer configuration is present in metadata. Returns None if no layer configuration exists.\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ndict[str, list[str]] | None\nDict with layer configuration or None\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_dict({\n...     \"region\": [\"M 0 0\"],\n...     \"_border\": [\"M 0 0 L 100 0\"],\n...     \"_metadata\": {\"overlay\": [\"_border\"], \"underlay\": [\"_bg\"]}\n... })\n&gt;&gt;&gt; geo.layers_dict()\n{'overlay': ['_border'], 'underlay': ['_bg']}\n\n\n\n\noutline.Outline.main_regions()\nGet main regions (excluding overlay layer).\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nRegions\nRegions object with main regions {regionId: [element1, …]}\n\n\n\nRegions\n(elements can be strings for v0.x or Element objects for v1.x)\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_dict({\n...     \"region\": [\"M 0 0\"],\n...     \"_border\": [\"M 0 0 L 100 0\"],\n...     \"_metadata\": {\"overlay\": [\"_border\"]}\n... })\n&gt;&gt;&gt; geo.main_regions()\nRegions({\n  'region': ['M 0 0'],\n})\n\n\n\n\noutline.Outline.merge_layers(layers)\nMerge provided layers with outline’s metadata.\nReturns a new Outline with updated metadata containing the merged layers configuration. Explicit layers take priority over existing metadata.\nThis method follows the immutable pattern - the original Outline is unchanged and a new Outline is returned.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nlayers\ndict[str, list[str]] | None\nOptional explicit layer configuration with keys: underlay, overlay, annotation, hidden\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nOutline\nNew Outline with merged layers in metadata\n\n\n\n\n\n\n&gt;&gt;&gt; outline = Outline.from_dict({\n...     \"region\": [\"M 0 0\"],\n...     \"_border\": [\"M 0 0 L 100 0\"],\n...     \"_metadata\": {\"overlay\": [\"_border\"]}\n... })\n&gt;&gt;&gt; merged = outline.merge_layers({\"underlay\": [\"_bg\"]})\n&gt;&gt;&gt; merged.metadata\n{'overlay': ['_border'], 'underlay': ['_bg']}\n&gt;&gt;&gt; merged = outline.merge_layers({\"overlay\": [\"_custom\"]})\n&gt;&gt;&gt; merged.metadata\n{'overlay': ['_custom']}\n\n\n\n\noutline.Outline.metadata_dict(view_box=None)\nBuild outline metadata dict for JavaScript props.\nCreates the outlineMetadata object sent to React components, containing viewBox and groups information.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nview_box\ntuple[float, float, float, float] | None\nOptional override viewBox tuple. If None, uses self.viewbox()\nNone\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ndict[str, Any] | None\nDict with viewBox and groups, or None if no metadata\n\n\n\n\n\n\n&gt;&gt;&gt; outline = Outline.from_dict({\n...     \"region1\": [\"M 0 0 L 100 100\"],\n...     \"_metadata\": {\"groups\": {\"coastal\": [\"region1\"]}}\n... })\n&gt;&gt;&gt; outline.metadata_dict()\n{'viewBox': '-2.0 -2.0 104.0 104.0', 'groups': {'coastal': ['region1']}}\n\n\n\n\noutline.Outline.move_group(group_id, *region_ids)\nRename a region or merge multiple regions into a group (returns new Outline).\nThis is a fluent API for relabeling. It’s equivalent to calling outline.relabel({group_id: list(region_ids)}).\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\ngroup_id\nstr\nNew ID for the group\nrequired\n\n\n*region_ids\nstr | list[str]\nRegion IDs to include. Can be: - Multiple string args: move_group(“new”, “id1”, “id2”) - Single list arg: move_group(“new”, [“id1”, “id2”])\n()\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nOutline\nNew Outline with the group applied\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nValueError\nIf a region ID doesn’t exist\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_dict({\n...     \"path_1\": [\"M 0 0 L 10 0\"],\n...     \"path_2\": [\"M 20 0 L 30 0\"],\n...     \"path_3\": [\"M 40 0 L 50 0\"]\n... })\n&gt;&gt;&gt; # Merge multiple regions\n&gt;&gt;&gt; geo2 = geo.move_group(\"combined\", \"path_1\", \"path_2\")\n&gt;&gt;&gt; sorted(geo2.region_ids())\n['combined', 'path_3']\n&gt;&gt;&gt; # Rename single region\n&gt;&gt;&gt; geo3 = geo.move_group(\"renamed\", \"path_3\")\n&gt;&gt;&gt; \"renamed\" in geo3.region_ids()\nTrue\n&gt;&gt;&gt; # Pass list of IDs\n&gt;&gt;&gt; geo4 = geo.move_group(\"merged\", [\"path_1\", \"path_2\", \"path_3\"])\n&gt;&gt;&gt; list(geo4.region_ids())\n['merged']\n\n\n\n\noutline.Outline.move_layer(layer, *region_ids)\nMove regions to the specified layer (returns new Outline object).\nThis is a fluent API for assigning regions to layers. Each region can only be in one layer at a time - calling this method removes the region from any previous layer assignment.\nUse “main” to move regions back to the main (interactive) layer.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nlayer\nLiteral['main', 'underlay', 'overlay', 'annotation', 'hidden']\nTarget layer (“main”, “underlay”, “overlay”, “annotation”, or “hidden”). The “annotation” layer renders above hover/selection.\nrequired\n\n\n*region_ids\nstr | list[str]\nRegion IDs to move. Can be: - Multiple string args: move_layer(“overlay”, “id1”, “id2”) - Single list arg: move_layer(“overlay”, [“id1”, “id2”])\n()\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nOutline\nNew Outline with updated layer assignments\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_dict({\n...     \"region\": [\"M 0 0\"],\n...     \"_border\": [\"M 0 0 L 100 0\"],\n...     \"_grid\": [\"M 0 50 L 100 50\"]\n... })\n&gt;&gt;&gt; # Move to overlay and underlay\n&gt;&gt;&gt; geo2 = (\n...     geo.move_layer(\"overlay\", \"_border\")\n...        .move_layer(\"underlay\", \"_grid\")\n... )\n&gt;&gt;&gt; geo2.overlay_ids()\n['_border']\n&gt;&gt;&gt; # Move back to main layer\n&gt;&gt;&gt; geo3 = geo2.move_layer(\"main\", \"_border\")\n&gt;&gt;&gt; geo3.overlay_ids()\n[]\n&gt;&gt;&gt; # Pass list of IDs\n&gt;&gt;&gt; geo4 = geo.move_layer(\"overlay\", [\"_border\", \"_grid\"])\n&gt;&gt;&gt; sorted(geo4.overlay_ids())\n['_border', '_grid']\n\n\n\n\noutline.Outline.overlay_ids()\nGet region IDs in the overlay layer.\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[str]\nList of region IDs in the overlay layer\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_dict({\n...     \"region\": [\"M 0 0\"],\n...     \"_border\": [\"M 0 0 L 100 0\"],\n...     \"_metadata\": {\"overlay\": [\"_border\"]}\n... })\n&gt;&gt;&gt; geo.overlay_ids()\n['_border']\n\n\n\n\noutline.Outline.overlay_regions()\nGet overlay regions only.\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nRegions\nRegions object with overlay regions {regionId: [element1, …]}\n\n\n\nRegions\n(elements can be strings for v0.x or Element objects for v1.x)\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_dict({\n...     \"region\": [\"M 0 0\"],\n...     \"_border\": [\"M 0 0 L 100 0\"],\n...     \"_metadata\": {\"overlay\": [\"_border\"]}\n... })\n&gt;&gt;&gt; geo.overlay_regions()\nRegions({\n  '_border': ['M 0 0 L 100 0'],\n})\n\n\n\n\noutline.Outline.path_as_line(*region_ids)\nMark regions as lines described in path notation.\nSome SVG paths represent lines (dividers, borders, grids) rather than filled shapes. This method stores the region IDs so that stroke-only aesthetics are automatically applied.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\n*region_ids\nstr\nRegion IDs containing line elements in path notation\n()\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nOutline\nNew Outline object with line regions recorded in metadata\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_dict({\n...     \"region\": [\"M 0 0 L 100 100\"],\n...     \"_divider\": [\"M 50 0 L 50 100\"]\n... })\n&gt;&gt;&gt; geo2 = geo.path_as_line(\"_divider\")\n&gt;&gt;&gt; # Now _divider will use stroke-only rendering\n\n\n\n\noutline.Outline.region_types()\nGet aesthetic element type for each region.\nReturns a mapping of region_id -&gt; element_type where element_type is one of “shape”, “line”, or “text” for aesthetic resolution purposes.\nPriority: 1. metadata[“lines_as_path”] - explicit line override for path elements 2. Element’s element_name: - “line” → “line” - “text” → “text” - All others → “shape”\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ndict[str, str]\nDict mapping region IDs to their aesthetic element types\n\n\n\n\n\n\n&gt;&gt;&gt; # v1.x format with mixed elements\n&gt;&gt;&gt; from shinymap.svg import Circle, Line, Text, Path\n&gt;&gt;&gt; outline = Outline(regions={\n...     \"region\": [Circle(cx=50, cy=50, r=30)],\n...     \"_divider\": [Line(x1=0, y1=50, x2=100, y2=50)],\n...     \"label\": [Text(x=50, y=50, text=\"A\")],\n... }, metadata={})\n&gt;&gt;&gt; outline.region_types()\n{'region': 'shape', '_divider': 'line', 'label': 'text'}\n\n&gt;&gt;&gt; # Path marked as line via path_as_line()\n&gt;&gt;&gt; outline = Outline(regions={\n...     \"_border\": [Path(d=\"M 0 0 L 100 0\")],\n... }, metadata={}).path_as_line(\"_border\")\n&gt;&gt;&gt; outline.region_types()\n{'_border': 'line'}\n\n\n\n\noutline.Outline.relabel(mapping)\nRename or merge regions (returns new Outline object).\nThis method applies relabeling transformations to create a new Outline object with renamed or merged regions. Original object is unchanged.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nmapping\ndict[str, str | list[str]]\nDict mapping new IDs to old ID(s) - String value: rename single region (e.g., {“tokyo”: “path_5”}) - List value: merge multiple regions (e.g., {“hokkaido”: [“path_1”, “path_2”]})\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nOutline\nNew Outline object with relabeled regions\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nValueError\nIf an old ID in mapping doesn’t exist\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_dict({\n...     \"path_1\": [\"M 0 0 L 10 0\"],\n...     \"path_2\": [\"M 20 0 L 30 0\"],\n...     \"path_3\": [\"M 40 0 L 50 0\"]\n... })\n&gt;&gt;&gt; # Rename and merge\n&gt;&gt;&gt; geo2 = geo.relabel({\n...     \"region_a\": [\"path_1\", \"path_2\"],  # Merge\n...     \"_border\": \"path_3\"                 # Rename\n... })\n&gt;&gt;&gt; geo2.regions.keys()\ndict_keys(['region_a', '_border'])\n\n\n\n\noutline.Outline.set_overlays(overlay_ids)\nSet overlay region IDs in metadata (returns new Outline object).\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\noverlay_ids\nlist[str]\nList of region IDs to mark as overlays\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nOutline\nNew Outline object with updated overlay metadata\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_dict({\n...     \"region\": [\"M 0 0\"],\n...     \"_border\": [\"M 0 0 L 100 0\"]\n... })\n&gt;&gt;&gt; geo2 = geo.set_overlays([\"_border\"])\n&gt;&gt;&gt; geo2.overlay_ids()\n['_border']\n\n\n\n\noutline.Outline.to_dict()\nExport to dict in shinymap JSON format.\nAutomatically serializes elements: - v0.x format: Strings are kept as-is - v1.x format: Element objects are serialized to dicts via to_dict()\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ndict[str, Any]\nDict with _metadata and region data (v0.x strings or v1.x element dicts)\n\n\n\n\n\n\n&gt;&gt;&gt; # v0.x format (strings) - empty metadata is omitted\n&gt;&gt;&gt; outline = Outline.from_dict({\"region\": [\"M 0 0\"]})\n&gt;&gt;&gt; outline.to_dict()\n{'region': ['M 0 0']}\n\n&gt;&gt;&gt; # v1.x format (elements)\n&gt;&gt;&gt; from shinymap.svg import Circle\n&gt;&gt;&gt; outline = Outline(regions={\"r1\": [Circle(cx=100, cy=100, r=50)]}, metadata={})\n&gt;&gt;&gt; outline.to_dict()\n{'r1': [{'type': 'circle', 'cx': 100, 'cy': 100, 'r': 50}]}\n\n\n\n\noutline.Outline.to_json(output_path)\nWrite outline to JSON file.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\noutput_path\nstr | PathType\nPath to write JSON file\nrequired\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_svg(\"map.svg\")  # doctest: +SKIP\n&gt;&gt;&gt; geo.to_json(\"output.json\")  # doctest: +SKIP\n\n\n\n\noutline.Outline.underlay_ids()\nGet region IDs in the underlay layer.\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[str]\nList of region IDs in the underlay layer\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_dict({\n...     \"region\": [\"M 0 0\"],\n...     \"_bg\": [\"M 0 0 L 100 0 L 100 100 L 0 100 Z\"],\n...     \"_metadata\": {\"underlay\": [\"_bg\"]}\n... })\n&gt;&gt;&gt; geo.underlay_ids()\n['_bg']\n\n\n\n\noutline.Outline.update_metadata(metadata)\nUpdate metadata (returns new Outline object).\nMerges provided metadata with existing metadata. Existing keys are overwritten by new values.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nmetadata\ndict[str, Any]\nDict of metadata to merge\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nOutline\nNew Outline object with updated metadata\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_dict({\"region\": [\"M 0 0\"]})\n&gt;&gt;&gt; geo2 = geo.update_metadata({\n...     \"source\": \"Wikimedia Commons\",\n...     \"license\": \"CC BY-SA 3.0\"\n... })\n&gt;&gt;&gt; geo2.metadata[\"source\"]\n'Wikimedia Commons'\n\n\n\n\noutline.Outline.viewbox(padding=0.02)\nGet viewBox from metadata, or compute from outline coordinates.\nWorks with both v0.x (string paths) and v1.x (Element objects).\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npadding\nfloat\nPadding fraction for computed viewBox (default 2%)\n0.02\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ntuple[float, float, float, float]\nViewBox tuple in format (x, y, width, height)\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_dict({\"a\": [\"M 0 0 L 100 100\"]})\n&gt;&gt;&gt; geo.viewbox()  # Returns with 2% padding\n(-2.0, -2.0, 104.0, 104.0)"
+    "text": "mode.Count(values=None, max_count=None, aes=None)\nCount mode - unbounded counting.\nEach click increments the count. Use with aes.Indexed to define visual appearance based on count (with clamping for index lookup).\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nvalues\ndict[str, int] | None\nInitial counts per region {id: count}. Default: all 0.\nNone\n\n\nmax_count\nint | None\nOptional cap for aesthetic indexing (clamping). If None, uses len(aes list) - 1 as the cap.\nNone\n\n\naes\nIndexedAesthetic | ByGroup | None\nIndexed aesthetic for visual feedback. Can be aes.Indexed (global) or aes.ByGroup wrapping aes.Indexed. Index is computed as: min(count, len(list) - 1) (clamping).\nNone\n\n\n\n\n\n\n&gt;&gt;&gt; from shinymap.mode import Count\n&gt;&gt;&gt; from shinymap import aes\n&gt;&gt;&gt; from shinymap.utils import linspace\n\n&gt;&gt;&gt; # Heat map with opacity gradient\n&gt;&gt;&gt; mode = Count(\n...     aes=aes.Indexed(\n...         fill_color=\"#f97316\",\n...         fill_opacity=linspace(0.0, 1.0, num=6),\n...     ),\n... )\n\n&gt;&gt;&gt; # Per-group palettes\n&gt;&gt;&gt; mode = Count(\n...     aes=aes.ByGroup(\n...         group_a=aes.Indexed(\n...             fill_color=\"#ef4444\", fill_opacity=linspace(0.2, 1.0, num=5)\n...         ),\n...         group_b=aes.Indexed(\n...             fill_color=\"#3b82f6\", fill_opacity=linspace(0.2, 1.0, num=5)\n...         ),\n...     ),\n... )\n\n\n\n\n\n\nName\nDescription\n\n\n\n\nto_dict\nSerialize for JavaScript (snake_case, JS converts to camelCase).\n\n\n\n\n\nmode.Count.to_dict()\nSerialize for JavaScript (snake_case, JS converts to camelCase)."
   },
   {
-    "objectID": "python/outline.Outline.html#attributes",
-    "href": "python/outline.Outline.html#attributes",
-    "title": "outline.Outline",
+    "objectID": "python/mode.Count.html#parameters",
+    "href": "python/mode.Count.html#parameters",
+    "title": "mode.Count",
     "section": "",
-    "text": "Name\nType\nDescription\n\n\n\n\nregions\nRegions\nRegions object (dict subclass) mapping region IDs to lists of elements (str for v0.x compatibility, Element objects for v1.x)\n\n\nmetadata\ndict[str, Any]\nOptional metadata dict (viewBox, overlays, source, license, etc.)"
+    "text": "Name\nType\nDescription\nDefault\n\n\n\n\nvalues\ndict[str, int] | None\nInitial counts per region {id: count}. Default: all 0.\nNone\n\n\nmax_count\nint | None\nOptional cap for aesthetic indexing (clamping). If None, uses len(aes list) - 1 as the cap.\nNone\n\n\naes\nIndexedAesthetic | ByGroup | None\nIndexed aesthetic for visual feedback. Can be aes.Indexed (global) or aes.ByGroup wrapping aes.Indexed. Index is computed as: min(count, len(list) - 1) (clamping).\nNone"
   },
   {
-    "objectID": "python/outline.Outline.html#note-on-aesthetics",
-    "href": "python/outline.Outline.html#note-on-aesthetics",
-    "title": "outline.Outline",
+    "objectID": "python/mode.Count.html#examples",
+    "href": "python/mode.Count.html#examples",
+    "title": "mode.Count",
     "section": "",
-    "text": "SVG elements preserve aesthetic attributes (fill, stroke, etc.) but these are NOT used by shinymap for rendering. Interactive appearance is controlled via Python API. Preserved values are for SVG export and reference only."
+    "text": "&gt;&gt;&gt; from shinymap.mode import Count\n&gt;&gt;&gt; from shinymap import aes\n&gt;&gt;&gt; from shinymap.utils import linspace\n\n&gt;&gt;&gt; # Heat map with opacity gradient\n&gt;&gt;&gt; mode = Count(\n...     aes=aes.Indexed(\n...         fill_color=\"#f97316\",\n...         fill_opacity=linspace(0.0, 1.0, num=6),\n...     ),\n... )\n\n&gt;&gt;&gt; # Per-group palettes\n&gt;&gt;&gt; mode = Count(\n...     aes=aes.ByGroup(\n...         group_a=aes.Indexed(\n...             fill_color=\"#ef4444\", fill_opacity=linspace(0.2, 1.0, num=5)\n...         ),\n...         group_b=aes.Indexed(\n...             fill_color=\"#3b82f6\", fill_opacity=linspace(0.2, 1.0, num=5)\n...         ),\n...     ),\n... )"
   },
   {
-    "objectID": "python/outline.Outline.html#examples",
-    "href": "python/outline.Outline.html#examples",
-    "title": "outline.Outline",
+    "objectID": "python/mode.Count.html#methods",
+    "href": "python/mode.Count.html#methods",
+    "title": "mode.Count",
     "section": "",
-    "text": "&gt;&gt;&gt; # v0.x format (backward compatible)\n&gt;&gt;&gt; data = {\"region1\": [\"M 0 0 L 10 0\"], \"_metadata\": {\"viewBox\": \"0 0 100 100\"}}\n&gt;&gt;&gt; geo = Outline.from_dict(data)\n\n&gt;&gt;&gt; # v1.x format (polymorphic elements)\n&gt;&gt;&gt; from shinymap.svg import Circle\n&gt;&gt;&gt; geo = Outline(regions={\"r1\": [Circle(cx=100, cy=100, r=50)]}, metadata={})"
+    "text": "Name\nDescription\n\n\n\n\nto_dict\nSerialize for JavaScript (snake_case, JS converts to camelCase).\n\n\n\n\n\nmode.Count.to_dict()\nSerialize for JavaScript (snake_case, JS converts to camelCase)."
   },
   {
-    "objectID": "python/outline.Outline.html#methods",
-    "href": "python/outline.Outline.html#methods",
-    "title": "outline.Outline",
+    "objectID": "python/mode.Display.html",
+    "href": "python/mode.Display.html",
+    "title": "mode.Display",
     "section": "",
-    "text": "Name\nDescription\n\n\n\n\nannotation_ids\nGet region IDs in the annotation layer.\n\n\nfrom_dict\nLoad outline from dict (supports v0.x strings and v1.x element dicts).\n\n\nfrom_json\nLoad outline from JSON file.\n\n\nfrom_svg\nExtract outline from SVG file (all element types).\n\n\ngroups\nGet group membership from metadata.\n\n\nhidden_ids\nGet region IDs in the hidden layer.\n\n\nlayers_dict\nGet layers configuration dict for JavaScript props.\n\n\nmain_regions\nGet main regions (excluding overlay layer).\n\n\nmerge_layers\nMerge provided layers with outline’s metadata.\n\n\nmetadata_dict\nBuild outline metadata dict for JavaScript props.\n\n\nmove_group\nRename a region or merge multiple regions into a group (returns new Outline).\n\n\nmove_layer\nMove regions to the specified layer (returns new Outline object).\n\n\noverlay_ids\nGet region IDs in the overlay layer.\n\n\noverlay_regions\nGet overlay regions only.\n\n\npath_as_line\nMark regions as lines described in path notation.\n\n\nregion_types\nGet aesthetic element type for each region.\n\n\nrelabel\nRename or merge regions (returns new Outline object).\n\n\nset_overlays\nSet overlay region IDs in metadata (returns new Outline object).\n\n\nto_dict\nExport to dict in shinymap JSON format.\n\n\nto_json\nWrite outline to JSON file.\n\n\nunderlay_ids\nGet region IDs in the underlay layer.\n\n\nupdate_metadata\nUpdate metadata (returns new Outline object).\n\n\nviewbox\nGet viewBox from metadata, or compute from outline coordinates.\n\n\n\n\n\noutline.Outline.annotation_ids()\nGet region IDs in the annotation layer.\nThe annotation layer renders above hover/selection layers, ensuring text labels and other annotations are always visible.\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[str]\nList of region IDs in the annotation layer\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_dict({\n...     \"region\": [\"M 0 0\"],\n...     \"_label\": [{\"type\": \"text\", \"x\": 50, \"y\": 50, \"text\": \"A\"}],\n...     \"_metadata\": {\"annotation\": [\"_label\"]}\n... })\n&gt;&gt;&gt; geo.annotation_ids()\n['_label']\n\n\n\n\noutline.Outline.from_dict(data)\nLoad outline from dict (supports v0.x strings and v1.x element dicts).\nAutomatically detects format and converts: - v0.x: String paths → kept as strings (backward compatible) - v1.x: Element dicts → deserialized to Element objects\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\ndata\ndict[str, Any]\nDictionary with regions and optional _metadata key\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nOutline\nOutline object with normalized list-based regions\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nValueError\nIf _metadata exists but is not a dict\n\n\n\n\n\n\n&gt;&gt;&gt; # v0.x string format (backward compatible)\n&gt;&gt;&gt; outline = Outline.from_dict({\"a\": \"M 0 0 L 10 0\"})\n&gt;&gt;&gt; list(outline.regions.keys())\n['a']\n\n&gt;&gt;&gt; # v0.x list format\n&gt;&gt;&gt; outline = Outline.from_dict({\"a\": [\"M 0 0\", \"L 10 0\"]})\n&gt;&gt;&gt; outline.regions[\"a\"]\n['M 0 0', 'L 10 0']\n\n&gt;&gt;&gt; # v1.x element format\n&gt;&gt;&gt; data = {\"a\": [{\"type\": \"circle\", \"cx\": 100, \"cy\": 100, \"r\": 50}]}\n&gt;&gt;&gt; outline = Outline.from_dict(data)\n&gt;&gt;&gt; outline.regions[\"a\"]\n[Circle(cx=100, cy=100, r=50)]\n\n\n\n\noutline.Outline.from_json(json_path)\nLoad outline from JSON file.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\njson_path\nstr | PathType\nPath to JSON file in shinymap format\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nOutline\nOutline object with normalized list-based paths\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_json(\"japan_prefectures.json\")  # doctest: +SKIP\n&gt;&gt;&gt; geo.regions.keys()  # doctest: +SKIP\ndict_keys(['01', '02', ...])\n\n\n\n\noutline.Outline.from_svg(svg_path, extract_viewbox=True)\nExtract outline from SVG file (all element types).\nExtracts all supported SVG shape elements (path, circle, rect, polygon, ellipse, line, text) and generates auto-IDs for elements without IDs. This is v1.0 behavior - returns polymorphic Element objects instead of path strings.\nPreserves SVG aesthetics (fill, stroke, etc.) but these are NOT used by shinymap for rendering. See class docstring for details.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nsvg_path\nstr | PathType\nPath to input SVG file\nrequired\n\n\nextract_viewbox\nbool\nIf True, extract viewBox from SVG root element\nTrue\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nOutline\nOutline object with extracted elements (v1.x format)\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nFileNotFoundError\nIf svg_path does not exist\n\n\n\nValueError\nIf SVG parsing fails\n\n\n\n\n\n\n&gt;&gt;&gt; # Basic extraction (all element types)\n&gt;&gt;&gt; geo = Outline.from_svg(\"design.svg\")  # doctest: +SKIP\n&gt;&gt;&gt; geo.regions.keys()  # doctest: +SKIP\ndict_keys(['circle_1', 'rect_1', 'path_1', 'text_1'])\n\n&gt;&gt;&gt; # With transformations\n&gt;&gt;&gt; geo = Outline.from_svg(\"map.svg\")  # doctest: +SKIP\n&gt;&gt;&gt; geo.relabel({\"hokkaido\": [\"circle_1\", \"circle_2\"]})  # doctest: +SKIP\n&gt;&gt;&gt; geo.set_overlays([\"_border\"])  # doctest: +SKIP\n&gt;&gt;&gt; geo.to_json(\"output.json\")  # doctest: +SKIP\n\n\n\n\noutline.Outline.groups()\nGet group membership from metadata.\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ndict[str, list[str]]\nDict mapping group names to lists of region IDs\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_dict({\n...     \"region1\": [\"M 0 0\"],\n...     \"region2\": [\"M 10 0\"],\n...     \"_metadata\": {\"groups\": {\"coastal\": [\"region1\", \"region2\"]}}\n... })\n&gt;&gt;&gt; geo.groups()\n{'coastal': ['region1', 'region2']}\n\n\n\n\noutline.Outline.hidden_ids()\nGet region IDs in the hidden layer.\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[str]\nList of region IDs in the hidden layer\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_dict({\n...     \"region\": [\"M 0 0\"],\n...     \"_temp\": [\"M 0 0 L 100 0\"],\n...     \"_metadata\": {\"hidden\": [\"_temp\"]}\n... })\n&gt;&gt;&gt; geo.hidden_ids()\n['_temp']\n\n\n\n\noutline.Outline.layers_dict()\nGet layers configuration dict for JavaScript props.\nReturns a dict with overlay, underlay, annotation, and hidden keys if any layer configuration is present in metadata. Returns None if no layer configuration exists.\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ndict[str, list[str]] | None\nDict with layer configuration or None\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_dict({\n...     \"region\": [\"M 0 0\"],\n...     \"_border\": [\"M 0 0 L 100 0\"],\n...     \"_metadata\": {\"overlay\": [\"_border\"], \"underlay\": [\"_bg\"]}\n... })\n&gt;&gt;&gt; geo.layers_dict()\n{'overlay': ['_border'], 'underlay': ['_bg']}\n\n\n\n\noutline.Outline.main_regions()\nGet main regions (excluding overlay layer).\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nRegions\nRegions object with main regions {regionId: [element1, …]}\n\n\n\nRegions\n(elements can be strings for v0.x or Element objects for v1.x)\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_dict({\n...     \"region\": [\"M 0 0\"],\n...     \"_border\": [\"M 0 0 L 100 0\"],\n...     \"_metadata\": {\"overlay\": [\"_border\"]}\n... })\n&gt;&gt;&gt; geo.main_regions()\nRegions({\n  'region': ['M 0 0'],\n})\n\n\n\n\noutline.Outline.merge_layers(layers)\nMerge provided layers with outline’s metadata.\nReturns a new Outline with updated metadata containing the merged layers configuration. Explicit layers take priority over existing metadata.\nThis method follows the immutable pattern - the original Outline is unchanged and a new Outline is returned.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nlayers\ndict[str, list[str]] | None\nOptional explicit layer configuration with keys: underlay, overlay, annotation, hidden\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nOutline\nNew Outline with merged layers in metadata\n\n\n\n\n\n\n&gt;&gt;&gt; outline = Outline.from_dict({\n...     \"region\": [\"M 0 0\"],\n...     \"_border\": [\"M 0 0 L 100 0\"],\n...     \"_metadata\": {\"overlay\": [\"_border\"]}\n... })\n&gt;&gt;&gt; merged = outline.merge_layers({\"underlay\": [\"_bg\"]})\n&gt;&gt;&gt; merged.metadata\n{'overlay': ['_border'], 'underlay': ['_bg']}\n&gt;&gt;&gt; merged = outline.merge_layers({\"overlay\": [\"_custom\"]})\n&gt;&gt;&gt; merged.metadata\n{'overlay': ['_custom']}\n\n\n\n\noutline.Outline.metadata_dict(view_box=None)\nBuild outline metadata dict for JavaScript props.\nCreates the outlineMetadata object sent to React components, containing viewBox and groups information.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nview_box\ntuple[float, float, float, float] | None\nOptional override viewBox tuple. If None, uses self.viewbox()\nNone\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ndict[str, Any] | None\nDict with viewBox and groups, or None if no metadata\n\n\n\n\n\n\n&gt;&gt;&gt; outline = Outline.from_dict({\n...     \"region1\": [\"M 0 0 L 100 100\"],\n...     \"_metadata\": {\"groups\": {\"coastal\": [\"region1\"]}}\n... })\n&gt;&gt;&gt; outline.metadata_dict()\n{'viewBox': '-2.0 -2.0 104.0 104.0', 'groups': {'coastal': ['region1']}}\n\n\n\n\noutline.Outline.move_group(group_id, *region_ids)\nRename a region or merge multiple regions into a group (returns new Outline).\nThis is a fluent API for relabeling. It’s equivalent to calling outline.relabel({group_id: list(region_ids)}).\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\ngroup_id\nstr\nNew ID for the group\nrequired\n\n\n*region_ids\nstr | list[str]\nRegion IDs to include. Can be: - Multiple string args: move_group(“new”, “id1”, “id2”) - Single list arg: move_group(“new”, [“id1”, “id2”])\n()\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nOutline\nNew Outline with the group applied\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nValueError\nIf a region ID doesn’t exist\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_dict({\n...     \"path_1\": [\"M 0 0 L 10 0\"],\n...     \"path_2\": [\"M 20 0 L 30 0\"],\n...     \"path_3\": [\"M 40 0 L 50 0\"]\n... })\n&gt;&gt;&gt; # Merge multiple regions\n&gt;&gt;&gt; geo2 = geo.move_group(\"combined\", \"path_1\", \"path_2\")\n&gt;&gt;&gt; sorted(geo2.region_ids())\n['combined', 'path_3']\n&gt;&gt;&gt; # Rename single region\n&gt;&gt;&gt; geo3 = geo.move_group(\"renamed\", \"path_3\")\n&gt;&gt;&gt; \"renamed\" in geo3.region_ids()\nTrue\n&gt;&gt;&gt; # Pass list of IDs\n&gt;&gt;&gt; geo4 = geo.move_group(\"merged\", [\"path_1\", \"path_2\", \"path_3\"])\n&gt;&gt;&gt; list(geo4.region_ids())\n['merged']\n\n\n\n\noutline.Outline.move_layer(layer, *region_ids)\nMove regions to the specified layer (returns new Outline object).\nThis is a fluent API for assigning regions to layers. Each region can only be in one layer at a time - calling this method removes the region from any previous layer assignment.\nUse “main” to move regions back to the main (interactive) layer.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nlayer\nLiteral['main', 'underlay', 'overlay', 'annotation', 'hidden']\nTarget layer (“main”, “underlay”, “overlay”, “annotation”, or “hidden”). The “annotation” layer renders above hover/selection.\nrequired\n\n\n*region_ids\nstr | list[str]\nRegion IDs to move. Can be: - Multiple string args: move_layer(“overlay”, “id1”, “id2”) - Single list arg: move_layer(“overlay”, [“id1”, “id2”])\n()\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nOutline\nNew Outline with updated layer assignments\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_dict({\n...     \"region\": [\"M 0 0\"],\n...     \"_border\": [\"M 0 0 L 100 0\"],\n...     \"_grid\": [\"M 0 50 L 100 50\"]\n... })\n&gt;&gt;&gt; # Move to overlay and underlay\n&gt;&gt;&gt; geo2 = (\n...     geo.move_layer(\"overlay\", \"_border\")\n...        .move_layer(\"underlay\", \"_grid\")\n... )\n&gt;&gt;&gt; geo2.overlay_ids()\n['_border']\n&gt;&gt;&gt; # Move back to main layer\n&gt;&gt;&gt; geo3 = geo2.move_layer(\"main\", \"_border\")\n&gt;&gt;&gt; geo3.overlay_ids()\n[]\n&gt;&gt;&gt; # Pass list of IDs\n&gt;&gt;&gt; geo4 = geo.move_layer(\"overlay\", [\"_border\", \"_grid\"])\n&gt;&gt;&gt; sorted(geo4.overlay_ids())\n['_border', '_grid']\n\n\n\n\noutline.Outline.overlay_ids()\nGet region IDs in the overlay layer.\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[str]\nList of region IDs in the overlay layer\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_dict({\n...     \"region\": [\"M 0 0\"],\n...     \"_border\": [\"M 0 0 L 100 0\"],\n...     \"_metadata\": {\"overlay\": [\"_border\"]}\n... })\n&gt;&gt;&gt; geo.overlay_ids()\n['_border']\n\n\n\n\noutline.Outline.overlay_regions()\nGet overlay regions only.\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nRegions\nRegions object with overlay regions {regionId: [element1, …]}\n\n\n\nRegions\n(elements can be strings for v0.x or Element objects for v1.x)\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_dict({\n...     \"region\": [\"M 0 0\"],\n...     \"_border\": [\"M 0 0 L 100 0\"],\n...     \"_metadata\": {\"overlay\": [\"_border\"]}\n... })\n&gt;&gt;&gt; geo.overlay_regions()\nRegions({\n  '_border': ['M 0 0 L 100 0'],\n})\n\n\n\n\noutline.Outline.path_as_line(*region_ids)\nMark regions as lines described in path notation.\nSome SVG paths represent lines (dividers, borders, grids) rather than filled shapes. This method stores the region IDs so that stroke-only aesthetics are automatically applied.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\n*region_ids\nstr\nRegion IDs containing line elements in path notation\n()\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nOutline\nNew Outline object with line regions recorded in metadata\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_dict({\n...     \"region\": [\"M 0 0 L 100 100\"],\n...     \"_divider\": [\"M 50 0 L 50 100\"]\n... })\n&gt;&gt;&gt; geo2 = geo.path_as_line(\"_divider\")\n&gt;&gt;&gt; # Now _divider will use stroke-only rendering\n\n\n\n\noutline.Outline.region_types()\nGet aesthetic element type for each region.\nReturns a mapping of region_id -&gt; element_type where element_type is one of “shape”, “line”, or “text” for aesthetic resolution purposes.\nPriority: 1. metadata[“lines_as_path”] - explicit line override for path elements 2. Element’s element_name: - “line” → “line” - “text” → “text” - All others → “shape”\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ndict[str, str]\nDict mapping region IDs to their aesthetic element types\n\n\n\n\n\n\n&gt;&gt;&gt; # v1.x format with mixed elements\n&gt;&gt;&gt; from shinymap.svg import Circle, Line, Text, Path\n&gt;&gt;&gt; outline = Outline(regions={\n...     \"region\": [Circle(cx=50, cy=50, r=30)],\n...     \"_divider\": [Line(x1=0, y1=50, x2=100, y2=50)],\n...     \"label\": [Text(x=50, y=50, text=\"A\")],\n... }, metadata={})\n&gt;&gt;&gt; outline.region_types()\n{'region': 'shape', '_divider': 'line', 'label': 'text'}\n\n&gt;&gt;&gt; # Path marked as line via path_as_line()\n&gt;&gt;&gt; outline = Outline(regions={\n...     \"_border\": [Path(d=\"M 0 0 L 100 0\")],\n... }, metadata={}).path_as_line(\"_border\")\n&gt;&gt;&gt; outline.region_types()\n{'_border': 'line'}\n\n\n\n\noutline.Outline.relabel(mapping)\nRename or merge regions (returns new Outline object).\nThis method applies relabeling transformations to create a new Outline object with renamed or merged regions. Original object is unchanged.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nmapping\ndict[str, str | list[str]]\nDict mapping new IDs to old ID(s) - String value: rename single region (e.g., {“tokyo”: “path_5”}) - List value: merge multiple regions (e.g., {“hokkaido”: [“path_1”, “path_2”]})\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nOutline\nNew Outline object with relabeled regions\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nValueError\nIf an old ID in mapping doesn’t exist\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_dict({\n...     \"path_1\": [\"M 0 0 L 10 0\"],\n...     \"path_2\": [\"M 20 0 L 30 0\"],\n...     \"path_3\": [\"M 40 0 L 50 0\"]\n... })\n&gt;&gt;&gt; # Rename and merge\n&gt;&gt;&gt; geo2 = geo.relabel({\n...     \"region_a\": [\"path_1\", \"path_2\"],  # Merge\n...     \"_border\": \"path_3\"                 # Rename\n... })\n&gt;&gt;&gt; geo2.regions.keys()\ndict_keys(['region_a', '_border'])\n\n\n\n\noutline.Outline.set_overlays(overlay_ids)\nSet overlay region IDs in metadata (returns new Outline object).\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\noverlay_ids\nlist[str]\nList of region IDs to mark as overlays\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nOutline\nNew Outline object with updated overlay metadata\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_dict({\n...     \"region\": [\"M 0 0\"],\n...     \"_border\": [\"M 0 0 L 100 0\"]\n... })\n&gt;&gt;&gt; geo2 = geo.set_overlays([\"_border\"])\n&gt;&gt;&gt; geo2.overlay_ids()\n['_border']\n\n\n\n\noutline.Outline.to_dict()\nExport to dict in shinymap JSON format.\nAutomatically serializes elements: - v0.x format: Strings are kept as-is - v1.x format: Element objects are serialized to dicts via to_dict()\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ndict[str, Any]\nDict with _metadata and region data (v0.x strings or v1.x element dicts)\n\n\n\n\n\n\n&gt;&gt;&gt; # v0.x format (strings) - empty metadata is omitted\n&gt;&gt;&gt; outline = Outline.from_dict({\"region\": [\"M 0 0\"]})\n&gt;&gt;&gt; outline.to_dict()\n{'region': ['M 0 0']}\n\n&gt;&gt;&gt; # v1.x format (elements)\n&gt;&gt;&gt; from shinymap.svg import Circle\n&gt;&gt;&gt; outline = Outline(regions={\"r1\": [Circle(cx=100, cy=100, r=50)]}, metadata={})\n&gt;&gt;&gt; outline.to_dict()\n{'r1': [{'type': 'circle', 'cx': 100, 'cy': 100, 'r': 50}]}\n\n\n\n\noutline.Outline.to_json(output_path)\nWrite outline to JSON file.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\noutput_path\nstr | PathType\nPath to write JSON file\nrequired\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_svg(\"map.svg\")  # doctest: +SKIP\n&gt;&gt;&gt; geo.to_json(\"output.json\")  # doctest: +SKIP\n\n\n\n\noutline.Outline.underlay_ids()\nGet region IDs in the underlay layer.\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[str]\nList of region IDs in the underlay layer\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_dict({\n...     \"region\": [\"M 0 0\"],\n...     \"_bg\": [\"M 0 0 L 100 0 L 100 100 L 0 100 Z\"],\n...     \"_metadata\": {\"underlay\": [\"_bg\"]}\n... })\n&gt;&gt;&gt; geo.underlay_ids()\n['_bg']\n\n\n\n\noutline.Outline.update_metadata(metadata)\nUpdate metadata (returns new Outline object).\nMerges provided metadata with existing metadata. Existing keys are overwritten by new values.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nmetadata\ndict[str, Any]\nDict of metadata to merge\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nOutline\nNew Outline object with updated metadata\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_dict({\"region\": [\"M 0 0\"]})\n&gt;&gt;&gt; geo2 = geo.update_metadata({\n...     \"source\": \"Wikimedia Commons\",\n...     \"license\": \"CC BY-SA 3.0\"\n... })\n&gt;&gt;&gt; geo2.metadata[\"source\"]\n'Wikimedia Commons'\n\n\n\n\noutline.Outline.viewbox(padding=0.02)\nGet viewBox from metadata, or compute from outline coordinates.\nWorks with both v0.x (string paths) and v1.x (Element objects).\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npadding\nfloat\nPadding fraction for computed viewBox (default 2%)\n0.02\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ntuple[float, float, float, float]\nViewBox tuple in format (x, y, width, height)\n\n\n\n\n\n\n&gt;&gt;&gt; geo = Outline.from_dict({\"a\": [\"M 0 0 L 100 100\"]})\n&gt;&gt;&gt; geo.viewbox()  # Returns with 2% padding\n(-2.0, -2.0, 104.0, 104.0)"
+    "text": "mode.Display(aes=None, clickable=False, input_id=None)\nDisplay-only mode for output_map.\nRegions respond to hover but not click by default. Value determines which indexed aesthetic to use, enabling declarative value-to-color mapping.\nThis mode is specifically for output_map, allowing you to prepopulate the color scale in the UI declaration rather than computing it in the render function.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\naes\nIndexedAesthetic | ByGroup | None\nIndexed aesthetic mapping values to colors. Can be aes.Indexed (global) or aes.ByGroup wrapping aes.Indexed. Index is computed as: min(value, len(list) - 1) (clamping).\nNone\n\n\nclickable\nbool\nIf True, clicking a region emits an input event with the region ID. Use with @reactive.event to trigger actions like showing modals. Default is False.\nFalse\n\n\ninput_id\nstr | None\nCustom input ID for click events. If None (default), uses “{output_map_id}_click”. Only used when clickable=True.\nNone\n\n\n\nExample:: from shinymap.mode import Display from shinymap import aes, output_map, render_map, Outline\noutline = Outline.from_dict({\n    \"question_1\": \"M 5 5 L 5 10 L 10 10 L 10 5 Z\",\n    \"question_2\": \"M 7 7 L 7 9 L 9 9 L 9 7 Z\"\n})\n\n# Traffic light colors for status values\n_ = output_map(\n    \"status_map\",\n    outline,\n    mode=Display(aes=aes.Indexed(\n        fill_color=[\"#f3f4f6\", \"#22c55e\", \"#f59e0b\", \"#ef4444\"]\n    ))\n)\n\n@render_map\ndef status_map():\n    # value 0=unknown, 1=good, 2=warning, 3=error\n    return Map(outline, value=status_values)\n\n# Clickable display map for triggering actions\n_ = output_map(\n    \"clickable_map\",\n    outline,\n    mode=Display(clickable=True)\n)\n\n@reactive.effect\n@reactive.event(input.clickable_map_click)\ndef show_region_modal():\n    region_id = input.clickable_map_click()\n    # Show modal with region details\n\n# Custom input ID\n_ = output_map(\n    \"my_map\",\n    outline,\n    mode=Display(clickable=True, input_id=\"region_clicked\")\n)\n\n\n\n\n\n\nName\nDescription\n\n\n\n\nget_click_input_id\nGet the click input ID for this mode.\n\n\nto_dict\nSerialize for JavaScript (snake_case, JS converts to camelCase).\n\n\n\n\n\nmode.Display.get_click_input_id(output_id)\nGet the click input ID for this mode.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\noutput_id\nstr\nThe output map’s ID\nrequired\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nstr | None\nThe input ID for click events, or None if not clickable\n\n\n\n\n\n\n\nmode.Display.to_dict()\nSerialize for JavaScript (snake_case, JS converts to camelCase)."
+  },
+  {
+    "objectID": "python/mode.Display.html#parameters",
+    "href": "python/mode.Display.html#parameters",
+    "title": "mode.Display",
+    "section": "",
+    "text": "Name\nType\nDescription\nDefault\n\n\n\n\naes\nIndexedAesthetic | ByGroup | None\nIndexed aesthetic mapping values to colors. Can be aes.Indexed (global) or aes.ByGroup wrapping aes.Indexed. Index is computed as: min(value, len(list) - 1) (clamping).\nNone\n\n\nclickable\nbool\nIf True, clicking a region emits an input event with the region ID. Use with @reactive.event to trigger actions like showing modals. Default is False.\nFalse\n\n\ninput_id\nstr | None\nCustom input ID for click events. If None (default), uses “{output_map_id}_click”. Only used when clickable=True.\nNone\n\n\n\nExample:: from shinymap.mode import Display from shinymap import aes, output_map, render_map, Outline\noutline = Outline.from_dict({\n    \"question_1\": \"M 5 5 L 5 10 L 10 10 L 10 5 Z\",\n    \"question_2\": \"M 7 7 L 7 9 L 9 9 L 9 7 Z\"\n})\n\n# Traffic light colors for status values\n_ = output_map(\n    \"status_map\",\n    outline,\n    mode=Display(aes=aes.Indexed(\n        fill_color=[\"#f3f4f6\", \"#22c55e\", \"#f59e0b\", \"#ef4444\"]\n    ))\n)\n\n@render_map\ndef status_map():\n    # value 0=unknown, 1=good, 2=warning, 3=error\n    return Map(outline, value=status_values)\n\n# Clickable display map for triggering actions\n_ = output_map(\n    \"clickable_map\",\n    outline,\n    mode=Display(clickable=True)\n)\n\n@reactive.effect\n@reactive.event(input.clickable_map_click)\ndef show_region_modal():\n    region_id = input.clickable_map_click()\n    # Show modal with region details\n\n# Custom input ID\n_ = output_map(\n    \"my_map\",\n    outline,\n    mode=Display(clickable=True, input_id=\"region_clicked\")\n)"
+  },
+  {
+    "objectID": "python/mode.Display.html#methods",
+    "href": "python/mode.Display.html#methods",
+    "title": "mode.Display",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\nget_click_input_id\nGet the click input ID for this mode.\n\n\nto_dict\nSerialize for JavaScript (snake_case, JS converts to camelCase).\n\n\n\n\n\nmode.Display.get_click_input_id(output_id)\nGet the click input ID for this mode.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\noutput_id\nstr\nThe output map’s ID\nrequired\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nstr | None\nThe input ID for click events, or None if not clickable\n\n\n\n\n\n\n\nmode.Display.to_dict()\nSerialize for JavaScript (snake_case, JS converts to camelCase)."
+  },
+  {
+    "objectID": "python/mode.Single.html",
+    "href": "python/mode.Single.html",
+    "title": "mode.Single",
+    "section": "",
+    "text": "mode.Single(selected=None, allow_deselect=True, aes=None)\nSingle selection mode with customization options.\nUse when you need options beyond the simple mode=“single” string: - Initial selection - Disable deselection - Custom two-state aesthetics\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nselected\nstr | None\nInitially selected region ID.\nNone\n\n\nallow_deselect\nbool\nIf True (default), clicking selected region deselects it.\nTrue\n\n\naes\nIndexedAesthetic | ByGroup | None\nTwo-state aesthetic [unselected, selected]. Can be aes.Indexed (global) or aes.ByGroup wrapping aes.Indexed.\nNone\n\n\n\n\n\n\n&gt;&gt;&gt; from shinymap.mode import Single\n&gt;&gt;&gt; from shinymap import aes\n\n&gt;&gt;&gt; # Pre-select a region\n&gt;&gt;&gt; mode = Single(selected=\"region_a\")\n\n&gt;&gt;&gt; # Disable deselection (must always have one selected)\n&gt;&gt;&gt; mode = Single(allow_deselect=False)\n\n&gt;&gt;&gt; # Custom selection colors\n&gt;&gt;&gt; mode = Single(\n...     aes=aes.Indexed(\n...         fill_color=[\"#e5e7eb\", \"#3b82f6\"],  # gray -&gt; blue\n...     )\n... )\n\n\n\n\n\n\nName\nDescription\n\n\n\n\nto_dict\nSerialize for JavaScript (snake_case, JS converts to camelCase).\n\n\n\n\n\nmode.Single.to_dict()\nSerialize for JavaScript (snake_case, JS converts to camelCase)."
+  },
+  {
+    "objectID": "python/mode.Single.html#parameters",
+    "href": "python/mode.Single.html#parameters",
+    "title": "mode.Single",
+    "section": "",
+    "text": "Name\nType\nDescription\nDefault\n\n\n\n\nselected\nstr | None\nInitially selected region ID.\nNone\n\n\nallow_deselect\nbool\nIf True (default), clicking selected region deselects it.\nTrue\n\n\naes\nIndexedAesthetic | ByGroup | None\nTwo-state aesthetic [unselected, selected]. Can be aes.Indexed (global) or aes.ByGroup wrapping aes.Indexed.\nNone"
+  },
+  {
+    "objectID": "python/mode.Single.html#examples",
+    "href": "python/mode.Single.html#examples",
+    "title": "mode.Single",
+    "section": "",
+    "text": "&gt;&gt;&gt; from shinymap.mode import Single\n&gt;&gt;&gt; from shinymap import aes\n\n&gt;&gt;&gt; # Pre-select a region\n&gt;&gt;&gt; mode = Single(selected=\"region_a\")\n\n&gt;&gt;&gt; # Disable deselection (must always have one selected)\n&gt;&gt;&gt; mode = Single(allow_deselect=False)\n\n&gt;&gt;&gt; # Custom selection colors\n&gt;&gt;&gt; mode = Single(\n...     aes=aes.Indexed(\n...         fill_color=[\"#e5e7eb\", \"#3b82f6\"],  # gray -&gt; blue\n...     )\n... )"
+  },
+  {
+    "objectID": "python/mode.Single.html#methods",
+    "href": "python/mode.Single.html#methods",
+    "title": "mode.Single",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\nto_dict\nSerialize for JavaScript (snake_case, JS converts to camelCase).\n\n\n\n\n\nmode.Single.to_dict()\nSerialize for JavaScript (snake_case, JS converts to camelCase)."
+  },
+  {
+    "objectID": "python/outline.export_svg.html",
+    "href": "python/outline.export_svg.html",
+    "title": "outline.export_svg",
+    "section": "",
+    "text": "outline.export_svg(\n    outline,\n    output_path,\n    viewbox=MISSING,\n    width=MISSING,\n    height=MISSING,\n    include_ids=True,\n)\nExport shinymap outline to SVG file.\nThis function preserves original SVG aesthetics (fill, stroke, etc.) from the outline. Useful for round-tripping outline or exporting modified outline after relabeling/merging operations.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\noutline\nOutline\nOutline object to export\nrequired\n\n\noutput_path\nstr | PathType\nPath to write SVG file\nrequired\n\n\nviewbox\nstr | MissingType\nViewBox string (default: use outline.viewbox() method)\nMISSING\n\n\nwidth\nint | str | MissingType\nSVG width attribute (default: extract from viewBox)\nMISSING\n\n\nheight\nint | str | MissingType\nSVG height attribute (default: extract from viewBox)\nMISSING\n\n\ninclude_ids\nbool\nAdd id attributes to elements (default: True)\nTrue\n\n\n\n\n\n\n&gt;&gt;&gt; from shinymap.outline import Outline, export_svg\n&gt;&gt;&gt; outline = Outline.from_svg(\"input.svg\")  # doctest: +SKIP\n\n&gt;&gt;&gt; # Basic export preserving original aesthetics\n&gt;&gt;&gt; export_svg(outline, \"output.svg\")  # doctest: +SKIP\n\n&gt;&gt;&gt; # Export with custom viewBox\n&gt;&gt;&gt; export_svg(outline, \"custom.svg\", viewbox=\"0 0 1000 1000\")  # doctest: +SKIP\n\n&gt;&gt;&gt; # Export without id attributes\n&gt;&gt;&gt; export_svg(outline, \"no_ids.svg\", include_ids=False)  # doctest: +SKIP\nNote: Exported SVG preserves aesthetic attributes (fill, stroke, etc.) from the original outline. These aesthetics are NOT used by shinymap for interactive rendering - they’re preserved for SVG export only."
+  },
+  {
+    "objectID": "python/outline.export_svg.html#parameters",
+    "href": "python/outline.export_svg.html#parameters",
+    "title": "outline.export_svg",
+    "section": "",
+    "text": "Name\nType\nDescription\nDefault\n\n\n\n\noutline\nOutline\nOutline object to export\nrequired\n\n\noutput_path\nstr | PathType\nPath to write SVG file\nrequired\n\n\nviewbox\nstr | MissingType\nViewBox string (default: use outline.viewbox() method)\nMISSING\n\n\nwidth\nint | str | MissingType\nSVG width attribute (default: extract from viewBox)\nMISSING\n\n\nheight\nint | str | MissingType\nSVG height attribute (default: extract from viewBox)\nMISSING\n\n\ninclude_ids\nbool\nAdd id attributes to elements (default: True)\nTrue"
+  },
+  {
+    "objectID": "python/outline.export_svg.html#examples",
+    "href": "python/outline.export_svg.html#examples",
+    "title": "outline.export_svg",
+    "section": "",
+    "text": "&gt;&gt;&gt; from shinymap.outline import Outline, export_svg\n&gt;&gt;&gt; outline = Outline.from_svg(\"input.svg\")  # doctest: +SKIP\n\n&gt;&gt;&gt; # Basic export preserving original aesthetics\n&gt;&gt;&gt; export_svg(outline, \"output.svg\")  # doctest: +SKIP\n\n&gt;&gt;&gt; # Export with custom viewBox\n&gt;&gt;&gt; export_svg(outline, \"custom.svg\", viewbox=\"0 0 1000 1000\")  # doctest: +SKIP\n\n&gt;&gt;&gt; # Export without id attributes\n&gt;&gt;&gt; export_svg(outline, \"no_ids.svg\", include_ids=False)  # doctest: +SKIP\nNote: Exported SVG preserves aesthetic attributes (fill, stroke, etc.) from the original outline. These aesthetics are NOT used by shinymap for interactive rendering - they’re preserved for SVG export only."
   },
   {
     "objectID": "python/preview_region.html",
@@ -847,6 +1071,83 @@
     "text": "&gt;&gt;&gt; from shinymap import aes, PARENT, resolve_region, RegionState, AestheticConfig\n&gt;&gt;&gt; state = RegionState(\"region_1\", value=1, is_hovered=True)  # value=1 means selected\n&gt;&gt;&gt; config = AestheticConfig(\n...     aes_base=aes.Shape(stroke_width=2),\n...     aes_select=aes.Shape(stroke_width=3, fill_color=\"#fef08a\"),\n...     aes_hover=aes.Shape(stroke_width=PARENT.stroke_width + 1),\n... )\n&gt;&gt;&gt; resolved = resolve_region(state, config)\n&gt;&gt;&gt; resolved.stroke_width  # 3 (from select) + 1 (from hover) = 4\n4.0"
   },
   {
+    "objectID": "python/svg.Ellipse.html",
+    "href": "python/svg.Ellipse.html",
+    "title": "svg.Ellipse",
+    "section": "",
+    "text": "svg.Ellipse()\nEllipse element with bounds calculation and JSON serialization.\nInherits all attributes from svg.Ellipse: cx: Center x coordinate cy: Center y coordinate rx: Horizontal radius ry: Vertical radius fill: Fill color (preserved but not used by shinymap) stroke: Stroke color (preserved but not used by shinymap) … and all other svg.Ellipse attributes\n\n\n&gt;&gt;&gt; ellipse = Ellipse(cx=100, cy=100, rx=50, ry=30)\n&gt;&gt;&gt; ellipse.bounds()\n(50.0, 70.0, 150.0, 130.0)"
+  },
+  {
+    "objectID": "python/svg.Ellipse.html#examples",
+    "href": "python/svg.Ellipse.html#examples",
+    "title": "svg.Ellipse",
+    "section": "",
+    "text": "&gt;&gt;&gt; ellipse = Ellipse(cx=100, cy=100, rx=50, ry=30)\n&gt;&gt;&gt; ellipse.bounds()\n(50.0, 70.0, 150.0, 130.0)"
+  },
+  {
+    "objectID": "python/svg.Path.html",
+    "href": "python/svg.Path.html",
+    "title": "svg.Path",
+    "section": "",
+    "text": "svg.Path()\nPath element with bounds calculation and JSON serialization.\nInherits all attributes from svg.Path: d: Path data (accepts string or list[PathData]) fill: Fill color (preserved but not used by shinymap) stroke: Stroke color (preserved but not used by shinymap) … and all other svg.Path attributes\n\n\nPath data can be specified as either: 1. String: “M 0 0 L 100 0 L 100 100 Z” 2. List of PathData objects: [M(0, 0), L(100, 0), L(100, 100), Z()]\nInternally, svg.py uses PathData objects. When serializing to JSON, these are converted to strings.\n\n\n\n&gt;&gt;&gt; path = Path(d=\"M 0 0 L 100 0 L 100 100 Z\")\n&gt;&gt;&gt; path.bounds()\n(0.0, 0.0, 100.0, 100.0)\n\n&gt;&gt;&gt; from svg._path import M, L, Z\n&gt;&gt;&gt; path = Path(d=[M(0, 0), L(100, 0), L(100, 100), Z()])\n&gt;&gt;&gt; path.bounds()\n(0.0, 0.0, 100.0, 100.0)"
+  },
+  {
+    "objectID": "python/svg.Path.html#note",
+    "href": "python/svg.Path.html#note",
+    "title": "svg.Path",
+    "section": "",
+    "text": "Path data can be specified as either: 1. String: “M 0 0 L 100 0 L 100 100 Z” 2. List of PathData objects: [M(0, 0), L(100, 0), L(100, 100), Z()]\nInternally, svg.py uses PathData objects. When serializing to JSON, these are converted to strings."
+  },
+  {
+    "objectID": "python/svg.Path.html#examples",
+    "href": "python/svg.Path.html#examples",
+    "title": "svg.Path",
+    "section": "",
+    "text": "&gt;&gt;&gt; path = Path(d=\"M 0 0 L 100 0 L 100 100 Z\")\n&gt;&gt;&gt; path.bounds()\n(0.0, 0.0, 100.0, 100.0)\n\n&gt;&gt;&gt; from svg._path import M, L, Z\n&gt;&gt;&gt; path = Path(d=[M(0, 0), L(100, 0), L(100, 100), Z()])\n&gt;&gt;&gt; path.bounds()\n(0.0, 0.0, 100.0, 100.0)"
+  },
+  {
+    "objectID": "python/svg.Rect.html",
+    "href": "python/svg.Rect.html",
+    "title": "svg.Rect",
+    "section": "",
+    "text": "svg.Rect()\nRectangle element with bounds calculation and JSON serialization.\nInherits all attributes from svg.Rect: x: Top-left x coordinate y: Top-left y coordinate width: Rectangle width height: Rectangle height rx: Horizontal corner radius (optional) ry: Vertical corner radius (optional) fill: Fill color (preserved but not used by shinymap) stroke: Stroke color (preserved but not used by shinymap) … and all other svg.Rect attributes\n\n\n&gt;&gt;&gt; rect = Rect(x=10, y=20, width=100, height=80)\n&gt;&gt;&gt; rect.bounds()\n(10.0, 20.0, 110.0, 100.0)"
+  },
+  {
+    "objectID": "python/svg.Rect.html#examples",
+    "href": "python/svg.Rect.html#examples",
+    "title": "svg.Rect",
+    "section": "",
+    "text": "&gt;&gt;&gt; rect = Rect(x=10, y=20, width=100, height=80)\n&gt;&gt;&gt; rect.bounds()\n(10.0, 20.0, 110.0, 100.0)"
+  },
+  {
+    "objectID": "python/svg.is_stroke_only_candidate.html",
+    "href": "python/svg.is_stroke_only_candidate.html",
+    "title": "svg.is_stroke_only_candidate",
+    "section": "",
+    "text": "svg.is_stroke_only_candidate(elements)\nDetect if elements are likely intended as lines rather than filled shapes.\nUses heuristics to suggest paths that might be lines: 1. Native Line elements (SVG ) 2. Elements with fill=“none” or fill=“transparent” 3. Open paths (path data not ending with ‘z’ or ‘Z’)\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nelements\nlist\nList of SVG elements for a region\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nbool\nTrue if the region appears to be stroke-only\n\n\n\n\n\n\n&gt;&gt;&gt; is_stroke_only_candidate([Line(x1=0, y1=0, x2=100, y2=100)])\nTrue\n&gt;&gt;&gt; is_stroke_only_candidate([Path(d=\"M 0 0 L 100 100\")])\nTrue\n&gt;&gt;&gt; is_stroke_only_candidate([Path(d=\"M 0 0 L 100 0 L 100 100 Z\")])\nFalse"
+  },
+  {
+    "objectID": "python/svg.is_stroke_only_candidate.html#parameters",
+    "href": "python/svg.is_stroke_only_candidate.html#parameters",
+    "title": "svg.is_stroke_only_candidate",
+    "section": "",
+    "text": "Name\nType\nDescription\nDefault\n\n\n\n\nelements\nlist\nList of SVG elements for a region\nrequired"
+  },
+  {
+    "objectID": "python/svg.is_stroke_only_candidate.html#returns",
+    "href": "python/svg.is_stroke_only_candidate.html#returns",
+    "title": "svg.is_stroke_only_candidate",
+    "section": "",
+    "text": "Name\nType\nDescription\n\n\n\n\n\nbool\nTrue if the region appears to be stroke-only"
+  },
+  {
+    "objectID": "python/svg.is_stroke_only_candidate.html#examples",
+    "href": "python/svg.is_stroke_only_candidate.html#examples",
+    "title": "svg.is_stroke_only_candidate",
+    "section": "",
+    "text": "&gt;&gt;&gt; is_stroke_only_candidate([Line(x1=0, y1=0, x2=100, y2=100)])\nTrue\n&gt;&gt;&gt; is_stroke_only_candidate([Path(d=\"M 0 0 L 100 100\")])\nTrue\n&gt;&gt;&gt; is_stroke_only_candidate([Path(d=\"M 0 0 L 100 0 L 100 100 Z\")])\nFalse"
+  },
+  {
     "objectID": "vignettes/getting-started.html",
     "href": "vignettes/getting-started.html",
     "title": "Getting Started",
@@ -865,14 +1166,14 @@
     "href": "vignettes/getting-started.html#basic-example",
     "title": "Getting Started",
     "section": "Basic Example",
-    "text": "Basic Example\nfrom shiny import App, ui\nfrom shinymap import input_map, output_map, render_map, Map\nfrom shinymap.outline import Outline\n\n# Define simple geometry\nOUTLINE = Outline.from_dict({\n    \"region_a\": [{\"type\": \"rect\", \"x\": 10, \"y\": 10, \"width\": 30, \"height\": 30}],\n    \"region_b\": [{\"type\": \"rect\", \"x\": 50, \"y\": 10, \"width\": 30, \"height\": 30}],\n    \"region_c\": [{\"type\": \"rect\", \"x\": 30, \"y\": 50, \"width\": 30, \"height\": 30}],\n    \"_metadata\": {\"viewBox\": \"0 0 100 100\"},\n})\n\napp_ui = ui.page_fluid(\n    ui.h2(\"My First Map\"),\n    input_map(\"selection\", OUTLINE, mode=\"single\"),\n    ui.output_text(\"selected\"),\n)\n\ndef server(input, output, session):\n    @output\n    @render.text\n    def selected():\n        return f\"Selected: {input.selection()}\"\n\napp = App(app_ui, server)"
+    "text": "Basic Example\nfrom shiny import App, render, ui\nfrom shinymap import input_map, output_map, render_map, Map\nfrom shinymap.outline import Outline\n\n# Define a simple outline\nOUTLINE = Outline.from_dict({\n    \"region_a\": [{\"type\": \"rect\", \"x\": 10, \"y\": 10, \"width\": 30, \"height\": 30}],\n    \"region_b\": [{\"type\": \"rect\", \"x\": 50, \"y\": 10, \"width\": 30, \"height\": 30}],\n    \"region_c\": [{\"type\": \"rect\", \"x\": 30, \"y\": 50, \"width\": 30, \"height\": 30}],\n    \"_metadata\": {\"viewBox\": \"0 0 100 100\"},\n})\n\napp_ui = ui.page_fluid(\n    ui.h2(\"My First Map\"),\n    input_map(\"selection\", OUTLINE, mode=\"single\"),\n    ui.output_text(\"selected\"),\n)\n\ndef server(input, output, session):\n    @render.text\n    def selected():\n        return f\"Selected: {input.selection()}\"\n\napp = App(app_ui, server)"
   },
   {
     "objectID": "vignettes/getting-started.html#next-steps",
     "href": "vignettes/getting-started.html#next-steps",
     "title": "Getting Started",
     "section": "Next Steps",
-    "text": "Next Steps\n\nLearn about selection modes\nCustomize appearance with aesthetics\nLoad real geometry from SVG files"
+    "text": "Next Steps\n\nSelection modes (Single, Multiple, Cycle, Count) and aesthetics are documented in the Python API reference\nPrepare your own SVG with python -m shinymap.kit.sketch -f map.svg\nRunnable examples live in packages/shinymap/python/examples/"
   },
   {
     "objectID": "typescript/index.html",

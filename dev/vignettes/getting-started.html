@@ -206,11 +206,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="basic-example" class="level2">
 <h2 class="anchored" data-anchor-id="basic-example">Basic Example</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> shiny <span class="im">import</span> App, ui</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> shiny <span class="im">import</span> App, render, ui</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> shinymap <span class="im">import</span> input_map, output_map, render_map, Map</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> shinymap.outline <span class="im">import</span> Outline</span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Define simple geometry</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Define a simple outline</span></span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>OUTLINE <span class="op">=</span> Outline.from_dict({</span>
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"region_a"</span>: [{<span class="st">"type"</span>: <span class="st">"rect"</span>, <span class="st">"x"</span>: <span class="dv">10</span>, <span class="st">"y"</span>: <span class="dv">10</span>, <span class="st">"width"</span>: <span class="dv">30</span>, <span class="st">"height"</span>: <span class="dv">30</span>}],</span>
 <span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"region_b"</span>: [{<span class="st">"type"</span>: <span class="st">"rect"</span>, <span class="st">"x"</span>: <span class="dv">50</span>, <span class="st">"y"</span>: <span class="dv">10</span>, <span class="st">"width"</span>: <span class="dv">30</span>, <span class="st">"height"</span>: <span class="dv">30</span>}],</span>
@@ -225,19 +225,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> server(<span class="bu">input</span>, output, session):</span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">@output</span></span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">@render.text</span></span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> selected():</span>
-<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ss">f"Selected: </span><span class="sc">{</span><span class="bu">input</span><span class="sc">.</span>selection()<span class="sc">}</span><span class="ss">"</span></span>
-<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>app <span class="op">=</span> App(app_ui, server)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">@render.text</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> selected():</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ss">f"Selected: </span><span class="sc">{</span><span class="bu">input</span><span class="sc">.</span>selection()<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>app <span class="op">=</span> App(app_ui, server)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="next-steps" class="level2">
 <h2 class="anchored" data-anchor-id="next-steps">Next Steps</h2>
 <ul>
-<li>Learn about <a href="modes.qmd">selection modes</a></li>
-<li>Customize appearance with <a href="aesthetics.qmd">aesthetics</a></li>
-<li>Load real geometry from <a href="svg-geometry.qmd">SVG files</a></li>
+<li>Selection modes (<code>Single</code>, <code>Multiple</code>, <code>Cycle</code>, <code>Count</code>) and aesthetics are documented in the <a href="../python/index.html">Python API reference</a></li>
+<li>Prepare your own SVG with <code>python -m shinymap.kit.sketch -f map.svg</code></li>
+<li>Runnable examples live in <a href="https://github.com/kenjisato/shinymap/tree/main/packages/shinymap/python/examples"><code>packages/shinymap/python/examples/</code></a></li>
 </ul>
 
 

@@ -142,7 +142,9 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#color-scales" id="toc-color-scales" class="nav-link" data-scroll-target="#color-scales">Color Scales</a></li>
   <li><a href="#relative-expressions" id="toc-relative-expressions" class="nav-link" data-scroll-target="#relative-expressions">Relative Expressions</a></li>
   <li><a href="#outline-utilities" id="toc-outline-utilities" class="nav-link" data-scroll-target="#outline-utilities">Outline Utilities</a></li>
+  <li><a href="#svg-elements" id="toc-svg-elements" class="nav-link" data-scroll-target="#svg-elements">SVG Elements</a></li>
   <li><a href="#static-analysis-and-export" id="toc-static-analysis-and-export" class="nav-link" data-scroll-target="#static-analysis-and-export">Static Analysis and Export</a></li>
+  <li><a href="#kit-preparing-svg-files" id="toc-kit-preparing-svg-files" class="nav-link" data-scroll-target="#kit-preparing-svg-files">Kit: Preparing SVG Files</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -293,24 +295,96 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="outline-utilities" class="level2">
 <h2 class="anchored" data-anchor-id="outline-utilities">Outline Utilities</h2>
-<p>Tools for working with SVG geometry</p>
+<p>Tools for working with SVG outlines</p>
 <table class="caption-top table">
 <tbody>
 <tr class="odd">
-<td><a href="../python/outline.Outline.html#shinymap.outline.Outline">outline.Outline</a></td>
-<td>Canonical outline representation with polymorphic elements.</td>
+<td><a href="../python/outline.Regions.html#shinymap.outline.Regions">outline.Regions</a></td>
+<td>Dictionary subclass with clean repr for region data.</td>
+</tr>
+<tr class="even">
+<td><a href="../python/outline.export_svg.html#shinymap.outline.export_svg">outline.export_svg</a></td>
+<td>Export shinymap outline to SVG file.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="svg-elements" class="level2">
+<h2 class="anchored" data-anchor-id="svg-elements">SVG Elements</h2>
+<p>Element classes that make up an outline</p>
+<table class="caption-top table">
+<tbody>
+<tr class="odd">
+<td><a href="../python/svg.Circle.html#shinymap.svg.Circle">svg.Circle</a></td>
+<td>Circle element with bounds calculation and JSON serialization.</td>
+</tr>
+<tr class="even">
+<td><a href="../python/svg.Ellipse.html#shinymap.svg.Ellipse">svg.Ellipse</a></td>
+<td>Ellipse element with bounds calculation and JSON serialization.</td>
+</tr>
+<tr class="odd">
+<td><a href="../python/svg.Line.html#shinymap.svg.Line">svg.Line</a></td>
+<td>Line element with bounds calculation and JSON serialization.</td>
+</tr>
+<tr class="even">
+<td><a href="../python/svg.Path.html#shinymap.svg.Path">svg.Path</a></td>
+<td>Path element with bounds calculation and JSON serialization.</td>
+</tr>
+<tr class="odd">
+<td><a href="../python/svg.Polygon.html#shinymap.svg.Polygon">svg.Polygon</a></td>
+<td>Polygon element with bounds calculation and JSON serialization.</td>
+</tr>
+<tr class="even">
+<td><a href="../python/svg.Rect.html#shinymap.svg.Rect">svg.Rect</a></td>
+<td>Rectangle element with bounds calculation and JSON serialization.</td>
+</tr>
+<tr class="odd">
+<td><a href="../python/svg.Text.html#shinymap.svg.Text">svg.Text</a></td>
+<td>Text element with bounds calculation and JSON serialization.</td>
+</tr>
+<tr class="even">
+<td><a href="../python/svg.is_stroke_only_candidate.html#shinymap.svg.is_stroke_only_candidate">svg.is_stroke_only_candidate</a></td>
+<td>Detect if elements are likely intended as lines rather than filled shapes.</td>
 </tr>
 </tbody>
 </table>
 </section>
 <section id="static-analysis-and-export" class="level2">
 <h2 class="anchored" data-anchor-id="static-analysis-and-export">Static Analysis and Export</h2>
-<p>Mode classes for static pictures</p>
+<p>Inspect resolved aesthetics and export static SVG without a Shiny session</p>
 <table class="caption-top table">
 <tbody>
 <tr class="odd">
 <td><a href="../python/StillLife.html#shinymap.StillLife">StillLife</a></td>
 <td>Static snapshot of a map for aesthetic analysis and SVG export.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="kit-preparing-svg-files" class="level2">
+<h2 class="anchored" data-anchor-id="kit-preparing-svg-files">Kit: Preparing SVG Files</h2>
+<p>Programmatic counterparts of the sketch app (python -m shinymap.kit.sketch)</p>
+<table class="caption-top table">
+<tbody>
+<tr class="odd">
+<td><a href="../python/kit.convert.html#shinymap.kit.convert">kit.convert</a></td>
+<td>Convert SVG or JSON file to shinymap JSON format.</td>
+</tr>
+<tr class="even">
+<td><a href="../python/kit.apply_mapping.html#shinymap.kit.apply_mapping">kit.apply_mapping</a></td>
+<td>Apply a mapping dict to convert an outline.</td>
+</tr>
+<tr class="odd">
+<td><a href="../python/kit.generate_code.html#shinymap.kit.generate_code">kit.generate_code</a></td>
+<td>Generate Python code for the conversion.</td>
+</tr>
+<tr class="even">
+<td><a href="../python/kit.describe.html#shinymap.kit.describe">kit.describe</a></td>
+<td>Generate Text elements with region IDs at each region’s center.</td>
+</tr>
+<tr class="odd">
+<td><a href="../python/kit.glaze.html#shinymap.kit.glaze">kit.glaze</a></td>
+<td>Add regions as overlay (default) or underlay to an existing outline.</td>
 </tr>
 </tbody>
 </table>
