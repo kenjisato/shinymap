@@ -13,9 +13,6 @@ Command-line usage:
     # Interactive sketch app
     uv run python -m shinymap.kit.sketch [-f FILE]
 
-    # Interactive review app
-    uv run python -m shinymap.kit.review [-f FILE]
-
 Programmatic usage:
     >>> from shinymap import Outline
     >>> from shinymap.kit import describe, glaze, apply_mapping

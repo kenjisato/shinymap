@@ -18,7 +18,7 @@ uv add shinymap
 
 ```python
 from shinymap import Map, input_map, output_map, render_map, aes
-from shinymap import scale_sequential, scale_qualitative
+from shinymap.aes.color import scale_sequential, scale_qualitative
 from shinymap.mode import Single, Multiple, Cycle, Count, Display
 from shinymap.outline import Outline
 ```
@@ -30,34 +30,44 @@ from shinymap.outline import Outline
     - `Single()` or `mode="single"`: returns `str | None`
     - `Multiple()` or `mode="multiple"`: returns `list[str]`
     - `Cycle(n=4)`: cycles through n states, returns `dict[str, int]`
-    - `Count()` or `Count(max=10)`: counting mode, returns `dict[str, int]`
+    - `Count()`: counting mode, returns `dict[str, int]` (`Count(max_count=10)` caps the indexed aesthetic, not the value)
   - Aesthetics via `aes` parameter:
     - `aes.ByState(base=..., hover=..., select=...)`: state-based styling
     - `aes.ByGroup(__all=..., region_id=...)`: per-region styling
     - `aes.Indexed(fill_color=[...])`: indexed colors for cycle/count modes
+  - `raw=True` returns the `dict[str, int]` value in every mode
+  - Works inside Shiny modules (ids are resolved through the module namespace)
 - `output_map("map", outline, ...)` adds a placeholder with static parameters.
   - `mode=Display()`: hover-only output map
-  - `mode=Display(clickable=True)`: output map with click events
+  - `mode=Display(clickable=True)`: output map with click events (`input_id=` to choose the input name)
 - `Map` provides a fluent API for building map payloads with method chaining.
 - `render_map` decorator serializes a `Map` and mounts the React output map.
-- `scale_sequential()` and `scale_qualitative()` generate fill color maps.
+- `scale_sequential()` and `scale_qualitative()` (in `shinymap.aes.color`) generate fill color maps.
 
 ### Outline Utilities
 
-The `shinymap.outline` subpackage provides tools for working with SVG geometry:
+The `shinymap.outline` subpackage provides tools for working with SVG outlines:
 
 - **`Outline.from_svg(svg_path)`**: Extract geometry from SVG files (polymorphic elements)
 - **`Outline.from_json(json_path)`**: Load geometry from shinymap JSON files
 - **`outline.relabel({...})`**: Rename or merge regions
 - **`outline.set_overlays([...])`**: Mark overlay regions
+- **`outline.move_layer("overlay", "a", "b")`**: Assign regions to `underlay` / `overlay` / `hidden` (or back to `main`)
+- **`outline.move_group("group", "a", "b")`**: Merge regions into a group
 - **`outline.path_as_line("_dividers")`**: Mark regions as lines for stroke-only rendering
 - **`outline.to_json(path)`**: Export to JSON file
 
-**Polymorphic elements**: Circle, Rect, Ellipse, Path, Polygon, Line, Text
+**SVG element classes** (`Circle`, `Rect`, `Ellipse`, `Path`, `Polygon`, `Line`, `Text`) live in `shinymap.svg`.
 
-**Interactive converter app**:
+### Preparing SVG files (`shinymap.kit`)
+
 ```bash
-uv run python -m shinymap.outline.converter -b
+# Interactive app: rename regions, set groups and layers, mark lines,
+# then download the JSON and the Python code that reproduces it
+uv run python -m shinymap.kit.sketch -f map.svg
+
+# Reference SVG with region IDs overlaid
+uv run python -m shinymap.kit.caption map.svg
 ```
 
 ## Minimal example

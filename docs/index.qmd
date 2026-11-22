@@ -2,7 +2,7 @@
 title: "shinymap"
 ---
 
-Interactive SVG map components for Shiny (Python and R).
+Interactive SVG map components for Shiny for Python.
 
 ## Overview
 

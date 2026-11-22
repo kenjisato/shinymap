@@ -4,7 +4,6 @@ This repository now hosts a multi-package workspace:
 
 - `packages/shinymap/` – core map renderer and language bindings with lightweight demo geometry.
 - `packages/shinymapjp/` – Japan-prefecture geometry assets (JS + Python façades).
-- `archive/legacy/` – the previous implementation preserved for reference while the new modular design is built out.
 
 See `dev/SPEC.md` for the current roadmap and design goals.
 
