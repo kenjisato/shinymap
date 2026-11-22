@@ -64,6 +64,7 @@ class MapBuilder:
         view_box: tuple[float, float, float, float] | None = None,
         _outline: Outline | None = None,
         _resolved_aes: ResolvedAesType = None,
+        _mode: Any = None,
     ):
         """Internal constructor - use Map() function instead.
 
@@ -73,6 +74,7 @@ class MapBuilder:
             view_box: ViewBox as tuple (x, y, width, height)
             _outline: (Private) Full Outline object for StillLife analysis
             _resolved_aes: (Private) Pre-resolved ByGroup aesthetics from Wash
+            _mode: (Private) Mode object, so StillLife can render indexed aesthetics
         """
         self._regions: Mapping[str, Any] | None = regions
         self._tooltips = tooltips
@@ -83,6 +85,7 @@ class MapBuilder:
         # Private fields for StillLife static analysis
         self._outline: Outline | None = _outline
         self._resolved_aes: ResolvedAesType = _resolved_aes
+        self._mode: Any = _mode
 
     def with_tooltips(self, tooltips: TooltipMap) -> MapBuilder:
         """Set region tooltips."""
