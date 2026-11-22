@@ -104,8 +104,17 @@ def _output_map(
         )
 
     else:
-        # Still record the wash so Map(aes=...) resolves against the right one
-        static_params = _strip_none({"wash_config": wash_config, "user_aes": user_aes})
+        # No outline yet (it comes from @render_map): still record the mode, the
+        # click input and the wash, or clicks and indexed aes would be lost
+        static_params = _strip_none(
+            {
+                "tooltips": tooltips,
+                "mode": mode,
+                "click_input_id": click_input_id,
+                "wash_config": wash_config,
+                "user_aes": user_aes,
+            }
+        )
 
     if static_params:
         _static_map_params[resolved] = static_params

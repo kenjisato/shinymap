@@ -4,6 +4,7 @@ import pytest
 from shiny.pytest import create_app_fixture
 
 from shinymap import output_map
+from shinymap.outline import Outline
 from shinymap.uicore._registry import _static_map_params
 
 # Create fixture for the bug reproduction app
@@ -40,26 +41,32 @@ class TestRenderMapModeDefault:
         result = output_map("test_map")
         assert result is not None
 
-    def test_output_map_without_outline_does_not_register_mode(self):
-        """Test that output_map without outline doesn't register mode.
+    @pytest.mark.unit
+    def test_output_map_without_outline_registers_mode(self):
+        """output_map(id, mode=...) without outline keeps the mode and click input (#44)."""
+        from shinymap.mode import Display
 
-        This verifies the precondition that causes the bug:
-        when output_map() is called without outline, mode is not in static_params.
-        """
-        test_id = "_test_no_outline_no_mode"
+        test_id = "_test_no_outline_mode"
+        output_map(test_id, mode=Display(clickable=True))
+        params = _static_map_params.pop(test_id, {})
 
-        # Call output_map without outline
-        output_map(test_id)
+        assert params["mode"].clickable is True
+        assert params["click_input_id"] == f"{test_id}_click"
 
-        # Check what was registered
-        params = _static_map_params.get(test_id, {})
+    @pytest.mark.unit
+    def test_render_without_outline_in_output_map_is_clickable(self):
+        from shinymap import Map
+        from shinymap.mode import Display
+        from shinymap.uicore._render_map import _build_payload
 
-        # mode should NOT be in params (this is the root cause of the bug)
-        assert "mode" not in params
+        outline = Outline.from_dict({"a": "M0 0 L10 0 L10 10 Z"})
+        test_id = "_test_no_outline_payload"
+        output_map(test_id, mode=Display(clickable=True))
+        static = _static_map_params.pop(test_id)
+        payload = _build_payload(Map(outline), static)
 
-        # Cleanup
-        if test_id in _static_map_params:
-            del _static_map_params[test_id]
+        assert "regions" in payload
+        assert static["mode"].to_dict()["clickable"] is True
 
 
 class TestMapAesForms:
