@@ -11,17 +11,6 @@ class TestStillLifeInit:
     """Test StillLife initialization and validation."""
 
     @pytest.mark.unit
-    def test_requires_builder_from_wash_build(self):
-        """StillLife requires a MapBuilder created via WashResult.build()."""
-        outline = Outline(regions={"a": [Circle(cx=50, cy=50, r=30)]}, metadata={})
-
-        # Map() creates a MapBuilder without _resolved_aes (required by StillLife)
-        builder = Map(outline)
-
-        with pytest.raises(ValueError, match="lacks _resolved_aes"):
-            StillLife(builder)
-
-    @pytest.mark.unit
     def test_accepts_builder_from_wash_build(self):
         """StillLife accepts a MapBuilder created via WashResult.build()."""
         outline = Outline(regions={"a": [Circle(cx=50, cy=50, r=30)]}, metadata={})
@@ -831,3 +820,91 @@ class TestStillLifeCountMaxCount:
         pic = StillLife(wc.build(outline, mode=mode, value={"a": 5}))
 
         assert pic.aes("a")["fill_color"] == palette[1]
+
+
+class TestStillLifeFromMap:
+    """StillLife(Map(...)) draws what @render_map would show."""
+
+    OUTLINE = Outline.from_dict({"a": "M0 0 L10 0 L10 10 Z", "b": "M20 0 L30 0 L30 10 Z"})
+
+    @pytest.fixture(autouse=True)
+    def _clean_registry(self):
+        from shinymap.uicore._registry import _static_map_params
+
+        yield
+        for key in [k for k in _static_map_params if k.startswith("_still_")]:
+            del _static_map_params[key]
+
+    @pytest.mark.unit
+    def test_map_defaults_to_default_wash(self):
+        from shinymap import default_wash
+
+        pic = StillLife(Map(self.OUTLINE, value={"a": 1}))
+        expected = StillLife(default_wash.build(self.OUTLINE, value={"a": 1}))
+        assert pic.aes("a") == expected.aes("a")
+        assert pic.aes("b") == expected.aes("b")
+
+    @pytest.mark.unit
+    def test_map_fill_color(self):
+        pic = StillLife(Map(self.OUTLINE, fill_color={"a": "#ff0000"}))
+        assert pic.aes("a")["fill_color"] == "#ff0000"
+        assert pic.aes("b")["fill_color"] != "#ff0000"
+
+    @pytest.mark.unit
+    def test_wash(self):
+        wc = Wash(shape=aes.Shape(fill_color="#123456"))
+        pic = StillLife(Map(self.OUTLINE), wash=wc)
+        assert pic.aes("a")["fill_color"] == "#123456"
+
+    @pytest.mark.unit
+    def test_output_id_layers_map_over_output_map(self):
+        from shinymap import output_map
+
+        output_map("_still_a", self.OUTLINE, aes=aes.ByGroup(a=aes.Shape(stroke_width=3)))
+        pic = StillLife(Map(fill_color={"a": "#ff0000"}), output_id="_still_a")
+        assert pic.aes("a")["fill_color"] == "#ff0000"
+        assert pic.aes("a")["stroke_width"] == 3  # kept from output_map's aes
+
+    @pytest.mark.unit
+    def test_output_id_matches_render_map_payload(self):
+        from shinymap.uicore._registry import _static_map_params
+        from shinymap.uicore._render_map import _build_payload
+
+        wc = Wash(shape=aes.ByState(base=aes.Shape(fill_color="#eeeeee", stroke_width=1)))
+        wc.output_map("_still_b", self.OUTLINE, aes=aes.ByGroup(b=aes.Shape(stroke_width=4)))
+        builder = Map(fill_color={"a": "#ff0000"})
+        payload = _build_payload(builder, _static_map_params["_still_b"])["aes"]
+        pic = StillLife(builder, output_id="_still_b")
+        for rid in ("a", "b"):
+            base = payload.get(rid, payload["__shape"])["base"]
+            for key, val in base.items():
+                assert pic.aes(rid)[key] == val, (rid, key)
+
+    @pytest.mark.unit
+    def test_output_id_takes_wash_without_outline(self):
+        wc = Wash(shape=aes.Shape(fill_color="#123456"))
+        wc.output_map("_still_c")
+        pic = StillLife(Map(self.OUTLINE), output_id="_still_c")
+        assert pic.aes("a")["fill_color"] == "#123456"
+
+    @pytest.mark.unit
+    def test_output_id_takes_mode(self):
+        from shinymap import output_map
+        from shinymap.mode import Display
+
+        mode = Display(aes=aes.Indexed(fill_color=["#000000", "#111111", "#222222"]))
+        output_map("_still_d", self.OUTLINE, mode=mode)
+        pic = StillLife(Map(value={"a": 2}), output_id="_still_d")
+        assert pic.aes("a")["fill_color"] == "#222222"
+
+    @pytest.mark.unit
+    def test_errors(self):
+        wc = Wash(shape=aes.Shape(fill_color="#123456"))
+        with pytest.raises(ValueError, match="either"):
+            StillLife(Map(self.OUTLINE), wash=wc, output_id="x")
+        with pytest.raises(ValueError, match="_still_missing"):
+            StillLife(Map(self.OUTLINE), output_id="_still_missing")
+        with pytest.raises(ValueError, match="outline"):
+            StillLife(Map())
+        with pytest.raises(ValueError, match="build"):
+            StillLife(wc.build(self.OUTLINE), wash=wc)

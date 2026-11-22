@@ -402,3 +402,18 @@ class TestMapFillColor:
         outline = Outline.from_dict(self.OUTLINE_DICT)
         builder = Map(outline).with_value({"a": 1}).with_fill_color({"b": "#123456"})
         assert self._aes_payload(builder)["b"]["base"]["fill_color"] == "#123456"
+
+
+class TestRenderMapWashWithoutOutline:
+    @pytest.mark.unit
+    def test_wash_applies_when_map_has_no_aes(self):
+        """wc.output_map(id) without outline + Map(outline) uses the wash (it was dropped)."""
+        from shinymap import Map, Wash, aes
+        from shinymap.uicore._render_map import _build_payload
+
+        wc = Wash(shape=aes.Shape(fill_color="#123456"))
+        wc.output_map("_test_wash_no_outline")
+        static = _static_map_params.pop("_test_wash_no_outline")
+        outline = Outline.from_dict({"a": "M0 0 L10 0 L10 10 Z"})
+        payload = _build_payload(Map(outline), static)
+        assert payload["aes"]["__shape"]["base"]["fill_color"] == "#123456"

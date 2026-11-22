@@ -5,6 +5,7 @@ map outputs.
 """
 
 import json
+from collections.abc import Mapping
 from functools import wraps
 from typing import Any
 
@@ -17,6 +18,25 @@ from ..types import MapBuilder
 from ._registry import _static_map_params
 from ._util import _normalize_outline
 from ._wash import layer_user_aes
+
+
+def _resolve_map_aes(builder_aes: Any, static_params: Mapping[str, Any], outline: Any) -> Any:
+    """Resolve ``Map(aes=...)`` as ``@render_map`` shows it.
+
+    ``Map(aes=...)`` is layered over ``output_map(aes=...)`` and the result is
+    resolved once through the output's wash (the default wash without one), so
+    user entries always outrank the wash's defaults. Shared with ``StillLife`` so
+    a static picture matches the rendered map.
+    """
+    if builder_aes is None and static_params.get("resolved_aes") is not None:
+        return static_params["resolved_aes"]
+    combined = layer_user_aes(static_params.get("user_aes"), builder_aes)
+    wash_config = static_params.get("wash_config")
+    if wash_config is None:
+        from ..ui._ui import default_wash
+
+        wash_config = default_wash.config
+    return wash_config.apply(combined, outline)
 
 
 def _build_payload(
@@ -49,25 +69,12 @@ def _build_payload(
     if regions is None and outline is not None:
         regions = outline.regions
 
-    # Merge aes: Map(aes=...) is layered over output_map(aes=...) and the result is
-    # resolved once through the same wash, so user entries always outrank the
-    # wash's defaults (JS looks up type defaults before __all).
-    static_aes = static_params.get("resolved_aes")  # ByGroup resolved by output_map()
+    # Merge aes (see _resolve_map_aes); without an outline it cannot be resolved yet
     merged_aes: Any = None
-
-    if builder._aes is None:
-        merged_aes = static_aes
-    else:
-        combined = layer_user_aes(static_params.get("user_aes"), builder._aes)
-        if outline is not None:
-            wash_config = static_params.get("wash_config")
-            if wash_config is None:
-                from ..ui._ui import default_wash
-
-                wash_config = default_wash.config
-            merged_aes = wash_config.apply(combined, outline)
-        else:
-            merged_aes = combined
+    if outline is not None:
+        merged_aes = _resolve_map_aes(builder._aes, static_params, outline)
+    elif builder._aes is not None:
+        merged_aes = layer_user_aes(static_params.get("user_aes"), builder._aes)
 
     # Build aes payload dict
     aes_dict = None

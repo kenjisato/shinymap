@@ -457,6 +457,14 @@ pic_hovered = StillLife(builder, hovered="region_a")
 pic_hovered.to_svg(output="map_hover.svg")
 ```
 
+`StillLife` also takes `Map(...)`, the builder `@render_map` returns. With
+`output_id="result"` it uses that `output_map()`'s outline, mode, wash and `aes`, and
+resolves the map through the same function as `@render_map`
+(`uicore/_render_map.py::_resolve_map_aes`), so the picture matches the browser.
+Without `output_id` it uses `wash=` or `default_wash`, and `Map()` must carry the
+outline. `output_id` and `wash` are exclusive, and neither applies to a
+`Wash.build()` builder, which is already resolved.
+
 `build(..., mode=...)` takes the mode the picture represents. With indexed aesthetics
 (`mode.aes` is one `aes.Indexed` or an `aes.ByGroup` of them), `StillLife` follows the JS
 components: Cycle uses `count % n`, other modes clamp to the last entry; looks apply as

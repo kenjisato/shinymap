@@ -23,6 +23,7 @@ from .types import MISSING, MissingType
 if TYPE_CHECKING:
     from ._map import MapBuilder
     from .outline import Outline
+    from .uicore._wash import WashResult
 
 
 class StillLife:
@@ -58,44 +59,99 @@ class StillLife:
         *,
         value: dict[str, int] | None = None,
         hovered: str | None = None,
+        output_id: str | None = None,
+        wash: WashResult | None = None,
     ):
-        """Create a still life from a MapBuilder.
+        """Create a still life from a map.
+
+        Pass what ``@render_map`` returns, ``Map(...)``, to draw the map as the
+        browser shows it, or a builder from ``Wash.build()``.
 
         Args:
-            builder: MapBuilder created via WashResult.build().
-                Must have _outline and _resolved_aes populated.
+            builder: ``Map(...)``, or a MapBuilder from ``WashResult.build()``.
             value: Override value dict. If None, uses builder's value.
             hovered: Region ID to show as hovered.
+            output_id: ID of an ``output_map()``. The picture then uses that
+                output's outline, mode, wash and ``aes``, with the map layered over
+                them exactly as ``@render_map`` does, so ``Map()`` needs no outline.
+            wash: Wash to draw a ``Map(...)`` with, when there is no
+                ``output_map()`` to follow. Default: ``shinymap.default_wash``.
 
         Raises:
-            ValueError: If builder lacks required _outline or _resolved_aes.
+            ValueError: If both ``output_id`` and ``wash`` are given, if
+                ``output_id`` names no ``output_map()``, if there is no outline,
+                or if a ``Wash.build()`` builder is combined with either.
 
         Examples:
-            >>> from shinymap import Wash, StillLife, aes, Outline
-            >>> wc = Wash(shape=aes.Shape(fill_color="#e2e8f0"))
-            >>> outline = Outline.from_dict({"a": "M 0 0 L 10 10"})
-            >>> builder = wc.build(outline, value={"a": 1})
-            >>> pic = StillLife(builder)
-            >>> pic = StillLife(builder, value={"a": 0})  # Override value
-            >>> pic = StillLife(builder, hovered="a")  # With hover state
+            ```pycon
+            >>> from shinymap import Map, Outline, StillLife, output_map
+            >>> outline = Outline.from_dict({"a": "M 0 0 L 10 0 L 10 10 Z"})
+            >>> pic = StillLife(Map(outline, fill_color={"a": "#ff0000"}))
+            >>> pic.aes("a")["fill_color"]
+            '#ff0000'
+            >>> _ = output_map("result", outline)
+            >>> pic = StillLife(Map(fill_color={"a": "#00ff00"}), output_id="result")
+            >>> pic.aes("a")["fill_color"]
+            '#00ff00'
+
+            ```
         """
-        # Validate builder has required fields
-        if builder._outline is None:
+        if output_id is not None and wash is not None:
             raise ValueError(
-                "MapBuilder lacks _outline. "
-                "Use WashResult.build() to create a MapBuilder for StillLife."
-            )
-        if builder._resolved_aes is None:
-            raise ValueError(
-                "MapBuilder lacks _resolved_aes. "
-                "Use WashResult.build() to create a MapBuilder for StillLife."
+                "Pass either output_id= (follow an output_map()) or wash=, not both: "
+                "the output already has its wash."
             )
 
-        self._outline: Outline = builder._outline
-        self._resolved_aes: ByGroup = builder._resolved_aes
+        if builder._resolved_aes is not None:
+            if output_id is not None or wash is not None:
+                raise ValueError(
+                    "This builder comes from Wash.build() and already has its look; "
+                    "pass Map(...) to use output_id= or wash=."
+                )
+            outline = builder._outline
+            resolved_aes = builder._resolved_aes
+            mode = getattr(builder, "_mode", None)
+        else:
+            from .uicore._render_map import _resolve_map_aes
+
+            static: Mapping[str, Any]
+            if output_id is not None:
+                from shiny.module import resolve_id
+
+                from .uicore._registry import _static_map_params
+
+                key = resolve_id(output_id)
+                if key not in _static_map_params:
+                    raise ValueError(
+                        f"No output_map({output_id!r}) found. Call output_map() first, "
+                        "or pass wash= to draw the map on its own."
+                    )
+                static = _static_map_params[key]
+            elif wash is not None:
+                static = {"wash_config": wash.config}
+            else:
+                static = {}
+
+            outline = static.get("outline") or builder._outline
+            if outline is None:
+                raise ValueError(
+                    "StillLife needs an outline: pass it to Map(outline, ...), "
+                    "or pass output_id= of an output_map() that has one."
+                )
+            if builder._layers is not None:
+                layers = {k: v for k, v in builder._layers.items() if v is not None}
+                outline = outline.merge_layers(layers)
+            resolved_aes = _resolve_map_aes(builder._aes, static, outline)
+            mode = static.get("mode")
+
+        if outline is None:
+            raise ValueError("MapBuilder lacks _outline.")
+
+        self._outline: Outline = outline
+        self._resolved_aes: ByGroup = resolved_aes
         self._value: Mapping[str, int] = value if value is not None else (builder._value or {})
         self._hovered: str | None = hovered
-        self._mode: Any = getattr(builder, "_mode", None)
+        self._mode: Any = mode
 
     def _region_group(self, region_id: str) -> str | None:
         for group_name, region_ids in self._outline.groups().items():

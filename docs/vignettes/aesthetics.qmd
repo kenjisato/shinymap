@@ -146,11 +146,34 @@ colors = scale_continuous(rates, region_ids, vmin=0, vmax=100)
   made from it (`wc.input_map`, `wc.output_map`, `wc.render_map`).
 
 The library defaults are themselves a wash, `shinymap.default_wash`; `input_map` and
-friends are its methods. Use it where you need the default look outside an app, for
-example to save a static picture:
+friends are its methods.
+
+## Static pictures
+
+`StillLife` draws a map as a static SVG, for a report, a slide or a thumbnail. Give it
+the same `Map(...)` you return from `@render_map`, with `output_id=` naming the
+`output_map()`: the picture uses that output's outline, mode, wash and `aes`, and
+matches what the browser shows.
 
 ```python
-from shinymap import StillLife, default_wash
+from shiny import render, ui
+from shinymap import Map, StillLife, output_map, render_map
 
-StillLife(default_wash.build(outline, value={"r7": 1})).to_svg("map.svg")
+output_map("result", outline, aes=...)
+
+@render_map
+def result():
+    return Map(fill_color=colors)
+
+@render.ui
+def snapshot():  # the same map, as a static SVG
+    return ui.HTML(StillLife(Map(fill_color=colors), output_id="result").to_svg())
+```
+
+Outside an app, pass the outline to `Map()`. The picture uses `default_wash`, or the
+wash you give with `wash=`:
+
+```python
+StillLife(Map(outline, fill_color=colors)).to_svg("map.svg")
+StillLife(Map(outline, value={"r7": 1}), wash=wc).to_svg("selected.svg")
 ```
