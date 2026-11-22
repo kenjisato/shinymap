@@ -60,7 +60,9 @@ def export_svg(
 
         >>> # Export without id attributes
         >>> export_svg(outline, "no_ids.svg", include_ids=False)  # doctest: +SKIP
+
         ```
+
     Note:
         Exported SVG preserves aesthetic attributes (fill, stroke, etc.)
         from the original outline. These aesthetics are NOT used by shinymap

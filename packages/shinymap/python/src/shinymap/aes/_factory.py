@@ -78,6 +78,7 @@ def Line(
         ```pycon
         >>> from shinymap import aes
         >>> grid_aes = aes.Line(stroke_color="#ddd", stroke_dasharray=aes.line.dashed)
+
         ```
     """
     return LineAesthetic(
@@ -115,6 +116,7 @@ def Shape(
         ```pycon
         >>> from shinymap import aes
         >>> region_aes = aes.Shape(fill_color="#3b82f6", stroke_color="#000", stroke_width=1)
+
         ```
     """
     return ShapeAesthetic(
@@ -154,6 +156,7 @@ def Text(
         ```pycon
         >>> from shinymap import aes
         >>> label_aes = aes.Text(fill_color="#000", stroke_color="#fff", stroke_width=0.5)
+
         ```
     """
     return TextAesthetic(
@@ -209,6 +212,7 @@ def Path(
         >>> border_aes = aes.Path(fill_color=None, stroke_color="#000", stroke_width=1)
         >>> # Path used as a shape (filled)
         >>> region_aes = aes.Path(fill_color="#3b82f6", stroke_color="#fff")
+
         ```
     """
     return PathAesthetic(
@@ -263,6 +267,7 @@ def Indexed(
 
         >>> # Traffic light (4 states)
         >>> _ = aes.Indexed(fill_color=["#e2e8f0", "#ef4444", "#eab308", "#22c55e"])
+
         ```
     """
     return IndexedAesthetic(

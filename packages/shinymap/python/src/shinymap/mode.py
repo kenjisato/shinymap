@@ -88,6 +88,7 @@ class Single:
         ...         fill_color=["#e5e7eb", "#3b82f6"],  # gray -> blue
         ...     )
         ... )
+
         ```
     """
 
@@ -141,6 +142,7 @@ class Multiple:
         ...         fill_color=["#e5e7eb", "#10b981"],  # gray -> green
         ...     )
         ... )
+
         ```
     """
 
@@ -196,6 +198,7 @@ class Cycle:
         ...         question_2=aes.Indexed(fill_color=["#bbf7d0", "#16a34a"]),
         ...     ),
         ... )
+
         ```
     """
 
@@ -260,6 +263,7 @@ class Count:
         ...         ),
         ...     ),
         ... )
+
         ```
     """
 
@@ -440,6 +444,7 @@ def normalize_mode(mode: ModeType) -> Single | Multiple | Cycle | Count:
         Single(selected=None, allow_deselect=True, aes=None)
         >>> normalize_mode(Multiple(max_selection=3))
         Multiple(selected=None, max_selection=3, aes=None)
+
         ```
     """
     if mode == "single":
@@ -476,6 +481,7 @@ def initial_value_from_mode(
         {'a': 1, 'b': 1}
         >>> initial_value_from_mode(Count(values={"r1": 3}))
         {'r1': 3}
+
         ```
     """
     if isinstance(mode, Single) and mode.selected is not None:

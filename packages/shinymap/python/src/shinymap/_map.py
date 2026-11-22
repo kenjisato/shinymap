@@ -201,6 +201,7 @@ def Map(
         @render_map
         def my_map():
             return Map().with_value(counts)
+
         ```
     Returns:
         MapBuilder instance for method chaining

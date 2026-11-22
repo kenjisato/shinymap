@@ -67,6 +67,7 @@ def build_aes_payload(
         >>> payload = build_aes_payload(resolved, outline)
         >>> payload["coastal"]["base"]["fill_color"]
         '#3b82f6'
+
         ```
     """
     result: dict[str, Any] = {}

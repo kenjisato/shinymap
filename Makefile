@@ -1,4 +1,4 @@
-.PHONY: help build build-js build-bundle build-shiny clean test lint format lint-python format-python check-python install docs docs-python docs-typescript docs-preview
+.PHONY: help build build-js build-bundle build-shiny clean test test-doctest lint format lint-python format-python check-python install docs docs-python docs-typescript docs-preview
 
 # Default target
 help:
@@ -59,9 +59,16 @@ clean:
 	@echo "✓ Clean complete"
 
 # Run tests
+# Docstring examples. The EOL stub modules raise ImportError on import by design.
+test-doctest:
+	uv run pytest --doctest-modules packages/shinymap/python/src/shinymap \
+		--ignore=packages/shinymap/python/src/shinymap/geometry \
+		--ignore=packages/shinymap/python/src/shinymap/outline/converter
+
 test:
 	@echo "Running Python tests..."
 	uv run pytest packages/shinymap/python/tests/ -v
+	$(MAKE) test-doctest
 	@echo "✓ Tests complete"
 
 # Lint

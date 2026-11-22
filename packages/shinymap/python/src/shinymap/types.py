@@ -44,6 +44,7 @@ class MissingType:
         color = #fff
         >>> set_color(None)  # None means "transparent"
         color = None
+
         ```
     """
 

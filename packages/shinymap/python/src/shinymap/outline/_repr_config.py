@@ -48,6 +48,7 @@ def get_repr_config() -> ReprConfig:
         >>> config = get_repr_config()
         >>> config.max_regions
         10
+
         ```
     """
     config = _repr_config.get()

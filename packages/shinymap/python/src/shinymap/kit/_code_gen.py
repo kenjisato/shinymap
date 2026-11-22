@@ -46,18 +46,20 @@ def convert(
         Dict in shinymap JSON format
 
     Examples:
-        >>> from shinymap.kit import convert
-        >>>
-        >>> result = convert(
-        ...     "map.svg",
-        ...     "map.json",
-        ...     relabel={"tokyo": "path_1", "hokkaido": ["path_2", "path_3"]},
-        ...     overlay_ids=["_border"],
-        ...     underlay_ids=["_background"],
-        ...     hidden_ids=["_guides"],
-        ...     lines_as_path_ids=["_divider"],
-        ...     metadata={"source": "Custom SVG"},
-        ... )
+        ```python
+        from shinymap.kit import convert
+
+        result = convert(
+            "map.svg",
+            "map.json",
+            relabel={"tokyo": "path_1", "hokkaido": ["path_2", "path_3"]},
+            overlay_ids=["_border"],
+            underlay_ids=["_background"],
+            hidden_ids=["_guides"],
+            lines_as_path_ids=["_divider"],
+            metadata={"source": "Custom SVG"},
+        )
+        ```
     """
     file_path = Path(input_path).expanduser()
 
@@ -109,23 +111,25 @@ def apply_mapping(outline: Outline, mapping: dict[str, Any]) -> Outline:
         New Outline with all transformations applied
 
     Examples:
-        >>> from shinymap import Outline
-        >>> from shinymap.kit import apply_mapping
-        >>>
-        >>> outline = Outline.from_svg("map.svg")
-        >>> mapping = {
-        ...     "groups": {
-        ...         "hokkaido": ["path_1", "path_2"],
-        ...         "tokyo": "path_4",
-        ...     },
-        ...     "layers": {
-        ...         "overlay": ["_border"],
-        ...         "hidden": ["_guides"],
-        ...     },
-        ...     "lines_as_path": ["_divider"],
-        ...     "metadata": {"source": "...", "license": "..."},
-        ... }
-        >>> result = apply_mapping(outline, mapping)
+        ```python
+        from shinymap import Outline
+        from shinymap.kit import apply_mapping
+
+        outline = Outline.from_svg("map.svg")
+        mapping = {
+            "groups": {
+                "hokkaido": ["path_1", "path_2"],
+                "tokyo": "path_4",
+            },
+            "layers": {
+                "overlay": ["_border"],
+                "hidden": ["_guides"],
+            },
+            "lines_as_path": ["_divider"],
+            "metadata": {"source": "...", "license": "..."},
+        }
+        result = apply_mapping(outline, mapping)
+        ```
     """
     result = outline
 

@@ -59,6 +59,7 @@ def update_map(
 
         # Set specific selections (input_map only)
         update_map("my_map", value={"region1": 1, "region2": 1})
+
         ```
     Note:
         - Uses shallow merge semantics: new properties override existing ones

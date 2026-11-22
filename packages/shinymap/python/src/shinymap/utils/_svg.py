@@ -25,6 +25,7 @@ def path_bb(path_d: str) -> tuple[float, float, float, float]:
         ```pycon
         >>> path_bb("M 0 0 L 100 0 L 100 100 Z")
         (0.0, 0.0, 100.0, 100.0)
+
         ```
     """
     # Extract all numbers (handles negative, decimals)
@@ -59,6 +60,7 @@ def strip_unit(value: str) -> float | None:
         50.5
         >>> strip_unit("invalid") is None
         True
+
         ```
     """
     # Remove common SVG units and try to parse as float
