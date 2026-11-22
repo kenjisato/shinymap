@@ -62,9 +62,9 @@ def _build_payload(
         if outline is not None:
             wash_config = static_params.get("wash_config")
             if wash_config is None:
-                from ..ui._ui import _default_wash
+                from ..ui._ui import default_wash
 
-                wash_config = _default_wash.config
+                wash_config = default_wash.config
             merged_aes = wash_config.apply(combined, outline)
         else:
             merged_aes = combined

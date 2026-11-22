@@ -19,6 +19,7 @@ from .relative import (
 
 # Re-export from ui for convenience
 from .ui import (
+    default_wash,
     input_checkbox_group,
     input_map,
     input_radio_buttons,
@@ -41,6 +42,7 @@ __all__ = [
     "update_map",
     # Wash factory (watercolor-inspired aesthetic configuration)
     "Wash",
+    "default_wash",  # the Wash behind input_map/output_map/render_map
     # Aesthetic module (aes.Shape(), aes.Line(), aes.color, aes.line, aes.default)
     "aes",
     # PARENT proxy and relative expressions

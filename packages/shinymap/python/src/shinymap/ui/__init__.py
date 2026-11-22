@@ -23,6 +23,7 @@ Usage:
 from __future__ import annotations
 
 from ._ui import (
+    default_wash,
     input_checkbox_group,
     input_map,
     input_radio_buttons,
@@ -32,6 +33,7 @@ from ._ui import (
 )
 
 __all__ = [
+    "default_wash",
     "input_map",
     "output_map",
     "render_map",

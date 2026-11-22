@@ -48,7 +48,7 @@ if TYPE_CHECKING:
 #   2. LIBRARY_AESTHETIC_DEFAULTS: complete defaults for React developers
 # - Library defaults here provide a complete, polished out-of-box experience
 # - No hardcoded fallbacks in shinymap-shiny.js - everything flows from Python
-_default_wash = Wash(
+default_wash = Wash(
     shape=aes.ByState(
         base=aes.Shape(
             fill_color="#e2e8f0",  # slate-200: neutral base
@@ -74,10 +74,27 @@ _default_wash = Wash(
     ),
 )
 
+"""The look every map gets unless you make your own `Wash`.
+
+`shinymap.input_map`, `output_map` and `render_map` are its methods. Use it
+where a function takes a wash, for example to draw a static picture with the
+default look:
+
+Examples:
+    ```pycon
+    >>> from shinymap import Outline, StillLife, default_wash
+    >>> outline = Outline.from_dict({"a": "M 0 0 L 10 0 L 10 10 Z"})
+    >>> svg = StillLife(default_wash.build(outline, value={"a": 1})).to_svg()
+    >>> svg.startswith("<svg")
+    True
+
+    ```
+"""
+
 # Public API functions use the default wash
-input_map = _default_wash.input_map
-output_map = _default_wash.output_map
-render_map = _default_wash.render_map
+input_map = default_wash.input_map
+output_map = default_wash.output_map
+render_map = default_wash.render_map
 
 
 # =============================================================================

@@ -129,3 +129,13 @@ def result():
   look each time it renders. Properties it does not set are kept.
 - `Wash(shape=..., line=..., text=...)` replaces the library defaults for every map
   made from it (`wc.input_map`, `wc.output_map`, `wc.render_map`).
+
+The library defaults are themselves a wash, `shinymap.default_wash`; `input_map` and
+friends are its methods. Use it where you need the default look outside an app, for
+example to save a static picture:
+
+```python
+from shinymap import StillLife, default_wash
+
+StillLife(default_wash.build(outline, value={"r7": 1})).to_svg("map.svg")
+```

@@ -51,6 +51,7 @@ quartodoc:
         - Map
         - Outline
         - Wash
+        - default_wash
 
     - title: "Selection Modes"
       desc: "Mode classes controlling selection behavior"
