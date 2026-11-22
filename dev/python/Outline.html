@@ -81,7 +81,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-cb61c712ca1a7fe70a83faed8e4da2d7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-f35a81a4717690815b2013502477d714.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -257,7 +257,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 &gt;&gt;&gt; # v1.x format (polymorphic elements)
 &gt;&gt;&gt; from shinymap.svg import Circle
-&gt;&gt;&gt; geo = Outline(regions={"r1": [Circle(cx=100, cy=100, r=50)]}, metadata={})</code></pre>
+&gt;&gt;&gt; geo = Outline(regions={"r1": [Circle(cx=100, cy=100, r=50)]}, metadata={})
+</code></pre>
 </section>
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">Methods</h2>
@@ -395,7 +396,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 ...     "_metadata": {"annotation": ["_label"]}
 ... })
 &gt;&gt;&gt; geo.annotation_ids()
-['_label']</code></pre>
+['_label']
+</code></pre>
 </section>
 </section>
 <section id="shinymap.Outline.from_dict" class="level3">
@@ -484,7 +486,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 &gt;&gt;&gt; data = {"a": [{"type": "circle", "cx": 100, "cy": 100, "r": 50}]}
 &gt;&gt;&gt; outline = Outline.from_dict(data)
 &gt;&gt;&gt; outline.regions["a"]
-[Circle(cx=100, cy=100, r=50)]</code></pre>
+[Circle(cx=100, cy=100, r=50)]
+</code></pre>
 </section>
 </section>
 <section id="shinymap.Outline.from_json" class="level3">
@@ -541,7 +544,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-3">Examples</h4>
 <pre class="pycon"><code>&gt;&gt;&gt; geo = Outline.from_json("japan_prefectures.json")  # doctest: +SKIP
 &gt;&gt;&gt; geo.regions.keys()  # doctest: +SKIP
-dict_keys(['01', '02', ...])</code></pre>
+dict_keys(['01', '02', ...])
+</code></pre>
 </section>
 </section>
 <section id="shinymap.Outline.from_svg" class="level3">
@@ -642,7 +646,8 @@ dict_keys(['circle_1', 'rect_1', 'path_1', 'text_1'])
 &gt;&gt;&gt; geo = Outline.from_svg("map.svg")  # doctest: +SKIP
 &gt;&gt;&gt; geo.relabel({"hokkaido": ["circle_1", "circle_2"]})  # doctest: +SKIP
 &gt;&gt;&gt; geo.set_overlays(["_border"])  # doctest: +SKIP
-&gt;&gt;&gt; geo.to_json("output.json")  # doctest: +SKIP</code></pre>
+&gt;&gt;&gt; geo.to_json("output.json")  # doctest: +SKIP
+</code></pre>
 </section>
 </section>
 <section id="shinymap.Outline.groups" class="level3">
@@ -681,7 +686,8 @@ dict_keys(['circle_1', 'rect_1', 'path_1', 'text_1'])
 ...     "_metadata": {"groups": {"coastal": ["region1", "region2"]}}
 ... })
 &gt;&gt;&gt; geo.groups()
-{'coastal': ['region1', 'region2']}</code></pre>
+{'coastal': ['region1', 'region2']}
+</code></pre>
 </section>
 </section>
 <section id="shinymap.Outline.hidden_ids" class="level3">
@@ -715,7 +721,8 @@ dict_keys(['circle_1', 'rect_1', 'path_1', 'text_1'])
 ...     "_metadata": {"hidden": ["_temp"]}
 ... })
 &gt;&gt;&gt; geo.hidden_ids()
-['_temp']</code></pre>
+['_temp']
+</code></pre>
 </section>
 </section>
 <section id="shinymap.Outline.layers_dict" class="level3">
@@ -755,7 +762,8 @@ dict_keys(['circle_1', 'rect_1', 'path_1', 'text_1'])
 ...     "_metadata": {"overlay": ["_border"], "underlay": ["_bg"]}
 ... })
 &gt;&gt;&gt; geo.layers_dict()
-{'overlay': ['_border'], 'underlay': ['_bg']}</code></pre>
+{'overlay': ['_border'], 'underlay': ['_bg']}
+</code></pre>
 </section>
 </section>
 <section id="shinymap.Outline.main_regions" class="level3">
@@ -801,7 +809,8 @@ dict_keys(['circle_1', 'rect_1', 'path_1', 'text_1'])
 &gt;&gt;&gt; geo.main_regions()
 Regions({
   'region': ['M 0 0'],
-})</code></pre>
+})
+</code></pre>
 </section>
 </section>
 <section id="shinymap.Outline.merge_layers" class="level3">
@@ -868,7 +877,8 @@ Regions({
 {'overlay': ['_border'], 'underlay': ['_bg']}
 &gt;&gt;&gt; merged = outline.merge_layers({"overlay": ["_custom"]})
 &gt;&gt;&gt; merged.metadata
-{'overlay': ['_custom']}</code></pre>
+{'overlay': ['_custom']}
+</code></pre>
 </section>
 </section>
 <section id="shinymap.Outline.metadata_dict" class="level3">
@@ -934,7 +944,8 @@ Regions({
 ...     "_metadata": {"groups": {"coastal": ["region1"]}}
 ... })
 &gt;&gt;&gt; outline.metadata_dict()
-{'viewBox': '-2.0 -2.0 104.0 104.0', 'groups': {'coastal': ['region1']}}</code></pre>
+{'viewBox': '-2.0 -2.0 104.0 104.0', 'groups': {'coastal': ['region1']}}
+</code></pre>
 </section>
 </section>
 <section id="shinymap.Outline.move_group" class="level3">
@@ -1022,16 +1033,17 @@ Regions({
 ... })
 &gt;&gt;&gt; # Merge multiple regions
 &gt;&gt;&gt; geo2 = geo.move_group("combined", "path_1", "path_2")
-&gt;&gt;&gt; sorted(geo2.region_ids())
+&gt;&gt;&gt; sorted(geo2.regions)
 ['combined', 'path_3']
 &gt;&gt;&gt; # Rename single region
 &gt;&gt;&gt; geo3 = geo.move_group("renamed", "path_3")
-&gt;&gt;&gt; "renamed" in geo3.region_ids()
+&gt;&gt;&gt; "renamed" in geo3.regions
 True
 &gt;&gt;&gt; # Pass list of IDs
 &gt;&gt;&gt; geo4 = geo.move_group("merged", ["path_1", "path_2", "path_3"])
-&gt;&gt;&gt; list(geo4.region_ids())
-['merged']</code></pre>
+&gt;&gt;&gt; list(geo4.regions)
+['merged']
+</code></pre>
 </section>
 </section>
 <section id="shinymap.Outline.move_layer" class="level3">
@@ -1113,7 +1125,8 @@ True
 &gt;&gt;&gt; # Pass list of IDs
 &gt;&gt;&gt; geo4 = geo.move_layer("overlay", ["_border", "_grid"])
 &gt;&gt;&gt; sorted(geo4.overlay_ids())
-['_border', '_grid']</code></pre>
+['_border', '_grid']
+</code></pre>
 </section>
 </section>
 <section id="shinymap.Outline.overlay_ids" class="level3">
@@ -1147,7 +1160,8 @@ True
 ...     "_metadata": {"overlay": ["_border"]}
 ... })
 &gt;&gt;&gt; geo.overlay_ids()
-['_border']</code></pre>
+['_border']
+</code></pre>
 </section>
 </section>
 <section id="shinymap.Outline.overlay_regions" class="level3">
@@ -1193,7 +1207,8 @@ True
 &gt;&gt;&gt; geo.overlay_regions()
 Regions({
   '_border': ['M 0 0 L 100 0'],
-})</code></pre>
+})
+</code></pre>
 </section>
 </section>
 <section id="shinymap.Outline.path_as_line" class="level3">
@@ -1259,7 +1274,8 @@ Regions({
 ...     "_divider": ["M 50 0 L 50 100"]
 ... })
 &gt;&gt;&gt; geo2 = geo.path_as_line("_divider")
-&gt;&gt;&gt; # Now _divider will use stroke-only rendering</code></pre>
+&gt;&gt;&gt; # Now _divider will use stroke-only rendering
+</code></pre>
 </section>
 </section>
 <section id="shinymap.Outline.region_types" class="level3">
@@ -1309,7 +1325,8 @@ Regions({
 ...     "_border": [Path(d="M 0 0 L 100 0")],
 ... }, metadata={}).path_as_line("_border")
 &gt;&gt;&gt; outline.region_types()
-{'_border': 'line'}</code></pre>
+{'_border': 'line'}
+</code></pre>
 </section>
 </section>
 <section id="shinymap.Outline.relabel" class="level3">
@@ -1395,7 +1412,8 @@ Regions({
 ...     "_border": "path_3"                 # Rename
 ... })
 &gt;&gt;&gt; geo2.regions.keys()
-dict_keys(['region_a', '_border'])</code></pre>
+dict_keys(['region_a', '_border'])
+</code></pre>
 </section>
 </section>
 <section id="shinymap.Outline.set_overlays" class="level3">
@@ -1456,7 +1474,8 @@ dict_keys(['region_a', '_border'])</code></pre>
 ... })
 &gt;&gt;&gt; geo2 = geo.set_overlays(["_border"])
 &gt;&gt;&gt; geo2.overlay_ids()
-['_border']</code></pre>
+['_border']
+</code></pre>
 </section>
 </section>
 <section id="shinymap.Outline.to_dict" class="level3">
@@ -1499,7 +1518,8 @@ dict_keys(['region_a', '_border'])</code></pre>
 &gt;&gt;&gt; from shinymap.svg import Circle
 &gt;&gt;&gt; outline = Outline(regions={"r1": [Circle(cx=100, cy=100, r=50)]}, metadata={})
 &gt;&gt;&gt; outline.to_dict()
-{'r1': [{'type': 'circle', 'cx': 100, 'cy': 100, 'r': 50}]}</code></pre>
+{'r1': [{'type': 'circle', 'cx': 100, 'cy': 100, 'r': 50}]}
+</code></pre>
 </section>
 </section>
 <section id="shinymap.Outline.to_json" class="level3">
@@ -1530,7 +1550,8 @@ dict_keys(['region_a', '_border'])</code></pre>
 <section id="examples-20" class="level4 doc-section doc-section-examples">
 <h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-20">Examples</h4>
 <pre class="pycon"><code>&gt;&gt;&gt; geo = Outline.from_svg("map.svg")  # doctest: +SKIP
-&gt;&gt;&gt; geo.to_json("output.json")  # doctest: +SKIP</code></pre>
+&gt;&gt;&gt; geo.to_json("output.json")  # doctest: +SKIP
+</code></pre>
 </section>
 </section>
 <section id="shinymap.Outline.underlay_ids" class="level3">
@@ -1564,7 +1585,8 @@ dict_keys(['region_a', '_border'])</code></pre>
 ...     "_metadata": {"underlay": ["_bg"]}
 ... })
 &gt;&gt;&gt; geo.underlay_ids()
-['_bg']</code></pre>
+['_bg']
+</code></pre>
 </section>
 </section>
 <section id="shinymap.Outline.update_metadata" class="level3">
@@ -1620,7 +1642,8 @@ dict_keys(['region_a', '_border'])</code></pre>
 ...     "license": "CC BY-SA 3.0"
 ... })
 &gt;&gt;&gt; geo2.metadata["source"]
-'Wikimedia Commons'</code></pre>
+'Wikimedia Commons'
+</code></pre>
 </section>
 </section>
 <section id="shinymap.Outline.viewbox" class="level3">
@@ -1683,7 +1706,8 @@ dict_keys(['region_a', '_border'])</code></pre>
 <h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-23">Examples</h4>
 <pre class="pycon"><code>&gt;&gt;&gt; geo = Outline.from_dict({"a": ["M 0 0 L 100 100"]})
 &gt;&gt;&gt; geo.viewbox()  # Returns with 2% padding
-(-2.0, -2.0, 104.0, 104.0)</code></pre>
+(-2.0, -2.0, 104.0, 104.0)
+</code></pre>
 
 
 </section>

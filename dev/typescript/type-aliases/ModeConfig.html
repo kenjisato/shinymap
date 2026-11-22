@@ -46,7 +46,7 @@ ul.task-list li input[type="checkbox"] {
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-cb61c712ca1a7fe70a83faed8e4da2d7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-f35a81a4717690815b2013502477d714.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -141,6 +141,7 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#aesindexed" id="toc-aesindexed" class="nav-link" data-scroll-target="#aesindexed">aesIndexed?</a></li>
   <li><a href="#allowdeselect" id="toc-allowdeselect" class="nav-link" data-scroll-target="#allowdeselect">allowDeselect?</a></li>
   <li><a href="#clickable" id="toc-clickable" class="nav-link" data-scroll-target="#clickable">clickable?</a></li>
+  <li><a href="#maxcount" id="toc-maxcount" class="nav-link" data-scroll-target="#maxcount">maxCount?</a></li>
   <li><a href="#maxselection" id="toc-maxselection" class="nav-link" data-scroll-target="#maxselection">maxSelection?</a></li>
   <li><a href="#n" id="toc-n" class="nav-link" data-scroll-target="#n">n?</a></li>
   <li><a href="#type" id="toc-type" class="nav-link" data-scroll-target="#type">type</a></li>
@@ -163,7 +164,7 @@ ul.task-list li input[type="checkbox"] {
 <blockquote class="blockquote">
 <p><strong>ModeConfig</strong> = <code>object</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/kenjisato/shinymap/blob/3bd137f178ff665ad75b42072404fb7c8e71f3e2/packages/shinymap/js/src/types.ts#L274">types.ts:274</a></p>
+<p>Defined in: <a href="https://github.com/kenjisato/shinymap/blob/4b444d0f5bfe420bd70b882cbfee0b4132b2a2c3/packages/shinymap/js/src/types.ts#L274">types.ts:274</a></p>
 <p>Mode configuration object (nested API).</p>
 <p>Python normalizes string mode to this full config before sending to JS.</p>
 <section id="properties" class="level2">
@@ -173,7 +174,7 @@ ul.task-list li input[type="checkbox"] {
 <blockquote class="blockquote">
 <p><code>optional</code> <strong>aesIndexed</strong>: <code>AesIndexedConfig</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/kenjisato/shinymap/blob/3bd137f178ff665ad75b42072404fb7c8e71f3e2/packages/shinymap/js/src/types.ts#L283">types.ts:283</a></p>
+<p>Defined in: <a href="https://github.com/kenjisato/shinymap/blob/4b444d0f5bfe420bd70b882cbfee0b4132b2a2c3/packages/shinymap/js/src/types.ts#L285">types.ts:285</a></p>
 <p>Indexed aesthetic for multi-state visual feedback (Cycle, Count modes)</p>
 <hr>
 </section>
@@ -182,7 +183,7 @@ ul.task-list li input[type="checkbox"] {
 <blockquote class="blockquote">
 <p><code>optional</code> <strong>allowDeselect</strong>: <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/kenjisato/shinymap/blob/3bd137f178ff665ad75b42072404fb7c8e71f3e2/packages/shinymap/js/src/types.ts#L277">types.ts:277</a></p>
+<p>Defined in: <a href="https://github.com/kenjisato/shinymap/blob/4b444d0f5bfe420bd70b882cbfee0b4132b2a2c3/packages/shinymap/js/src/types.ts#L277">types.ts:277</a></p>
 <p>Allow deselection in single mode</p>
 <hr>
 </section>
@@ -191,8 +192,17 @@ ul.task-list li input[type="checkbox"] {
 <blockquote class="blockquote">
 <p><code>optional</code> <strong>clickable</strong>: <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/kenjisato/shinymap/blob/3bd137f178ff665ad75b42072404fb7c8e71f3e2/packages/shinymap/js/src/types.ts#L285">types.ts:285</a></p>
+<p>Defined in: <a href="https://github.com/kenjisato/shinymap/blob/4b444d0f5bfe420bd70b882cbfee0b4132b2a2c3/packages/shinymap/js/src/types.ts#L287">types.ts:287</a></p>
 <p>Enable click events in display mode. Default is false.</p>
+<hr>
+</section>
+<section id="maxcount" class="level3">
+<h3 class="anchored" data-anchor-id="maxcount">maxCount?</h3>
+<blockquote class="blockquote">
+<p><code>optional</code> <strong>maxCount</strong>: <code>number</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/kenjisato/shinymap/blob/4b444d0f5bfe420bd70b882cbfee0b4132b2a2c3/packages/shinymap/js/src/types.ts#L283">types.ts:283</a></p>
+<p>Count mode: highest count used to pick an indexed aesthetic (counts above share it)</p>
 <hr>
 </section>
 <section id="maxselection" class="level3">
@@ -200,7 +210,7 @@ ul.task-list li input[type="checkbox"] {
 <blockquote class="blockquote">
 <p><code>optional</code> <strong>maxSelection</strong>: <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/kenjisato/shinymap/blob/3bd137f178ff665ad75b42072404fb7c8e71f3e2/packages/shinymap/js/src/types.ts#L279">types.ts:279</a></p>
+<p>Defined in: <a href="https://github.com/kenjisato/shinymap/blob/4b444d0f5bfe420bd70b882cbfee0b4132b2a2c3/packages/shinymap/js/src/types.ts#L279">types.ts:279</a></p>
 <p>Maximum number of regions that can be selected (multiple mode)</p>
 <hr>
 </section>
@@ -209,7 +219,7 @@ ul.task-list li input[type="checkbox"] {
 <blockquote class="blockquote">
 <p><code>optional</code> <strong>n</strong>: <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/kenjisato/shinymap/blob/3bd137f178ff665ad75b42072404fb7c8e71f3e2/packages/shinymap/js/src/types.ts#L281">types.ts:281</a></p>
+<p>Defined in: <a href="https://github.com/kenjisato/shinymap/blob/4b444d0f5bfe420bd70b882cbfee0b4132b2a2c3/packages/shinymap/js/src/types.ts#L281">types.ts:281</a></p>
 <p>Number of states for cycle mode. Counts advance modulo n.</p>
 <hr>
 </section>
@@ -218,7 +228,7 @@ ul.task-list li input[type="checkbox"] {
 <blockquote class="blockquote">
 <p><strong>type</strong>: <a href="../../typescript/type-aliases/MapModeType.html"><code>MapModeType</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/kenjisato/shinymap/blob/3bd137f178ff665ad75b42072404fb7c8e71f3e2/packages/shinymap/js/src/types.ts#L275">types.ts:275</a></p>
+<p>Defined in: <a href="https://github.com/kenjisato/shinymap/blob/4b444d0f5bfe420bd70b882cbfee0b4132b2a2c3/packages/shinymap/js/src/types.ts#L275">types.ts:275</a></p>
 
 
 </section>
