@@ -118,6 +118,31 @@ class MapBuilder:
         self._aes = aes
         return self
 
+    def with_fill_color(self, fill_color: Mapping[str, str]) -> MapBuilder:
+        """Color regions by ID, e.g. with the output of ``aes.color.scale_sequential``.
+
+        Each entry becomes ``aes.Shape(fill_color=...)`` for that region, layered
+        over any aes already set: other properties of the region are kept.
+
+        Args:
+            fill_color: Mapping of region ID to color.
+
+        Examples:
+            ```pycon
+            @render_map
+            def my_map():
+                colors = scale_sequential(counts, region_ids, max_count=5)
+                return Map().with_value(counts).with_fill_color(colors)
+
+            ```
+        """
+        from .aes._core import ByGroup, ShapeAesthetic
+        from .uicore._wash import layer_user_aes
+
+        fills = ByGroup(**{rid: ShapeAesthetic(fill_color=c) for rid, c in fill_color.items()})
+        self._aes = layer_user_aes(self._aes, fills)
+        return self
+
     def with_layers(self, layers: Mapping[str, list[str] | None]) -> MapBuilder:
         """Set layer configuration.
 
@@ -174,6 +199,7 @@ def Map(
     tooltips: dict[str, str] | None = None,
     value: dict[str, int] | None = None,
     aes: AesType = None,
+    fill_color: Mapping[str, str] | None = None,
     layers: Mapping[str, list[str] | None] | None = None,
 ) -> MapBuilder:
     """Create map from Outline object.
@@ -193,6 +219,8 @@ def Map(
             - value > 0: selected (select aesthetic applied)
         aes: Aesthetic configuration (ByGroup, ByState, or BaseAesthetic).
             ByState and single aesthetics apply to every region.
+        fill_color: Mapping of region ID to fill color, e.g. from
+            ``aes.color.scale_sequential``. Layered over ``aes``.
         layers: Layer configuration (nested dict: underlay, overlay, hidden)
 
     Examples:
@@ -206,6 +234,11 @@ def Map(
         @render_map
         def my_map():
             return Map().with_value(counts)
+
+        # Coloring by value
+        @render_map
+        def my_map():
+            return Map(fill_color=scale_continuous(rates, region_ids, vmin=0, vmax=100))
 
         ```
     Returns:
@@ -239,6 +272,8 @@ def Map(
         builder = builder.with_value(value)
     if aes is not None:
         builder = builder.with_aes(aes)
+    if fill_color is not None:
+        builder = builder.with_fill_color(fill_color)
     if layers is not None:
         builder = builder.with_layers(layers)
 
