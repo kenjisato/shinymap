@@ -1,0 +1,104 @@
+---
+title: "Selection Modes"
+---
+
+`input_map()` turns SVG regions into a form input. The `mode` decides what a click
+does and what value your server receives. Internally every mode keeps a count per
+region (`{region_id: int}`); the mode only changes how clicks update it and how it is
+returned.
+
+The pictures below use a grid of hexagons: any SVG paths work, not only maps.
+
+## Single: a visual radio button
+
+```python
+from shinymap import input_map
+
+input_map("choice", outline, mode="single")      # or mode=Single()
+```
+
+::: {layout="[[45,55]]" layout-valign="center"}
+![](../images/generated/mode-single.svg){fig-alt="Hexagon grid with one hexagon selected" width="100%"}
+
+::: {}
+Clicking a region selects it and clears the previous one. Clicking the selected
+region again clears it.
+
+`input.choice()` → `"r7"`, or `None` when nothing is selected.
+:::
+:::
+
+## Multiple: visual checkboxes
+
+```python
+input_map("choices", outline, mode="multiple")   # or Multiple(max_selection=3)
+```
+
+::: {layout="[[45,55]]" layout-valign="center"}
+![](../images/generated/mode-multiple.svg){fig-alt="Hexagon grid with four hexagons selected" width="100%"}
+
+::: {}
+Each click toggles one region. With `Multiple(max_selection=n)`, clicks that would
+select more than `n` regions are ignored.
+
+`input.choices()` → `["r1", "r8", "r12", "r16"]`
+:::
+:::
+
+## Cycle: a fixed number of states
+
+```python
+from shinymap import aes
+from shinymap.mode import Cycle
+
+input_map(
+    "status", outline,
+    mode=Cycle(n=4, aes=aes.Indexed(fill_color=["#e2e8f0", "#86efac", "#fde047", "#f87171"])),
+)
+```
+
+::: {layout="[[45,55]]" layout-valign="center"}
+![](../images/generated/mode-cycle.svg){fig-alt="Hexagon grid colored in four states" width="100%"}
+
+::: {}
+Each click moves a region to the next state, `0 → 1 → 2 → 3 → 0`. `aes.Indexed` gives
+one color per state, which suits ratings, traffic lights or "not started / doing / done".
+
+`input.status()` → `{"r0": 0, "r1": 3, "r2": 2, ...}`
+:::
+:::
+
+## Count: click to increment
+
+```python
+from shinymap.mode import Count
+
+palette = ["#e2e8f0", "#bfdbfe", "#93c5fd", "#60a5fa", "#3b82f6", "#1d4ed8"]  # counts 0..5
+input_map(
+    "votes", outline,
+    mode=Count(max_count=5, aes=aes.Indexed(fill_color=palette)),
+)
+```
+
+::: {layout="[[45,55]]" layout-valign="center"}
+![](../images/generated/mode-count.svg){fig-alt="Hexagon grid shaded darker where counts are higher" width="100%"}
+
+::: {}
+Each click adds one. The count is not capped; `max_count` only caps which color of
+`aes.Indexed` is used, so counts of 5 and above share the darkest color.
+
+`input.votes()` → `{"r6": 3, "r7": 5, ...}`
+:::
+:::
+
+## Raw values
+
+Pass `raw=True` to receive the underlying `dict[str, int]` in every mode, e.g. when you
+want the same processing for single and multiple selection.
+
+## Output maps
+
+`output_map()` shows a map without collecting input. Use `mode=Display(clickable=True)`
+when you still want to react to clicks: they arrive as `input.<id>_click`
+(or the `input_id` you pass). See [Aesthetics](aesthetics.qmd) for coloring regions by
+value.

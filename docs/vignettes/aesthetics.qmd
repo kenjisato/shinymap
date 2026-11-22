@@ -1,0 +1,132 @@
+---
+title: "Aesthetics"
+---
+
+Aesthetics decide how regions look: fill, stroke, width, opacity. You can set them
+for every region at once, for a group, or for a single region, and separately for
+the base, hover and selected states. This page builds that up one layer at a time.
+
+## One look for every region
+
+Pass a single aesthetic to `aes=`. `aes.Shape` is for filled shapes, `aes.Line` for
+lines and `aes.Text` for text.
+
+```python
+from shinymap import aes, input_map
+
+input_map("region", outline, mode="single", aes=aes.Shape(fill_color="#c7d2fe"))
+```
+
+Anything you leave out keeps the library default, including the hover and selection
+styles.
+
+## States: base, hover, select
+
+`aes.ByState` sets a look per state. `select` and `hover` are drawn *on top of* the
+base look, so they only need the properties that change.
+
+```python
+aes.ByState(
+    base=aes.Shape(fill_color="#e2e8f0", stroke_color="#ffffff", stroke_width=1.5),
+    hover=aes.Shape(stroke_color="#0f172a", stroke_width=2.5),
+    select=aes.Shape(fill_color="#3b82f6", stroke_color="#1e40af"),
+)
+```
+
+::: {layout-ncol=3}
+![base](../images/generated/state-base.svg){fig-alt="Hexagon grid, all regions in the base color" width="100%"}
+
+![hover](../images/generated/state-hover.svg){fig-alt="One hexagon outlined in dark navy" width="100%"}
+
+![select](../images/generated/state-select.svg){fig-alt="One hexagon filled in blue" width="100%"}
+:::
+
+Set a state to `None` to switch it off, e.g. `hover=None`. Values can also be
+relative to the base look: `hover=aes.Shape(stroke_width=PARENT.stroke_width + 1)`
+(`from shinymap import PARENT`).
+
+## Groups and regions: `aes.ByGroup`
+
+`aes.ByGroup` assigns looks by key. A key can be a **region ID** or a **group name**.
+Groups are defined in the outline's metadata:
+
+```python
+outline = Outline.from_dict({
+    "r0": ..., "r1": ..., ...,
+    "_metadata": {"groups": {"north": ["r0", ..., "r9"], "south": ["r10", ..., "r19"]}},
+})
+
+aes.ByGroup(
+    north=aes.Shape(fill_color="#fde68a"),
+    south=aes.Shape(fill_color="#a7f3d0"),
+)
+```
+
+![](../images/generated/bygroup.svg){fig-alt="Top half of the grid yellow, bottom half green" width="50%"}
+
+Each value can itself be an `aes.ByState`, so a group can have its own hover and
+selection look.
+
+## Which setting wins
+
+When several entries apply to a region, the most specific one wins:
+
+**region ID** › **group** › **type** (`__shape`, `__line`, `__text`) › **everything** (`__all`)
+
+This order applies to the base and selected looks. The hover look currently comes
+from `__all` only.
+
+A single aesthetic passed to `aes=` counts as `__all` for the element type it is
+written for. Each picture below adds one more specific entry:
+
+::: {layout-ncol=4}
+![Library default](../images/generated/prec-1-wash.svg){fig-alt="All hexagons gray" width="100%"}
+
+![`__all`](../images/generated/prec-2-all.svg){fig-alt="All hexagons lavender" width="100%"}
+
+![+ group `north`](../images/generated/prec-3-group.svg){fig-alt="Top half yellow, bottom half lavender" width="100%"}
+
+![+ region `r7`](../images/generated/prec-4-region.svg){fig-alt="As before, with one hexagon red" width="100%"}
+:::
+
+```python
+aes.ByGroup(
+    __all=aes.Shape(fill_color="#c7d2fe"),
+    north=aes.Shape(fill_color="#fde68a"),
+    r7=aes.Shape(fill_color="#f87171"),
+)
+```
+
+## Coloring by value
+
+`shinymap.aes.color` turns data into one color per region. Pass the result through
+`aes.ByGroup`, typically from `@render_map` so the colors follow your data:
+
+```python
+from shinymap import Map, aes, output_map, render_map
+from shinymap.aes.color import scale_sequential
+
+output_map("result", outline)
+
+@render_map
+def result():
+    colors = scale_sequential(counts, region_ids, max_count=5)
+    return Map(aes=aes.ByGroup(**{rid: aes.Shape(fill_color=c) for rid, c in colors.items()}))
+```
+
+::: {layout-ncol=3}
+![`scale_sequential`: counts](../images/generated/scale-sequential.svg){fig-alt="Hexagons in light to dark blue" width="100%"}
+
+![`scale_diverging`: below / above a midpoint](../images/generated/scale-diverging.svg){fig-alt="Hexagons from red through gray to blue" width="100%"}
+
+![`scale_qualitative`: categories](../images/generated/scale-qualitative.svg){fig-alt="Hexagons in blue, green and orange" width="100%"}
+:::
+
+## Where to set aesthetics
+
+- `input_map(..., aes=...)` and `output_map(..., aes=...)` set the look when the page
+  is built.
+- `Map(aes=...)` returned from `@render_map` is layered on top of `output_map()`'s
+  look each time it renders. Properties it does not set are kept.
+- `Wash(shape=..., line=..., text=...)` replaces the library defaults for every map
+  made from it (`wc.input_map`, `wc.output_map`, `wc.render_map`).
