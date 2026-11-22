@@ -5,9 +5,6 @@ by shinymap itself via `Wash.build()` + `StillLife.to_svg()`, so the pictures
 always match the library's rendering. Output goes to `images/generated/`
 (git-ignored).
 
-`StillLife` does not render indexed aesthetics (Cycle/Count) or the
-annotation layer; the Cycle/Count figures reproduce the same colors with
-`aes.ByGroup`.
 """
 
 import math
@@ -15,6 +12,7 @@ import re
 from pathlib import Path
 
 from shinymap import Outline, StillLife, Wash, aes
+from shinymap.mode import Count, Cycle
 from shinymap.aes.color import scale_diverging, scale_qualitative, scale_sequential
 from shinymap.ui._ui import _default_wash  # the look users get by default
 
@@ -140,11 +138,14 @@ def modes() -> None:
     save("mode-single", value={"r7": 1})
     save("mode-multiple", value={"r1": 1, "r8": 1, "r12": 1, "r16": 1})
     cycle = {rid: (i * 3) % 4 for i, rid in enumerate(IDS)}
-    save("mode-cycle", aes=fills({rid: CYCLE_COLORS[v] for rid, v in cycle.items()}))
+    save(
+        "mode-cycle",
+        mode=Cycle(n=4, aes=aes.Indexed(fill_color=CYCLE_COLORS)),
+        value=cycle,
+    )
     count = {"r2": 1, "r6": 3, "r7": 5, "r8": 2, "r12": 4, "r13": 1}
     save(
-        "mode-count",
-        aes=fills({rid: COUNT_COLORS[min(count.get(rid, 0), 5)] for rid in IDS}),
+        "mode-count", mode=Count(aes=aes.Indexed(fill_color=COUNT_COLORS)), value=count
     )
 
 
@@ -216,6 +217,25 @@ def layers() -> None:
     save("layer-3-overlay", lined, aes=bg)
     save("layer-4-select", lined, aes=bg, value={"r7": 1, "r8": 1})
     save("layer-5-hover", lined, aes=bg, value={"r7": 1, "r8": 1}, hovered="r12")
+
+    # Annotation: a marker on the hovered region stays above the hover outline
+    w = math.sqrt(3) * 10
+    pin = {"type": "circle", "cx": 6 + 2 * w + w / 2, "cy": 6 + 30 + 10, "r": 3.5}
+    pinned = Outline.from_dict({**lined.to_dict(), "_pin": [pin]})
+    pinned = pinned.path_as_line("_river").move_layer("overlay", "_river")
+    pinned = pinned.move_layer("annotation", "_pin")
+    save(
+        "layer-6-annotation",
+        pinned,
+        aes=aes.ByGroup(
+            _background=aes.Shape(fill_color="#e0f2fe", stroke_color="#e0f2fe"),
+            _pin=aes.Shape(
+                fill_color="#f97316", stroke_color="#ffffff", stroke_width=1
+            ),
+        ),
+        value={"r7": 1, "r8": 1},
+        hovered="r12",
+    )
 
     # The same open path without and with path_as_line()
     save("line-as-shape", LAYERED.move_layer("overlay", "_river"), aes=bg)

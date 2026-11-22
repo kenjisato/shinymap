@@ -10,7 +10,7 @@ hovered regions on top so that their borders are never covered by a neighbour.
 
 Each picture adds one layer to the previous one.
 
-::: {layout-ncol=5}
+::: {layout-ncol=3}
 ![1. underlay](../images/generated/layer-1-underlay.svg){fig-alt="A light blue background rectangle" width="100%"}
 
 ![2. base](../images/generated/layer-2-base.svg){fig-alt="Hexagon grid on the background" width="100%"}
@@ -19,7 +19,9 @@ Each picture adds one layer to the previous one.
 
 ![4. selection](../images/generated/layer-4-select.svg){fig-alt="Two selected hexagons drawn over the river" width="100%"}
 
-![5. hover](../images/generated/layer-5-hover.svg){fig-alt="A hovered hexagon outlined above everything" width="100%"}
+![5. hover](../images/generated/layer-5-hover.svg){fig-alt="A hovered hexagon outlined above the selection" width="100%"}
+
+![6. annotation](../images/generated/layer-6-annotation.svg){fig-alt="An orange marker drawn above the hovered hexagon" width="100%"}
 :::
 
 | Layer | What goes there | Clickable |

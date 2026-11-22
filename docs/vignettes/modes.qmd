@@ -73,10 +73,10 @@ one color per state, which suits ratings, traffic lights or "not started / doing
 ```python
 from shinymap.mode import Count
 
-palette = ["#e2e8f0", "#bfdbfe", "#93c5fd", "#60a5fa", "#3b82f6", "#1d4ed8"]  # counts 0..5
+palette = ["#e2e8f0", "#bfdbfe", "#93c5fd", "#60a5fa", "#3b82f6", "#1d4ed8"]  # counts 0..5+
 input_map(
     "votes", outline,
-    mode=Count(max_count=5, aes=aes.Indexed(fill_color=palette)),
+    mode=Count(aes=aes.Indexed(fill_color=palette)),
 )
 ```
 
@@ -84,8 +84,8 @@ input_map(
 ![](../images/generated/mode-count.svg){fig-alt="Hexagon grid shaded darker where counts are higher" width="100%"}
 
 ::: {}
-Each click adds one. The count is not capped; `max_count` only caps which color of
-`aes.Indexed` is used, so counts of 5 and above share the darkest color.
+Each click adds one, without a cap. The color stops at the last entry of
+`aes.Indexed`, so with six colors every count of 5 or more shares the darkest one.
 
 `input.votes()` → `{"r6": 3, "r7": 5, ...}`
 :::
