@@ -81,7 +81,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-cb61c712ca1a7fe70a83faed8e4da2d7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-f35a81a4717690815b2013502477d714.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -312,7 +312,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="coloring-by-value" class="level2">
 <h2 class="anchored" data-anchor-id="coloring-by-value">Coloring by value</h2>
-<p><code>shinymap.aes.color</code> turns data into one color per region. Pass the result through <code>aes.ByGroup</code>, typically from <code>@render_map</code> so the colors follow your data:</p>
+<p><code>shinymap.aes.color</code> turns data into one color per region. Pass the result through <code>aes.ByGroup</code>, typically from <code>@render_map</code> so the colors follow your data. <code>scale_sequential</code> is for counts from a Count input: regions not in the dict count as zero and get the lightest color.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> shinymap <span class="im">import</span> Map, aes, output_map, render_map</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> shinymap.aes.color <span class="im">import</span> scale_sequential</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -322,9 +322,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> result():</span>
 <span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    colors <span class="op">=</span> scale_sequential(counts, region_ids, max_count<span class="op">=</span><span class="dv">5</span>)</span>
 <span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Map(aes<span class="op">=</span>aes.ByGroup(<span class="op">**</span>{rid: aes.Shape(fill_color<span class="op">=</span>c) <span class="cf">for</span> rid, c <span class="kw">in</span> colors.items()}))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="quarto-layout-panel" data-layout-ncol="3">
+<p>For data such as populations or ratios, use <code>scale_continuous</code>. It takes floats, maps <code>vmin</code> to the lightest color and <code>vmax</code> to the darkest, and gives regions without a value a neutral gray, so “no data” does not look like the lowest value:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> shinymap.aes.color <span class="im">import</span> scale_continuous</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>rates <span class="op">=</span> {<span class="st">"r0"</span>: <span class="fl">12.5</span>, <span class="st">"r1"</span>: <span class="fl">48.0</span>, <span class="st">"r2"</span>: <span class="va">None</span>}  <span class="co"># r2 and regions not listed: no data</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>colors <span class="op">=</span> scale_continuous(rates, region_ids, vmin<span class="op">=</span><span class="dv">0</span>, vmax<span class="op">=</span><span class="dv">100</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="quarto-layout-panel" data-layout-ncol="2">
 <div class="quarto-layout-row">
-<div class="quarto-layout-cell" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="../images/generated/scale-sequential.svg" class="img-fluid figure-img" style="width:100.0%" alt="Hexagons in light to dark blue"></p>
@@ -332,7 +337,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </figure>
 </div>
 </div>
-<div class="quarto-layout-cell" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/generated/scale-continuous.svg" class="img-fluid figure-img" style="width:100.0%" alt="Hexagons in shades of blue, a few in gray"></p>
+<figcaption><code>scale_continuous</code>: data, gray where missing</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="../images/generated/scale-diverging.svg" class="img-fluid figure-img" style="width:100.0%" alt="Hexagons from red through gray to blue"></p>
@@ -340,7 +355,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </figure>
 </div>
 </div>
-<div class="quarto-layout-cell" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="../images/generated/scale-qualitative.svg" class="img-fluid figure-img" style="width:100.0%" alt="Hexagons in blue, green and orange"></p>
@@ -359,9 +374,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>Wash(shape=..., line=..., text=...)</code> replaces the library defaults for every map made from it (<code>wc.input_map</code>, <code>wc.output_map</code>, <code>wc.render_map</code>).</li>
 </ul>
 <p>The library defaults are themselves a wash, <code>shinymap.default_wash</code>; <code>input_map</code> and friends are its methods. Use it where you need the default look outside an app, for example to save a static picture:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> shinymap <span class="im">import</span> StillLife, default_wash</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>StillLife(default_wash.build(outline, value<span class="op">=</span>{<span class="st">"r7"</span>: <span class="dv">1</span>})).to_svg(<span class="st">"map.svg"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> shinymap <span class="im">import</span> StillLife, default_wash</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>StillLife(default_wash.build(outline, value<span class="op">=</span>{<span class="st">"r7"</span>: <span class="dv">1</span>})).to_svg(<span class="st">"map.svg"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 
 
 </section>
