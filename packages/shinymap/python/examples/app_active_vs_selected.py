@@ -70,7 +70,7 @@ def _server_programmatic(input, output, session):
         high_value_regions = set(rid for rid, count in counts.items() if count >= 3)
 
         # Use sequential color scale
-        fills = scale_sequential(counts, list(DEMO_OUTLINE.regions.keys()), max_count=10)
+        fills = scale_sequential(counts, list(DEMO_OUTLINE.regions.keys()), vmax=10)
 
         # Create stroke width dict: thicker for high-value regions
         stroke_widths = {rid: 4.0 if rid in high_value_regions else 1.0

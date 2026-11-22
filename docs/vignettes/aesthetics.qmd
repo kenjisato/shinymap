@@ -98,8 +98,10 @@ aes.ByGroup(
 
 ## Coloring by value
 
-`shinymap.aes.color` turns data into one color per region. Pass the result through
-`aes.ByGroup`, typically from `@render_map` so the colors follow your data:
+`shinymap.aes.color` turns data into one color per region. `scale_sequential` takes
+any numbers (counts, populations, ratios); set `vmin` / `vmax` to fix the range, and
+regions without a value get a neutral gray. Pass the result through `aes.ByGroup`,
+typically from `@render_map` so the colors follow your data:
 
 ```python
 from shinymap import Map, aes, output_map, render_map
@@ -109,12 +111,12 @@ output_map("result", outline)
 
 @render_map
 def result():
-    colors = scale_sequential(counts, region_ids, max_count=5)
+    colors = scale_sequential(counts, region_ids, vmax=5)
     return Map(aes=aes.ByGroup(**{rid: aes.Shape(fill_color=c) for rid, c in colors.items()}))
 ```
 
 ::: {layout-ncol=3}
-![`scale_sequential`: counts](../images/generated/scale-sequential.svg){fig-alt="Hexagons in light to dark blue" width="100%"}
+![`scale_sequential`: numbers](../images/generated/scale-sequential.svg){fig-alt="Hexagons in light to dark blue" width="100%"}
 
 ![`scale_diverging`: below / above a midpoint](../images/generated/scale-diverging.svg){fig-alt="Hexagons from red through gray to blue" width="100%"}
 

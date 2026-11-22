@@ -75,7 +75,7 @@ def server_output(input, output, session):
     def alpha_output():
         counts = {rid: input[rid]() or 0 for rid in rids}
         # Use scale_sequential to generate fill colors based on counts
-        fills = scale_sequential(counts, rids, palette=SEQUENTIAL_BLUE, max_count=10)
+        fills = scale_sequential(counts, rids, palette=SEQUENTIAL_BLUE, vmax=10)
         region_aes = {
             rid: aes.Shape(fill_color=color)
             for rid, color in fills.items()
