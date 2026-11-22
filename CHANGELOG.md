@@ -31,7 +31,7 @@ Planned as 0.4.0: the breaking changes below follow from fixes, not redesigns.
 - `StillLife(Map(...), output_id="result")` draws the map `@render_map` shows, with
   that `output_map()`'s outline, mode, wash and `aes`, so a static SVG matches the
   browser. Outside an app, `StillLife(Map(outline, ...))` uses `default_wash` or
-  `wash=` (#PR).
+  `wash=` (#70).
 - `shinymap.default_wash`: the library's default look as a `Wash`; `input_map`,
   `output_map` and `render_map` are its methods (#62).
 - `Wash.build(..., mode=...)` and `StillLife` render indexed aesthetics (`Cycle` / `Count` /
@@ -58,7 +58,7 @@ Planned as 0.4.0: the breaking changes below follow from fixes, not redesigns.
 - `output_map(..., mode=Display(clickable=True))` without an outline keeps its mode and
   click input when `@render_map` supplies the outline (#56).
 - A wash's `output_map()` without an outline applies its look when `Map(outline)` sets
-  no `aes`; before, the map fell back to the browser's built-in look (#PR).
+  no `aes`; before, the map fell back to the browser's built-in look (#70).
 - Values accept numpy integers and bools (converted to `int`), so values built from a
   pandas DataFrame work (#58).
 - A click on an `input_map()` right after the page loads is no longer reset to the
