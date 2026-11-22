@@ -128,4 +128,5 @@ def result():
 - `Map(aes=...)` returned from `@render_map` is layered on top of `output_map()`'s
   look each time it renders. Properties it does not set are kept.
 - `Wash(shape=..., line=..., text=...)` replaces the library defaults for every map
-  made from it (`wc.input_map`, `wc.output_map`, `wc.render_map`).
+  made from it (`wc.input_map`, `wc.output_map`, `wc.render_map`). The defaults
+  themselves are `shinymap.default_wash`; `input_map` and friends are its methods.

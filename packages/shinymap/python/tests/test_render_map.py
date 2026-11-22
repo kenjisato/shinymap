@@ -140,25 +140,23 @@ class TestWashApplyAllOverridesTypeDefault:
 
     @pytest.mark.unit
     def test_shape_aes_reaches_shape_type_entry(self):
-        from shinymap import aes
+        from shinymap import aes, default_wash
         from shinymap.outline import Outline
-        from shinymap.ui._ui import _default_wash
 
         outline = Outline.from_dict({"a": "M0 0 L10 0 L10 10 Z"})
-        resolved = _default_wash.config.apply(aes.Shape(fill_color="#ff0000"), outline)
+        resolved = default_wash.config.apply(aes.Shape(fill_color="#ff0000"), outline)
 
         assert resolved["__shape"].base.fill_color == "#ff0000"
         assert resolved["__all"].base.fill_color == "#ff0000"
 
     @pytest.mark.unit
     def test_line_aes_does_not_touch_shape_entry(self):
-        from shinymap import aes
+        from shinymap import aes, default_wash
         from shinymap.outline import Outline
-        from shinymap.ui._ui import _default_wash
 
         outline = Outline.from_dict({"a": "M0 0 L10 0 L10 10 Z"})
-        default_fill = _default_wash.config.apply(None, outline)["__shape"].base.fill_color
-        resolved = _default_wash.config.apply(aes.Line(stroke_color="#ff0000"), outline)
+        default_fill = default_wash.config.apply(None, outline)["__shape"].base.fill_color
+        resolved = default_wash.config.apply(aes.Line(stroke_color="#ff0000"), outline)
 
         assert resolved["__shape"].base.fill_color == default_fill
         assert resolved["__line"].base.stroke_color == "#ff0000"
@@ -231,11 +229,10 @@ class TestMapAesLayering:
 
     @pytest.mark.unit
     def test_select_only_bystate_keeps_base_default(self):
-        from shinymap import aes
-        from shinymap.ui._ui import _default_wash
+        from shinymap import aes, default_wash
 
         payload = self._payload(output_map, aes.ByState(select=aes.Shape(fill_color="#ff0000")))
-        default_fill = _default_wash.config.shape.base.fill_color
+        default_fill = default_wash.config.shape.base.fill_color
 
         assert payload["__shape"]["select"]["fill_color"] == "#ff0000"
         assert payload["__shape"]["base"]["fill_color"] == default_fill
@@ -256,12 +253,11 @@ class TestElementKind:
 
     @pytest.mark.unit
     def test_text_aes_reaches_text_entry(self):
-        from shinymap import aes
+        from shinymap import aes, default_wash
         from shinymap.outline import Outline
-        from shinymap.ui._ui import _default_wash
 
         outline = Outline.from_dict({"a": "M0 0 L10 0 L10 10 Z"})
-        resolved = _default_wash.config.apply(aes.Text(fill_color="#ff0000"), outline)
+        resolved = default_wash.config.apply(aes.Text(fill_color="#ff0000"), outline)
 
         assert resolved["__text"].base.fill_color == "#ff0000"
 
@@ -338,3 +334,23 @@ class TestRegionStateLooks:
             page.wait_for_timeout(300)
             # Hover overlay (layer 4): region a's hover; none for b (hover=None)
             assert self._layer(page, map_id, 4) == expected
+
+
+class TestDefaultWash:
+    @pytest.mark.unit
+    def test_default_wash_is_public_and_backs_top_level_functions(self):
+        import shinymap
+        from shinymap import default_wash
+        from shinymap.types import WashResult
+
+        assert isinstance(default_wash, WashResult)
+        assert shinymap.input_map == default_wash.input_map
+        assert shinymap.output_map == default_wash.output_map
+
+    @pytest.mark.unit
+    def test_default_wash_builds_for_stilllife(self):
+        from shinymap import StillLife, default_wash
+
+        outline = Outline.from_dict({"a": "M0 0 L10 0 L10 10 Z"})
+        pic = StillLife(default_wash.build(outline, value={"a": 1}))
+        assert pic.aes("a")["fill_color"] == default_wash.config.shape.select.fill_color

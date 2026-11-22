@@ -48,7 +48,7 @@ if TYPE_CHECKING:
 #   2. LIBRARY_AESTHETIC_DEFAULTS: complete defaults for React developers
 # - Library defaults here provide a complete, polished out-of-box experience
 # - No hardcoded fallbacks in shinymap-shiny.js - everything flows from Python
-_default_wash = Wash(
+default_wash = Wash(
     shape=aes.ByState(
         base=aes.Shape(
             fill_color="#e2e8f0",  # slate-200: neutral base
@@ -75,9 +75,9 @@ _default_wash = Wash(
 )
 
 # Public API functions use the default wash
-input_map = _default_wash.input_map
-output_map = _default_wash.output_map
-render_map = _default_wash.render_map
+input_map = default_wash.input_map
+output_map = default_wash.output_map
+render_map = default_wash.render_map
 
 
 # =============================================================================

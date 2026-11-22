@@ -14,7 +14,7 @@ from pathlib import Path
 from shinymap import Outline, StillLife, Wash, aes
 from shinymap.mode import Count, Cycle
 from shinymap.aes.color import scale_diverging, scale_qualitative, scale_sequential
-from shinymap.ui._ui import _default_wash  # the look users get by default
+from shinymap import default_wash  # the look users get by default
 
 OUT = Path(__file__).parent / "images" / "generated"
 
@@ -129,9 +129,9 @@ def getting_started() -> None:
             "_metadata": {"viewBox": "0 0 100 100"},
         }
     )
-    save("gs-before", outline, _default_wash)
-    save("gs-hover", outline, _default_wash, hovered="region_b")
-    save("gs-after", outline, _default_wash, value={"region_b": 1})
+    save("gs-before", outline, default_wash)
+    save("gs-hover", outline, default_wash, hovered="region_b")
+    save("gs-after", outline, default_wash, value={"region_b": 1})
 
 
 def modes() -> None:
