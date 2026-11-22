@@ -627,7 +627,7 @@
     "href": "index.html",
     "title": "shinymap",
     "section": "",
-    "text": "Interactive SVG map components for Shiny for Python."
+    "text": "Interactive SVG map components for Shiny for Python.\nThese pictures are drawn by shinymap itself (StillLife.to_svg()) when the site is built. Any SVG paths work, not only maps."
   },
   {
     "objectID": "index.html#overview",
