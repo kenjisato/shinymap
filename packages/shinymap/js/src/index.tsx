@@ -7,7 +7,7 @@ import { OutputMap } from "./components/OutputMap";
 
 export type {
   AesConfig,
-  GeometryMap,
+  RegionsMap,
   InputMapProps,
   LayersConfig,
   MapModeType,

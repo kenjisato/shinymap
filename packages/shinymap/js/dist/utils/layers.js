@@ -1,16 +1,16 @@
 /**
- * Resolves group names to region IDs using geometry metadata.
+ * Resolves group names to region IDs using outline metadata.
  *
  * Groups can be:
- * 1. Named groups defined in geometryMetadata.groups (e.g., "grid" -> ["grid_lat", "grid_lon"])
+ * 1. Named groups defined in outlineMetadata.groups (e.g., "grid" -> ["grid_lat", "grid_lon"])
  * 2. Individual region IDs used as singleton groups (e.g., "tokyo" -> ["tokyo"])
  *
  * @param groupNames - Array of group names to resolve
- * @param geometry - The geometry map (for fallback to region IDs)
- * @param metadata - Optional geometry metadata containing group definitions
+ * @param regions - The regions map (for fallback to region IDs)
+ * @param metadata - Optional outline metadata containing group definitions
  * @returns Set of region IDs
  */
-export function resolveGroups(groupNames, geometry, metadata) {
+export function resolveGroups(groupNames, regions, metadata) {
     var _a;
     const result = new Set();
     if (!groupNames)
@@ -23,7 +23,7 @@ export function resolveGroups(groupNames, geometry, metadata) {
                 result.add(id);
             }
         }
-        else if (geometry[name]) {
+        else if (regions[name]) {
             // Use as singleton group (region ID)
             result.add(name);
         }
@@ -36,34 +36,41 @@ export function resolveGroups(groupNames, geometry, metadata) {
  *
  * Layer priority (highest to lowest):
  * 1. hidden - not rendered at all
- * 2. overlays - rendered above base
- * 3. underlays - rendered below base
- * 4. base - default layer for all other regions
+ * 2. annotation - rendered above hover/selection (always on top)
+ * 3. overlay - rendered above base but below selection/hover
+ * 4. underlay - rendered below base
+ * 5. base - default layer for all other regions
  *
  * A region appears in at most one layer.
  *
- * @param geometry - The normalized geometry map
- * @param underlays - Group names for underlay layer
- * @param overlays - Group names for overlay layer
+ * @param regions - The normalized regions map
+ * @param underlay - Group names for underlay layer
+ * @param overlay - Group names for overlay layer
+ * @param annotation - Group names for annotation layer (renders above hover)
  * @param hidden - Group names to hide
- * @param metadata - Optional geometry metadata
+ * @param metadata - Optional outline metadata
  * @returns Layer assignment for each region
  */
-export function assignLayers(geometry, underlays, overlays, hidden, metadata) {
+export function assignLayers(regions, underlay, overlay, annotation, hidden, metadata) {
     // Resolve group names to region IDs
-    const underlayRegions = resolveGroups(underlays, geometry, metadata);
-    const overlayRegions = resolveGroups(overlays, geometry, metadata);
-    const hiddenRegions = resolveGroups(hidden, geometry, metadata);
+    const underlayRegions = resolveGroups(underlay, regions, metadata);
+    const overlayRegions = resolveGroups(overlay, regions, metadata);
+    const annotationRegions = resolveGroups(annotation, regions, metadata);
+    const hiddenRegions = resolveGroups(hidden, regions, metadata);
     const result = {
         underlay: new Set(),
         base: new Set(),
         overlay: new Set(),
+        annotation: new Set(),
         hidden: new Set(),
     };
     // Assign each region to exactly one layer based on priority
-    for (const id of Object.keys(geometry)) {
+    for (const id of Object.keys(regions)) {
         if (hiddenRegions.has(id)) {
             result.hidden.add(id);
+        }
+        else if (annotationRegions.has(id)) {
+            result.annotation.add(id);
         }
         else if (overlayRegions.has(id)) {
             result.overlay.add(id);
@@ -85,7 +92,7 @@ export function assignLayers(geometry, underlays, overlays, hidden, metadata) {
  *
  * @param id - Region ID
  * @param aesGroup - Per-group aesthetic overrides
- * @param metadata - Optional geometry metadata
+ * @param metadata - Optional outline metadata
  * @returns Merged aesthetic style for the region
  */
 export function resolveGroupAesthetic(id, aesGroup, metadata) {

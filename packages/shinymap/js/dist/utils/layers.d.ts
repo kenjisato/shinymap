@@ -1,17 +1,17 @@
-import type { AestheticStyle, Element, GeometryMetadata, RegionId } from "../types";
+import type { AestheticStyle, Element, OutlineMetadata, RegionId } from "../types";
 /**
- * Resolves group names to region IDs using geometry metadata.
+ * Resolves group names to region IDs using outline metadata.
  *
  * Groups can be:
- * 1. Named groups defined in geometryMetadata.groups (e.g., "grid" -> ["grid_lat", "grid_lon"])
+ * 1. Named groups defined in outlineMetadata.groups (e.g., "grid" -> ["grid_lat", "grid_lon"])
  * 2. Individual region IDs used as singleton groups (e.g., "tokyo" -> ["tokyo"])
  *
  * @param groupNames - Array of group names to resolve
- * @param geometry - The geometry map (for fallback to region IDs)
- * @param metadata - Optional geometry metadata containing group definitions
+ * @param regions - The regions map (for fallback to region IDs)
+ * @param metadata - Optional outline metadata containing group definitions
  * @returns Set of region IDs
  */
-export declare function resolveGroups(groupNames: string[] | undefined, geometry: Record<RegionId, Element[]>, metadata?: GeometryMetadata): Set<RegionId>;
+export declare function resolveGroups(groupNames: string[] | undefined, regions: Record<RegionId, Element[]>, metadata?: OutlineMetadata): Set<RegionId>;
 /**
  * Layer assignment result.
  * Regions are assigned to exactly one layer based on priority.
@@ -20,6 +20,7 @@ export type LayerAssignment = {
     underlay: Set<RegionId>;
     base: Set<RegionId>;
     overlay: Set<RegionId>;
+    annotation: Set<RegionId>;
     hidden: Set<RegionId>;
 };
 /**
@@ -27,20 +28,22 @@ export type LayerAssignment = {
  *
  * Layer priority (highest to lowest):
  * 1. hidden - not rendered at all
- * 2. overlays - rendered above base
- * 3. underlays - rendered below base
- * 4. base - default layer for all other regions
+ * 2. annotation - rendered above hover/selection (always on top)
+ * 3. overlay - rendered above base but below selection/hover
+ * 4. underlay - rendered below base
+ * 5. base - default layer for all other regions
  *
  * A region appears in at most one layer.
  *
- * @param geometry - The normalized geometry map
- * @param underlays - Group names for underlay layer
- * @param overlays - Group names for overlay layer
+ * @param regions - The normalized regions map
+ * @param underlay - Group names for underlay layer
+ * @param overlay - Group names for overlay layer
+ * @param annotation - Group names for annotation layer (renders above hover)
  * @param hidden - Group names to hide
- * @param metadata - Optional geometry metadata
+ * @param metadata - Optional outline metadata
  * @returns Layer assignment for each region
  */
-export declare function assignLayers(geometry: Record<RegionId, Element[]>, underlays?: string[], overlays?: string[], hidden?: string[], metadata?: GeometryMetadata): LayerAssignment;
+export declare function assignLayers(regions: Record<RegionId, Element[]>, underlay?: string[], overlay?: string[], annotation?: string[], hidden?: string[], metadata?: OutlineMetadata): LayerAssignment;
 /**
  * Resolves aesthetic for a region based on group membership.
  *
@@ -49,7 +52,7 @@ export declare function assignLayers(geometry: Record<RegionId, Element[]>, unde
  *
  * @param id - Region ID
  * @param aesGroup - Per-group aesthetic overrides
- * @param metadata - Optional geometry metadata
+ * @param metadata - Optional outline metadata
  * @returns Merged aesthetic style for the region
  */
-export declare function resolveGroupAesthetic(id: RegionId, aesGroup: Record<string, AestheticStyle> | undefined, metadata?: GeometryMetadata): AestheticStyle | undefined;
+export declare function resolveGroupAesthetic(id: RegionId, aesGroup: Record<string, AestheticStyle> | undefined, metadata?: OutlineMetadata): AestheticStyle | undefined;

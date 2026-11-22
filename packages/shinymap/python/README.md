@@ -18,58 +18,72 @@ uv add shinymap
 
 ```python
 from shinymap import Map, input_map, output_map, render_map, aes
-from shinymap import scale_sequential, scale_qualitative
-from shinymap.mode import Single, Multiple, Cycle, Count
-from shinymap.geometry import Geometry
+from shinymap.aes.color import scale_sequential, scale_qualitative
+from shinymap.mode import Single, Multiple, Cycle, Count, Display
+from shinymap.outline import Outline
 ```
 
 ### Map Components
 
-- `input_map(id, geometry, mode, ...)` renders an interactive input.
-  - Mode classes (v0.2.0):
+- `input_map(id, outline, mode, ...)` renders an interactive input.
+  - Mode classes:
     - `Single()` or `mode="single"`: returns `str | None`
     - `Multiple()` or `mode="multiple"`: returns `list[str]`
     - `Cycle(n=4)`: cycles through n states, returns `dict[str, int]`
-    - `Count()` or `Count(max=10)`: counting mode, returns `dict[str, int]`
+    - `Count()`: counting mode, returns `dict[str, int]` (`Count(max_count=10)` caps the indexed aesthetic, not the value)
   - Aesthetics via `aes` parameter:
     - `aes.ByState(base=..., hover=..., select=...)`: state-based styling
     - `aes.ByGroup(__all=..., region_id=...)`: per-region styling
     - `aes.Indexed(fill_color=[...])`: indexed colors for cycle/count modes
-- `output_map("map", geometry, ...)` adds a placeholder with static parameters.
+  - `raw=True` returns the `dict[str, int]` value in every mode
+  - Works inside Shiny modules (ids are resolved through the module namespace)
+- `output_map("map", outline, ...)` adds a placeholder with static parameters.
+  - `mode=Display()`: hover-only output map
+  - `mode=Display(clickable=True)`: output map with click events (`input_id=` to choose the input name)
 - `Map` provides a fluent API for building map payloads with method chaining.
 - `render_map` decorator serializes a `Map` and mounts the React output map.
-- `scale_sequential()` and `scale_qualitative()` generate fill color maps.
+- `scale_sequential()` and `scale_qualitative()` (in `shinymap.aes.color`) generate fill color maps.
 
-### Geometry Utilities
+### Outline Utilities
 
-The `shinymap.geometry` subpackage provides tools for working with SVG geometry:
+The `shinymap.outline` subpackage provides tools for working with SVG outlines:
 
-- **`Geometry.from_svg(svg_path)`**: Extract geometry from SVG files (v1.x polymorphic elements)
-- **`Geometry.from_json(json_path)`**: Load geometry from shinymap JSON files
-- **`geo.relabel({...})`**: Rename or merge regions
-- **`geo.set_overlays([...])`**: Mark overlay regions
-- **`geo.path_as_line("_dividers")`**: Mark regions as lines for stroke-only rendering
-- **`geo.to_json(path)`**: Export to JSON file
+- **`Outline.from_svg(svg_path)`**: Extract geometry from SVG files (polymorphic elements)
+- **`Outline.from_json(json_path)`**: Load geometry from shinymap JSON files
+- **`outline.relabel({...})`**: Rename or merge regions
+- **`outline.set_overlays([...])`**: Mark overlay regions
+- **`outline.move_layer("overlay", "a", "b")`**: Assign regions to `underlay` / `overlay` / `hidden` (or back to `main`)
+- **`outline.move_group("group", "a", "b")`**: Merge regions into a group
+- **`outline.path_as_line("_dividers")`**: Mark regions as lines for stroke-only rendering
+- **`outline.to_json(path)`**: Export to JSON file
 
-**Polymorphic elements** (v0.2.0): Circle, Rect, Ellipse, Path, Polygon, Line, Text
+**SVG element classes** (`Circle`, `Rect`, `Ellipse`, `Path`, `Polygon`, `Line`, `Text`) live in `shinymap.svg`.
 
-**Interactive converter app**:
+### Preparing SVG files (`shinymap.kit`)
+
 ```bash
-uv run python -m shinymap.geometry.converter -b
+# Interactive app: rename regions, set groups and layers, mark lines,
+# then download the JSON and the Python code that reproduces it
+uv run python -m shinymap.kit.sketch -f map.svg
+
+# Reference SVG with region IDs overlaid
+uv run python -m shinymap.kit.caption map.svg
 ```
 
 ## Minimal example
 
 ```python
 from shiny import App, ui
-from shinymap import Map, input_map, output_map, render_map, scale_sequential, aes
+from shinymap import Map, input_map, output_map, render_map, aes
 from shinymap.mode import Count
+from shinymap.outline import Outline
 
-DEMO_GEOMETRY = {
-    "circle": ["M25,50 A20,20 0 1 1 24.999,50 Z"],
-    "square": ["M10 10 H40 V40 H10 Z"],
-    "triangle": ["M75 70 L90 40 L60 40 Z"],
-}
+DEMO_OUTLINE = Outline.from_dict({
+    "circle": [{"type": "circle", "cx": 25, "cy": 50, "r": 20}],
+    "square": [{"type": "rect", "x": 10, "y": 10, "width": 30, "height": 30}],
+    "triangle": [{"type": "path", "d": "M75 70 L90 40 L60 40 Z"}],
+    "_metadata": {"viewBox": "0 0 100 100"},
+})
 
 TOOLTIPS = {"circle": "Circle", "square": "Square", "triangle": "Triangle"}
 
@@ -79,22 +93,22 @@ app_ui = ui.page_fluid(
     ui.layout_columns(
         input_map(
             "region",
-            DEMO_GEOMETRY,
+            DEMO_OUTLINE,
             tooltips=TOOLTIPS,
             mode="single",  # Returns str | None
         ),
-        output_map("summary"),
+        output_map("summary", DEMO_OUTLINE, tooltips=TOOLTIPS),
     ),
     ui.br(),
     ui.h4("Counts"),
     ui.layout_columns(
         input_map(
             "clicks",
-            DEMO_GEOMETRY,
+            DEMO_OUTLINE,
             tooltips=TOOLTIPS,
             mode=Count(),  # Returns dict[str, int]
         ),
-        output_map("counts"),
+        output_map("counts", DEMO_OUTLINE, tooltips=TOOLTIPS),
     ),
 )
 
@@ -103,19 +117,14 @@ def server(input, output, session):
     @render_map
     def summary():
         selected = input.region()
-        return (
-            Map(DEMO_GEOMETRY, tooltips=TOOLTIPS)
-            .with_active(selected)
-        )
+        # Value dict: selected region has value=1
+        value = {selected: 1} if selected else {}
+        return Map().with_value(value)
 
     @render_map
     def counts():
         counts_data = input.clicks() or {}
-        return (
-            Map(DEMO_GEOMETRY, tooltips=TOOLTIPS)
-            .with_fill_color(scale_sequential(counts_data, list(DEMO_GEOMETRY.keys()), max_count=10))
-            .with_counts(counts_data)
-        )
+        return Map().with_value(counts_data)
 
 
 app = App(app_ui, server)

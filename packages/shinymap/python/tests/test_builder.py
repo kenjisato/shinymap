@@ -2,14 +2,15 @@
 
 import pytest
 
-from shinymap import Map, MapBuilder
-from shinymap.geometry import Geometry
+from shinymap import Map
+from shinymap.outline import Outline
+from shinymap.types import MapBuilder
 
 
 @pytest.mark.unit
 def test_map_builder_basic():
     """Test basic Map builder functionality."""
-    geo = Geometry.from_dict(
+    geo = Outline.from_dict(
         {"a": ["M0 0 L10 0 L10 10 L0 10 Z"], "b": ["M20 0 L30 0 L30 10 L20 10 Z"]}
     )
 
@@ -26,7 +27,7 @@ def test_map_builder_basic():
 @pytest.mark.unit
 def test_map_builder_with_tooltips():
     """Test Map builder with tooltips."""
-    geo = Geometry.from_dict({"a": ["M0 0 L10 0 L10 10 L0 10 Z"]})
+    geo = Outline.from_dict({"a": ["M0 0 L10 0 L10 10 L0 10 Z"]})
     tooltips = {"a": "Region A"}
 
     builder = Map(geo, tooltips=tooltips)
@@ -37,32 +38,31 @@ def test_map_builder_with_tooltips():
 @pytest.mark.unit
 def test_map_builder_method_chaining():
     """Test Map builder method chaining."""
-    geo = Geometry.from_dict({"a": ["M0 0 L10 0 L10 10 L0 10 Z"]})
+    geo = Outline.from_dict({"a": ["M0 0 L10 0 L10 10 L0 10 Z"]})
     value = {"a": 5}
-    active_ids = ["a"]
 
-    builder = Map(geo).with_value(value).with_active(active_ids)
+    builder = Map(geo).with_value(value)
 
     assert builder._value == value
-    assert builder._active_ids == active_ids
 
 
 @pytest.mark.unit
 def test_map_builder_with_view_box():
     """Test Map builder with custom viewBox."""
-    geo = Geometry.from_dict({"a": ["M0 0 L10 0 L10 10 L0 10 Z"]})
+    geo = Outline.from_dict({"a": ["M0 0 L10 0 L10 10 L0 10 Z"]})
     view_box_tuple = (0.0, 0.0, 100.0, 100.0)
 
     builder = Map(geo).with_view_box(view_box_tuple)
     json_output = builder.as_json()
 
-    assert json_output["viewBox"] == "0.0 0.0 100.0 100.0"
+    # as_json() returns snake_case; JS handles camelCase conversion
+    assert json_output["view_box"] == "0.0 0.0 100.0 100.0"
 
 
 @pytest.mark.unit
 def test_map_builder_with_aes():
     """Test Map builder with aesthetic configuration."""
-    geo = Geometry.from_dict({"a": ["M0 0 L10 0 L10 10 L0 10 Z"]})
+    geo = Outline.from_dict({"a": ["M0 0 L10 0 L10 10 L0 10 Z"]})
 
     aes_config = {
         "base": {"fillColor": "#e2e8f0"},
@@ -79,96 +79,131 @@ def test_map_builder_with_aes():
 @pytest.mark.unit
 def test_map_builder_with_layers():
     """Test Map builder with layer configuration."""
-    geo = Geometry.from_dict({"a": ["M0 0"], "b": ["M10 10"], "overlay": ["M0 0 L10 10"]})
+    geo = Outline.from_dict({"a": ["M0 0"], "b": ["M10 10"], "overlay": ["M0 0 L10 10"]})
 
     layers_config = {
-        "overlays": ["overlay"],
+        "overlay": ["overlay"],
         "hidden": ["b"],
     }
 
     builder = Map(geo).with_layers(layers_config)
     json_output = builder.as_json()
 
-    assert json_output["layers"]["overlays"] == ["overlay"]
+    assert json_output["layers"]["overlay"] == ["overlay"]
     assert json_output["layers"]["hidden"] == ["b"]
 
 
 @pytest.mark.unit
 def test_map_as_json():
     """Test Map builder as_json() output."""
-    geo = Geometry.from_dict({"a": ["M0 0"], "b": ["M10 10"]})
+    geo = Outline.from_dict({"a": ["M0 0"], "b": ["M10 10"]})
 
-    builder = Map(geo, value={"a": 1}, active=["a"])
+    # Selection is now derived from value > 0 (no separate active param)
+    builder = Map(geo, value={"a": 1, "b": 0})
     json_output = builder.as_json()
 
-    # Check that geometry is normalized
-    assert "geometry" in json_output
-    # Check that value is included
-    assert json_output["value"] == {"a": 1}
-    # Check that active_ids is camelCase
-    assert json_output["activeIds"] == ["a"]
+    # Check that regions is normalized
+    assert "regions" in json_output
+    # Check that value is included (value > 0 means selected)
+    assert json_output["value"] == {"a": 1, "b": 0}
 
 
 @pytest.mark.unit
-def test_static_params_merging():
-    """Test that _apply_static_params merges static params from output_map()."""
-    from shinymap._ui import MapBuilder, _apply_static_params, _static_map_params
+def test_build_payload_with_static_outline():
+    """Test that _build_payload uses static outline from output_map()."""
+    from shinymap._map import MapBuilder
+    from shinymap.outline import Outline
+    from shinymap.uicore._render_map import _build_payload
 
-    geometry = {"a": "M0 0", "b": "M10 10"}
+    outline = Outline.from_dict({"a": ["M0 0"], "b": ["M10 10"]})
     tooltips = {"a": "Region A", "b": "Region B"}
-    viewbox = (0, 0, 100, 100)
 
-    # Simulate output_map() storing static params
-    _static_map_params["test_map"] = {
-        "geometry": geometry,
+    # Simulate static params from output_map()
+    static_params = {
+        "outline": outline,
         "tooltips": tooltips,
-        "view_box": viewbox,
-        "aes": {"base": {"fillColor": "#ccc"}},
+        "view_box": (0, 0, 100, 100),
     }
 
     # Create builder without geometry (simulating Map() with no args)
     builder = MapBuilder(None)
 
-    # Apply static params
-    merged = _apply_static_params(builder, "test_map")
+    # Build payload
+    payload = _build_payload(builder, static_params)
 
-    # Verify static params were applied
-    assert merged._regions == geometry
-    assert merged._tooltips == tooltips
-    assert merged._view_box == viewbox
-    assert merged._aes == {"base": {"fillColor": "#ccc"}}
-
-    # Cleanup
-    del _static_map_params["test_map"]
+    # Verify static params were used
+    assert "regions" in payload
+    assert "a" in payload["regions"]
+    assert "b" in payload["regions"]
+    assert payload["tooltips"] == tooltips
+    assert payload["view_box"] == "0 0 100 100"
 
 
 @pytest.mark.unit
-def test_static_params_builder_precedence():
+def test_build_payload_builder_precedence():
     """Test that builder params take precedence over static params."""
-    from shinymap._ui import MapBuilder, _apply_static_params, _static_map_params
+    from shinymap._map import MapBuilder
+    from shinymap.outline import Outline
+    from shinymap.uicore._render_map import _build_payload
 
-    static_geometry = {"a": "M0 0", "b": "M10 10"}
-    builder_geometry = {"x": "M20 20", "y": "M30 30"}
+    static_outline = Outline.from_dict({"a": ["M0 0"], "b": ["M10 10"]})
+    builder_regions = {"x": "M20 20", "y": "M30 30"}
 
-    # Simulate output_map() storing static params
-    _static_map_params["test_map2"] = {
-        "geometry": static_geometry,
+    # Simulate static params from output_map()
+    static_params = {
+        "outline": static_outline,
         "view_box": (0, 0, 100, 100),
         "tooltips": {"a": "Static tooltip"},
     }
 
     # Create builder with geometry (should override static)
-    builder = MapBuilder(builder_geometry, tooltips={"x": "Builder tooltip"})
+    builder = MapBuilder(builder_regions, tooltips={"x": "Builder tooltip"})
 
-    # Apply static params
-    merged = _apply_static_params(builder, "test_map2")
+    # Build payload
+    payload = _build_payload(builder, static_params)
 
-    # Builder geometry should win
-    assert merged._regions == builder_geometry
+    # Builder regions should win
+    assert "x" in payload["regions"]
+    assert "y" in payload["regions"]
     # Builder tooltips should win
-    assert merged._tooltips == {"x": "Builder tooltip"}
+    assert payload["tooltips"] == {"x": "Builder tooltip"}
     # Static view_box should be used (not set in builder)
-    assert merged._view_box == (0, 0, 100, 100)
+    assert payload["view_box"] == "0 0 100 100"
 
-    # Cleanup
-    del _static_map_params["test_map2"]
+
+class TestValueValidation:
+    """Test value validation in Map()."""
+
+    @pytest.mark.unit
+    def test_valid_values_pass(self):
+        """Valid non-negative integers pass validation."""
+        geo = Outline.from_dict({"a": ["M0 0"], "b": ["M10 10"]})
+
+        # Should not raise
+        builder = Map(geo, value={"a": 0, "b": 1})
+        assert builder._value == {"a": 0, "b": 1}
+
+    @pytest.mark.unit
+    def test_negative_value_raises(self):
+        """Negative values raise ValueError."""
+        geo = Outline.from_dict({"a": ["M0 0"]})
+
+        with pytest.raises(ValueError, match=r"value\['a'\] must be non-negative"):
+            Map(geo, value={"a": -1})
+
+    @pytest.mark.unit
+    def test_float_value_raises(self):
+        """Float values raise ValueError."""
+        geo = Outline.from_dict({"a": ["M0 0"]})
+
+        with pytest.raises(ValueError, match=r"value\['a'\] must be an integer"):
+            Map(geo, value={"a": 0.5})  # type: ignore
+
+    @pytest.mark.unit
+    def test_none_value_passes(self):
+        """None value (no value specified) passes validation."""
+        geo = Outline.from_dict({"a": ["M0 0"]})
+
+        # Should not raise
+        builder = Map(geo, value=None)
+        assert builder._value is None

@@ -21760,22 +21760,25 @@ var shinymap = (() => {
       strokeDasharray: getIndexedValue(data.strokeDasharray, index, wrap)
     };
   }
-  function getIndexedDataForRegion(config, regionId, geometryMetadata) {
+  function isAesIndexedByGroup(config) {
+    return typeof config === "object" && config !== null && "type" in config && config.type === "byGroup";
+  }
+  function getIndexedDataForRegion(config, regionId, outlineMetadata) {
     if (!config) return void 0;
-    if (config.type === "indexed") {
-      return config.value;
-    }
-    if (config.groups[regionId]) {
-      return config.groups[regionId];
-    }
-    if (geometryMetadata?.groups) {
-      for (const [groupName, regionIds] of Object.entries(geometryMetadata.groups)) {
-        if (regionIds.includes(regionId) && config.groups[groupName]) {
-          return config.groups[groupName];
+    if (isAesIndexedByGroup(config)) {
+      if (config.groups[regionId]) {
+        return config.groups[regionId];
+      }
+      if (outlineMetadata?.groups) {
+        for (const [groupName, regionIds] of Object.entries(outlineMetadata.groups)) {
+          if (regionIds.includes(regionId) && config.groups[groupName]) {
+            return config.groups[groupName];
+          }
         }
       }
+      return void 0;
     }
-    return void 0;
+    return config;
   }
   function isRelativeExpr(value) {
     return typeof value === "object" && value !== null && "__relative__" in value && value.__relative__ === true;
@@ -21833,17 +21836,65 @@ var shinymap = (() => {
   }
   function createRenderedRegion(id, aes, parent) {
     const resolved = {
-      fillColor: resolveStringProperty(aes.fillColor, parent, "fillColor", DEFAULT_AESTHETIC_VALUES.fillColor),
-      fillOpacity: resolveNumericProperty(aes.fillOpacity, parent, "fillOpacity", DEFAULT_AESTHETIC_VALUES.fillOpacity),
-      strokeColor: resolveStringProperty(aes.strokeColor, parent, "strokeColor", DEFAULT_AESTHETIC_VALUES.strokeColor),
-      strokeWidth: resolveNumericProperty(aes.strokeWidth, parent, "strokeWidth", DEFAULT_AESTHETIC_VALUES.strokeWidth),
-      strokeDasharray: resolveStringProperty(aes.strokeDasharray, parent, "strokeDasharray", DEFAULT_AESTHETIC_VALUES.strokeDasharray),
+      fillColor: resolveStringProperty(
+        aes.fillColor,
+        parent,
+        "fillColor",
+        DEFAULT_AESTHETIC_VALUES.fillColor
+      ),
+      fillOpacity: resolveNumericProperty(
+        aes.fillOpacity,
+        parent,
+        "fillOpacity",
+        DEFAULT_AESTHETIC_VALUES.fillOpacity
+      ),
+      strokeColor: resolveStringProperty(
+        aes.strokeColor,
+        parent,
+        "strokeColor",
+        DEFAULT_AESTHETIC_VALUES.strokeColor
+      ),
+      strokeWidth: resolveNumericProperty(
+        aes.strokeWidth,
+        parent,
+        "strokeWidth",
+        DEFAULT_AESTHETIC_VALUES.strokeWidth
+      ),
+      strokeDasharray: resolveStringProperty(
+        aes.strokeDasharray,
+        parent,
+        "strokeDasharray",
+        DEFAULT_AESTHETIC_VALUES.strokeDasharray
+      ),
       nonScalingStroke: aes.nonScalingStroke ?? parent?.aesthetic.nonScalingStroke ?? DEFAULT_AESTHETIC_VALUES.nonScalingStroke
     };
     return { id, aesthetic: resolved, parent };
   }
+  function getAesForRegion(regionId, elementType, aes) {
+    if (!aes) return void 0;
+    if (aes[regionId] && !regionId.startsWith("_")) {
+      return aes[regionId];
+    }
+    const metadata = aes._metadata;
+    if (metadata) {
+      for (const [groupName, members] of Object.entries(metadata)) {
+        if (groupName.startsWith("__")) continue;
+        if (Array.isArray(members) && members.includes(regionId) && aes[groupName]) {
+          return aes[groupName];
+        }
+      }
+    }
+    const typeKey = `__${elementType}`;
+    if (aes[typeKey]) return aes[typeKey];
+    if (aes.__all) return aes.__all;
+    return void 0;
+  }
+  function isAesPayload(aes) {
+    if (!aes || typeof aes !== "object") return false;
+    return "__all" in aes || "_metadata" in aes;
+  }
 
-  // src/utils/geometry.ts
+  // src/utils/regions.ts
   function normalizeRegion(value) {
     if (typeof value === "object" && "type" in value) {
       return Array.isArray(value) ? value : [value];
@@ -21862,16 +21913,16 @@ var shinymap = (() => {
     }
     throw new Error(`Invalid region value: ${JSON.stringify(value)}`);
   }
-  function normalizeGeometry(geometry) {
+  function normalizeRegions(regions) {
     const result = {};
-    for (const [regionId, value] of Object.entries(geometry)) {
+    for (const [regionId, value] of Object.entries(regions)) {
       result[regionId] = normalizeRegion(value);
     }
     return result;
   }
 
   // src/utils/layers.ts
-  function resolveGroups(groupNames, geometry, metadata) {
+  function resolveGroups(groupNames, regions, metadata) {
     const result = /* @__PURE__ */ new Set();
     if (!groupNames) return result;
     const groups = metadata?.groups ?? {};
@@ -21880,25 +21931,29 @@ var shinymap = (() => {
         for (const id of groups[name]) {
           result.add(id);
         }
-      } else if (geometry[name]) {
+      } else if (regions[name]) {
         result.add(name);
       }
     }
     return result;
   }
-  function assignLayers(geometry, underlays, overlays, hidden, metadata) {
-    const underlayRegions = resolveGroups(underlays, geometry, metadata);
-    const overlayRegions = resolveGroups(overlays, geometry, metadata);
-    const hiddenRegions = resolveGroups(hidden, geometry, metadata);
+  function assignLayers(regions, underlay, overlay, annotation, hidden, metadata) {
+    const underlayRegions = resolveGroups(underlay, regions, metadata);
+    const overlayRegions = resolveGroups(overlay, regions, metadata);
+    const annotationRegions = resolveGroups(annotation, regions, metadata);
+    const hiddenRegions = resolveGroups(hidden, regions, metadata);
     const result = {
       underlay: /* @__PURE__ */ new Set(),
       base: /* @__PURE__ */ new Set(),
       overlay: /* @__PURE__ */ new Set(),
+      annotation: /* @__PURE__ */ new Set(),
       hidden: /* @__PURE__ */ new Set()
     };
-    for (const id of Object.keys(geometry)) {
+    for (const id of Object.keys(regions)) {
       if (hiddenRegions.has(id)) {
         result.hidden.add(id);
+      } else if (annotationRegions.has(id)) {
+        result.annotation.add(id);
       } else if (overlayRegions.has(id)) {
         result.overlay.add(id);
       } else if (underlayRegions.has(id)) {
@@ -21990,7 +22045,18 @@ var shinymap = (() => {
       case "polygon":
         return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("polygon", { points: element.points, ...commonProps, children: titleElement }, key);
       case "ellipse":
-        return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ellipse", { cx: element.cx, cy: element.cy, rx: element.rx, ry: element.ry, ...commonProps, children: titleElement }, key);
+        return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+          "ellipse",
+          {
+            cx: element.cx,
+            cy: element.cy,
+            rx: element.rx,
+            ry: element.ry,
+            ...commonProps,
+            children: titleElement
+          },
+          key
+        );
       case "line":
         return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
           "line",
@@ -22042,16 +22108,16 @@ var shinymap = (() => {
     });
     return set;
   }
-  function normalizeFillColor(fillColor, geometry) {
+  function normalizeFillColor(fillColor, regions) {
     if (!fillColor) return void 0;
     if (typeof fillColor === "string") {
-      return Object.fromEntries(Object.keys(geometry).map((id) => [id, fillColor]));
+      return Object.fromEntries(Object.keys(regions).map((id) => [id, fillColor]));
     }
     return fillColor;
   }
   function InputMap(props) {
     const {
-      geometry,
+      regions,
       tooltips,
       fillColor,
       className,
@@ -22060,36 +22126,37 @@ var shinymap = (() => {
       mode: modeConfig,
       aes,
       layers,
-      geometryMetadata,
+      outlineMetadata,
       value,
       onChange,
       resolveAesthetic,
-      regionProps,
-      // Deprecated props (for backward compatibility)
-      overlayGeometry,
-      overlayAesthetic
+      regionProps
     } = props;
-    const aesBase = aes?.base ?? DEFAULT_AESTHETIC_VALUES;
-    const aesHover = aes?.hover;
-    const aesSelect = aes?.select;
-    const aesGroup = aes?.group;
-    const underlays = layers?.underlays;
-    const overlays = layers?.overlays;
+    const isV03Format = isAesPayload(aes);
+    const aesPayload = isV03Format ? aes : void 0;
+    const legacyAes = !isV03Format ? aes : void 0;
+    const aesBase = isV03Format ? aesPayload?.__all?.base ?? DEFAULT_AESTHETIC_VALUES : legacyAes?.base ?? DEFAULT_AESTHETIC_VALUES;
+    const aesHover = isV03Format ? aesPayload?.__all?.hover : legacyAes?.hover;
+    const aesSelect = isV03Format ? aesPayload?.__all?.select : legacyAes?.select;
+    const aesGroup = isV03Format ? void 0 : legacyAes?.group;
+    const underlays = layers?.underlay;
+    const overlays = layers?.overlay;
+    const annotations = layers?.annotation;
     const hidden = layers?.hidden;
-    const modeType = modeConfig?.type ?? "multiple";
-    const cycle = modeConfig?.n;
-    const maxSelection = modeConfig?.maxSelection;
-    const aesIndexed = modeConfig?.aesIndexed;
-    const normalizedGeometry = (0, import_react.useMemo)(() => normalizeGeometry(geometry), [geometry]);
-    const normalizedOverlayGeometry = (0, import_react.useMemo)(
-      () => overlayGeometry ? normalizeGeometry(overlayGeometry) : void 0,
-      [overlayGeometry]
-    );
+    const normalizedMode = typeof modeConfig === "string" ? { type: modeConfig } : modeConfig;
+    const modeType = normalizedMode?.type ?? "multiple";
+    const cycle = normalizedMode?.n;
+    const maxSelection = normalizedMode?.maxSelection;
+    const aesIndexed = normalizedMode?.aesIndexed;
+    const normalizedRegions = (0, import_react.useMemo)(() => normalizeRegions(regions), [regions]);
     const layerAssignment = (0, import_react.useMemo)(
-      () => assignLayers(normalizedGeometry, underlays, overlays, hidden, geometryMetadata),
-      [normalizedGeometry, underlays, overlays, hidden, geometryMetadata]
+      () => assignLayers(normalizedRegions, underlays, overlays, annotations, hidden, outlineMetadata),
+      [normalizedRegions, underlays, overlays, annotations, hidden, outlineMetadata]
     );
-    const normalizedFillColor = (0, import_react.useMemo)(() => normalizeFillColor(fillColor, normalizedGeometry), [fillColor, normalizedGeometry]);
+    const normalizedFillColor = (0, import_react.useMemo)(
+      () => normalizeFillColor(fillColor, normalizedRegions),
+      [fillColor, normalizedRegions]
+    );
     const [hovered, setHovered] = (0, import_react.useState)(null);
     const [counts, setCounts] = (0, import_react.useState)(value ?? {});
     const selected = (0, import_react.useMemo)(() => buildSelected(counts), [counts]);
@@ -22113,7 +22180,7 @@ var shinymap = (() => {
       if (isActivating && activeCount >= maxSel) {
         if (maxSel === 1) {
           const next2 = Object.fromEntries(
-            Object.keys(normalizedGeometry).map((key) => [key, key === id ? nextCount : 0])
+            Object.keys(normalizedRegions).map((key) => [key, key === id ? nextCount : 0])
           );
           setCounts(next2);
           onChange?.(next2);
@@ -22124,14 +22191,31 @@ var shinymap = (() => {
       setCounts(next);
       onChange?.(next);
     };
+    const getElementType = (regionId) => {
+      const metadata = aesPayload?._metadata;
+      if (metadata) {
+        if (metadata.__line?.includes(regionId)) return "line";
+        if (metadata.__text?.includes(regionId)) return "text";
+      }
+      return "shape";
+    };
     const renderNonInteractiveLayer = (regionIds, keyPrefix) => {
       return Array.from(regionIds).flatMap((id) => {
-        const elements = normalizedGeometry[id];
+        const elements = normalizedRegions[id];
         if (!elements) return [];
-        let layerAes = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
-        const groupAes = resolveGroupAesthetic(id, aesGroup, geometryMetadata);
-        if (groupAes) {
-          layerAes = { ...layerAes, ...groupAes };
+        let layerAes = { ...DEFAULT_AESTHETIC_VALUES };
+        if (isV03Format && aesPayload) {
+          const elementType = getElementType(id);
+          const byState = getAesForRegion(id, elementType, aesPayload);
+          if (byState?.base) {
+            layerAes = { ...layerAes, ...byState.base };
+          }
+        } else {
+          layerAes = { ...layerAes, ...aesBase };
+          const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
+          if (groupAes) {
+            layerAes = { ...layerAes, ...groupAes };
+          }
         }
         const region = createRenderedRegion(id, layerAes);
         return elements.map(
@@ -22159,18 +22243,27 @@ var shinymap = (() => {
         children: [
           /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("g", { children: renderNonInteractiveLayer(layerAssignment.underlay, "underlay") }),
           /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("g", { children: Array.from(layerAssignment.base).flatMap((id) => {
-            const elements = normalizedGeometry[id];
+            const elements = normalizedRegions[id];
             if (!elements) return [];
             const tooltip = tooltips?.[id];
             const isHovered = hovered === id;
             const isSelected = selected.has(id);
             const count = counts[id] ?? 0;
-            let baseAes = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
-            const groupAes = resolveGroupAesthetic(id, aesGroup, geometryMetadata);
-            if (groupAes) {
-              baseAes = { ...baseAes, ...groupAes };
+            let baseAes = { ...DEFAULT_AESTHETIC_VALUES };
+            if (isV03Format && aesPayload) {
+              const elementType = getElementType(id);
+              const byState = getAesForRegion(id, elementType, aesPayload);
+              if (byState?.base) {
+                baseAes = { ...baseAes, ...byState.base };
+              }
+            } else {
+              baseAes = { ...baseAes, ...aesBase };
+              const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
+              if (groupAes) {
+                baseAes = { ...baseAes, ...groupAes };
+              }
             }
-            const indexedData = getIndexedDataForRegion(aesIndexed, id, geometryMetadata);
+            const indexedData = getIndexedDataForRegion(aesIndexed, id, outlineMetadata);
             if (indexedData) {
               const indexedAes = resolveIndexedAesthetic(indexedData, count, cycle);
               baseAes = {
@@ -22230,44 +22323,35 @@ var shinymap = (() => {
               })
             );
           }) }),
-          normalizedOverlayGeometry && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("g", { children: Object.entries(normalizedOverlayGeometry).flatMap(([id, elements]) => {
-            const overlayAes = {
-              ...DEFAULT_AESTHETIC_VALUES,
-              ...overlayAesthetic
-            };
-            const region = createRenderedRegion(id, overlayAes);
-            return elements.map(
-              (element, index) => renderElement({
-                element,
-                key: `legacy-overlay-${id}-${index}`,
-                fill: region.aesthetic.fillColor,
-                fillOpacity: region.aesthetic.fillOpacity,
-                stroke: region.aesthetic.strokeColor,
-                strokeWidth: region.aesthetic.strokeWidth,
-                strokeDasharray: region.aesthetic.strokeDasharray,
-                nonScalingStroke: region.aesthetic.nonScalingStroke,
-                pointerEvents: "none"
-              })
-            );
-          }) }),
           /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("g", { children: renderNonInteractiveLayer(layerAssignment.overlay, "overlay") }),
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("g", { children: !aesIndexed && Array.from(selected).flatMap((id) => {
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("g", { children: !aesIndexed && aesSelect && Array.from(selected).flatMap((id) => {
             if (!layerAssignment.base.has(id)) return [];
-            const elements = normalizedGeometry[id];
+            const elements = normalizedRegions[id];
             if (!elements) return [];
+            const count = counts[id] ?? 0;
             let baseAes = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
-            const groupAes = resolveGroupAesthetic(id, aesGroup, geometryMetadata);
+            const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
             if (groupAes) {
               baseAes = { ...baseAes, ...groupAes };
             }
             if (normalizedFillColor && normalizedFillColor[id]) {
               baseAes.fillColor = normalizedFillColor[id];
             }
-            const baseRegion = createRenderedRegion(id, baseAes);
-            let selectAes = {};
-            if (aesSelect) {
-              selectAes = { ...aesSelect };
+            if (resolveAesthetic) {
+              const overrides = resolveAesthetic({
+                id,
+                mode: modeType,
+                isHovered: false,
+                isSelected: false,
+                count,
+                baseAesthetic: baseAes
+              });
+              if (overrides) {
+                baseAes = { ...baseAes, ...overrides };
+              }
             }
+            const baseRegion = createRenderedRegion(id, baseAes);
+            const selectAes = { ...aesSelect };
             const selectRegion = createRenderedRegion(id, selectAes, baseRegion);
             return elements.map(
               (element, index) => renderElement({
@@ -22286,12 +22370,12 @@ var shinymap = (() => {
           /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("g", { children: hovered && aesHover !== null && layerAssignment.base.has(hovered) && (() => {
             const effectiveHover = aesHover ?? DEFAULT_HOVER_AESTHETIC;
             let baseAes = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
-            const groupAes = resolveGroupAesthetic(hovered, aesGroup, geometryMetadata);
+            const groupAes = resolveGroupAesthetic(hovered, aesGroup, outlineMetadata);
             if (groupAes) {
               baseAes = { ...baseAes, ...groupAes };
             }
             const count = counts[hovered] ?? 0;
-            const indexedData = getIndexedDataForRegion(aesIndexed, hovered, geometryMetadata);
+            const indexedData = getIndexedDataForRegion(aesIndexed, hovered, outlineMetadata);
             if (indexedData) {
               const indexedAes = resolveIndexedAesthetic(indexedData, count, cycle);
               baseAes = {
@@ -22306,13 +22390,27 @@ var shinymap = (() => {
             if (normalizedFillColor && normalizedFillColor[hovered]) {
               baseAes.fillColor = normalizedFillColor[hovered];
             }
+            if (resolveAesthetic) {
+              const overrides = resolveAesthetic({
+                id: hovered,
+                mode: modeType,
+                isHovered: false,
+                // We're building the parent, not hover state
+                isSelected: selected.has(hovered),
+                count,
+                baseAesthetic: baseAes
+              });
+              if (overrides) {
+                baseAes = { ...baseAes, ...overrides };
+              }
+            }
             const baseRegion = createRenderedRegion(hovered, baseAes);
             let parentRegion = baseRegion;
             if (!aesIndexed && selected.has(hovered) && aesSelect) {
               parentRegion = createRenderedRegion(hovered, aesSelect, baseRegion);
             }
             const hoverRegion = createRenderedRegion(hovered, effectiveHover, parentRegion);
-            return normalizedGeometry[hovered]?.map(
+            return normalizedRegions[hovered]?.map(
               (element, index) => renderElement({
                 element,
                 key: `hover-overlay-${hovered}-${index}`,
@@ -22325,7 +22423,8 @@ var shinymap = (() => {
                 pointerEvents: "none"
               })
             );
-          })() })
+          })() }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("g", { children: renderNonInteractiveLayer(layerAssignment.annotation, "annotation") })
         ]
       }
     );
@@ -22335,78 +22434,98 @@ var shinymap = (() => {
   var import_react2 = __toESM(require_react(), 1);
   var import_jsx_runtime3 = __toESM(require_jsx_runtime(), 1);
   var DEFAULT_VIEWBOX2 = "0 0 100 100";
-  function normalizeActive(active) {
-    if (!active) return /* @__PURE__ */ new Set();
-    if (Array.isArray(active)) return new Set(active);
-    return /* @__PURE__ */ new Set([active]);
+  function deriveActiveFromValue(value) {
+    if (!value) return /* @__PURE__ */ new Set();
+    const active = /* @__PURE__ */ new Set();
+    for (const [id, count] of Object.entries(value)) {
+      if (count > 0) active.add(id);
+    }
+    return active;
   }
-  function normalize(value, geometry) {
+  function normalize(value, regions) {
     if (!value) return void 0;
     if (typeof value === "object" && !Array.isArray(value)) {
       return value;
     }
-    return Object.fromEntries(Object.keys(geometry).map((id) => [id, value]));
+    return Object.fromEntries(Object.keys(regions).map((id) => [id, value]));
   }
   function OutputMap(props) {
     const {
-      geometry,
+      regions,
       tooltips,
       className,
       containerStyle,
       viewBox = DEFAULT_VIEWBOX2,
+      mode: modeConfig,
       aes,
       layers,
-      geometryMetadata,
+      outlineMetadata,
       fillColor,
       strokeWidth: strokeWidthProp,
       strokeColor: strokeColorProp,
       fillOpacity: fillOpacityProp,
       value,
-      activeIds,
       onRegionClick,
       resolveAesthetic,
-      regionProps,
-      // Deprecated props (for backward compatibility)
-      overlayGeometry,
-      overlayAesthetic
+      regionProps
     } = props;
-    const aesBaseRaw = aes?.base ?? DEFAULT_AESTHETIC_VALUES;
+    const normalizedMode = typeof modeConfig === "string" ? { type: modeConfig } : modeConfig;
+    const aesIndexed = normalizedMode?.aesIndexed;
+    const isClickable = normalizedMode?.clickable ?? false;
+    const isV03Format = isAesPayload(aes);
+    const aesPayload = isV03Format ? aes : void 0;
+    const legacyAes = !isV03Format ? aes : void 0;
+    const aesBaseRaw = isV03Format ? aesPayload?.__all?.base ?? DEFAULT_AESTHETIC_VALUES : legacyAes?.base ?? DEFAULT_AESTHETIC_VALUES;
     const aesBase = aesBaseRaw;
-    const aesHover = aes?.hover;
-    const aesSelect = aes?.select;
-    const aesNotSelect = aes?.notSelect;
-    const aesGroup = aes?.group;
-    const aesBaseFillColorDict = typeof aesBaseRaw.fillColor === "object" && aesBaseRaw.fillColor !== null ? aesBaseRaw.fillColor : void 0;
-    const underlays = layers?.underlays;
-    const overlays = layers?.overlays;
+    const aesHover = isV03Format ? aesPayload?.__all?.hover : legacyAes?.hover;
+    const aesSelect = isV03Format ? aesPayload?.__all?.select : legacyAes?.select;
+    const aesNotSelect = legacyAes?.notSelect;
+    const aesGroup = isV03Format ? void 0 : legacyAes?.group;
+    const aesBaseFillColorDict = typeof aesBaseRaw?.fillColor === "object" && aesBaseRaw.fillColor !== null ? aesBaseRaw.fillColor : void 0;
+    const underlays = layers?.underlay;
+    const overlays = layers?.overlay;
+    const annotations = layers?.annotation;
     const hidden = layers?.hidden;
-    const normalizedGeometry = (0, import_react2.useMemo)(() => normalizeGeometry(geometry), [geometry]);
-    const normalizedOverlayGeometry = (0, import_react2.useMemo)(
-      () => overlayGeometry ? normalizeGeometry(overlayGeometry) : void 0,
-      [overlayGeometry]
-    );
+    const normalizedRegions = (0, import_react2.useMemo)(() => normalizeRegions(regions), [regions]);
     const layerAssignment = (0, import_react2.useMemo)(
-      () => assignLayers(normalizedGeometry, underlays, overlays, hidden, geometryMetadata),
-      [normalizedGeometry, underlays, overlays, hidden, geometryMetadata]
+      () => assignLayers(normalizedRegions, underlays, overlays, annotations, hidden, outlineMetadata),
+      [normalizedRegions, underlays, overlays, annotations, hidden, outlineMetadata]
     );
     const [hovered, setHovered] = (0, import_react2.useState)(null);
-    const activeSet = normalizeActive(activeIds);
-    const normalizedFillColor = normalize(fillColor, normalizedGeometry);
-    const normalizedStrokeWidth = normalize(strokeWidthProp, normalizedGeometry);
-    const normalizedStrokeColor = normalize(strokeColorProp, normalizedGeometry);
-    const normalizedFillOpacity = normalize(fillOpacityProp, normalizedGeometry);
+    const activeSet = deriveActiveFromValue(value);
+    const normalizedFillColor = normalize(fillColor, normalizedRegions);
+    const normalizedStrokeWidth = normalize(strokeWidthProp, normalizedRegions);
+    const normalizedStrokeColor = normalize(strokeColorProp, normalizedRegions);
+    const normalizedFillOpacity = normalize(fillOpacityProp, normalizedRegions);
     const countMap = value ?? {};
+    const getElementType = (regionId) => {
+      const metadata = aesPayload?._metadata;
+      if (metadata) {
+        if (metadata.__line?.includes(regionId)) return "line";
+        if (metadata.__text?.includes(regionId)) return "text";
+      }
+      return "shape";
+    };
     const renderNonInteractiveLayer = (regionIds, keyPrefix) => {
       return Array.from(regionIds).flatMap((id) => {
-        const elements = normalizedGeometry[id];
+        const elements = normalizedRegions[id];
         if (!elements) return [];
-        let layerAes = { ...DEFAULT_AESTHETIC_VALUES, ...aesBase };
-        if (aesBaseFillColorDict?.[id]) {
-          layerAes = { ...layerAes, fillColor: aesBaseFillColorDict[id] };
-        }
-        const groupAes = resolveGroupAesthetic(id, aesGroup, geometryMetadata);
-        if (groupAes) {
-          layerAes = { ...layerAes, ...groupAes };
+        let layerAes = { ...DEFAULT_AESTHETIC_VALUES };
+        if (isV03Format && aesPayload) {
+          const elementType = getElementType(id);
+          const byState = getAesForRegion(id, elementType, aesPayload);
+          if (byState?.base) {
+            layerAes = { ...layerAes, ...byState.base };
+          }
+        } else {
+          layerAes = { ...layerAes, ...aesBase };
+          if (aesBaseFillColorDict?.[id]) {
+            layerAes = { ...layerAes, fillColor: aesBaseFillColorDict[id] };
+          }
+          const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
+          if (groupAes) {
+            layerAes = { ...layerAes, ...groupAes };
+          }
         }
         const region = createRenderedRegion(id, layerAes);
         return elements.map(
@@ -22434,21 +22553,39 @@ var shinymap = (() => {
         children: [
           /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("g", { children: renderNonInteractiveLayer(layerAssignment.underlay, "underlay") }),
           /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("g", { children: Array.from(layerAssignment.base).flatMap((id) => {
-            const elements = normalizedGeometry[id];
+            const elements = normalizedRegions[id];
             if (!elements) return [];
             const tooltip = tooltips?.[id];
             const isActive = activeSet.has(id);
             const count = countMap[id] ?? 0;
-            let baseAes = {
-              ...DEFAULT_AESTHETIC_VALUES,
-              ...aesBase
-            };
-            if (aesBaseFillColorDict?.[id]) {
-              baseAes = { ...baseAes, fillColor: aesBaseFillColorDict[id] };
+            let baseAes = { ...DEFAULT_AESTHETIC_VALUES };
+            if (isV03Format && aesPayload) {
+              const elementType = getElementType(id);
+              const byState = getAesForRegion(id, elementType, aesPayload);
+              if (byState?.base) {
+                baseAes = { ...baseAes, ...byState.base };
+              }
+            } else {
+              baseAes = { ...baseAes, ...aesBase };
+              if (aesBaseFillColorDict?.[id]) {
+                baseAes = { ...baseAes, fillColor: aesBaseFillColorDict[id] };
+              }
+              const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
+              if (groupAes) {
+                baseAes = { ...baseAes, ...groupAes };
+              }
             }
-            const groupAes = resolveGroupAesthetic(id, aesGroup, geometryMetadata);
-            if (groupAes) {
-              baseAes = { ...baseAes, ...groupAes };
+            const indexedData = getIndexedDataForRegion(aesIndexed, id, outlineMetadata);
+            if (indexedData) {
+              const indexedAes = resolveIndexedAesthetic(indexedData, count, void 0);
+              baseAes = {
+                ...baseAes,
+                ...indexedAes.fillColor !== void 0 ? { fillColor: indexedAes.fillColor } : {},
+                ...indexedAes.fillOpacity !== void 0 ? { fillOpacity: indexedAes.fillOpacity } : {},
+                ...indexedAes.strokeColor !== void 0 ? { strokeColor: indexedAes.strokeColor } : {},
+                ...indexedAes.strokeWidth !== void 0 ? { strokeWidth: indexedAes.strokeWidth } : {},
+                ...indexedAes.strokeDasharray !== void 0 ? { strokeDasharray: indexedAes.strokeDasharray } : {}
+              };
             }
             baseAes = {
               ...baseAes,
@@ -22482,6 +22619,7 @@ var shinymap = (() => {
             });
             const handleMouseEnter = () => setHovered(id);
             const handleMouseLeave = () => setHovered((current) => current === id ? null : current);
+            const effectiveOnClick = isClickable && onRegionClick ? () => onRegionClick(id) : void 0;
             return elements.map(
               (element, index) => renderElement({
                 element,
@@ -22492,8 +22630,8 @@ var shinymap = (() => {
                 strokeWidth: region.aesthetic.strokeWidth,
                 strokeDasharray: region.aesthetic.strokeDasharray,
                 nonScalingStroke: region.aesthetic.nonScalingStroke,
-                cursor: onRegionClick ? "pointer" : void 0,
-                onClick: onRegionClick ? () => onRegionClick(id) : void 0,
+                cursor: effectiveOnClick ? "pointer" : void 0,
+                onClick: effectiveOnClick,
                 onMouseEnter: handleMouseEnter,
                 onMouseLeave: handleMouseLeave,
                 onFocus: handleMouseEnter,
@@ -22503,30 +22641,10 @@ var shinymap = (() => {
               })
             );
           }) }),
-          normalizedOverlayGeometry && /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("g", { children: Object.entries(normalizedOverlayGeometry).flatMap(([id, elements]) => {
-            const overlayAes = {
-              ...DEFAULT_AESTHETIC_VALUES,
-              ...overlayAesthetic
-            };
-            const region = createRenderedRegion(id, overlayAes);
-            return elements.map(
-              (element, index) => renderElement({
-                element,
-                key: `legacy-overlay-${id}-${index}`,
-                fill: region.aesthetic.fillColor,
-                fillOpacity: region.aesthetic.fillOpacity,
-                stroke: region.aesthetic.strokeColor,
-                strokeWidth: region.aesthetic.strokeWidth,
-                strokeDasharray: region.aesthetic.strokeDasharray,
-                nonScalingStroke: region.aesthetic.nonScalingStroke,
-                pointerEvents: "none"
-              })
-            );
-          }) }),
           /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("g", { children: renderNonInteractiveLayer(layerAssignment.overlay, "overlay") }),
-          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("g", { children: Array.from(activeSet).flatMap((id) => {
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("g", { children: aesSelect && Array.from(activeSet).flatMap((id) => {
             if (!layerAssignment.base.has(id)) return [];
-            const elements = normalizedGeometry[id];
+            const elements = normalizedRegions[id];
             if (!elements) return [];
             const count = countMap[id] ?? 0;
             let baseAes = {
@@ -22536,7 +22654,7 @@ var shinymap = (() => {
             if (aesBaseFillColorDict?.[id]) {
               baseAes = { ...baseAes, fillColor: aesBaseFillColorDict[id] };
             }
-            const groupAes = resolveGroupAesthetic(id, aesGroup, geometryMetadata);
+            const groupAes = resolveGroupAesthetic(id, aesGroup, outlineMetadata);
             if (groupAes) {
               baseAes = { ...baseAes, ...groupAes };
             }
@@ -22583,7 +22701,7 @@ var shinymap = (() => {
             if (aesBaseFillColorDict?.[hovered]) {
               baseAes = { ...baseAes, fillColor: aesBaseFillColorDict[hovered] };
             }
-            const groupAes = resolveGroupAesthetic(hovered, aesGroup, geometryMetadata);
+            const groupAes = resolveGroupAesthetic(hovered, aesGroup, outlineMetadata);
             if (groupAes) {
               baseAes = { ...baseAes, ...groupAes };
             }
@@ -22600,7 +22718,7 @@ var shinymap = (() => {
               parentRegion = createRenderedRegion(hovered, aesSelect, baseRegion);
             }
             const hoverRegion = createRenderedRegion(hovered, effectiveHover, parentRegion);
-            return normalizedGeometry[hovered]?.map(
+            return normalizedRegions[hovered]?.map(
               (element, index) => renderElement({
                 element,
                 key: `hover-overlay-${hovered}-${index}`,
@@ -22613,7 +22731,8 @@ var shinymap = (() => {
                 pointerEvents: "none"
               })
             );
-          })() })
+          })() }),
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("g", { children: renderNonInteractiveLayer(layerAssignment.annotation, "annotation") })
         ]
       }
     );

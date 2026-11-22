@@ -182,8 +182,8 @@ export function renderElement(props: RenderElementProps): React.ReactElement {
           fontFamily={element.fontFamily}
           fontWeight={element.fontWeight}
           fontStyle={element.fontStyle}
-          textAnchor={element.textAnchor as any}
-          dominantBaseline={element.dominantBaseline as any}
+          textAnchor={element.textAnchor}
+          dominantBaseline={element.dominantBaseline}
           transform={element.transform}
           {...commonProps}
         >

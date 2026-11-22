@@ -1,10 +1,10 @@
 from textwrap import dedent
 
 from shiny import ui
-from shinymap.color import QUALITATIVE
-from shinymap.geometry import Geometry
+from shinymap import Outline
+from shinymap.aes.color import QUALITATIVE
 
-DEMO_GEOMETRY = Geometry.from_dict({
+DEMO_OUTLINE = Outline.from_dict({
     "circle": ["M25,50 A20,20 0 1 1 24.999,50 Z"],
     "square": ["M10 10 H40 V40 H10 Z"],
     "triangle": ["M75 70 L90 40 L60 40 Z"],

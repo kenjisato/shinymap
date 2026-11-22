@@ -1,0 +1,18 @@
+---
+title: "Vignettes"
+---
+
+Tutorials and practical examples for common use cases.
+
+## Getting Started
+
+- [Getting Started](getting-started.qmd) - Basic setup and first map
+
+## Use Cases
+
+*Coming soon*
+
+- Creating a choropleth map
+- Interactive region selection
+- Custom SVG geometry
+- Styling with aesthetics

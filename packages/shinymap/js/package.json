@@ -1,6 +1,6 @@
 {
   "name": "shinymap",
-  "version": "0.3.0-dev",
+  "version": "0.3.0",
   "description": "Core React map renderer with lightweight demo geometry.",
   "license": "MIT",
   "type": "module",
@@ -9,13 +9,16 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
+    "build:shiny": "esbuild src/shinyBridge.ts --bundle --format=iife --outfile=dist/shinymap-shiny.js --minify",
+    "build:all": "npm run build && npm run build:shiny",
     "lint": "eslint \"src/**/*.ts\" \"src/**/*.tsx\"",
     "lint:fix": "eslint \"src/**/*.ts\" \"src/**/*.tsx\" --fix",
     "format": "prettier --write \"src/**/*.ts\" \"src/**/*.tsx\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"src/**/*.tsx\"",
     "demo": "esbuild demo/App.tsx --bundle --sourcemap --format=esm --outfile=demo/dist/app.js --watch",
     "serve": "npm-run-all --parallel demo serve:static",
-    "serve:static": "npx --yes http-server demo --port 4173"
+    "serve:static": "npx --yes http-server demo --port 4173",
+    "docs": "typedoc"
   },
   "files": [
     "dist",
@@ -42,6 +45,8 @@
     "eslint-config-prettier": "^10.1.8",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.7.4",
+    "typedoc": "^0.28.15",
+    "typedoc-plugin-markdown": "^4.9.0",
     "typescript": "^5.4.0"
   }
 }

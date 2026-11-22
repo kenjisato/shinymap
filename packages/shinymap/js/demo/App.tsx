@@ -2,8 +2,8 @@ import React, { useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 
 import { InputMap, OutputMap, palette } from "../src";
-import type { GeometryMap, ResolveAestheticArgs, AestheticStyle } from "../src/types";
-import geometry from "./geometry.json";
+import type { RegionsMap, ResolveAestheticArgs, AestheticStyle } from "../src/types";
+import regionsData from "./regions.json";
 
 const TOOLTIP_MAP: Record<string, string> = {
   circle: "Circle",
@@ -11,7 +11,7 @@ const TOOLTIP_MAP: Record<string, string> = {
   triangle: "Triangle",
 };
 
-const demoGeometry = geometry as GeometryMap;
+const demoRegions = regionsData as RegionsMap;
 
 // --- Shared section wrapper
 type DemoSectionProps = {
@@ -33,12 +33,12 @@ function DemoSection({ title, description, children }: DemoSectionProps) {
 }
 
 type DemoSingleProps = {
-  geometry: GeometryMap;
+  regions: RegionsMap;
   tooltips: Record<string, string>;
 };
 
 // --- Single selection demo
-function DemoSingle({ geometry, tooltips }: DemoSingleProps) {
+function DemoSingle({ regions, tooltips }: DemoSingleProps) {
   const [counts, setCounts] = useState<Record<string, number>>({ circle: 1 });
 
   const resolveAesthetic = ({ count, isHovered, baseAesthetic }: ResolveAestheticArgs) => {
@@ -47,7 +47,8 @@ function DemoSingle({ geometry, tooltips }: DemoSingleProps) {
       next.fillColor = palette.qualitative[0];
     }
     if (isHovered) {
-      next.strokeWidth = (next.strokeWidth ?? 1) + 1;
+      const sw = typeof next.strokeWidth === "number" ? next.strokeWidth : 1;
+      next.strokeWidth = sw + 1;
     }
     return next;
   };
@@ -60,11 +61,11 @@ function DemoSingle({ geometry, tooltips }: DemoSingleProps) {
       <div style={{ aspectRatio: "1", border: "1px solid #cbd5f5", borderRadius: 6, overflow: "hidden", background: "#f8fafc" }}>
         <InputMap
           mode="single"
-          geometry={geometry}
+          regions={regions}
           tooltips={tooltips}
           value={counts}
           onChange={setCounts}
-          defaultAesthetic={{ fillColor: palette.neutrals.fill, strokeColor: palette.neutrals.stroke }}
+          aes={{ base: { fillColor: palette.neutrals.fill, strokeColor: palette.neutrals.stroke } }}
           resolveAesthetic={resolveAesthetic}
         />
       </div>
@@ -82,12 +83,12 @@ function DemoSingle({ geometry, tooltips }: DemoSingleProps) {
 }
 
 type DemoMultipleProps = {
-  geometry: GeometryMap;
+  regions: RegionsMap;
   tooltips: Record<string, string>;
 };
 
 // --- Multiple selection demo
-function DemoMultiple({ geometry, tooltips }: DemoMultipleProps) {
+function DemoMultiple({ regions, tooltips }: DemoMultipleProps) {
   const [counts, setCounts] = useState<Record<string, number>>({ square: 1 });
 
   const resolveAesthetic = ({ count, isHovered, baseAesthetic }: ResolveAestheticArgs) => {
@@ -96,7 +97,8 @@ function DemoMultiple({ geometry, tooltips }: DemoMultipleProps) {
       next.fillColor = palette.qualitative[1];
     }
     if (isHovered) {
-      next.strokeWidth = (next.strokeWidth ?? 1) + 1;
+      const sw = typeof next.strokeWidth === "number" ? next.strokeWidth : 1;
+      next.strokeWidth = sw + 1;
     }
     return next;
   };
@@ -109,11 +111,11 @@ function DemoMultiple({ geometry, tooltips }: DemoMultipleProps) {
       <div style={{ aspectRatio: "1", border: "1px solid #cbd5f5", borderRadius: 6, overflow: "hidden", background: "#f8fafc" }}>
         <InputMap
           mode="multiple"
-          geometry={geometry}
+          regions={regions}
           tooltips={tooltips}
           value={counts}
           onChange={setCounts}
-          defaultAesthetic={{ fillColor: palette.neutrals.fill, strokeColor: palette.neutrals.stroke }}
+          aes={{ base: { fillColor: palette.neutrals.fill, strokeColor: palette.neutrals.stroke } }}
           resolveAesthetic={resolveAesthetic}
         />
       </div>
@@ -131,17 +133,17 @@ function DemoMultiple({ geometry, tooltips }: DemoMultipleProps) {
 }
 
 type DemoCountsAlphaProps = {
-  geometry: GeometryMap;
+  regions: RegionsMap;
   tooltips: Record<string, string>;
 };
 
 type DemoHueCountsProps = {
-  geometry: GeometryMap;
+  regions: RegionsMap;
   tooltips: Record<string, string>;
 };
 
 // --- Count mode demo (alpha mapping)
-function DemoCountsAlpha({ geometry, tooltips }: DemoCountsAlphaProps) {
+function DemoCountsAlpha({ regions, tooltips }: DemoCountsAlphaProps) {
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [countCeiling, setCountCeiling] = useState(5);
 
@@ -153,14 +155,15 @@ function DemoCountsAlpha({ geometry, tooltips }: DemoCountsAlphaProps) {
       next.fillOpacity = 0.2 + alpha * 0.8;
     }
     if (isHovered) {
-      next.strokeWidth = (next.strokeWidth ?? 1) + 1;
+      const sw = typeof next.strokeWidth === "number" ? next.strokeWidth : 1;
+      next.strokeWidth = sw + 1;
     }
     return next;
   };
 
   const resetCounts = () => {
     const next: Record<string, number> = {};
-    Object.keys(geometry).forEach((id) => {
+    Object.keys(regions).forEach((id) => {
       next[id] = 0;
     });
     setCounts(next);
@@ -174,11 +177,11 @@ function DemoCountsAlpha({ geometry, tooltips }: DemoCountsAlphaProps) {
       <div style={{ aspectRatio: "1", border: "1px solid #cbd5f5", borderRadius: 6, overflow: "hidden", background: "#f8fafc" }}>
         <InputMap
           mode="count"
-          geometry={geometry}
+          regions={regions}
           tooltips={tooltips}
           value={counts}
           onChange={setCounts}
-          defaultAesthetic={{ fillColor: palette.neutrals.fill, strokeColor: palette.neutrals.stroke }}
+          aes={{ base: { fillColor: palette.neutrals.fill, strokeColor: palette.neutrals.stroke } }}
           resolveAesthetic={resolveAesthetic}
         />
       </div>
@@ -208,20 +211,21 @@ function DemoCountsAlpha({ geometry, tooltips }: DemoCountsAlphaProps) {
 }
 
 // --- Count mode demo (hue mapping)
-function DemoHueCounts({ geometry, tooltips }: DemoHueCountsProps) {
+function DemoHueCounts({ regions, tooltips }: DemoHueCountsProps) {
   const [counts, setCounts] = useState<Record<string, number>>({});
-  const maxValue = 10;
-
   const hues = palette.qualitative;
+  const maxValue = hues.length;
+
   const resolveAesthetic = ({ count, isHovered, baseAesthetic }: ResolveAestheticArgs) => {
     const next: AestheticStyle = { ...baseAesthetic };
     if (count > 0) {
-      const ratio = Math.min(1, Math.max(0, count / maxValue));
-      const idx = Math.min(hues.length - 1, Math.floor(ratio * (hues.length - 1)));
+      // Direct index: count 1 → hues[0], count 2 → hues[1], etc.
+      const idx = Math.min(hues.length - 1, count - 1);
       next.fillColor = hues[idx] ?? hues[0];
     }
     if (isHovered) {
-      next.strokeWidth = (next.strokeWidth ?? 1) + 1;
+      const sw = typeof next.strokeWidth === "number" ? next.strokeWidth : 1;
+      next.strokeWidth = sw + 1;
     }
     return next;
   };
@@ -234,17 +238,17 @@ function DemoHueCounts({ geometry, tooltips }: DemoHueCountsProps) {
       <div style={{ aspectRatio: "1", border: "1px solid #cbd5f5", borderRadius: 6, overflow: "hidden", background: "#f8fafc" }}>
         <InputMap
           mode="count"
-          geometry={geometry}
+          regions={regions}
           tooltips={tooltips}
           value={counts}
           onChange={setCounts}
-          defaultAesthetic={{ fillColor: palette.neutrals.fill, strokeColor: palette.neutrals.stroke }}
+          aes={{ base: { fillColor: palette.neutrals.fill, strokeColor: palette.neutrals.stroke } }}
           resolveAesthetic={resolveAesthetic}
         />
       </div>
       <div style={{ background: "#f8fafc", borderRadius: 8, padding: "0.75rem", border: "1px solid #e2e8f0" }}>
         <div style={{ display: "grid", gap: "0.5rem" }}>
-          {Object.keys(geometry).map((id) => (
+          {Object.keys(regions).map((id) => (
             <label key={id} style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
               <span style={{ width: 80, textTransform: "capitalize" }}>{id}</span>
               <input
@@ -267,12 +271,12 @@ function DemoHueCounts({ geometry, tooltips }: DemoHueCountsProps) {
 }
 
 type DemoOutputProps = {
-  geometry: GeometryMap;
+  regions: RegionsMap;
   tooltips: Record<string, string>;
 };
 
 // --- Output map demo
-function DemoOutput({ geometry, tooltips }: DemoOutputProps) {
+function DemoOutput({ regions, tooltips }: DemoOutputProps) {
   const [values, setValues] = useState<Record<string, number>>({ circle: 5, square: 3, triangle: 7 });
   const [maxValue, setMaxValue] = useState(10);
 
@@ -344,10 +348,10 @@ function DemoOutput({ geometry, tooltips }: DemoOutputProps) {
       </div>
       <div style={{ aspectRatio: "1", border: "1px solid #cbd5f5", borderRadius: 6, overflow: "hidden", background: "#f8fafc" }}>
         <OutputMap
-          geometry={geometry}
+          regions={regions}
           tooltips={tooltips}
           fillColor={fills}
-          counts={values}
+          value={values}
           resolveAesthetic={({ id, baseAesthetic }) => styleForRegion({ id, baseAesthetic })}
         />
       </div>
@@ -357,25 +361,25 @@ function DemoOutput({ geometry, tooltips }: DemoOutputProps) {
 
 const singleContainer = document.getElementById("root-single");
 if (singleContainer) {
-  createRoot(singleContainer).render(<DemoSingle geometry={demoGeometry} tooltips={TOOLTIP_MAP} />);
+  createRoot(singleContainer).render(<DemoSingle regions={demoRegions} tooltips={TOOLTIP_MAP} />);
 }
 
 const multipleContainer = document.getElementById("root-multiple");
 if (multipleContainer) {
-  createRoot(multipleContainer).render(<DemoMultiple geometry={demoGeometry} tooltips={TOOLTIP_MAP} />);
+  createRoot(multipleContainer).render(<DemoMultiple regions={demoRegions} tooltips={TOOLTIP_MAP} />);
 }
 
 const countsContainer = document.getElementById("root-counts");
 if (countsContainer) {
   createRoot(countsContainer).render(
     <>
-      <DemoCountsAlpha geometry={demoGeometry} tooltips={TOOLTIP_MAP} />
-      <DemoHueCounts geometry={demoGeometry} tooltips={TOOLTIP_MAP} />
+      <DemoCountsAlpha regions={demoRegions} tooltips={TOOLTIP_MAP} />
+      <DemoHueCounts regions={demoRegions} tooltips={TOOLTIP_MAP} />
     </>
   );
 }
 
 const outputContainer = document.getElementById("root-output");
 if (outputContainer) {
-  createRoot(outputContainer).render(<DemoOutput geometry={demoGeometry} tooltips={TOOLTIP_MAP} />);
+  createRoot(outputContainer).render(<DemoOutput regions={demoRegions} tooltips={TOOLTIP_MAP} />);
 }

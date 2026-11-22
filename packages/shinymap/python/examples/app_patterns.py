@@ -3,25 +3,20 @@
 from shiny import App, ui
 
 from shinymap import Map, aes, input_map, output_map, render_map
-from shinymap.color import scale_qualitative, scale_sequential
+from shinymap.aes.color import scale_qualitative, scale_sequential
 from shinymap.mode import Count
 
-from shared import DEMO_GEOMETRY, SHAPE_COLORS, TOOLTIPS
+from shared import DEMO_OUTLINE, SHAPE_COLORS, TOOLTIPS
 
 
 # Helper functions --------
-def selected_ids(counts: dict[str, int] | None) -> list[str]:
-    """Return IDs of regions with count > 0."""
-    return [id for id, count in (counts or {}).items() if count > 0]
-
-
 def fills_for_qualitative(counts: dict[str, int] | None) -> dict[str, str]:
     """Active regions get their assigned color; inactive regions are neutral gray."""
     counts = counts or {}
     return scale_qualitative(
-        categories={rid: rid if counts.get(rid, 0) > 0 else None for rid in DEMO_GEOMETRY.regions},
-        region_ids=list(DEMO_GEOMETRY.regions.keys()),
-        palette=[SHAPE_COLORS[rid] for rid in DEMO_GEOMETRY.regions],
+        categories={rid: rid if counts.get(rid, 0) > 0 else None for rid in DEMO_OUTLINE.regions},
+        region_ids=list(DEMO_OUTLINE.regions.keys()),
+        palette=[SHAPE_COLORS[rid] for rid in DEMO_OUTLINE.regions],
     )
 
 
@@ -35,13 +30,13 @@ _ui_qualitative = ui.card(
     ui.layout_columns(
         input_map(
             "region_single",
-            DEMO_GEOMETRY,
+            DEMO_OUTLINE,
             tooltips=TOOLTIPS,
             mode="single",
             value={},
             aes=aes.ByState(hover=aes.Shape(stroke_width=1)),
         ),
-        output_map("qualitative_output", DEMO_GEOMETRY, tooltips=TOOLTIPS),
+        output_map("qualitative_output", DEMO_OUTLINE, tooltips=TOOLTIPS),
     ),
 )
 
@@ -54,9 +49,9 @@ def _server_qualitative(input, output, session):
         counts = {selected: 1} if selected else {}
         fills = fills_for_qualitative(counts)
 
+        # value > 0 means selected (highlighted)
         return Map(
             value=counts,
-            active=selected_ids(counts),
             aes={"base": {"fillColor": fills, "strokeWidth": 1.5}}
         )
 
@@ -71,13 +66,13 @@ _ui_count_helpers = ui.card(
     ui.layout_columns(
         input_map(
             "clicks",
-            DEMO_GEOMETRY,
+            DEMO_OUTLINE,
             tooltips=TOOLTIPS,
             mode=Count(),
             value={},
             aes=aes.ByState(hover=aes.Shape(stroke_width=2)),
         ),
-        output_map("count_output", DEMO_GEOMETRY, tooltips=TOOLTIPS),
+        output_map("count_output", DEMO_OUTLINE, tooltips=TOOLTIPS),
     ),
 )
 
@@ -86,7 +81,7 @@ def _server_count_helpers(input, output, session):
     @render_map
     def count_output():
         counts = input.clicks() or {}
-        fills = scale_sequential(counts, list(DEMO_GEOMETRY.regions.keys()), max_count=10)
+        fills = scale_sequential(counts, list(DEMO_OUTLINE.regions.keys()), max_count=10)
         return Map(
             value=counts,
             aes={"base": {"fillColor": fills}}
@@ -99,19 +94,15 @@ _code_examples = ui.card(
     ui.p("Reusable helper functions for common transformations:"),
     ui.tags.pre(
         ui.tags.code(
-            '''from shinymap.color import scale_qualitative
-
-def selected_ids(counts: dict[str, int] | None) -> list[str]:
-    """Return IDs of regions with count > 0."""
-    return [id for id, count in (counts or {}).items() if count > 0]
+            '''from shinymap.aes.color import scale_qualitative
 
 def fills_for_qualitative(counts: dict[str, int] | None) -> dict[str, str]:
     """Active regions get their assigned color; inactive regions are neutral gray."""
     counts = counts or {}
     return scale_qualitative(
-        categories={rid: rid if counts.get(rid, 0) > 0 else None for rid in DEMO_GEOMETRY.regions},
-        region_ids=list(DEMO_GEOMETRY.regions.keys()),
-        palette=[SHAPE_COLORS[rid] for rid in DEMO_GEOMETRY.regions],
+        categories={rid: rid if counts.get(rid, 0) > 0 else None for rid in DEMO_OUTLINE.regions},
+        region_ids=list(DEMO_OUTLINE.regions.keys()),
+        palette=[SHAPE_COLORS[rid] for rid in DEMO_OUTLINE.regions],
     )
 
 @render_map
@@ -120,9 +111,9 @@ def qualitative_output():
     counts = {selected: 1} if selected else {}
     fills = fills_for_qualitative(counts)
 
+    # value > 0 means selected (highlighted)
     return Map(
         value=counts,
-        active=selected_ids(counts),
         aes={"base": {"fillColor": fills}}
     )'''
         )

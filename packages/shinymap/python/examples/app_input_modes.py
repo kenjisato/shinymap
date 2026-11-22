@@ -5,7 +5,7 @@ from shiny import App, render, ui
 from shinymap import aes, input_map
 from shinymap.mode import Count, Cycle, Multiple
 
-from shared import DEMO_GEOMETRY, TOOLTIPS, code_sample
+from shared import DEMO_OUTLINE, TOOLTIPS, code_sample
 
 # Traffic light colors for 4-state cycle
 CYCLE_COLORS = ["#e2e8f0", "#fecaca", "#fef08a", "#bbf7d0"]  # gray, red, yellow, green
@@ -32,7 +32,7 @@ _ui_count_unlimited = ui.card(
                 # UI
                 input_map(
                     "count_unlimited",
-                    DEMO_GEOMETRY,
+                    DEMO_OUTLINE,
                     tooltips=TOOLTIPS,
                     mode=Count()
                 )
@@ -48,7 +48,7 @@ _ui_count_unlimited = ui.card(
             ui.h4("Input Map"),
             input_map(
                 "count_unlimited",
-                DEMO_GEOMETRY,
+                DEMO_OUTLINE,
                 tooltips=TOOLTIPS,
                 mode=Count(aes=aes.Indexed(fill_color=CYCLE_COLORS)),
             ),
@@ -87,7 +87,7 @@ _ui_hue_cycle = ui.card(
             # UI
             input_map(
                 "count_cycle",
-                DEMO_GEOMETRY,
+                DEMO_OUTLINE,
                 tooltips=TOOLTIPS,
                 mode=Cycle(n=4)
             )
@@ -103,7 +103,7 @@ _ui_hue_cycle = ui.card(
             ui.h4("Input Map"),
             input_map(
                 "count_cycle",
-                DEMO_GEOMETRY,
+                DEMO_OUTLINE,
                 tooltips=TOOLTIPS,
                 mode=Cycle(n=4, aes=aes.Indexed(fill_color=CYCLE_COLORS)),
             ),
@@ -141,7 +141,7 @@ _ui_max_selection = ui.card(
                 # UI
                 input_map(
                     "limited",
-                    DEMO_GEOMETRY,
+                    DEMO_OUTLINE,
                     tooltips=TOOLTIPS,
                     mode=Multiple(max_selection=2)
                 )
@@ -157,7 +157,7 @@ _ui_max_selection = ui.card(
             ui.h4("Input Map"),
             input_map(
                 "limited",
-                DEMO_GEOMETRY,
+                DEMO_OUTLINE,
                 tooltips=TOOLTIPS,
                 mode=Multiple(max_selection=2),
             ),

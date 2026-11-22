@@ -18,5 +18,6 @@ members = [
 
 [dependency-groups]
 dev = [
+    "quartodoc>=0.11.1",
     "svgpathtools>=1.7.2",
 ]

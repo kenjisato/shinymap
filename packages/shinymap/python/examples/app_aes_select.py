@@ -4,7 +4,7 @@ from shiny import App, ui, render
 
 from shinymap import aes, input_map
 
-from shared import DEMO_GEOMETRY, TOOLTIPS
+from shared import DEMO_OUTLINE, TOOLTIPS
 
 
 app_ui = ui.page_fixed(
@@ -15,7 +15,7 @@ app_ui = ui.page_fixed(
         ui.layout_columns(
             input_map(
                 "test_selected",
-                DEMO_GEOMETRY,
+                DEMO_OUTLINE,
                 tooltips=TOOLTIPS,
                 mode="multiple",
                 aes=aes.ByState(

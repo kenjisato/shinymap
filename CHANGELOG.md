@@ -5,6 +5,57 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-11-22
+
+### Breaking changes
+
+- **`geometry` → `outline`**: `Geometry` is now `Outline`, `shinymap.geometry` is now
+  `shinymap.outline`, and the `geometry` parameter of `input_map()`, `output_map()` and
+  `export_svg()` is now `outline`.
+  Importing from `shinymap.geometry` raises an `ImportError` that names the replacement.
+- **SVG element classes moved to `shinymap.svg`** (`Circle`, `Path`, `Line`, ...).
+  Old import paths raise an `ImportError` with migration instructions.
+- **Layer keys are singular**: `overlay`, `underlay`, `hidden` (was `overlays`,
+  `underlays`) in metadata and `layers=`. `Outline` accessors are `overlay_ids()`,
+  `underlay_ids()` and `hidden_ids()`.
+- **`Map(active=...)` removed**: selection is derived from `value > 0`. On the builder,
+  `with_active()` is removed and `with_geometry_metadata()` is now `with_outline_metadata()`.
+- `input_radio_buttons()` and `input_checkbox_group()` also take `outline` (was `geometry`).
+- **Top-level API reorganized**:
+  - `wash()` is now the class `Wash`; `configure_theme()` is removed (use `Wash`).
+  - `shinymap.color` and `shinymap.linestyle` moved to `shinymap.aes.color` and
+    `shinymap.aes.line`.
+  - `MapBuilder`, `MISSING`, `BaseAesthetic`, `WashConfig` and `WashResult` are no longer
+    exported from `shinymap`; import them from `shinymap.types`.
+  - The `DEFAULT_*_AESTHETIC` constants are removed; defaults come from `Wash`.
+- **SVG conversion moved**: `shinymap.geometry.convert` and the converter app are now in
+  `shinymap.kit` (`kit.convert`, `python -m shinymap.kit.sketch`); `from_svg` / `from_json`
+  are `Outline.from_svg()` / `Outline.from_json()`.
+- `Map(aes=...)` no longer accepts a raw dict; pass `aes` objects.
+- Initial values passed to `Map()` / `input_map()` must be non-negative integers;
+  negative or float values now raise.
+
+### Added
+
+- `output_map(mode=Display(...))`: display mode with `clickable=True` to emit clicks
+  (optionally to a custom `input_id`) and `aes.Indexed` for value-to-color mapping.
+- `input_map(raw=True)` returns the `dict[str, int]` value in every mode.
+- Annotation layer, rendered above hover and selection (#7).
+- `Outline.move_layer()` and `Outline.move_group()` for assigning layers and merging
+  regions fluently.
+- `StillLife` for inspecting resolved aesthetics outside a Shiny session, and
+  `StillLife.to_svg()` for static SVG export.
+- `shinymap.kit`: `python -m shinymap.kit.sketch` converts an SVG into an outline
+  (rename, groups, layers, and marking stroke-only paths as lines) and generates the
+  Python code to reproduce it; `python -m shinymap.kit.caption` writes a reference SVG
+  with region IDs overlaid.
+
+### Fixed
+
+- `input_map()` and `output_map()` work inside Shiny modules (ids are resolved
+  through the module namespace) (#8, #10).
+- `output_map()` without an `outline` no longer raises `AttributeError`.
+
 ## [0.2.2] - 2025-12-28
 
 ### Added
@@ -40,7 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Mode classes**: `Single`, `Multiple`, `Cycle`, `Count` classes replace string-based mode configuration
   - Each mode class accepts an optional `aes` parameter for customization
   - `Cycle(n=4, aes=aes.Indexed(fill_color=[...]))` for visual state cycling
-  - `Count(max=10, aes=aes.Indexed(fill_color=[...]))` for count visualization
+  - `Count(max_count=10, aes=aes.Indexed(fill_color=[...]))` for count visualization
 - **Layer system**: Support for underlays, overlays, and hidden layers in geometry
   - Automatic detection of layer types from region ID prefixes (`_underlay_`, `_overlay_`, `_hidden_`)
   - `path_as_line()` method to mark regions containing line paths for stroke-only rendering

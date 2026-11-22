@@ -1,0 +1,54 @@
+---
+title: "Getting Started"
+---
+
+This guide walks you through creating your first interactive map with shinymap.
+
+## Installation
+
+```bash
+pip install shinymap
+```
+
+Or with uv:
+
+```bash
+uv add shinymap
+```
+
+## Basic Example
+
+```python
+from shiny import App, render, ui
+from shinymap import input_map, output_map, render_map, Map
+from shinymap.outline import Outline
+
+# Define a simple outline
+OUTLINE = Outline.from_dict({
+    "region_a": [{"type": "rect", "x": 10, "y": 10, "width": 30, "height": 30}],
+    "region_b": [{"type": "rect", "x": 50, "y": 10, "width": 30, "height": 30}],
+    "region_c": [{"type": "rect", "x": 30, "y": 50, "width": 30, "height": 30}],
+    "_metadata": {"viewBox": "0 0 100 100"},
+})
+
+app_ui = ui.page_fluid(
+    ui.h2("My First Map"),
+    input_map("selection", OUTLINE, mode="single"),
+    ui.output_text("selected"),
+)
+
+def server(input, output, session):
+    @render.text
+    def selected():
+        return f"Selected: {input.selection()}"
+
+app = App(app_ui, server)
+```
+
+## Next Steps
+
+- Selection modes (`Single`, `Multiple`, `Cycle`, `Count`) and aesthetics are
+  documented in the [Python API reference](../python/index.qmd)
+- Prepare your own SVG with `python -m shinymap.kit.sketch -f map.svg`
+- Runnable examples live in
+  [`packages/shinymap/python/examples/`](https://github.com/kenjisato/shinymap/tree/main/packages/shinymap/python/examples)

@@ -89,8 +89,21 @@ export type TextElement = {
   fontFamily?: string;
   fontWeight?: string;
   fontStyle?: string;
-  textAnchor?: string;
-  dominantBaseline?: string;
+  textAnchor?: "start" | "middle" | "end" | "inherit";
+  dominantBaseline?:
+    | "auto"
+    | "alphabetic"
+    | "ideographic"
+    | "middle"
+    | "central"
+    | "mathematical"
+    | "hanging"
+    | "inherit"
+    | "use-script"
+    | "no-change"
+    | "reset-size"
+    | "text-after-edge"
+    | "text-before-edge";
   transform?: string;
   fill?: string;
   class?: string;
@@ -111,7 +124,7 @@ export type Element =
   | TextElement;
 
 /**
- * Geometry map supports both v0.x (string paths) and v1.x (polymorphic elements):
+ * Regions map supports both v0.x (string paths) and v1.x (polymorphic elements):
  * - v0.x: string | string[] (treated as path elements)
  * - v1.x: Element | Element[] (any SVG element type)
  *
@@ -121,7 +134,7 @@ export type Element =
  *   v1.x: { "region1": { type: "circle", cx: 50, cy: 50, r: 30 } }
  *   v1.x: { "region1": [{ type: "circle", ... }, { type: "rect", ... }] }
  */
-export type GeometryMap = Record<RegionId, string | string[] | Element | Element[]>;
+export type RegionsMap = Record<RegionId, string | string[] | Element | Element[]>;
 
 export type TooltipMap = Record<RegionId, string>;
 
@@ -152,9 +165,15 @@ export type IndexedAestheticData = {
 
 /**
  * Serialized aesIndexed from Python mode.to_dict().
+ *
+ * Two formats:
+ * - Direct IndexedAestheticData (global): {fillColor: [...], ...}
+ * - ByGroup wrapper (per-group): {type: "byGroup", groups: {...}}
+ *
+ * JS distinguishes: if it has a "type" key, it's ByGroup. Otherwise direct data.
  */
 export type AesIndexedConfig =
-  | { type: "indexed"; value: IndexedAestheticData }
+  | IndexedAestheticData // Direct (no wrapper, for global aes.Indexed)
   | { type: "byGroup"; groups: Record<string, IndexedAestheticData> };
 
 /**
@@ -199,36 +218,52 @@ export function resolveIndexedAesthetic(
 }
 
 /**
+ * Check if an AesIndexedConfig is a ByGroup wrapper (has type: "byGroup").
+ */
+function isAesIndexedByGroup(
+  config: AesIndexedConfig
+): config is { type: "byGroup"; groups: Record<string, IndexedAestheticData> } {
+  return (
+    typeof config === "object" && config !== null && "type" in config && config.type === "byGroup"
+  );
+}
+
+/**
  * Get the IndexedAestheticData for a region from an AesIndexedConfig.
  * Returns undefined if no indexed aesthetic applies to this region.
+ *
+ * Handles two formats:
+ * - Direct IndexedAestheticData: {fillColor: [...], ...}
+ * - ByGroup wrapper: {type: "byGroup", groups: {...}}
  */
 export function getIndexedDataForRegion(
   config: AesIndexedConfig | undefined,
   regionId: RegionId,
-  geometryMetadata?: GeometryMetadata
+  outlineMetadata?: OutlineMetadata
 ): IndexedAestheticData | undefined {
   if (!config) return undefined;
 
-  if (config.type === "indexed") {
-    return config.value;
-  }
+  // Check if it's a ByGroup wrapper
+  if (isAesIndexedByGroup(config)) {
+    // First check if region ID matches directly
+    if (config.groups[regionId]) {
+      return config.groups[regionId];
+    }
 
-  // type === "byGroup"
-  // First check if region ID matches directly
-  if (config.groups[regionId]) {
-    return config.groups[regionId];
-  }
-
-  // Check if region belongs to a group that has indexed aesthetic
-  if (geometryMetadata?.groups) {
-    for (const [groupName, regionIds] of Object.entries(geometryMetadata.groups)) {
-      if (regionIds.includes(regionId) && config.groups[groupName]) {
-        return config.groups[groupName];
+    // Check if region belongs to a group that has indexed aesthetic
+    if (outlineMetadata?.groups) {
+      for (const [groupName, regionIds] of Object.entries(outlineMetadata.groups)) {
+        if (regionIds.includes(regionId) && config.groups[groupName]) {
+          return config.groups[groupName];
+        }
       }
     }
+
+    return undefined;
   }
 
-  return undefined;
+  // Direct IndexedAestheticData (global applies to all regions)
+  return config;
 }
 
 /**
@@ -246,6 +281,8 @@ export type ModeConfig = {
   n?: number;
   /** Indexed aesthetic for multi-state visual feedback (Cycle, Count modes) */
   aesIndexed?: AesIndexedConfig;
+  /** Enable click events in display mode. Default is false. */
+  clickable?: boolean;
 };
 
 /**
@@ -520,31 +557,120 @@ export function createRenderedRegion(
 }
 
 /**
- * Geometry metadata with optional group definitions.
+ * Outline metadata with optional group definitions.
  * Groups allow regions to be assigned to layers (underlay/overlay) and aesthetic groups.
  */
-export type GeometryMetadata = {
+export type OutlineMetadata = {
   viewBox?: string;
   groups?: Record<string, RegionId[]>; // Group name → region IDs
 };
 
 /**
- * Nested aesthetic configuration (new API).
+ * ByState entry containing base/select/hover aesthetics.
  *
- * Groups all aesthetic settings under a single `aes` prop.
+ * Part of v0.3 payload format from Python.
  */
-export type AesConfig = {
+export type ByStateEntry = {
+  base?: AestheticStyle;
+  select?: AestheticStyle | null;
+  hover?: AestheticStyle | null;
+};
+
+/**
+ * v0.3 Aesthetic payload from Python.
+ *
+ * Keys can be:
+ * - `__all`: Global default for all regions
+ * - `__shape`, `__line`, `__text`: Type-specific defaults
+ * - Group names: Named group defaults
+ * - Region IDs: Individual region overrides
+ * - `_metadata`: Maps group/type names to region IDs
+ */
+export type AesPayload = {
+  __all?: ByStateEntry;
+  __shape?: ByStateEntry;
+  __line?: ByStateEntry;
+  __text?: ByStateEntry;
+  _metadata?: Record<string, RegionId[]>;
+  [key: string]: ByStateEntry | Record<string, RegionId[]> | undefined;
+};
+
+/**
+ * Look up the ByState aesthetic for a region from the v0.3 payload.
+ *
+ * Priority (first match wins):
+ *   region_id → group_name → __shape/__line/__text → __all
+ *
+ * @param regionId The region ID to look up
+ * @param elementType The element type ("shape", "line", or "text")
+ * @param aes The v0.3 aesthetic payload
+ * @returns The ByState entry for this region, or undefined
+ */
+export function getAesForRegion(
+  regionId: RegionId,
+  elementType: "shape" | "line" | "text",
+  aes: AesPayload | undefined
+): ByStateEntry | undefined {
+  if (!aes) return undefined;
+
+  // 1. Check explicit region entry
+  if (aes[regionId] && !regionId.startsWith("_")) {
+    return aes[regionId] as ByStateEntry;
+  }
+
+  // 2. Check named groups (from _metadata)
+  const metadata = aes._metadata;
+  if (metadata) {
+    for (const [groupName, members] of Object.entries(metadata)) {
+      if (groupName.startsWith("__")) continue; // Skip type defaults
+      if (Array.isArray(members) && members.includes(regionId) && aes[groupName]) {
+        return aes[groupName] as ByStateEntry;
+      }
+    }
+  }
+
+  // 3. Check element type default
+  const typeKey = `__${elementType}` as const;
+  if (aes[typeKey]) return aes[typeKey] as ByStateEntry;
+
+  // 4. Check global default
+  if (aes.__all) return aes.__all;
+
+  return undefined;
+}
+
+/**
+ * Legacy aesthetic configuration (for backward compatibility with pure React usage).
+ */
+export type LegacyAesConfig = {
   /** Base aesthetic for all regions (not selected, not hovered). */
   base?: AestheticStyle;
   /** Aesthetic override for hovered regions. null disables hover effect. */
   hover?: AestheticStyle | null;
   /** Aesthetic override for selected regions. */
   select?: AestheticStyle;
-  /** Aesthetic for non-selected regions when activeIds is set. */
+  /** Aesthetic for non-selected regions (when some regions have value > 0). */
   notSelect?: AestheticStyle;
   /** Per-group aesthetic overrides. Group name → aesthetic style. */
   group?: Record<string, AestheticStyle>;
 };
+
+/**
+ * Check if an aes config is in v0.3 payload format.
+ */
+export function isAesPayload(aes: unknown): aes is AesPayload {
+  if (!aes || typeof aes !== "object") return false;
+  return "__all" in aes || "_metadata" in aes;
+}
+
+/**
+ * Nested aesthetic configuration (new API).
+ *
+ * Accepts either:
+ * - LegacyAesConfig: flat base/select/hover/group structure (React developers)
+ * - AesPayload: v0.3 format from Python with __all/_metadata (Shiny apps)
+ */
+export type AesConfig = LegacyAesConfig | AesPayload;
 
 /**
  * Nested layer configuration (new API).
@@ -553,9 +679,11 @@ export type AesConfig = {
  */
 export type LayersConfig = {
   /** Group names to render in underlay layer (below base regions). */
-  underlays?: string[];
+  underlay?: string[];
   /** Group names to render in overlay layer (above base regions). */
-  overlays?: string[];
+  overlay?: string[];
+  /** Group names to render in annotation layer (above hover/selection, always on top). */
+  annotation?: string[];
   /** Group names to hide completely (not rendered). */
   hidden?: string[];
 };
@@ -570,16 +698,17 @@ export type ResolveAestheticArgs = {
 };
 
 export type InputMapProps = {
-  geometry: GeometryMap;
+  regions: RegionsMap;
   tooltips?: TooltipMap;
   fillColor?: FillMap;
   viewBox?: string;
   className?: string;
   containerStyle?: React.CSSProperties;
   /**
-   * Mode configuration (normalized by Python to full ModeConfig).
+   * Mode configuration. Can be a string shorthand ("single", "multiple", "count", "cycle")
+   * or a full ModeConfig object for advanced options.
    */
-  mode?: ModeConfig;
+  mode?: MapModeType | ModeConfig;
   /**
    * Nested aesthetic configuration.
    */
@@ -589,23 +718,19 @@ export type InputMapProps = {
    */
   layers?: LayersConfig;
   /**
-   * Geometry metadata containing group definitions.
+   * Outline metadata containing group definitions.
    */
-  geometryMetadata?: GeometryMetadata;
+  outlineMetadata?: OutlineMetadata;
   value?: Record<RegionId, number>;
   onChange?: (value: Record<RegionId, number>) => void;
   resolveAesthetic?: (args: ResolveAestheticArgs) => AestheticStyle | undefined;
   regionProps?: (args: ResolveAestheticArgs) => React.SVGProps<SVGPathElement>;
   /**
-   * Non-interactive overlay geometry (dividers, borders, grids).
-   * @deprecated Use layers.overlays + aes.group instead
+   * If true, return raw dict value to Shiny instead of transformed types.
+   * When false (default), single mode returns string|null, multiple returns string[].
+   * When true, all modes return Record<RegionId, number>.
    */
-  overlayGeometry?: GeometryMap;
-  /**
-   * Default aesthetic for overlay regions.
-   * @deprecated Use aes.group instead
-   */
-  overlayAesthetic?: AestheticStyle;
+  raw?: boolean;
 };
 
 export type ResolveOutputAestheticArgs = {
@@ -617,11 +742,17 @@ export type ResolveOutputAestheticArgs = {
 };
 
 export type OutputMapProps = {
-  geometry: GeometryMap;
+  regions: RegionsMap;
   tooltips?: TooltipMap;
   viewBox?: string;
   className?: string;
   containerStyle?: React.CSSProperties;
+  /**
+   * Mode configuration. For output maps, typically "display" mode.
+   * Display mode enables hover but disables click, and uses indexed
+   * aesthetics to map values to visual styles.
+   */
+  mode?: MapModeType | ModeConfig;
   /**
    * Nested aesthetic configuration.
    */
@@ -631,20 +762,19 @@ export type OutputMapProps = {
    */
   layers?: LayersConfig;
   /**
-   * Geometry metadata containing group definitions.
+   * Outline metadata containing group definitions.
    */
-  geometryMetadata?: GeometryMetadata;
+  outlineMetadata?: OutlineMetadata;
   fillColor?: string | Record<RegionId, string>;
   strokeWidth?: number | Record<RegionId, number>;
   strokeColor?: string | Record<RegionId, string>;
   fillOpacity?: number | Record<RegionId, number>;
+  /**
+   * Region values (counts). Selection is derived from value > 0.
+   * For display mode, values index into the aesIndexed arrays.
+   */
   value?: Record<RegionId, number>;
-  activeIds?: RegionId | RegionId[] | null;
   onRegionClick?: (id: RegionId) => void;
   resolveAesthetic?: (args: ResolveOutputAestheticArgs) => AestheticStyle | undefined;
   regionProps?: (args: ResolveOutputAestheticArgs) => React.SVGProps<SVGPathElement>;
-  /** @deprecated Use layers.overlays + aes.group instead */
-  overlayGeometry?: GeometryMap;
-  /** @deprecated Use aes.group instead */
-  overlayAesthetic?: AestheticStyle;
 };

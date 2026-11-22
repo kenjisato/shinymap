@@ -2,7 +2,7 @@ from shiny import App, render, ui
 
 from shinymap import aes, input_map
 
-from shared import DEMO_GEOMETRY, code_sample
+from shared import DEMO_OUTLINE, code_sample
 
 # Single Select Example ---------
 _ui_single = ui.card(
@@ -11,10 +11,10 @@ _ui_single = ui.card(
         ui.div(
             ui.h4("Code"),
             code_sample("""\
-                from shinymap import wash, aes
+                from shinymap import Wash, aes
 
-                # Create wash with default aesthetics
-                wc = wash(
+                # Create Wash with default aesthetics
+                wc = Wash(
                     shape=aes.ByState(
                         base=aes.Shape(fill_color="#f0f9ff", stroke_color="#0369a1"),
                         select=aes.Shape(fill_color="#7dd3fc"),
@@ -22,7 +22,7 @@ _ui_single = ui.card(
                 )
 
                 # UI
-                wc.input_map("region_single", GEOMETRY, mode="single")
+                wc.input_map("region_single", OUTLINE, mode="single")
 
                 # SERVER
                 def server(input):
@@ -35,7 +35,7 @@ _ui_single = ui.card(
             ui.h4("Input Map"),
             input_map(
                 "region_single",
-                DEMO_GEOMETRY,
+                DEMO_OUTLINE,
                 mode="single",
             ),
         ),
@@ -62,7 +62,7 @@ _ui_multiple = ui.card(
             ui.h4("Code"),
             code_sample("""\
                 # UI (using same wc from above)
-                wc.input_map("region_multi", GEOMETRY, mode="multiple")
+                wc.input_map("region_multi", OUTLINE, mode="multiple")
 
                 # SERVER
                 def server(input):
@@ -75,7 +75,7 @@ _ui_multiple = ui.card(
             ui.h4("Input Map"),
             input_map(
                 "region_multi",
-                DEMO_GEOMETRY,
+                DEMO_OUTLINE,
                 mode="multiple",
             ),
         ),

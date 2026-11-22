@@ -1,13 +1,13 @@
 """Showcase of output_map with dynamic data from server."""
 
-from shared import DEMO_GEOMETRY, TOOLTIPS
+from shared import DEMO_OUTLINE, TOOLTIPS
 from shiny import App, ui
 
-from shinymap import Map, output_map, render_map
-from shinymap.color import scale_sequential, SEQUENTIAL_BLUE
+from shinymap import Map, output_map, render_map, aes
+from shinymap.aes.color import scale_sequential, SEQUENTIAL_BLUE
 
 
-rids = list(DEMO_GEOMETRY.regions.keys())
+rids = list(DEMO_OUTLINE.regions.keys())
 
 # Single Select -------------------
 
@@ -18,7 +18,7 @@ _ui_single = ui.card(
         "Select a Region",
         rids
     ),
-    output_map("single_select_output", DEMO_GEOMETRY, tooltips=TOOLTIPS),
+    output_map("single_select_output", DEMO_OUTLINE, tooltips=TOOLTIPS),
 )
 
 _ui_multiple = ui.card(
@@ -29,7 +29,7 @@ _ui_multiple = ui.card(
         rids,
         multiple=True,
     ),
-    output_map("multiple_select_output", DEMO_GEOMETRY, tooltips=TOOLTIPS),
+    output_map("multiple_select_output", DEMO_OUTLINE, tooltips=TOOLTIPS),
 )
 
 def ui_input_numeric(rid):
@@ -41,7 +41,7 @@ _ui_count = ui.card(
         *[ui_input_numeric(rid) for rid in rids],
         width=1/3,
     ),
-    output_map("alpha_output", DEMO_GEOMETRY, tooltips=TOOLTIPS),
+    output_map("alpha_output", DEMO_OUTLINE, tooltips=TOOLTIPS),
 )
 
 
@@ -62,19 +62,25 @@ def server_output(input, output, session):
     @render_map
     def single_select_output():
         selected = input.single_select_input()
-        return Map(active=[selected] if selected else [])
+        # value > 0 means selected (highlighted)
+        return Map(value={selected: 1} if selected else {})
 
     @render_map
     def multiple_select_output():
         selected = input.multiple_select_input() or []
-        return Map(active=list(selected))
+        # value > 0 means selected (highlighted)
+        return Map(value={s: 1 for s in selected})
 
     @render_map
     def alpha_output():
         counts = {rid: input[rid]() or 0 for rid in rids}
         # Use scale_sequential to generate fill colors based on counts
         fills = scale_sequential(counts, rids, palette=SEQUENTIAL_BLUE, max_count=10)
-        return Map(value=counts, aes={"base": {"fill_color": fills}})
+        region_aes = {
+            rid: aes.Shape(fill_color=color)
+            for rid, color in fills.items()
+        }
+        return Map(aes=aes.ByGroup(**region_aes))
 
 
 app = App(ui_output, server_output)

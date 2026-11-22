@@ -3,9 +3,9 @@
 from shiny import App, ui, reactive, render
 
 from shinymap import aes, input_map, update_map
-from shinymap.color import QUALITATIVE
+from shinymap.aes.color import QUALITATIVE
 
-from shared import DEMO_GEOMETRY, TOOLTIPS
+from shared import DEMO_OUTLINE, TOOLTIPS
 
 
 app_ui = ui.page_fixed(
@@ -16,7 +16,7 @@ app_ui = ui.page_fixed(
         ui.layout_columns(
             input_map(
                 "test_update",
-                DEMO_GEOMETRY,
+                DEMO_OUTLINE,
                 tooltips=TOOLTIPS,
                 mode="multiple",
                 aes=aes.ByState(

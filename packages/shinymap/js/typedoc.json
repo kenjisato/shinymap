@@ -1,0 +1,13 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/index.tsx"],
+  "out": "../../../docs/typescript",
+  "plugin": ["typedoc-plugin-markdown"],
+  "name": "shinymap TypeScript API",
+  "readme": "none",
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "excludeExternals": true,
+  "hideGenerator": true,
+  "entryFileName": "index"
+}

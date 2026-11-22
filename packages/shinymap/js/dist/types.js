@@ -32,29 +32,40 @@ export function resolveIndexedAesthetic(data, count, cycle) {
     };
 }
 /**
+ * Check if an AesIndexedConfig is a ByGroup wrapper (has type: "byGroup").
+ */
+function isAesIndexedByGroup(config) {
+    return (typeof config === "object" && config !== null && "type" in config && config.type === "byGroup");
+}
+/**
  * Get the IndexedAestheticData for a region from an AesIndexedConfig.
  * Returns undefined if no indexed aesthetic applies to this region.
+ *
+ * Handles two formats:
+ * - Direct IndexedAestheticData: {fillColor: [...], ...}
+ * - ByGroup wrapper: {type: "byGroup", groups: {...}}
  */
-export function getIndexedDataForRegion(config, regionId, geometryMetadata) {
+export function getIndexedDataForRegion(config, regionId, outlineMetadata) {
     if (!config)
         return undefined;
-    if (config.type === "indexed") {
-        return config.value;
-    }
-    // type === "byGroup"
-    // First check if region ID matches directly
-    if (config.groups[regionId]) {
-        return config.groups[regionId];
-    }
-    // Check if region belongs to a group that has indexed aesthetic
-    if (geometryMetadata === null || geometryMetadata === void 0 ? void 0 : geometryMetadata.groups) {
-        for (const [groupName, regionIds] of Object.entries(geometryMetadata.groups)) {
-            if (regionIds.includes(regionId) && config.groups[groupName]) {
-                return config.groups[groupName];
+    // Check if it's a ByGroup wrapper
+    if (isAesIndexedByGroup(config)) {
+        // First check if region ID matches directly
+        if (config.groups[regionId]) {
+            return config.groups[regionId];
+        }
+        // Check if region belongs to a group that has indexed aesthetic
+        if (outlineMetadata === null || outlineMetadata === void 0 ? void 0 : outlineMetadata.groups) {
+            for (const [groupName, regionIds] of Object.entries(outlineMetadata.groups)) {
+                if (regionIds.includes(regionId) && config.groups[groupName]) {
+                    return config.groups[groupName];
+                }
             }
         }
+        return undefined;
     }
-    return undefined;
+    // Direct IndexedAestheticData (global applies to all regions)
+    return config;
 }
 /**
  * Check if a value is a RelativeExpr object.
@@ -216,4 +227,50 @@ export function createRenderedRegion(id, aes, parent) {
         nonScalingStroke: (_b = (_a = aes.nonScalingStroke) !== null && _a !== void 0 ? _a : parent === null || parent === void 0 ? void 0 : parent.aesthetic.nonScalingStroke) !== null && _b !== void 0 ? _b : DEFAULT_AESTHETIC_VALUES.nonScalingStroke,
     };
     return { id, aesthetic: resolved, parent };
+}
+/**
+ * Look up the ByState aesthetic for a region from the v0.3 payload.
+ *
+ * Priority (first match wins):
+ *   region_id → group_name → __shape/__line/__text → __all
+ *
+ * @param regionId The region ID to look up
+ * @param elementType The element type ("shape", "line", or "text")
+ * @param aes The v0.3 aesthetic payload
+ * @returns The ByState entry for this region, or undefined
+ */
+export function getAesForRegion(regionId, elementType, aes) {
+    if (!aes)
+        return undefined;
+    // 1. Check explicit region entry
+    if (aes[regionId] && !regionId.startsWith("_")) {
+        return aes[regionId];
+    }
+    // 2. Check named groups (from _metadata)
+    const metadata = aes._metadata;
+    if (metadata) {
+        for (const [groupName, members] of Object.entries(metadata)) {
+            if (groupName.startsWith("__"))
+                continue; // Skip type defaults
+            if (Array.isArray(members) && members.includes(regionId) && aes[groupName]) {
+                return aes[groupName];
+            }
+        }
+    }
+    // 3. Check element type default
+    const typeKey = `__${elementType}`;
+    if (aes[typeKey])
+        return aes[typeKey];
+    // 4. Check global default
+    if (aes.__all)
+        return aes.__all;
+    return undefined;
+}
+/**
+ * Check if an aes config is in v0.3 payload format.
+ */
+export function isAesPayload(aes) {
+    if (!aes || typeof aes !== "object")
+        return false;
+    return "__all" in aes || "_metadata" in aes;
 }
