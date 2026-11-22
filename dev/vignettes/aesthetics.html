@@ -358,6 +358,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>Map(aes=...)</code> returned from <code>@render_map</code> is layered on top of <code>output_map()</code>’s look each time it renders. Properties it does not set are kept.</li>
 <li><code>Wash(shape=..., line=..., text=...)</code> replaces the library defaults for every map made from it (<code>wc.input_map</code>, <code>wc.output_map</code>, <code>wc.render_map</code>).</li>
 </ul>
+<p>The library defaults are themselves a wash, <code>shinymap.default_wash</code>; <code>input_map</code> and friends are its methods. Use it where you need the default look outside an app, for example to save a static picture:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> shinymap <span class="im">import</span> StillLife, default_wash</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>StillLife(default_wash.build(outline, value<span class="op">=</span>{<span class="st">"r7"</span>: <span class="dv">1</span>})).to_svg(<span class="st">"map.svg"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 
 
 </section>
