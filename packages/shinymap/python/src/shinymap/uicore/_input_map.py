@@ -53,7 +53,7 @@ def _input_map(
         tooltips: Tooltip text per region.
         value: Initial values per region {region_id: count}.
         view_box: SVG viewBox override (x, y, width, height).
-        layers: Layer configuration dict with keys: underlays, overlays, hidden.
+        layers: Layer configuration dict with keys: underlay, overlay, hidden.
         raw: If True, return raw dict[str, int] value instead of transformed types.
         width: CSS width.
         height: CSS height.

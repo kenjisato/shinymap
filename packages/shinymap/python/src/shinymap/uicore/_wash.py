@@ -61,6 +61,80 @@ def _normalize_to_by_state[T: BaseAesthetic](
     return ByState(base=value)
 
 
+def element_kind(aes: Any) -> str | None:
+    """Element type ("shape", "line", "text") an aesthetic is written for, if known."""
+    if isinstance(aes, ByState):
+        for state in (aes.base, aes.select, aes.hover):
+            if isinstance(state, BaseAesthetic):
+                return element_kind(state)
+        return None
+    if isinstance(aes, PathAesthetic):
+        # A kind-less Path resolves against the shape default, like __all does
+        return aes.kind if isinstance(aes.kind, str) else "shape"
+    if isinstance(aes, ShapeAesthetic):
+        return "shape"
+    if isinstance(aes, LineAesthetic):
+        return "line"
+    if isinstance(aes, TextAesthetic):
+        return "text"
+    return None
+
+
+def as_user_bygroup(aes: Any) -> ByGroup:
+    """Normalize a user aes argument (unresolved) into a ByGroup.
+
+    ByState and single aesthetics apply to every region (``__all``).
+    """
+    if aes is None or isinstance(aes, MissingType):
+        return ByGroup()
+    if isinstance(aes, ByGroup):
+        return aes
+    if isinstance(aes, (ByState, BaseAesthetic)):
+        return ByGroup(__all=aes)
+    if isinstance(aes, dict):
+        raise TypeError(
+            "aes no longer accepts a dict. Use aes objects instead, e.g. "
+            "aes.ByGroup(region_id=aes.Shape(fill_color='#f00')) or aes.Shape(...)."
+        )
+    raise TypeError(f"Unsupported aes type: {type(aes).__name__}")
+
+
+def _layer_by_state(lower: Any, upper: Any) -> Any:
+    """Layer one user entry over another, state by state (both unresolved).
+
+    ``base`` inherits field by field; ``select`` / ``hover`` given in ``upper``
+    replace ``lower``'s (their PARENT refers to base, so they are not merged).
+    MISSING in ``upper`` keeps ``lower``; None in ``upper`` disables.
+    """
+    if isinstance(upper, MissingType):
+        return lower
+    if isinstance(lower, MissingType) or lower is None or upper is None:
+        return upper
+    lo = ByState(base=lower) if isinstance(lower, BaseAesthetic) else lower
+    up = ByState(base=upper) if isinstance(upper, BaseAesthetic) else upper
+
+    if isinstance(up.base, MissingType):
+        base = lo.base
+    elif isinstance(up.base, BaseAesthetic) and isinstance(lo.base, BaseAesthetic):
+        base = up.base.resolve(lo.base)
+    else:
+        base = up.base
+    select = lo.select if isinstance(up.select, MissingType) else up.select
+    hover = lo.hover if isinstance(up.hover, MissingType) else up.hover
+    return ByState(base=base, select=select, hover=hover)
+
+
+def layer_user_aes(lower: Any, upper: Any) -> ByGroup:
+    """Layer a user aes (e.g. from Map()) over another (e.g. from output_map()).
+
+    Both are unresolved; resolve the result with ``WashConfig.apply``.
+    """
+    lo = as_user_bygroup(lower)
+    up = as_user_bygroup(upper)
+    keys = list(dict.fromkeys([*lo.keys(), *up.keys()]))
+    return ByGroup(**{k: _layer_by_state(lo.get(k, MISSING), up.get(k, MISSING)) for k in keys})
+
+
 @dataclass
 class WashConfig:
     """Configuration created by Wash() for use by map functions.
@@ -273,6 +347,15 @@ class WashConfig:
         ]:
             user_type = user_by_group.get(type_key, MISSING)
             elem_type = type_key[2:]  # Remove "__" prefix
+
+            # A user-level __all (e.g. aes=aes.Shape(...)) must beat the wash's
+            # type default, which JS looks up before __all.
+            if (
+                isinstance(user_type, MissingType)
+                and not isinstance(user_all, MissingType)
+                and element_kind(user_all) == elem_type
+            ):
+                user_type = user_all
 
             # Add entry if:
             # - user explicitly provided it, OR
@@ -503,6 +586,8 @@ class WashResult:
             height,
             class_,
             style,
+            wash_config=self.config,
+            user_aes=aes,
         )
 
     def render_map(self, fn: Callable | None = None) -> Callable:

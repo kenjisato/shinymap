@@ -12,18 +12,11 @@ from htmltools import Tag, TagList, div
 from shiny import render
 from shiny.module import resolve_id
 
-from ..aes._core import ByGroup
 from ..payload import build_aes_payload
 from ..types import MapBuilder
 from ._registry import _static_map_params
 from ._util import _normalize_outline
-
-
-def _merge_bygroup(a: ByGroup, b: ByGroup) -> ByGroup:
-    """Merge two ByGroup objects. Keys in b take precedence over a."""
-    merged_groups = dict(a._groups)
-    merged_groups.update(b._groups)
-    return ByGroup(**merged_groups)
+from ._wash import layer_user_aes
 
 
 def _build_payload(
@@ -56,22 +49,25 @@ def _build_payload(
     if regions is None and outline is not None:
         regions = outline.regions
 
-    # Merge aes: static from output_map, builder from Map()
-    static_aes = static_params.get("resolved_aes")  # ByGroup object
-    builder_aes = builder._aes
+    # Merge aes: Map(aes=...) is layered over output_map(aes=...) and the result is
+    # resolved once through the same wash, so user entries always outrank the
+    # wash's defaults (JS looks up type defaults before __all).
+    static_aes = static_params.get("resolved_aes")  # ByGroup resolved by output_map()
     merged_aes: Any = None
 
-    if static_aes is not None and builder_aes is not None:
-        # Both exist: merge (builder keys take precedence)
-        if isinstance(builder_aes, ByGroup):
-            merged_aes = _merge_bygroup(static_aes, builder_aes)
-        else:
-            # Builder aes is not ByGroup, use as-is
-            merged_aes = builder_aes
-    elif builder_aes is not None:
-        merged_aes = builder_aes
-    elif static_aes is not None:
+    if builder._aes is None:
         merged_aes = static_aes
+    else:
+        combined = layer_user_aes(static_params.get("user_aes"), builder._aes)
+        if outline is not None:
+            wash_config = static_params.get("wash_config")
+            if wash_config is None:
+                from ..ui._ui import _default_wash
+
+                wash_config = _default_wash.config
+            merged_aes = wash_config.apply(combined, outline)
+        else:
+            merged_aes = combined
 
     # Build aes payload dict
     aes_dict = None

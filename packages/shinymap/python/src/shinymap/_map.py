@@ -108,7 +108,7 @@ class MapBuilder:
         """Set aesthetic configuration.
 
         Args:
-            aes: Aesthetic config (ByGroup, ByState, BaseAesthetic, or dict)
+            aes: Aesthetic config (ByGroup, ByState, or BaseAesthetic)
         """
         self._aes = aes
         return self
@@ -117,7 +117,7 @@ class MapBuilder:
         """Set layer configuration.
 
         Args:
-            layers: Nested dict with keys 'underlays', 'overlays', 'hidden'
+            layers: Nested dict with keys 'underlay', 'overlay', 'hidden'
         """
         self._layers = layers
         return self
@@ -183,8 +183,9 @@ def Map(
             Values determine both visual state and selection:
             - value = 0: not selected (base aesthetic)
             - value > 0: selected (select aesthetic applied)
-        aes: Aesthetic configuration (ByGroup, ByState, BaseAesthetic, or dict)
-        layers: Layer configuration (nested dict: underlays, overlays, hidden)
+        aes: Aesthetic configuration (ByGroup, ByState, or BaseAesthetic).
+            ByState and single aesthetics apply to every region.
+        layers: Layer configuration (nested dict: underlay, overlay, hidden)
 
     Examples:
         ```pycon
