@@ -31,3 +31,22 @@ class TestPluralLayerKeysRejected:
     def test_singular_keys_still_work(self):
         outline = Outline.from_dict({"a": "M0 0 L1 1", "_metadata": {"overlay": ["a"]}})
         assert outline.overlay_ids() == ["a"]
+
+
+class TestGeometryStub:
+    @pytest.mark.unit
+    def test_import_module_raises(self):
+        import importlib
+        import sys
+
+        sys.modules.pop("shinymap.geometry", None)
+        with pytest.raises(ImportError, match="renamed to 'shinymap.outline'"):
+            importlib.import_module("shinymap.geometry")
+
+    @pytest.mark.unit
+    def test_from_import_raises(self):
+        import sys
+
+        sys.modules.pop("shinymap.geometry", None)
+        with pytest.raises(ImportError, match="renamed to 'shinymap.outline'"):
+            from shinymap.geometry import Geometry  # noqa: F401

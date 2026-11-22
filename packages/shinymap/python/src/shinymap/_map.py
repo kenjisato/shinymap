@@ -98,8 +98,10 @@ class MapBuilder:
         Values determine both visual state and selection:
         - value = 0: not selected (base aesthetic)
         - value > 0: selected (select aesthetic applied)
+
+        Integer-like values (e.g. numpy ints from pandas) are converted to ``int``.
         """
-        self._value = value
+        self._value = _validate_value(value, "value")
         return self
 
     def with_view_box(self, view_box: tuple[float, float, float, float]) -> MapBuilder:
@@ -210,7 +212,7 @@ def Map(
         MapBuilder instance for method chaining
     """
     # Validate value (must be non-negative integers)
-    _validate_value(value, "value")
+    value = _validate_value(value, "value")
 
     if outline is None:
         # No outline provided - will be merged from output_map() static params
