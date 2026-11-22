@@ -22148,6 +22148,8 @@ var shinymap = (() => {
     const cycle = normalizedMode?.n;
     const maxSelection = normalizedMode?.maxSelection;
     const aesIndexed = normalizedMode?.aesIndexed;
+    const maxCount = modeType === "count" ? normalizedMode?.maxCount : void 0;
+    const indexCount = (count) => maxCount !== void 0 ? Math.min(count, maxCount) : count;
     const normalizedRegions = (0, import_react.useMemo)(() => normalizeRegions(regions), [regions]);
     const layerAssignment = (0, import_react.useMemo)(
       () => assignLayers(normalizedRegions, underlays, overlays, annotations, hidden, outlineMetadata),
@@ -22265,7 +22267,7 @@ var shinymap = (() => {
             }
             const indexedData = getIndexedDataForRegion(aesIndexed, id, outlineMetadata);
             if (indexedData) {
-              const indexedAes = resolveIndexedAesthetic(indexedData, count, cycle);
+              const indexedAes = resolveIndexedAesthetic(indexedData, indexCount(count), cycle);
               baseAes = {
                 ...baseAes,
                 ...indexedAes.fillColor !== void 0 ? { fillColor: indexedAes.fillColor } : {},
@@ -22377,7 +22379,7 @@ var shinymap = (() => {
             const count = counts[hovered] ?? 0;
             const indexedData = getIndexedDataForRegion(aesIndexed, hovered, outlineMetadata);
             if (indexedData) {
-              const indexedAes = resolveIndexedAesthetic(indexedData, count, cycle);
+              const indexedAes = resolveIndexedAesthetic(indexedData, indexCount(count), cycle);
               baseAes = {
                 ...baseAes,
                 ...indexedAes.fillColor !== void 0 ? { fillColor: indexedAes.fillColor } : {},

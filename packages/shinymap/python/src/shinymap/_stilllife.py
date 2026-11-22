@@ -139,6 +139,9 @@ class StillLife:
 
         n = getattr(self._mode, "n", None)
         wrap = isinstance(n, int) and n > 0
+        max_count = getattr(self._mode, "max_count", None)
+        if isinstance(max_count, int):
+            count = min(count, max_count)  # Count(max_count=k)
         index = count % n if isinstance(n, int) and n > 0 else count
 
         names = {f.name for f in dataclasses.fields(aesthetic)}

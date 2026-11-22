@@ -279,6 +279,8 @@ export type ModeConfig = {
   maxSelection?: number;
   /** Number of states for cycle mode. Counts advance modulo n. */
   n?: number;
+  /** Count mode: highest count used to pick an indexed aesthetic (counts above share it) */
+  maxCount?: number;
   /** Indexed aesthetic for multi-state visual feedback (Cycle, Count modes) */
   aesIndexed?: AesIndexedConfig;
   /** Enable click events in display mode. Default is false. */
