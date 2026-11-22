@@ -266,7 +266,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="which-setting-wins">Which setting wins</h2>
 <p>When several entries apply to a region, the most specific one wins:</p>
 <p><strong>region ID</strong> › <strong>group</strong> › <strong>type</strong> (<code>__shape</code>, <code>__line</code>, <code>__text</code>) › <strong>everything</strong> (<code>__all</code>)</p>
-<p>This order applies to the base and selected looks. The hover look currently comes from <code>__all</code> only.</p>
+<p>The same order applies to each state: base, select and hover.</p>
 <p>A single aesthetic passed to <code>aes=</code> counts as <code>__all</code> for the element type it is written for. Each picture below adds one more specific entry:</p>
 <div class="quarto-layout-panel" data-layout-ncol="4">
 <div class="quarto-layout-row">

@@ -221,7 +221,7 @@
     "href": "vignettes/aesthetics.html#which-setting-wins",
     "title": "Aesthetics",
     "section": "Which setting wins",
-    "text": "Which setting wins\nWhen several entries apply to a region, the most specific one wins:\nregion ID › group › type (__shape, __line, __text) › everything (__all)\nThis order applies to the base and selected looks. The hover look currently comes from __all only.\nA single aesthetic passed to aes= counts as __all for the element type it is written for. Each picture below adds one more specific entry:\n\n\n\n\n\n\nLibrary default\n\n\n\n\n\n\n\n__all\n\n\n\n\n\n\n\n+ group north\n\n\n\n\n\n\n\n+ region r7\n\n\n\n\n\naes.ByGroup(\n    __all=aes.Shape(fill_color=\"#c7d2fe\"),\n    north=aes.Shape(fill_color=\"#fde68a\"),\n    r7=aes.Shape(fill_color=\"#f87171\"),\n)"
+    "text": "Which setting wins\nWhen several entries apply to a region, the most specific one wins:\nregion ID › group › type (__shape, __line, __text) › everything (__all)\nThe same order applies to each state: base, select and hover.\nA single aesthetic passed to aes= counts as __all for the element type it is written for. Each picture below adds one more specific entry:\n\n\n\n\n\n\nLibrary default\n\n\n\n\n\n\n\n__all\n\n\n\n\n\n\n\n+ group north\n\n\n\n\n\n\n\n+ region r7\n\n\n\n\n\naes.ByGroup(\n    __all=aes.Shape(fill_color=\"#c7d2fe\"),\n    north=aes.Shape(fill_color=\"#fde68a\"),\n    r7=aes.Shape(fill_color=\"#f87171\"),\n)"
   },
   {
     "objectID": "vignettes/aesthetics.html#coloring-by-value",
