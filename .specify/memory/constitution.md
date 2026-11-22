@@ -42,6 +42,17 @@ The project is MIT licensed. Every dependency (Python and JS) must be
 MIT-compatible. Introducing any new dependency requires explicit user
 approval before implementation.
 
+### VII. Docs Grow With the Code
+A PR that adds a public API, or changes what one means, MUST in the same PR:
+1. show it in use on a user-facing page in `docs/`, with an example a reader
+   can copy and run (a docstring example alone does not count), and update
+   any existing example the change makes wrong;
+2. list it in the quartodoc API reference (`docs/_quarto.yml`), so its
+   docstring appears on the site.
+
+Users learn shinymap from the site, not from the source. An API that ships
+without a page showing it in use is, for them, an API that does not exist.
+
 ## Platform Constraints
 
 - Python: minimum 3.12; `uv` for dependency management, `hatch` for builds.
@@ -102,6 +113,6 @@ make test
 - Amendments require a PR approved by the maintainer and a version bump
   below (semver: principle changes = MAJOR/MINOR, wording = PATCH).
 - `specs/` checklists and PR reviews must verify compliance with Core
-  Principles I–VI.
+  Principles I–VII.
 
-**Version**: 1.0.0 | **Ratified**: 2026-07-20 | **Last Amended**: 2026-07-20
+**Version**: 1.1.0 | **Ratified**: 2026-07-20 | **Last Amended**: 2026-11-23

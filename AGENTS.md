@@ -16,6 +16,7 @@ Non-negotiable principles live in the [constitution](.specify/memory/constitutio
 - Minimal diffs - no drive-by refactors, no improvements beyond what's requested
 - Late serialization is architecture, not preference - keep typed Python objects; serialize only at JS boundary
 - New dependencies require explicit user approval
+- A PR adding or changing public API also adds a runnable example to `docs/` and lists it in the API reference (`docs/_quarto.yml`)
 
 ## Spec-Driven Workflow
 
