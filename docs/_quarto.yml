@@ -75,6 +75,7 @@ quartodoc:
       desc: "Functions for generating fill colors"
       contents:
         - aes.color.scale_sequential
+        - aes.color.scale_continuous
         - aes.color.scale_diverging
         - aes.color.scale_qualitative
 

@@ -13,6 +13,7 @@ Palette Categories:
 
 Scale Functions:
     - scale_sequential: Map counts to sequential colors
+    - scale_continuous: Map data values (floats, with vmin/vmax) to sequential colors
     - scale_diverging: Map values to diverging colors (red-white-blue)
     - scale_qualitative: Map categories to distinct colors
     - lerp_hex: Interpolate between two hex colors
@@ -37,7 +38,13 @@ from .neutral import NEUTRALS
 from .qualitative import QUALITATIVE
 
 # Scale functions
-from .scale import lerp_hex, scale_diverging, scale_qualitative, scale_sequential
+from .scale import (
+    lerp_hex,
+    scale_continuous,
+    scale_diverging,
+    scale_qualitative,
+    scale_sequential,
+)
 
 # Sequential palettes
 from .sequential import SEQUENTIAL_BLUE, SEQUENTIAL_GREEN, SEQUENTIAL_ORANGE
@@ -63,6 +70,7 @@ __all__ = [
     # Scale functions
     "lerp_hex",
     "scale_sequential",
+    "scale_continuous",
     "scale_diverging",
     "scale_qualitative",
 ]

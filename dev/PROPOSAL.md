@@ -28,7 +28,7 @@ Map(GEOMETRY).with_fill_color(scale_sequential(counts, region_ids))
 The output component offers:
 - **Simplified API** for common patterns (choropleth maps, categorical coloring, diverging scales)
 - **Geometry agnostic** design (works with any SVG paths, not just geographic maps)
-- **Built-in color utilities** (`scale_sequential`, `scale_diverging`, `scale_qualitative`)
+- **Built-in color utilities** (`scale_sequential`, `scale_continuous`, `scale_diverging`, `scale_qualitative`)
 - **Consistent styling** between input and output maps for cohesive UIs
 
 This dual focus—interactive inputs AND simplified outputs—makes shinymap valuable even for non-interactive visualizations.
@@ -352,6 +352,9 @@ def results_map():
 ```python
 # Sequential: light to dark based on count
 fills = scale_sequential(counts, region_ids, palette=SEQUENTIAL_BLUE)
+
+# Continuous: data values (e.g. population); missing data stays neutral
+fills = scale_continuous(population, region_ids, vmin=0)
 
 # Diverging: red-gray-blue for positive/negative values
 fills = scale_diverging(values, region_ids, midpoint=0.0)

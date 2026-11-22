@@ -33,6 +33,62 @@ def lerp_hex(start: str, end: str, t: float) -> str:
 
 
 def scale_sequential(
+    counts: Mapping[str, int],
+    region_ids: list[str],
+    palette: list[str] = SEQUENTIAL_BLUE,
+    neutral_color: str = NEUTRALS["fill"],
+    max_count: int | None = None,
+) -> dict[str, str]:
+    """Create a sequential color scale based on counts.
+
+    Regions with count=0 get the neutral color.
+    Regions with counts are colored from palette[0] (low) to palette[-1] (high).
+
+    Args:
+        counts: Mapping of region_id to count
+        region_ids: All region IDs to include
+        palette: Color palette to use (default: SEQUENTIAL_BLUE)
+        neutral_color: Color for regions with count=0
+        max_count: Fixed maximum for scaling. If None, uses dynamic max from counts.
+                   For interactive visualizations, use a fixed value to prevent
+                   other regions from changing color when one region is clicked.
+
+    Returns:
+        Mapping of region_id to hex color
+    """
+    # Determine the maximum count for scaling
+    if max_count is None:
+        # Dynamic: use the actual maximum from current counts
+        max_count = max(counts.values(), default=0)
+
+    if max_count <= 0:
+        return {region_id: neutral_color for region_id in region_ids}
+
+    fills = {}
+    for region_id in region_ids:
+        count = counts.get(region_id, 0)
+        # Use continuous color interpolation for smooth visual feedback
+        # Interpolate between palette colors based on count
+        if count == 0:
+            fills[region_id] = palette[0]
+        elif count >= max_count:
+            fills[region_id] = palette[-1]
+        else:
+            # Map count to continuous position in palette
+            t = count / max_count  # Normalize to [0, 1]
+            palette_pos = t * (len(palette) - 1)  # Map to [0, palette_size-1]
+
+            # Interpolate between adjacent palette colors
+            lower_idx = int(palette_pos)
+            upper_idx = min(lower_idx + 1, len(palette) - 1)
+            blend_factor = palette_pos - lower_idx  # Fraction between colors
+
+            fills[region_id] = lerp_hex(palette[lower_idx], palette[upper_idx], blend_factor)
+
+    return fills
+
+
+def scale_continuous(
     values: Mapping[str, float | None],
     region_ids: list[str],
     palette: list[str] = SEQUENTIAL_BLUE,
@@ -40,34 +96,31 @@ def scale_sequential(
     vmin: float | None = None,
     vmax: float | None = None,
 ) -> dict[str, str]:
-    """Create a sequential color scale from numbers (counts, populations, ratios).
+    """Color data values (populations, ratios, ...) along a sequential palette.
 
-    Values are placed on ``[vmin, vmax]`` and colored by interpolating along the
-    palette, from ``palette[0]`` (low) to ``palette[-1]`` (high). Values outside
-    the range are clamped. Regions with no value (missing, ``None`` or NaN) get
-    ``neutral_color``.
+    For data rather than click counts: values may be floats, the range is set
+    by ``vmin`` / ``vmax`` (values outside are clamped), and regions without a
+    value (missing, ``None`` or NaN) get ``neutral_color``, so "no data" stays
+    distinguishable from the lowest value. For counts from a Count input, use
+    ``scale_sequential``, which treats a missing region as zero.
 
     Args:
         values: Mapping of region_id to a number (int, float, numpy scalars).
         region_ids: All region IDs to include.
         palette: Color palette to use (default: SEQUENTIAL_BLUE).
         neutral_color: Color for regions without a value.
-        vmin: Value mapped to ``palette[0]``. Default: the smaller of 0 and the
-            minimum value, so counts start from zero.
+        vmin: Value mapped to ``palette[0]``. Default: the minimum value.
         vmax: Value mapped to ``palette[-1]``. Default: the maximum value.
-            For interactive maps, fix it so other regions keep their color when
-            one value changes.
 
     Returns:
         Mapping of region_id to hex color.
 
     Examples:
         ```pycon
-        >>> from shinymap.aes.color import scale_sequential
-        >>> fills = scale_sequential({"a": 0, "b": 10}, ["a", "b", "c"])
+        >>> from shinymap.aes.color import scale_continuous
+        >>> fills = scale_continuous({"a": 1.5, "b": 4.5}, ["a", "b", "c"])
         >>> fills["a"], fills["b"], fills["c"]
         ('#eff6ff', '#1d4ed8', '#e2e8f0')
-        >>> fills = scale_sequential({"a": 1.2, "b": 2.4}, ["a", "b"], vmin=1.0, vmax=3.0)
 
         ```
     """
@@ -81,29 +134,23 @@ def scale_sequential(
         present[region_id] = number
 
     if vmin is None:
-        vmin = min(0.0, min(present.values(), default=0.0))
+        vmin = min(present.values(), default=0.0)
     if vmax is None:
         vmax = max(present.values(), default=0.0)
-
-    if vmax <= vmin:
-        return {region_id: neutral_color for region_id in region_ids}
 
     fills = {}
     for region_id in region_ids:
         if region_id not in present:
             fills[region_id] = neutral_color
             continue
-        t = (present[region_id] - vmin) / (vmax - vmin)  # position in [0, 1]
-        t = max(0.0, min(1.0, t))
-        palette_pos = t * (len(palette) - 1)  # position along the palette
-
-        # Interpolate between adjacent palette colors
+        if vmax <= vmin:
+            t = 1.0 if present[region_id] >= vmax else 0.0
+        else:
+            t = max(0.0, min(1.0, (present[region_id] - vmin) / (vmax - vmin)))
+        palette_pos = t * (len(palette) - 1)
         lower_idx = int(palette_pos)
         upper_idx = min(lower_idx + 1, len(palette) - 1)
-        blend_factor = palette_pos - lower_idx
-
-        fills[region_id] = lerp_hex(palette[lower_idx], palette[upper_idx], blend_factor)
-
+        fills[region_id] = lerp_hex(palette[lower_idx], palette[upper_idx], palette_pos - lower_idx)
     return fills
 
 

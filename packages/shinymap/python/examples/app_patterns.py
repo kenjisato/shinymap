@@ -81,7 +81,7 @@ def _server_count_helpers(input, output, session):
     @render_map
     def count_output():
         counts = input.clicks() or {}
-        fills = scale_sequential(counts, list(DEMO_OUTLINE.regions.keys()), vmax=10)
+        fills = scale_sequential(counts, list(DEMO_OUTLINE.regions.keys()), max_count=10)
         return Map(
             value=counts,
             aes={"base": {"fillColor": fills}}

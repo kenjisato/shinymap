@@ -369,7 +369,9 @@ def my_output():
 
 Provide built-in color scaling functions for common statistical visualization patterns:
 
-- **`scale_sequential(counts, region_ids, palette=SEQUENTIAL_BLUE, max_count=None)`**: Maps count data to sequential color scales (light to dark). Uses continuous color interpolation for smooth visual feedback. The `max_count` parameter allows fixed scaling for interactive visualizations.
+- **`scale_sequential(counts, region_ids, palette=SEQUENTIAL_BLUE, max_count=None)`**: Maps count data to sequential color scales (light to dark). It belongs to the unified count model: a region missing from `counts` counts as zero and gets `palette[0]`, so unclicked regions of a Count input look the same as count 0. Uses continuous color interpolation for smooth visual feedback. The `max_count` parameter allows fixed scaling for interactive visualizations.
+
+- **`scale_continuous(values, region_ids, palette=SEQUENTIAL_BLUE, vmin=None, vmax=None)`**: Maps data values (floats, e.g. populations or ratios) to the same sequential palettes. `vmin` / `vmax` set the range (values outside are clamped). Regions without a value (missing, `None`, NaN) get `neutral_color`, keeping "no data" distinct from the lowest value. Kept separate from `scale_sequential` because counts treat "missing" as zero while data treats it as unknown.
 
 - **`scale_diverging(values, region_ids, low_color, mid_color, high_color, midpoint=0.0)`**: Maps numeric values to diverging color scales (red-gray-blue style) for positive/negative data.
 

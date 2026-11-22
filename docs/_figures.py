@@ -116,7 +116,7 @@ def home() -> None:
     save("multiple", value={"r1": 1, "r8": 1, "r12": 1, "r16": 1})
     save("hover", value={"r11": 1}, hovered="r12")
     counts = {rid: (i * 7) % 6 for i, rid in enumerate(IDS)}
-    save("choropleth", aes=fills(scale_sequential(counts, IDS, vmax=5)))
+    save("choropleth", aes=fills(scale_sequential(counts, IDS, max_count=5)))
 
 
 def getting_started() -> None:
@@ -190,7 +190,7 @@ def aesthetics() -> None:
 
     # Color scales
     counts = {rid: (i * 7) % 6 for i, rid in enumerate(IDS)}
-    save("scale-sequential", aes=fills(scale_sequential(counts, IDS, vmax=5)))
+    save("scale-sequential", aes=fills(scale_sequential(counts, IDS, max_count=5)))
     values = {rid: (i % 5) - 2.0 for i, rid in enumerate(IDS)}
     save("scale-diverging", aes=fills(scale_diverging(values, IDS)))
     cats = {rid: ["A", "B", "C", None][i % 4] for i, rid in enumerate(IDS)}
