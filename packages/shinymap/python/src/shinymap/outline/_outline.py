@@ -62,6 +62,7 @@ class Outline:
         >>> # v1.x format (polymorphic elements)
         >>> from shinymap.svg import Circle
         >>> geo = Outline(regions={"r1": [Circle(cx=100, cy=100, r=50)]}, metadata={})
+
         ```
     """
 
@@ -108,6 +109,7 @@ class Outline:
             >>> outline = Outline.from_dict(data)
             >>> outline.regions["a"]
             [Circle(cx=100, cy=100, r=50)]
+
             ```
         """
         from ..svg._mixins import JSONSerializableMixin
@@ -150,6 +152,7 @@ class Outline:
             >>> geo = Outline.from_json("japan_prefectures.json")  # doctest: +SKIP
             >>> geo.regions.keys()  # doctest: +SKIP
             dict_keys(['01', '02', ...])
+
             ```
         """
         path = PathType(json_path).expanduser()
@@ -203,6 +206,7 @@ class Outline:
             >>> geo.relabel({"hokkaido": ["circle_1", "circle_2"]})  # doctest: +SKIP
             >>> geo.set_overlays(["_border"])  # doctest: +SKIP
             >>> geo.to_json("output.json")  # doctest: +SKIP
+
             ```
         """
         from ..svg import Circle, Ellipse, Line, Path, Polygon, Rect, Text
@@ -378,6 +382,7 @@ class Outline:
             >>> geo = Outline.from_dict({"a": ["M 0 0 L 100 100"]})
             >>> geo.viewbox()  # Returns with 2% padding
             (-2.0, -2.0, 104.0, 104.0)
+
             ```
         """
         if "viewBox" in self.metadata:
@@ -443,6 +448,7 @@ class Outline:
             ... })
             >>> geo.overlay_ids()
             ['_border']
+
             ```
         """
         overlay = self.metadata.get("overlay", [])
@@ -463,6 +469,7 @@ class Outline:
             ... })
             >>> geo.underlay_ids()
             ['_bg']
+
             ```
         """
         underlay = self.metadata.get("underlay", [])
@@ -483,6 +490,7 @@ class Outline:
             ... })
             >>> geo.hidden_ids()
             ['_temp']
+
             ```
         """
         hidden = self.metadata.get("hidden", [])
@@ -506,6 +514,7 @@ class Outline:
             ... })
             >>> geo.annotation_ids()
             ['_label']
+
             ```
         """
         annotation = self.metadata.get("annotation", [])
@@ -530,6 +539,7 @@ class Outline:
             ... })
             >>> geo.layers_dict()
             {'overlay': ['_border'], 'underlay': ['_bg']}
+
             ```
         """
         overlay = self.overlay_ids()
@@ -570,6 +580,7 @@ class Outline:
             Regions({
               'region': ['M 0 0'],
             })
+
             ```
         """
         overlay = set(self.overlay_ids())
@@ -593,6 +604,7 @@ class Outline:
             Regions({
               '_border': ['M 0 0 L 100 0'],
             })
+
             ```
         """
         overlay = set(self.overlay_ids())
@@ -629,6 +641,7 @@ class Outline:
             ... })
             >>> geo2.regions.keys()
             dict_keys(['region_a', '_border'])
+
             ```
         """
         new_regions: dict[str, list[str]] = {}
@@ -676,6 +689,7 @@ class Outline:
             >>> geo2 = geo.set_overlays(["_border"])
             >>> geo2.overlay_ids()
             ['_border']
+
             ```
         """
         new_metadata = dict(self.metadata)
@@ -703,6 +717,7 @@ class Outline:
             ... })
             >>> geo2.metadata["source"]
             'Wikimedia Commons'
+
             ```
         """
         new_metadata = {**self.metadata, **metadata}
@@ -729,6 +744,7 @@ class Outline:
             ... })
             >>> geo2 = geo.path_as_line("_divider")
             >>> # Now _divider will use stroke-only rendering
+
             ```
         """
         # Get existing list or create new one
@@ -776,6 +792,7 @@ class Outline:
             ... }, metadata={}).path_as_line("_border")
             >>> outline.region_types()
             {'_border': 'line'}
+
             ```
         """
         lines_as_path = set(self.metadata.get("lines_as_path", []))
@@ -822,6 +839,7 @@ class Outline:
             ... })
             >>> geo.groups()
             {'coastal': ['region1', 'region2']}
+
             ```
         """
         return dict(self.metadata.get("groups", {}))
@@ -848,6 +866,7 @@ class Outline:
             ... })
             >>> outline.metadata_dict()
             {'viewBox': '-2.0 -2.0 104.0 104.0', 'groups': {'coastal': ['region1']}}
+
             ```
         """
         if not self.metadata:
@@ -893,6 +912,7 @@ class Outline:
             >>> merged = outline.merge_layers({"overlay": ["_custom"]})
             >>> merged.metadata
             {'overlay': ['_custom']}
+
             ```
         """
         if layers is None:
@@ -958,6 +978,7 @@ class Outline:
             >>> geo4 = geo.move_layer("overlay", ["_border", "_grid"])
             >>> sorted(geo4.overlay_ids())
             ['_border', '_grid']
+
             ```
         """
         # Normalize region_ids: handle both varargs and single list
@@ -1015,16 +1036,17 @@ class Outline:
             ... })
             >>> # Merge multiple regions
             >>> geo2 = geo.move_group("combined", "path_1", "path_2")
-            >>> sorted(geo2.region_ids())
+            >>> sorted(geo2.regions)
             ['combined', 'path_3']
             >>> # Rename single region
             >>> geo3 = geo.move_group("renamed", "path_3")
-            >>> "renamed" in geo3.region_ids()
+            >>> "renamed" in geo3.regions
             True
             >>> # Pass list of IDs
             >>> geo4 = geo.move_group("merged", ["path_1", "path_2", "path_3"])
-            >>> list(geo4.region_ids())
+            >>> list(geo4.regions)
             ['merged']
+
             ```
         """
         # Normalize region_ids: handle both varargs and single list
@@ -1057,6 +1079,7 @@ class Outline:
             >>> outline = Outline(regions={"r1": [Circle(cx=100, cy=100, r=50)]}, metadata={})
             >>> outline.to_dict()
             {'r1': [{'type': 'circle', 'cx': 100, 'cy': 100, 'r': 50}]}
+
             ```
         """
         output: dict[str, Any] = {}
@@ -1087,6 +1110,7 @@ class Outline:
             ```pycon
             >>> geo = Outline.from_svg("map.svg")  # doctest: +SKIP
             >>> geo.to_json("output.json")  # doctest: +SKIP
+
             ```
         """
         output_path = PathType(output_path).expanduser()
@@ -1106,6 +1130,7 @@ class Outline:
             >>> geo = Outline.from_svg("map.svg")  # doctest: +SKIP
             >>> geo  # doctest: +SKIP
             Outline(regions={47 regions}, metadata={'viewBox': '0 0 1000 1000'})
+
             ```
         """
         import reprlib

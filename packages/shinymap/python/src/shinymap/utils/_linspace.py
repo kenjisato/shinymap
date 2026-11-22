@@ -40,6 +40,7 @@ def linspace(start: float, stop: float, num: int = 5) -> list[float]:
         ...     fill_opacity=linspace(0.0, 1.0, num=6),
         ... )  # doctest: +ELLIPSIS
         Indexed(fill_color='#f97316', fill_opacity=[0.0, 0.2, ...])
+
         ```
     """
     if num < 1:

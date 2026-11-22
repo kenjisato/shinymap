@@ -81,6 +81,7 @@ class RelativeExpr:
             >>> expr = PARENT.stroke_width + 2
             >>> expr.resolve(1.0)  # 1.0 + 2 = 3.0
             3.0
+
             ```
         """
         if self.operator == "+":
@@ -122,6 +123,7 @@ class ParentProperty:
         ```pycon
         PARENT.stroke_width       # ParentProperty("stroke_width")
         PARENT.stroke_width + 2   # RelativeExpr("stroke_width", "+", 2)
+
         ```
     """
 
@@ -169,6 +171,7 @@ class ParentProxy:
         PARENT.stroke_width       # ParentProperty("stroke_width")
         PARENT.stroke_width + 2   # RelativeExpr("stroke_width", "+", 2)
         2 * PARENT.fill_opacity   # RelativeExpr("fill_opacity", "*", 2)
+
         ```
     """
 
@@ -317,6 +320,7 @@ def resolve_region(
         >>> resolved = resolve_region(state, config)
         >>> resolved.stroke_width  # 3 (from select) + 1 (from hover) = 4
         4.0
+
         ```
     """
     # Layer 0: DEFAULT
@@ -395,6 +399,7 @@ def preview_region(
         ...     aes_hover=aes.Shape(stroke_width=PARENT.stroke_width + 1),
         ... )
         >>> print(preview_region(state, config))  # doctest: +SKIP
+
         ```
     """
     lines: list[str] = []

@@ -51,6 +51,7 @@ class BaseAesthetic:
             >>> aes = ShapeAesthetic(fill_color="#fff", stroke_color=None)
             >>> aes.to_dict()
             {'fill_color': '#fff', 'stroke_color': None, 'type': 'shape'}
+
             ```
         """
         # Import here to avoid circular dependency
@@ -80,6 +81,7 @@ class BaseAesthetic:
             2
             >>> updated.fill_color  # Unchanged
             '#fff'
+
             ```
         """
         return replace(self, **kwargs)
@@ -112,6 +114,7 @@ class BaseAesthetic:
             '#fff'
             >>> resolved.stroke_width  # resolved: 1.0 + 1 = 2.0
             2.0
+
             ```
         """
         # Import here to avoid circular dependency
@@ -159,6 +162,7 @@ class ShapeAesthetic(BaseAesthetic):
         ```pycon
         >>> from shinymap import aes
         >>> region_aes = aes.Shape(fill_color="#3b82f6", stroke_width=1)
+
         ```
     """
 
@@ -217,6 +221,7 @@ class LineAesthetic(BaseAesthetic):
         ```pycon
         >>> from shinymap import aes
         >>> grid_aes = aes.Line(stroke_color="#ddd", stroke_dasharray=aes.line.dashed)
+
         ```
     """
 
@@ -268,6 +273,7 @@ class TextAesthetic(BaseAesthetic):
         ```pycon
         >>> from shinymap import aes
         >>> label_aes = aes.Text(fill_color="#000", stroke_color="#fff", stroke_width=0.5)
+
         ```
     """
 
@@ -340,6 +346,7 @@ class PathAesthetic(BaseAesthetic):
         >>> border_aes = aes.Path(fill_color=None, stroke_color="#000")
         >>> # Path used as a shape (filled)
         >>> region_aes = aes.Path(fill_color="#3b82f6", stroke_color="#fff")
+
         ```
     """
 
@@ -439,6 +446,7 @@ class ByState[T: BaseAesthetic]:
 
         >>> # Base only (select/hover inherit defaults)
         >>> line_states = aes.ByState(aes.Line(stroke_color="#0369a1"))
+
         ```
     """
 
@@ -587,6 +595,7 @@ class ByState[T: BaseAesthetic]:
             '#1e40af'
             >>> resolved.stroke_width  # 1.0 + 1 from hover
             2.0
+
             ```
         """
         # Layer 1: base resolves against wash default
@@ -632,6 +641,7 @@ class ByType:
         ...     line=aes.Line(stroke_color="#0369a1"),  # base only shorthand
         ...     text=aes.Text(fill_color="#0c4a6e"),
         ... )
+
         ```
     """
 
@@ -742,6 +752,7 @@ class ByGroup:
         ...         select=aes.Shape(fill_color="#6ee7b7"),
         ...     ),
         ... )
+
         ```
     """
 
@@ -851,6 +862,7 @@ class IndexedAesthetic:
 
         >>> # Traffic light (4 states)
         >>> _ = aes.Indexed(fill_color=["#e2e8f0", "#ef4444", "#eab308", "#22c55e"])
+
         ```
     """
 
@@ -940,6 +952,7 @@ def from_dict(d: dict[str, Any]) -> AnyAesthetic:
         ...     "base": {"type": "shape", "fill_color": "#fff"},
         ... })  # doctest: +ELLIPSIS
         ByState(base=ShapeAesthetic(fill_color='#fff', ...))
+
         ```
     """
     aes_type = d.get("type")

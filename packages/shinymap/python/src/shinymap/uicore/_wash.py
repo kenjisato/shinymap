@@ -251,6 +251,7 @@ class WashConfig:
             >>> resolved["__all"].base.stroke_width  # inherited from wash
             1.0
             >>> # hover.stroke_width is still RelativeExpr (not resolved)
+
             ```
         """
         # Get region types and groups from outline
@@ -564,6 +565,7 @@ class WashResult:
             ...         fill_color=["#f3f4f6", "#22c55e", "#f59e0b", "#ef4444"]
             ...     ))
             ... )
+
             ```
         """
         from ._output_map import _output_map

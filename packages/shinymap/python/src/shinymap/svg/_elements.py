@@ -61,6 +61,7 @@ class Circle(svg.Circle, ShinymapElementMixin):
         >>> circle = Circle(cx=100, cy=100, r=50)
         >>> circle.bounds()
         (50.0, 50.0, 150.0, 150.0)
+
         ```
     """
 
@@ -89,6 +90,7 @@ class Rect(svg.Rect, ShinymapElementMixin):
         >>> rect = Rect(x=10, y=20, width=100, height=80)
         >>> rect.bounds()
         (10.0, 20.0, 110.0, 100.0)
+
         ```
     """
 
@@ -125,6 +127,7 @@ class Path(svg.Path, ShinymapElementMixin):
         >>> path = Path(d=[M(0, 0), L(100, 0), L(100, 100), Z()])
         >>> path.bounds()
         (0.0, 0.0, 100.0, 100.0)
+
         ```
     """
 
@@ -148,6 +151,7 @@ class Polygon(svg.Polygon, ShinymapElementMixin):
         >>> polygon = Polygon(points=[0, 0, 100, 0, 100, 100, 0, 100])
         >>> polygon.bounds()
         (0.0, 0.0, 100.0, 100.0)
+
         ```
     """
 
@@ -174,6 +178,7 @@ class Ellipse(svg.Ellipse, ShinymapElementMixin):
         >>> ellipse = Ellipse(cx=100, cy=100, rx=50, ry=30)
         >>> ellipse.bounds()
         (50.0, 70.0, 150.0, 130.0)
+
         ```
     """
 
@@ -200,6 +205,7 @@ class Line(svg.Line, ShinymapElementMixin):
         >>> line = Line(x1=0, y1=0, x2=100, y2=100)
         >>> line.bounds()
         (0.0, 0.0, 100.0, 100.0)
+
         ```
     """
 
@@ -232,6 +238,7 @@ class Text(svg.Text, ShinymapElementMixin):
         >>> text = Text(x=100, y=100, text="Hello")
         >>> text.bounds()  # Approximate bounds
         (100.0, 100.0, 101.0, 101.0)
+
         ```
     """
 
@@ -277,6 +284,7 @@ def is_stroke_only_candidate(elements: list) -> bool:
         True
         >>> is_stroke_only_candidate([Path(d="M 0 0 L 100 0 L 100 100 Z")])
         False
+
         ```
     """
     if not elements:

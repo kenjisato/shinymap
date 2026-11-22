@@ -49,6 +49,9 @@ jobs:
       - name: Run unit tests
         run: uv run pytest packages/shinymap/python/tests -v -m unit
 
+      - name: Run doctests
+        run: make test-doctest
+
       - name: Run integration tests
         run: uv run pytest packages/shinymap/python/tests -v -m integration
 

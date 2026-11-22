@@ -14,20 +14,22 @@ Command-line usage:
     uv run python -m shinymap.kit.sketch [-f FILE]
 
 Programmatic usage:
-    >>> from shinymap import Outline
-    >>> from shinymap.kit import describe, glaze, apply_mapping
-    >>>
-    >>> # Generate labels at region centers
-    >>> outline = Outline.from_svg("map.svg")
-    >>> labels = describe(outline)
-    >>> labeled = glaze(outline, labels)
-    >>>
-    >>> # One-shot conversion from mapping
-    >>> mapping = {
-    ...     "groups": {"tokyo": "path_1", "osaka": ["path_2", "path_3"]},
-    ...     "layers": {"overlay": ["_border"]},
-    ... }
-    >>> converted = apply_mapping(outline, mapping)
+    ```python
+    from shinymap import Outline
+    from shinymap.kit import describe, glaze, apply_mapping
+
+    # Generate labels at region centers
+    outline = Outline.from_svg("map.svg")
+    labels = describe(outline)
+    labeled = glaze(outline, labels)
+
+    # One-shot conversion from mapping
+    mapping = {
+        "groups": {"tokyo": "path_1", "osaka": ["path_2", "path_3"]},
+        "layers": {"overlay": ["_border"]},
+    }
+    converted = apply_mapping(outline, mapping)
+    ```
 """
 
 from shinymap.kit._caption import describe, glaze

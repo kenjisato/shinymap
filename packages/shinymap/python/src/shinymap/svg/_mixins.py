@@ -197,6 +197,7 @@ class JSONSerializableMixin:
             cy=100
             r=50
             fill=#ff0000
+
             ```
         """
         for key, val in vars(self).items():
@@ -333,6 +334,7 @@ class ShinymapElementMixin(BoundsMixin, JSONSerializableMixin):
             "Circle(cx=100, cy=100, r=50, fill='#ff0000')"
             >>> str(circle)  # SVG markup from svg.py
             '<circle cx="100" cy="100" r="50" fill="#ff0000"/>'
+
             ```
         """
         import reprlib

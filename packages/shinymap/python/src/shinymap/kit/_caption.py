@@ -36,18 +36,20 @@ def describe(
         Regions dict with Text elements keyed as "_label_{region_id}"
 
     Examples:
-        >>> from shinymap import Outline
-        >>> from shinymap.kit import describe, glaze
-        >>>
-        >>> outline = Outline.from_svg("map.svg")
-        >>> labels = describe(outline, exclude=outline.overlay_ids())
-        >>> labeled = glaze(outline, labels)
-        >>>
-        >>> # Custom styling with absolute font size
-        >>> labels = describe(outline, font_size="5", fill="red")
-        >>>
-        >>> # Percentage-based font size (2% of smaller viewBox dimension)
-        >>> labels = describe(outline, font_size="2%")
+        ```python
+        from shinymap import Outline
+        from shinymap.kit import describe, glaze
+
+        outline = Outline.from_svg("map.svg")
+        labels = describe(outline, exclude=outline.overlay_ids())
+        labeled = glaze(outline, labels)
+
+        # Custom styling with absolute font size
+        labels = describe(outline, font_size="5", fill="red")
+
+        # Percentage-based font size (2% of smaller viewBox dimension)
+        labels = describe(outline, font_size="2%")
+        ```
     """
     from ..utils import path_bb
 
@@ -129,18 +131,20 @@ def glaze(
         New Outline with regions merged and layer assigned
 
     Examples:
-        >>> from shinymap import Outline, Regions
-        >>> from shinymap.svg import Text
-        >>> from shinymap.kit import glaze
-        >>>
-        >>> # Add labels as overlay (default)
-        >>> outline = Outline.from_svg("map.svg")
-        >>> labels = Regions({"_note": [Text(x=50, y=50, text="Note")]})
-        >>> annotated = glaze(outline, labels)
-        >>>
-        >>> # Add background as underlay
-        >>> background = Regions({"_bg": [...]})
-        >>> with_bg = glaze(outline, background, as_underlay=True)
+        ```python
+        from shinymap import Outline, Regions
+        from shinymap.svg import Text
+        from shinymap.kit import glaze
+
+        # Add labels as overlay (default)
+        outline = Outline.from_svg("map.svg")
+        labels = Regions({"_note": [Text(x=50, y=50, text="Note")]})
+        annotated = glaze(outline, labels)
+
+        # Add background as underlay
+        background = Regions({"_bg": [...]})
+        with_bg = glaze(outline, background, as_underlay=True)
+        ```
     """
     # Get regions to merge
     if isinstance(regions, Outline):
