@@ -1,6 +1,8 @@
 project:
   type: website
   output-dir: _site
+  # Draw the home-page figures with shinymap (writes images/generated/)
+  pre-render: _figures.py
   render:
     - "*.qmd"
     - "vignettes/*.qmd"
