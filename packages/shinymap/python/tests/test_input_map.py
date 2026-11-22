@@ -8,6 +8,7 @@ These tests verify:
 import json
 
 import pytest
+from shiny.pytest import create_app_fixture
 
 from shinymap import input_map
 from shinymap.outline import Outline
@@ -76,3 +77,32 @@ class TestInputMapRaw:
 
 # Mark all tests as unit tests
 pytestmark = pytest.mark.unit
+
+
+app_allow_deselect = create_app_fixture("apps/app_allow_deselect.py")
+
+
+class TestAllowDeselect:
+    @pytest.mark.integration
+    def test_allow_deselect_false_keeps_selection(self, page, app_allow_deselect):
+        page.goto(app_allow_deselect.url)
+        for map_id in ("keep", "free"):
+            page.wait_for_selector(f"#{map_id} svg path", state="attached", timeout=10000)
+        page.wait_for_timeout(1500)
+
+        def click(map_id, index):
+            page.evaluate(
+                f"() => document.querySelectorAll('#{map_id} svg > g')[1]"
+                f".querySelectorAll('path')[{index}]"
+                ".dispatchEvent(new MouseEvent('click', {bubbles: true}))"
+            )
+            page.wait_for_timeout(400)
+
+        for map_id in ("keep", "free"):
+            click(map_id, 0)  # select a
+            click(map_id, 0)  # click a again
+        # allow_deselect=False keeps "a"; the default clears it
+        assert page.locator("#values").inner_text() == "keep=a free=None"
+
+        click("keep", 1)  # switching to another region still works
+        assert page.locator("#values").inner_text() == "keep=b free=None"

@@ -91,6 +91,8 @@ export function InputMap(props: InputMapProps) {
   const modeType: MapModeType = normalizedMode?.type ?? "multiple";
   const cycle = normalizedMode?.n;
   const maxSelection = normalizedMode?.maxSelection;
+  // Single(allow_deselect=False): clicking the selected region keeps it selected
+  const allowDeselect = normalizedMode?.allowDeselect ?? true;
   const aesIndexed = normalizedMode?.aesIndexed;
   // Count(max_count=k): counts above k use the same indexed aesthetic as k
   const maxCount = modeType === "count" ? normalizedMode?.maxCount : undefined;
@@ -145,6 +147,9 @@ export function InputMap(props: InputMapProps) {
 
   const handleClick = (id: RegionId) => {
     const current = counts[id] ?? 0;
+    if (modeType === "single" && !allowDeselect && current > 0) {
+      return;
+    }
     const nextCount =
       effectiveCycle && Number.isFinite(effectiveCycle) && effectiveCycle > 0
         ? (current + 1) % effectiveCycle
