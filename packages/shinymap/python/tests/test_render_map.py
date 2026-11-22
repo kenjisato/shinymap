@@ -304,3 +304,37 @@ class TestInitialValueRace:
         )
         page.wait_for_timeout(1500)
         assert page.locator("#picked").inner_text() == "picked: b"
+
+
+app_region_states = create_app_fixture("apps/app_region_states.py")
+
+
+class TestRegionStateLooks:
+    """Selection and hover overlays use the region's own ByState, not only __all."""
+
+    @staticmethod
+    def _layer(page, map_id, index):
+        return page.evaluate(
+            f"() => [...document.querySelectorAll('#{map_id} svg > g')[{index}]"
+            ".querySelectorAll('path')].map(p => [p.getAttribute('fill'),"
+            " p.getAttribute('stroke'), p.getAttribute('stroke-width')])"
+        )
+
+    @pytest.mark.integration
+    @pytest.mark.parametrize("map_id", ["i", "o"])
+    def test_region_select_and_hover(self, page, app_region_states, map_id):
+        page.set_viewport_size({"width": 1000, "height": 800})
+        page.goto(app_region_states.url)
+        page.wait_for_selector(f"#{map_id} svg path", state="attached", timeout=10000)
+        page.wait_for_timeout(1000)
+
+        # Selection overlay (layer 3) uses region a's select fill
+        assert self._layer(page, map_id, 3)[0][0] == "#ff0000"
+
+        base = page.locator(f"#{map_id} svg > g").nth(1).locator("path")
+        for idx, expected in ((0, [["#ff0000", "#00aa00", "5"]]), (1, [])):
+            box = base.nth(idx).bounding_box()
+            page.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
+            page.wait_for_timeout(300)
+            # Hover overlay (layer 4): region a's hover; none for b (hover=None)
+            assert self._layer(page, map_id, 4) == expected
