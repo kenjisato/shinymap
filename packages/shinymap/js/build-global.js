@@ -21,7 +21,10 @@ await esbuild.build({
   outfile: join(outdir, 'shinymap.global.js'),
   platform: 'browser',
   target: ['es2020'],
-  minify: false,
+  // Ship React's production build: the development build is ~1 MB larger,
+  // slower, and logs dev-only warnings in users' consoles
+  define: { 'process.env.NODE_ENV': '"production"' },
+  minify: true,
   sourcemap: false,
   logLevel: 'info',
   footer: {
