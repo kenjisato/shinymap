@@ -14,9 +14,11 @@ permissions:
   contents: read
 
 # GitHub Pages serves the gh-pages branch: main at the root, dev under /dev/.
-# One group for both refs so their pushes to gh-pages never race.
+# One group per branch: a shared group would let a queued dev run replace a
+# pending main deploy. The two deploys touch disjoint paths (root vs dev/), so
+# a push that loses the race rebases and retries.
 concurrency:
-  group: pages
+  group: pages-${{ github.ref_name }}
   cancel-in-progress: false
 
 jobs:
@@ -103,7 +105,12 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
           git diff --staged --quiet || git commit -m "Update release docs from ${{ github.sha }}"
-          git push
+          pushed=false
+          for attempt in 1 2 3; do
+            if git push; then pushed=true; break; fi
+            git pull --rebase origin gh-pages
+          done
+          $pushed
 
   # Deploy dev branch to /dev/ subdirectory
   deploy-dev:
@@ -142,4 +149,9 @@ jobs:
           # Commit and push
           git add dev
           git diff --staged --quiet || git commit -m "Update dev docs from ${{ github.sha }}"
-          git push
+          pushed=false
+          for attempt in 1 2 3; do
+            if git push; then pushed=true; break; fi
+            git pull --rebase origin gh-pages
+          done
+          $pushed
