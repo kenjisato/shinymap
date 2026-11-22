@@ -1,12 +1,12 @@
-"""Export geometry to SVG format (preserves original aesthetics).
+"""Export outline to SVG format (preserves original aesthetics).
 
-This module provides functionality to export shinymap geometry back to SVG files,
+This module provides functionality to export shinymap outline back to SVG files,
 preserving original aesthetics (fill, stroke, etc.) from the source SVG.
 
 Key use cases:
 1. SVG round-tripping: Convert SVG → Geometry → SVG
-2. Export modified geometry after relabeling/merging operations
-3. Save geometry with annotations added by converter app
+2. Export modified outline after relabeling/merging operations
+3. Save outline with annotations added by converter app
 """
 
 from __future__ import annotations
@@ -26,23 +26,23 @@ Geometry = "Outline"
 
 
 def export_svg(
-    geometry: Outline,
+    outline: Outline,
     output_path: str | PathType,
     viewbox: str | MissingType = MISSING,
     width: int | str | MissingType = MISSING,
     height: int | str | MissingType = MISSING,
     include_ids: bool = True,
 ) -> None:
-    """Export shinymap geometry to SVG file.
+    """Export shinymap outline to SVG file.
 
     This function preserves original SVG aesthetics (fill, stroke, etc.)
-    from the geometry. Useful for round-tripping geometry or exporting
-    modified geometry after relabeling/merging operations.
+    from the outline. Useful for round-tripping outline or exporting
+    modified outline after relabeling/merging operations.
 
     Args:
-        geometry: Geometry object to export
+        outline: Outline object to export
         output_path: Path to write SVG file
-        viewbox: ViewBox string (default: use geometry.viewbox() method)
+        viewbox: ViewBox string (default: use outline.viewbox() method)
         width: SVG width attribute (default: extract from viewBox)
         height: SVG height attribute (default: extract from viewBox)
         include_ids: Add id attributes to elements (default: True)
@@ -63,18 +63,18 @@ def export_svg(
         ```
     Note:
         Exported SVG preserves aesthetic attributes (fill, stroke, etc.)
-        from the original geometry. These aesthetics are NOT used by shinymap
+        from the original outline. These aesthetics are NOT used by shinymap
         for interactive rendering - they're preserved for SVG export only.
     """
     # Determine viewBox string
     viewbox_str: str
     if viewbox is MISSING:
         # Try to use viewBox string from metadata first (preserves original format)
-        if "viewBox" in geometry.metadata:
-            viewbox_str = geometry.metadata["viewBox"]
+        if "viewBox" in outline.metadata:
+            viewbox_str = outline.metadata["viewBox"]
         else:
-            # Calculate from geometry bounds
-            vb_tuple = geometry.viewbox()
+            # Calculate from outline bounds
+            vb_tuple = outline.viewbox()
             viewbox_str = f"{vb_tuple[0]} {vb_tuple[1]} {vb_tuple[2]} {vb_tuple[3]}"
     else:
         viewbox_str = viewbox  # type: ignore[assignment]
@@ -103,7 +103,7 @@ def export_svg(
     # Create SVG elements list
     svg_elements: list[svg.Element] = []
 
-    for region_id, region_elements in geometry.regions.items():
+    for region_id, region_elements in outline.regions.items():
         for elem in region_elements:
             # Add id attribute if requested
             if include_ids:
