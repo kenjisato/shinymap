@@ -24,7 +24,7 @@ function normalizeFillColor(fillColor, regions) {
     return fillColor;
 }
 export function InputMap(props) {
-    var _a, _b, _c, _d, _e, _f;
+    var _a, _b, _c, _d, _e, _f, _g;
     const { regions, tooltips, fillColor, className, containerStyle, viewBox = DEFAULT_VIEWBOX, mode: modeConfig, aes, layers, outlineMetadata, value, onChange, resolveAesthetic, regionProps, } = props;
     // Detect v0.3 payload format (has __all or _metadata at top level)
     const isV03Format = isAesPayload(aes);
@@ -52,6 +52,8 @@ export function InputMap(props) {
     const modeType = (_f = normalizedMode === null || normalizedMode === void 0 ? void 0 : normalizedMode.type) !== null && _f !== void 0 ? _f : "multiple";
     const cycle = normalizedMode === null || normalizedMode === void 0 ? void 0 : normalizedMode.n;
     const maxSelection = normalizedMode === null || normalizedMode === void 0 ? void 0 : normalizedMode.maxSelection;
+    // Single(allow_deselect=False): clicking the selected region keeps it selected
+    const allowDeselect = (_g = normalizedMode === null || normalizedMode === void 0 ? void 0 : normalizedMode.allowDeselect) !== null && _g !== void 0 ? _g : true;
     const aesIndexed = normalizedMode === null || normalizedMode === void 0 ? void 0 : normalizedMode.aesIndexed;
     // Count(max_count=k): counts above k use the same indexed aesthetic as k
     const maxCount = modeType === "count" ? normalizedMode === null || normalizedMode === void 0 ? void 0 : normalizedMode.maxCount : undefined;
@@ -89,6 +91,9 @@ export function InputMap(props) {
     const handleClick = (id) => {
         var _a;
         const current = (_a = counts[id]) !== null && _a !== void 0 ? _a : 0;
+        if (modeType === "single" && !allowDeselect && current > 0) {
+            return;
+        }
         const nextCount = effectiveCycle && Number.isFinite(effectiveCycle) && effectiveCycle > 0
             ? (current + 1) % effectiveCycle
             : current + 1;
