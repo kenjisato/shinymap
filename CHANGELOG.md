@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A click on an `input_map()` right after the page loads is no longer reset to the
+  initial value by the bridge's retry that waits for Shiny.
 - `StillLife.to_svg()` no longer draws annotation regions in the base layer, and draws
   selection copies only for base-layer regions.
 
