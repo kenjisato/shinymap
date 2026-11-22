@@ -16,7 +16,6 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from shiny import module, reactive, ui
-from shiny.module import resolve_id
 
 from shinymap import Map, aes
 from shinymap.mode import Display
@@ -134,13 +133,10 @@ def layer_chooser_ui(
         width: CSS width of the panel
         height: CSS height of the panel
     """
-    # Workaround: resolve_id needed because output_map doesn't resolve click input_id
-    # for module namespacing (upstream bug in _output_map.py)
-    click_input_id = resolve_id("buttons_click")
     return output_map(
         "buttons",
         _outline,
-        mode=Display(clickable=True, input_id=click_input_id),
+        mode=Display(clickable=True),  # clicks arrive as input.buttons_click
         aes=_aes,
         height=height,
         width=width,

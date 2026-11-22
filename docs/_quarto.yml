@@ -84,11 +84,33 @@ quartodoc:
         - preview_region
 
     - title: "Outline Utilities"
-      desc: "Tools for working with SVG geometry"
+      desc: "Tools for working with SVG outlines"
       contents:
-        - outline.Outline
+        - outline.Regions
+        - outline.export_svg
+
+    - title: "SVG Elements"
+      desc: "Element classes that make up an outline"
+      contents:
+        - svg.Circle
+        - svg.Ellipse
+        - svg.Line
+        - svg.Path
+        - svg.Polygon
+        - svg.Rect
+        - svg.Text
+        - svg.is_stroke_only_candidate
 
     - title: "Static Analysis and Export"
-      desc: "Mode classes for static pictures"
+      desc: "Inspect resolved aesthetics and export static SVG without a Shiny session"
       contents:
         - StillLife
+
+    - title: "Kit: Preparing SVG Files"
+      desc: "Programmatic counterparts of the sketch app (python -m shinymap.kit.sketch)"
+      contents:
+        - kit.convert
+        - kit.apply_mapping
+        - kit.generate_code
+        - kit.describe
+        - kit.glaze

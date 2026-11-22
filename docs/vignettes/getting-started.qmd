@@ -19,11 +19,11 @@ uv add shinymap
 ## Basic Example
 
 ```python
-from shiny import App, ui
+from shiny import App, render, ui
 from shinymap import input_map, output_map, render_map, Map
 from shinymap.outline import Outline
 
-# Define simple geometry
+# Define a simple outline
 OUTLINE = Outline.from_dict({
     "region_a": [{"type": "rect", "x": 10, "y": 10, "width": 30, "height": 30}],
     "region_b": [{"type": "rect", "x": 50, "y": 10, "width": 30, "height": 30}],
@@ -38,7 +38,6 @@ app_ui = ui.page_fluid(
 )
 
 def server(input, output, session):
-    @output
     @render.text
     def selected():
         return f"Selected: {input.selection()}"
@@ -48,6 +47,8 @@ app = App(app_ui, server)
 
 ## Next Steps
 
-- Learn about [selection modes](modes.qmd)
-- Customize appearance with [aesthetics](aesthetics.qmd)
-- Load real geometry from [SVG files](svg-geometry.qmd)
+- Selection modes (`Single`, `Multiple`, `Cycle`, `Count`) and aesthetics are
+  documented in the [Python API reference](../python/index.qmd)
+- Prepare your own SVG with `python -m shinymap.kit.sketch -f map.svg`
+- Runnable examples live in
+  [`packages/shinymap/python/examples/`](https://github.com/kenjisato/shinymap/tree/main/packages/shinymap/python/examples)
