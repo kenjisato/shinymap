@@ -98,13 +98,13 @@ aes.ByGroup(
 
 ## Coloring by value
 
-`shinymap.aes.color` turns data into one color per region. Pass the result through
-`aes.ByGroup`, typically from `@render_map` so the colors follow your data.
-`scale_sequential` is for counts from a Count input: regions not in the dict count as
-zero and get the lightest color.
+`shinymap.aes.color` turns data into one color per region. Pass the result to
+`Map(fill_color=...)`, typically from `@render_map` so the colors follow your data
+(other properties set with `aes=` are kept). `scale_sequential` is for counts from a
+Count input: regions not in the dict count as zero and get the lightest color.
 
 ```python
-from shinymap import Map, aes, output_map, render_map
+from shinymap import Map, output_map, render_map
 from shinymap.aes.color import scale_sequential
 
 output_map("result", outline)
@@ -112,7 +112,7 @@ output_map("result", outline)
 @render_map
 def result():
     colors = scale_sequential(counts, region_ids, max_count=5)
-    return Map(aes=aes.ByGroup(**{rid: aes.Shape(fill_color=c) for rid, c in colors.items()}))
+    return Map(fill_color=colors)
 ```
 
 For data such as populations or ratios, use `scale_continuous`. It takes floats, maps

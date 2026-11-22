@@ -3,7 +3,7 @@
 from shared import DEMO_OUTLINE, TOOLTIPS
 from shiny import App, ui
 
-from shinymap import Map, output_map, render_map, aes
+from shinymap import Map, output_map, render_map
 from shinymap.aes.color import scale_sequential, SEQUENTIAL_BLUE
 
 
@@ -76,11 +76,7 @@ def server_output(input, output, session):
         counts = {rid: input[rid]() or 0 for rid in rids}
         # Use scale_sequential to generate fill colors based on counts
         fills = scale_sequential(counts, rids, palette=SEQUENTIAL_BLUE, max_count=10)
-        region_aes = {
-            rid: aes.Shape(fill_color=color)
-            for rid, color in fills.items()
-        }
-        return Map(aes=aes.ByGroup(**region_aes))
+        return Map(fill_color=fills)
 
 
 app = App(ui_output, server_output)

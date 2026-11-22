@@ -354,3 +354,51 @@ class TestDefaultWash:
         outline = Outline.from_dict({"a": "M0 0 L10 0 L10 10 Z"})
         pic = StillLife(default_wash.build(outline, value={"a": 1}))
         assert pic.aes("a")["fill_color"] == default_wash.config.shape.select.fill_color
+
+
+class TestMapFillColor:
+    """Map(fill_color={region: color}) colors regions without building aes by hand."""
+
+    OUTLINE_DICT = {"a": "M0 0 L10 0 L10 10 Z", "b": "M20 0 L30 0 L30 10 Z"}
+
+    def _aes_payload(self, builder, with_output_map=False, **om_kwargs):
+        from shinymap.uicore._render_map import _build_payload
+
+        static: dict = {}
+        if with_output_map:
+            test_id = "_test_map_fill_color"
+            output_map(test_id, Outline.from_dict(self.OUTLINE_DICT), **om_kwargs)
+            static = _static_map_params.pop(test_id)
+        return _build_payload(builder, static)["aes"]
+
+    @pytest.mark.unit
+    def test_fill_color_per_region(self):
+        from shinymap import Map
+
+        outline = Outline.from_dict(self.OUTLINE_DICT)
+        payload = self._aes_payload(Map(outline, fill_color={"a": "#ff0000"}))
+
+        assert payload["a"]["base"]["fill_color"] == "#ff0000"
+        assert "b" not in payload
+
+    @pytest.mark.unit
+    def test_fill_color_layers_over_aes_and_output_map(self):
+        from shinymap import Map, aes
+
+        builder = Map(
+            aes=aes.ByGroup(a=aes.Shape(fill_color="#00ff00", stroke_width=3)),
+            fill_color={"a": "#ff0000", "b": "#0000ff"},
+        )
+        payload = self._aes_payload(builder, with_output_map=True)
+
+        assert payload["a"]["base"]["fill_color"] == "#ff0000"
+        assert payload["a"]["base"]["stroke_width"] == 3  # kept from aes
+        assert payload["b"]["base"]["fill_color"] == "#0000ff"
+
+    @pytest.mark.unit
+    def test_with_fill_color_chains(self):
+        from shinymap import Map
+
+        outline = Outline.from_dict(self.OUTLINE_DICT)
+        builder = Map(outline).with_value({"a": 1}).with_fill_color({"b": "#123456"})
+        assert self._aes_payload(builder)["b"]["base"]["fill_color"] == "#123456"

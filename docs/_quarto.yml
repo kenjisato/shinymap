@@ -49,6 +49,7 @@ quartodoc:
         - render_map
         - update_map
         - Map
+        - types.MapBuilder
         - Outline
         - Wash
         - default_wash
