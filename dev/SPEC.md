@@ -451,11 +451,26 @@ pic.aes_table()                     # All regions' aesthetics
 # Export static SVG
 pic.to_svg()                        # Returns SVG string
 pic.to_svg(output="map.svg")        # Writes to file
+pic.to_svg(fit=True)                # width/height 100%: fills its container
 
 # With hover state
 pic_hovered = StillLife(builder, hovered="region_a")
 pic_hovered.to_svg(output="map_hover.svg")
 ```
+
+`StillLife` also takes `Map(...)`, the builder `@render_map` returns. With
+`map_id="result"` it uses that `output_map()`'s outline, mode, wash and `aes`, and
+resolves the map through the same functions as `@render_map`
+(`uicore/_render_map.py`: `_resolve_map_geometry` for the outline, layers and viewBox,
+`_resolve_map_aes` for the look), so the picture matches the browser. Geometry rules:
+the outline given to `Map()` wins over `output_map()`'s; layers merge key by key
+(outline's own, then `output_map(layers=)`, then `Map(layers=)`); the viewBox is
+`Map()`'s, else `output_map()`'s, else the outline's. `map_id` looks up a
+process-wide registry, as `@render_map` does: two apps in one process with the same
+output ID share one entry.
+Without `map_id` it uses `wash=` or `default_wash`, and `Map()` must carry the
+outline. `map_id` and `wash` are exclusive, and neither applies to a
+`Wash.build()` builder, which is already resolved.
 
 `build(..., mode=...)` takes the mode the picture represents. With indexed aesthetics
 (`mode.aes` is one `aes.Indexed` or an `aes.ByGroup` of them), `StillLife` follows the JS

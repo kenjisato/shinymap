@@ -5,6 +5,7 @@ map outputs.
 """
 
 import json
+from collections.abc import Mapping
 from functools import wraps
 from typing import Any
 
@@ -19,6 +20,49 @@ from ._util import _normalize_outline
 from ._wash import layer_user_aes
 
 
+def _resolve_map_aes(builder_aes: Any, static_params: Mapping[str, Any], outline: Any) -> Any:
+    """Resolve ``Map(aes=...)`` as ``@render_map`` shows it.
+
+    ``Map(aes=...)`` is layered over ``output_map(aes=...)`` and the result is
+    resolved once through the output's wash (the default wash without one), so
+    user entries always outrank the wash's defaults. Shared with ``StillLife`` so
+    a static picture matches the rendered map.
+    """
+    if builder_aes is None and static_params.get("resolved_aes") is not None:
+        return static_params["resolved_aes"]
+    combined = layer_user_aes(static_params.get("user_aes"), builder_aes)
+    wash_config = static_params.get("wash_config")
+    if wash_config is None:
+        from ..ui._ui import default_wash
+
+        wash_config = default_wash.config
+    return wash_config.apply(combined, outline)
+
+
+def _resolve_map_geometry(builder: MapBuilder, static_params: Mapping[str, Any]) -> tuple[Any, Any]:
+    """The outline (with its layers) and viewBox ``@render_map`` draws.
+
+    The outline is the one given to ``Map()``, else ``output_map()``'s (builder
+    parameters take precedence, as for tooltips and the viewBox). Layers are
+    merged key by key: the outline's own, then ``output_map(layers=...)``, then
+    ``Map(layers=...)``. The viewBox is ``Map()``'s, else ``output_map()``'s, else
+    the outline's.
+    Shared with ``StillLife`` so a static picture matches the rendered map.
+    """
+    outline = builder._outline or static_params.get("outline")
+    if outline is not None:
+        if builder._outline is not None:
+            # output_map()'s own outline already has its layers merged in
+            outline = outline.merge_layers(static_params.get("layers"))
+        if builder._layers is not None:
+            layers = {k: v for k, v in builder._layers.items() if v is not None}
+            outline = outline.merge_layers(layers)
+    view_box = builder._view_box if builder._view_box is not None else static_params.get("view_box")
+    if view_box is None and outline is not None:
+        view_box = outline.viewbox()
+    return outline, view_box
+
+
 def _build_payload(
     builder: MapBuilder,
     static_params: dict[str, Any],
@@ -28,13 +72,7 @@ def _build_payload(
     Handles merging of builder params with static params from output_map(),
     and converts all objects to dicts.
     """
-    # Get outline from static params or builder (builder._outline is set by Map())
-    outline = static_params.get("outline") or builder._outline
-
-    # Get view_box
-    view_box = builder._view_box if builder._view_box is not None else static_params.get("view_box")
-    if view_box is None and outline is not None:
-        view_box = outline.viewbox()
+    outline, view_box = _resolve_map_geometry(builder, static_params)
 
     # Format view_box as string
     vb_str = None
@@ -44,30 +82,21 @@ def _build_payload(
         else:
             vb_str = f"{view_box[0]} {view_box[1]} {view_box[2]} {view_box[3]}"
 
-    # Get regions
-    regions = builder._regions
-    if regions is None and outline is not None:
+    # All regions of the outline: layers say which are overlay, underlay, etc.
+    # (Map(outline) keeps only main regions in _regions, so overlays went missing)
+    # A MapBuilder made from raw regions (no outline) keeps its own regions.
+    regions: Any = None
+    if builder._outline is None and builder._regions is not None:
+        regions = builder._regions
+    elif outline is not None:
         regions = outline.regions
 
-    # Merge aes: Map(aes=...) is layered over output_map(aes=...) and the result is
-    # resolved once through the same wash, so user entries always outrank the
-    # wash's defaults (JS looks up type defaults before __all).
-    static_aes = static_params.get("resolved_aes")  # ByGroup resolved by output_map()
+    # Merge aes (see _resolve_map_aes); without an outline it cannot be resolved yet
     merged_aes: Any = None
-
-    if builder._aes is None:
-        merged_aes = static_aes
-    else:
-        combined = layer_user_aes(static_params.get("user_aes"), builder._aes)
-        if outline is not None:
-            wash_config = static_params.get("wash_config")
-            if wash_config is None:
-                from ..ui._ui import default_wash
-
-                wash_config = default_wash.config
-            merged_aes = wash_config.apply(combined, outline)
-        else:
-            merged_aes = combined
+    if outline is not None:
+        merged_aes = _resolve_map_aes(builder._aes, static_params, outline)
+    elif builder._aes is not None:
+        merged_aes = layer_user_aes(static_params.get("user_aes"), builder._aes)
 
     # Build aes payload dict
     aes_dict = None
@@ -82,10 +111,7 @@ def _build_payload(
         else:
             aes_dict = merged_aes
 
-    # Get layers
-    layers = builder._layers
-    if layers is None and outline is not None:
-        layers = outline.layers_dict()
+    layers = outline.layers_dict() if outline is not None else builder._layers
 
     # Get outline metadata
     outline_metadata = None

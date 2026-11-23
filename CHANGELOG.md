@@ -28,6 +28,12 @@ Planned as 0.4.0: the breaking changes below follow from fixes, not redesigns.
   counts (#63).
 - `Map(fill_color={region_id: color})` and `MapBuilder.with_fill_color()` color regions
   by value, e.g. with a color scale's output, layered over `aes=` (#64).
+- `StillLife(Map(...), map_id="result")` draws the map `@render_map` shows, with
+  that `output_map()`'s outline, mode, wash and `aes`, so a static SVG matches the
+  browser. Outside an app, `StillLife(Map(outline, ...))` uses `default_wash` or
+  `wash=` (#70).
+- `StillLife.to_svg(fit=True)` makes the SVG fill its container (`width`/`height`
+  100%), for `ui.HTML()` or a page (#70).
 - `shinymap.default_wash`: the library's default look as a `Wash`; `input_map`,
   `output_map` and `render_map` are its methods (#62).
 - `Wash.build(..., mode=...)` and `StillLife` render indexed aesthetics (`Cycle` / `Count` /
@@ -53,6 +59,14 @@ Planned as 0.4.0: the breaking changes below follow from fixes, not redesigns.
   region's `hover=None` turns its hover off; before, they used the `__all` looks (#57).
 - `output_map(..., mode=Display(clickable=True))` without an outline keeps its mode and
   click input when `@render_map` supplies the outline (#56).
+- `@render_map` returning `Map(outline)` draws the outline's overlay, underlay and
+  annotation regions; before, only main regions were sent, so they disappeared.
+  `output_map(layers=...)` and `Map(layers=...)` now both merge key by key into the
+  outline, and an outline given to `Map()` takes precedence over `output_map()`'s (#70).
+- `StillLife.to_svg()` draws line regions (`path_as_line`) without fill, as the browser
+  does (#70).
+- A wash's `output_map()` without an outline applies its look when `Map(outline)` sets
+  no `aes`; before, the map fell back to the browser's built-in look (#70).
 - Values accept numpy integers and bools (converted to `int`), so values built from a
   pandas DataFrame work (#58).
 - A click on an `input_map()` right after the page loads is no longer reset to the

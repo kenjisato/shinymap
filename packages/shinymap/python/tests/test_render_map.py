@@ -402,3 +402,76 @@ class TestMapFillColor:
         outline = Outline.from_dict(self.OUTLINE_DICT)
         builder = Map(outline).with_value({"a": 1}).with_fill_color({"b": "#123456"})
         assert self._aes_payload(builder)["b"]["base"]["fill_color"] == "#123456"
+
+
+class TestRenderMapWashWithoutOutline:
+    @pytest.mark.unit
+    def test_wash_applies_when_map_has_no_aes(self):
+        """wc.output_map(id) without outline + Map(outline) uses the wash (it was dropped)."""
+        from shinymap import Map, Wash, aes
+        from shinymap.uicore._render_map import _build_payload
+
+        wc = Wash(shape=aes.Shape(fill_color="#123456"))
+        wc.output_map("_test_wash_no_outline")
+        static = _static_map_params.pop("_test_wash_no_outline")
+        outline = Outline.from_dict({"a": "M0 0 L10 0 L10 10 Z"})
+        payload = _build_payload(Map(outline), static)
+        assert payload["aes"]["__shape"]["base"]["fill_color"] == "#123456"
+
+
+class TestRenderMapGeometry:
+    """Regions, layers and viewBox @render_map sends (shared with StillLife)."""
+
+    OUTLINE = Outline.from_dict(
+        {
+            "a": "M0 0 L10 0 L10 10 Z",
+            "b": "M20 0 L30 0 L30 10 Z",
+            "border": "M0 0 L30 0",
+            "_metadata": {"overlay": ["border"]},
+        }
+    )
+
+    def _payload(self, builder, **om_kwargs):
+        from shinymap.uicore._render_map import _build_payload
+
+        output_map("_test_geometry", **om_kwargs)
+        return _build_payload(builder, _static_map_params.pop("_test_geometry"))
+
+    @pytest.mark.unit
+    def test_map_outline_keeps_overlay_regions(self):
+        from shinymap import Map
+
+        payload = self._payload(Map(self.OUTLINE))
+        assert "border" in payload["regions"]  # was dropped: only main regions were sent
+        assert payload["layers"]["overlay"] == ["border"]
+
+    @pytest.mark.unit
+    def test_output_map_layers_apply_to_map_outline(self):
+        from shinymap import Map
+
+        payload = self._payload(Map(self.OUTLINE), outline=self.OUTLINE, layers={"hidden": ["b"]})
+        assert payload["layers"]["hidden"] == ["b"]
+        assert payload["layers"]["overlay"] == ["border"]
+
+    @pytest.mark.unit
+    def test_map_layers_merge_key_by_key(self):
+        from shinymap import Map
+
+        payload = self._payload(Map(self.OUTLINE, layers={"hidden": ["b"]}), outline=self.OUTLINE)
+        assert payload["layers"]["hidden"] == ["b"]
+        assert payload["layers"]["overlay"] == ["border"]  # kept, not replaced
+
+    @pytest.mark.unit
+    def test_map_outline_takes_precedence(self):
+        from shinymap import Map
+
+        other = Outline.from_dict({"z": "M0 0 L5 0 L5 5 Z"})
+        payload = self._payload(Map(other), outline=self.OUTLINE)
+        assert sorted(payload["regions"]) == ["z"]
+
+    @pytest.mark.unit
+    def test_output_map_view_box(self):
+        from shinymap import Map
+
+        payload = self._payload(Map(), outline=self.OUTLINE, view_box=(2, 3, 4, 5))
+        assert payload["view_box"] == "2 3 4 5"

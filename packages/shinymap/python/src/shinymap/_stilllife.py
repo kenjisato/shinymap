@@ -23,6 +23,7 @@ from .types import MISSING, MissingType
 if TYPE_CHECKING:
     from ._map import MapBuilder
     from .outline import Outline
+    from .uicore._wash import WashResult
 
 
 class StillLife:
@@ -58,44 +59,99 @@ class StillLife:
         *,
         value: dict[str, int] | None = None,
         hovered: str | None = None,
+        map_id: str | None = None,
+        wash: WashResult | None = None,
     ):
-        """Create a still life from a MapBuilder.
+        """Create a still life from a map.
+
+        Pass what ``@render_map`` returns, ``Map(...)``, to draw the map as the
+        browser shows it, or a builder from ``Wash.build()``.
 
         Args:
-            builder: MapBuilder created via WashResult.build().
-                Must have _outline and _resolved_aes populated.
+            builder: ``Map(...)``, or a MapBuilder from ``WashResult.build()``.
             value: Override value dict. If None, uses builder's value.
             hovered: Region ID to show as hovered.
+            map_id: ID of an ``output_map()``. The picture then uses that
+                output's outline, mode, wash and ``aes``, with the map layered over
+                them exactly as ``@render_map`` does, so ``Map()`` needs no outline.
+                Like ``@render_map``, it looks the ID up in a process-wide registry.
+            wash: Wash to draw a ``Map(...)`` with, when there is no
+                ``output_map()`` to follow. Default: ``shinymap.default_wash``.
 
         Raises:
-            ValueError: If builder lacks required _outline or _resolved_aes.
+            ValueError: If both ``map_id`` and ``wash`` are given, if
+                ``map_id`` names no ``output_map()``, if there is no outline,
+                or if a ``Wash.build()`` builder is combined with either.
 
         Examples:
-            >>> from shinymap import Wash, StillLife, aes, Outline
-            >>> wc = Wash(shape=aes.Shape(fill_color="#e2e8f0"))
-            >>> outline = Outline.from_dict({"a": "M 0 0 L 10 10"})
-            >>> builder = wc.build(outline, value={"a": 1})
-            >>> pic = StillLife(builder)
-            >>> pic = StillLife(builder, value={"a": 0})  # Override value
-            >>> pic = StillLife(builder, hovered="a")  # With hover state
+            ```pycon
+            >>> from shinymap import Map, Outline, StillLife, output_map
+            >>> outline = Outline.from_dict({"a": "M 0 0 L 10 0 L 10 10 Z"})
+            >>> pic = StillLife(Map(outline, fill_color={"a": "#ff0000"}))
+            >>> pic.aes("a")["fill_color"]
+            '#ff0000'
+            >>> _ = output_map("result", outline)
+            >>> pic = StillLife(Map(fill_color={"a": "#00ff00"}), map_id="result")
+            >>> pic.aes("a")["fill_color"]
+            '#00ff00'
+
+            ```
         """
-        # Validate builder has required fields
-        if builder._outline is None:
+        if map_id is not None and wash is not None:
             raise ValueError(
-                "MapBuilder lacks _outline. "
-                "Use WashResult.build() to create a MapBuilder for StillLife."
-            )
-        if builder._resolved_aes is None:
-            raise ValueError(
-                "MapBuilder lacks _resolved_aes. "
-                "Use WashResult.build() to create a MapBuilder for StillLife."
+                "Pass either map_id= (follow an output_map()) or wash=, not both: "
+                "the output already has its wash."
             )
 
-        self._outline: Outline = builder._outline
-        self._resolved_aes: ByGroup = builder._resolved_aes
+        if builder._resolved_aes is not None:
+            if map_id is not None or wash is not None:
+                raise ValueError(
+                    "This builder comes from Wash.build() and already has its look; "
+                    "pass Map(...) to use map_id= or wash=."
+                )
+            outline = builder._outline
+            view_box = builder._view_box
+            resolved_aes = builder._resolved_aes
+            mode = getattr(builder, "_mode", None)
+        else:
+            from .uicore._render_map import _resolve_map_aes, _resolve_map_geometry
+
+            static: Mapping[str, Any]
+            if map_id is not None:
+                from shiny.module import resolve_id
+
+                from .uicore._registry import _static_map_params
+
+                key = resolve_id(map_id)
+                if key not in _static_map_params:
+                    raise ValueError(
+                        f"No output_map({map_id!r}) found. Call output_map() first, "
+                        "or pass wash= to draw the map on its own."
+                    )
+                static = _static_map_params[key]
+            elif wash is not None:
+                static = {"wash_config": wash.config}
+            else:
+                static = {}
+
+            outline, view_box = _resolve_map_geometry(builder, static)
+            if outline is None:
+                raise ValueError(
+                    "StillLife needs an outline: pass it to Map(outline, ...), "
+                    "or pass map_id= of an output_map() that has one."
+                )
+            resolved_aes = _resolve_map_aes(builder._aes, static, outline)
+            mode = static.get("mode")
+
+        if outline is None:
+            raise ValueError("MapBuilder lacks _outline.")
+
+        self._outline: Outline = outline
+        self._view_box: Any = view_box
+        self._resolved_aes: ByGroup = resolved_aes
         self._value: Mapping[str, int] = value if value is not None else (builder._value or {})
         self._hovered: str | None = hovered
-        self._mode: Any = getattr(builder, "_mode", None)
+        self._mode: Any = mode
 
     def _region_group(self, region_id: str) -> str | None:
         for group_name, region_ids in self._outline.groups().items():
@@ -383,6 +439,8 @@ class StillLife:
     def to_svg(
         self,
         output: str | Path | None = None,
+        *,
+        fit: bool = False,
     ) -> str | None:
         """Generate static SVG with resolved aesthetics.
 
@@ -393,6 +451,10 @@ class StillLife:
         Args:
             output: If provided, write SVG to file and return None.
                 If None, return SVG as string.
+            fit: If True, the SVG fills its container (``width="100%"``,
+                ``height="100%"``) and keeps its aspect ratio, e.g. inside
+                ``ui.HTML()`` or a page. If False, its size is the viewBox's, in
+                pixels.
 
         Returns:
             SVG string if output is None, otherwise None.
@@ -404,8 +466,8 @@ class StillLife:
         from .svg import Path as PathElement
 
         # ViewBox
-        vb = self._outline.viewbox()
-        viewbox_str = f"{vb[0]} {vb[1]} {vb[2]} {vb[3]}"
+        vb = self._view_box if self._view_box is not None else self._outline.viewbox()
+        viewbox_str = vb if isinstance(vb, str) else f"{vb[0]} {vb[1]} {vb[2]} {vb[3]}"
 
         # Layer sets
         overlays = set(self._outline.overlay_ids())
@@ -440,8 +502,13 @@ class StillLife:
         # Build element list in layer order
         svg_elements: list[svg.Element] = []
 
+        region_types = self._outline.region_types()
+
         def render(region_id: str, is_hovered: bool = False) -> None:
             aes_dict = self.aes(region_id, is_hovered=is_hovered)
+            if region_types.get(region_id) == "line":
+                # Line regions (path_as_line) are stroke only, as in the browser
+                aes_dict = {**aes_dict, "fill_color": "none"}
             for elem in self._outline.regions.get(region_id, []):
                 svg_elements.append(style_element(elem, aes_dict))  # type: ignore[arg-type]
 
@@ -481,8 +548,8 @@ class StillLife:
 
         # Create SVG
         root = svg.SVG(
-            width=str(vb[2]),  # type: ignore[arg-type]
-            height=str(vb[3]),  # type: ignore[arg-type]
+            width="100%" if fit else str(vb[2]),  # type: ignore[arg-type]
+            height="100%" if fit else str(vb[3]),  # type: ignore[arg-type]
             viewBox=viewbox_str,  # type: ignore[arg-type]
             elements=svg_elements,
         )

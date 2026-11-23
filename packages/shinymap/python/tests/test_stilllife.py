@@ -11,17 +11,6 @@ class TestStillLifeInit:
     """Test StillLife initialization and validation."""
 
     @pytest.mark.unit
-    def test_requires_builder_from_wash_build(self):
-        """StillLife requires a MapBuilder created via WashResult.build()."""
-        outline = Outline(regions={"a": [Circle(cx=50, cy=50, r=30)]}, metadata={})
-
-        # Map() creates a MapBuilder without _resolved_aes (required by StillLife)
-        builder = Map(outline)
-
-        with pytest.raises(ValueError, match="lacks _resolved_aes"):
-            StillLife(builder)
-
-    @pytest.mark.unit
     def test_accepts_builder_from_wash_build(self):
         """StillLife accepts a MapBuilder created via WashResult.build()."""
         outline = Outline(regions={"a": [Circle(cx=50, cy=50, r=30)]}, metadata={})
@@ -831,3 +820,181 @@ class TestStillLifeCountMaxCount:
         pic = StillLife(wc.build(outline, mode=mode, value={"a": 5}))
 
         assert pic.aes("a")["fill_color"] == palette[1]
+
+
+class TestStillLifeFromMap:
+    """StillLife(Map(...)) draws what @render_map would show."""
+
+    OUTLINE = Outline.from_dict({"a": "M0 0 L10 0 L10 10 Z", "b": "M20 0 L30 0 L30 10 Z"})
+
+    @pytest.fixture(autouse=True)
+    def _clean_registry(self):
+        from shinymap.uicore._registry import _static_map_params
+
+        yield
+        for key in [k for k in _static_map_params if k.startswith("_still_")]:
+            del _static_map_params[key]
+
+    @pytest.mark.unit
+    def test_map_defaults_to_default_wash(self):
+        from shinymap import default_wash
+
+        pic = StillLife(Map(self.OUTLINE, value={"a": 1}))
+        expected = StillLife(default_wash.build(self.OUTLINE, value={"a": 1}))
+        assert pic.aes("a") == expected.aes("a")
+        assert pic.aes("b") == expected.aes("b")
+
+    @pytest.mark.unit
+    def test_map_fill_color(self):
+        pic = StillLife(Map(self.OUTLINE, fill_color={"a": "#ff0000"}))
+        assert pic.aes("a")["fill_color"] == "#ff0000"
+        assert pic.aes("b")["fill_color"] != "#ff0000"
+
+    @pytest.mark.unit
+    def test_wash(self):
+        wc = Wash(shape=aes.Shape(fill_color="#123456"))
+        pic = StillLife(Map(self.OUTLINE), wash=wc)
+        assert pic.aes("a")["fill_color"] == "#123456"
+
+    @pytest.mark.unit
+    def test_map_id_layers_map_over_output_map(self):
+        from shinymap import output_map
+
+        output_map("_still_a", self.OUTLINE, aes=aes.ByGroup(a=aes.Shape(stroke_width=3)))
+        pic = StillLife(Map(fill_color={"a": "#ff0000"}), map_id="_still_a")
+        assert pic.aes("a")["fill_color"] == "#ff0000"
+        assert pic.aes("a")["stroke_width"] == 3  # kept from output_map's aes
+
+    @pytest.mark.unit
+    def test_map_id_matches_render_map_payload(self):
+        from shinymap.uicore._registry import _static_map_params
+        from shinymap.uicore._render_map import _build_payload
+
+        wc = Wash(shape=aes.ByState(base=aes.Shape(fill_color="#eeeeee", stroke_width=1)))
+        wc.output_map("_still_b", self.OUTLINE, aes=aes.ByGroup(b=aes.Shape(stroke_width=4)))
+        builder = Map(fill_color={"a": "#ff0000"})
+        payload = _build_payload(builder, _static_map_params["_still_b"])["aes"]
+        pic = StillLife(builder, map_id="_still_b")
+        for rid in ("a", "b"):
+            base = payload.get(rid, payload["__shape"])["base"]
+            for key, val in base.items():
+                assert pic.aes(rid)[key] == val, (rid, key)
+
+    @pytest.mark.unit
+    def test_map_id_takes_wash_without_outline(self):
+        wc = Wash(shape=aes.Shape(fill_color="#123456"))
+        wc.output_map("_still_c")
+        pic = StillLife(Map(self.OUTLINE), map_id="_still_c")
+        assert pic.aes("a")["fill_color"] == "#123456"
+
+    @pytest.mark.unit
+    def test_map_id_takes_mode(self):
+        from shinymap import output_map
+        from shinymap.mode import Display
+
+        mode = Display(aes=aes.Indexed(fill_color=["#000000", "#111111", "#222222"]))
+        output_map("_still_d", self.OUTLINE, mode=mode)
+        pic = StillLife(Map(value={"a": 2}), map_id="_still_d")
+        assert pic.aes("a")["fill_color"] == "#222222"
+
+    @pytest.mark.unit
+    def test_errors(self):
+        wc = Wash(shape=aes.Shape(fill_color="#123456"))
+        with pytest.raises(ValueError, match="either"):
+            StillLife(Map(self.OUTLINE), wash=wc, map_id="x")
+        with pytest.raises(ValueError, match="_still_missing"):
+            StillLife(Map(self.OUTLINE), map_id="_still_missing")
+        with pytest.raises(ValueError, match="outline"):
+            StillLife(Map())
+        with pytest.raises(ValueError, match="build"):
+            StillLife(wc.build(self.OUTLINE), wash=wc)
+
+
+class TestStillLifeGeometryMatchesRenderMap:
+    """StillLife(Map(...), map_id=) uses the regions, layers and viewBox @render_map sends."""
+
+    OUTLINE = Outline.from_dict(
+        {
+            "a": "M0 0 L10 0 L10 10 Z",
+            "b": "M20 0 L30 0 L30 10 Z",
+            "border": "M0 0 L30 0",
+            "_metadata": {"overlay": ["border"]},
+        }
+    )
+
+    @pytest.fixture(autouse=True)
+    def _clean_registry(self):
+        from shinymap.uicore._registry import _static_map_params
+
+        yield
+        for key in [k for k in _static_map_params if k.startswith("_geom_")]:
+            del _static_map_params[key]
+
+    def _both(self, builder, map_id, **om_kwargs):
+        from shinymap import output_map
+        from shinymap.uicore._registry import _static_map_params
+        from shinymap.uicore._render_map import _build_payload
+
+        output_map(map_id, **om_kwargs)
+        payload = _build_payload(builder, _static_map_params[map_id])
+        return payload, StillLife(builder, map_id=map_id)
+
+    @staticmethod
+    def _svg_viewbox(pic):
+        import re
+
+        return re.search(r'viewBox="([^"]+)"', pic.to_svg()).group(1)
+
+    @pytest.mark.unit
+    @pytest.mark.parametrize(
+        "make_builder, om_kwargs",
+        [
+            (lambda o: Map(), {"outline": "O", "view_box": (2, 3, 4, 5)}),
+            (lambda o: Map(o), {}),
+            (lambda o: Map(o), {"outline": "O", "layers": {"hidden": ["b"]}}),
+            (lambda o: Map(o, layers={"hidden": ["b"]}), {"outline": "O"}),
+            (lambda o: Map(o, view_box=(0, 0, 5, 5)), {"outline": "O", "view_box": (2, 3, 4, 5)}),
+        ],
+        ids=["om_view_box", "map_outline", "om_layers", "map_layers", "map_view_box"],
+    )
+    def test_same_regions_layers_viewbox(self, make_builder, om_kwargs, request):
+        kwargs = {k: (self.OUTLINE if v == "O" else v) for k, v in om_kwargs.items()}
+        map_id = "_geom_" + request.node.callspec.id
+        payload, pic = self._both(make_builder(self.OUTLINE), map_id, **kwargs)
+
+        assert sorted(pic._outline.regions) == sorted(payload["regions"])
+        assert pic._outline.layers_dict() == payload["layers"]
+        assert self._svg_viewbox(pic) == payload["view_box"]
+
+
+class TestStillLifeLineRegionFill:
+    @pytest.mark.unit
+    def test_line_region_has_no_fill_in_svg(self):
+        """path_as_line regions are drawn without fill, as in the browser (see #3)."""
+        import re
+
+        from shinymap import default_wash
+
+        outline = Outline.from_dict(
+            {"a": "M0 0 L10 0 L10 10 Z", "b": "M0 20 L30 20", "_metadata": {"overlay": ["b"]}}
+        ).path_as_line("b")
+        svg_str = StillLife(default_wash.build(outline)).to_svg()
+        line = re.search(r'<path[^>]*d="M0 20 L30 20"[^>]*>', svg_str).group(0)
+        assert 'fill="none"' in line
+
+
+class TestStillLifeToSvgFit:
+    OUTLINE = Outline.from_dict({"a": "M0 0 L40 0 L40 20 Z"})
+
+    @pytest.mark.unit
+    def test_default_size_is_viewbox_units(self):
+        svg_str = StillLife(Map(self.OUTLINE)).to_svg()
+        assert 'width="' in svg_str and 'width="100%"' not in svg_str
+
+    @pytest.mark.unit
+    def test_fit_fills_the_container(self):
+        svg_str = StillLife(Map(self.OUTLINE)).to_svg(fit=True)
+        head = svg_str[: svg_str.index(">")]
+        assert 'width="100%"' in head
+        assert 'height="100%"' in head
+        assert "viewBox=" in head  # aspect ratio comes from the viewBox
