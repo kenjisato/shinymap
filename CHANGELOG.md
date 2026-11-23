@@ -57,6 +57,10 @@ Planned as 0.4.0: the breaking changes below follow from fixes, not redesigns.
   region's `hover=None` turns its hover off; before, they used the `__all` looks (#57).
 - `output_map(..., mode=Display(clickable=True))` without an outline keeps its mode and
   click input when `@render_map` supplies the outline (#56).
+- `@render_map` returning `Map(outline)` draws the outline's overlay, underlay and
+  annotation regions; before, only main regions were sent, so they disappeared.
+  `output_map(layers=...)` and `Map(layers=...)` now both merge key by key into the
+  outline, and an outline given to `Map()` takes precedence over `output_map()`'s (#70).
 - A wash's `output_map()` without an outline applies its look when `Map(outline)` sets
   no `aes`; before, the map fell back to the browser's built-in look (#70).
 - Values accept numpy integers and bools (converted to `int`), so values built from a

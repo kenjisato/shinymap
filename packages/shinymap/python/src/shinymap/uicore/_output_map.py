@@ -88,6 +88,7 @@ def _output_map(
                 "click_input_id": click_input_id,
                 "wash_config": wash_config,
                 "user_aes": user_aes,
+                "layers": layers,
             }
         )
     elif view_box is not None:
@@ -100,6 +101,7 @@ def _output_map(
                 "click_input_id": click_input_id,
                 "wash_config": wash_config,
                 "user_aes": user_aes,
+                "layers": layers,
             }
         )
 
@@ -113,6 +115,7 @@ def _output_map(
                 "click_input_id": click_input_id,
                 "wash_config": wash_config,
                 "user_aes": user_aes,
+                "layers": layers,
             }
         )
 

@@ -908,3 +908,60 @@ class TestStillLifeFromMap:
             StillLife(Map())
         with pytest.raises(ValueError, match="build"):
             StillLife(wc.build(self.OUTLINE), wash=wc)
+
+
+class TestStillLifeGeometryMatchesRenderMap:
+    """StillLife(Map(...), map_id=) uses the regions, layers and viewBox @render_map sends."""
+
+    OUTLINE = Outline.from_dict(
+        {
+            "a": "M0 0 L10 0 L10 10 Z",
+            "b": "M20 0 L30 0 L30 10 Z",
+            "border": "M0 0 L30 0",
+            "_metadata": {"overlay": ["border"]},
+        }
+    )
+
+    @pytest.fixture(autouse=True)
+    def _clean_registry(self):
+        from shinymap.uicore._registry import _static_map_params
+
+        yield
+        for key in [k for k in _static_map_params if k.startswith("_geom_")]:
+            del _static_map_params[key]
+
+    def _both(self, builder, map_id, **om_kwargs):
+        from shinymap import output_map
+        from shinymap.uicore._registry import _static_map_params
+        from shinymap.uicore._render_map import _build_payload
+
+        output_map(map_id, **om_kwargs)
+        payload = _build_payload(builder, _static_map_params[map_id])
+        return payload, StillLife(builder, map_id=map_id)
+
+    @staticmethod
+    def _svg_viewbox(pic):
+        import re
+
+        return re.search(r'viewBox="([^"]+)"', pic.to_svg()).group(1)
+
+    @pytest.mark.unit
+    @pytest.mark.parametrize(
+        "make_builder, om_kwargs",
+        [
+            (lambda o: Map(), {"outline": "O", "view_box": (2, 3, 4, 5)}),
+            (lambda o: Map(o), {}),
+            (lambda o: Map(o), {"outline": "O", "layers": {"hidden": ["b"]}}),
+            (lambda o: Map(o, layers={"hidden": ["b"]}), {"outline": "O"}),
+            (lambda o: Map(o, view_box=(0, 0, 5, 5)), {"outline": "O", "view_box": (2, 3, 4, 5)}),
+        ],
+        ids=["om_view_box", "map_outline", "om_layers", "map_layers", "map_view_box"],
+    )
+    def test_same_regions_layers_viewbox(self, make_builder, om_kwargs, request):
+        kwargs = {k: (self.OUTLINE if v == "O" else v) for k, v in om_kwargs.items()}
+        map_id = "_geom_" + request.node.callspec.id
+        payload, pic = self._both(make_builder(self.OUTLINE), map_id, **kwargs)
+
+        assert sorted(pic._outline.regions) == sorted(payload["regions"])
+        assert pic._outline.layers_dict() == payload["layers"]
+        assert self._svg_viewbox(pic) == payload["view_box"]

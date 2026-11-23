@@ -74,6 +74,7 @@ class StillLife:
             map_id: ID of an ``output_map()``. The picture then uses that
                 output's outline, mode, wash and ``aes``, with the map layered over
                 them exactly as ``@render_map`` does, so ``Map()`` needs no outline.
+                Like ``@render_map``, it looks the ID up in a process-wide registry.
             wash: Wash to draw a ``Map(...)`` with, when there is no
                 ``output_map()`` to follow. Default: ``shinymap.default_wash``.
 
@@ -109,10 +110,11 @@ class StillLife:
                     "pass Map(...) to use map_id= or wash=."
                 )
             outline = builder._outline
+            view_box = builder._view_box
             resolved_aes = builder._resolved_aes
             mode = getattr(builder, "_mode", None)
         else:
-            from .uicore._render_map import _resolve_map_aes
+            from .uicore._render_map import _resolve_map_aes, _resolve_map_geometry
 
             static: Mapping[str, Any]
             if map_id is not None:
@@ -132,15 +134,12 @@ class StillLife:
             else:
                 static = {}
 
-            outline = static.get("outline") or builder._outline
+            outline, view_box = _resolve_map_geometry(builder, static)
             if outline is None:
                 raise ValueError(
                     "StillLife needs an outline: pass it to Map(outline, ...), "
                     "or pass map_id= of an output_map() that has one."
                 )
-            if builder._layers is not None:
-                layers = {k: v for k, v in builder._layers.items() if v is not None}
-                outline = outline.merge_layers(layers)
             resolved_aes = _resolve_map_aes(builder._aes, static, outline)
             mode = static.get("mode")
 
@@ -148,6 +147,7 @@ class StillLife:
             raise ValueError("MapBuilder lacks _outline.")
 
         self._outline: Outline = outline
+        self._view_box: Any = view_box
         self._resolved_aes: ByGroup = resolved_aes
         self._value: Mapping[str, int] = value if value is not None else (builder._value or {})
         self._hovered: str | None = hovered
@@ -460,8 +460,8 @@ class StillLife:
         from .svg import Path as PathElement
 
         # ViewBox
-        vb = self._outline.viewbox()
-        viewbox_str = f"{vb[0]} {vb[1]} {vb[2]} {vb[3]}"
+        vb = self._view_box if self._view_box is not None else self._outline.viewbox()
+        viewbox_str = vb if isinstance(vb, str) else f"{vb[0]} {vb[1]} {vb[2]} {vb[3]}"
 
         # Layer sets
         overlays = set(self._outline.overlay_ids())
