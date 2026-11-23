@@ -190,7 +190,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="shinymap.StillLife" class="level1">
 <h1>StillLife</h1>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>StillLife(builder, <span class="op">*</span>, value<span class="op">=</span><span class="va">None</span>, hovered<span class="op">=</span><span class="va">None</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>StillLife(builder, <span class="op">*</span>, value<span class="op">=</span><span class="va">None</span>, hovered<span class="op">=</span><span class="va">None</span>, map_id<span class="op">=</span><span class="va">None</span>, wash<span class="op">=</span><span class="va">None</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Static snapshot of a map for aesthetic analysis and SVG export.</p>
 <p>Like a still life painting, this class captures a map’s state at a specific moment, allowing you to:</p>
 <ul>
@@ -386,17 +386,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="shinymap.StillLife.to_svg" class="level3">
 <h3 class="anchored" data-anchor-id="shinymap.StillLife.to_svg">to_svg</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>StillLife.to_svg(output<span class="op">=</span><span class="va">None</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>StillLife.to_svg(output<span class="op">=</span><span class="va">None</span>, <span class="op">*</span>, fit<span class="op">=</span><span class="va">False</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Generate static SVG with resolved aesthetics.</p>
 <p>Renders layers in order: underlay → base → overlay → selection → hover → annotation. Regions with an indexed aesthetic show their state in the base layer and get no selection copy, as in the JS components.</p>
 <section id="parameters-2" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-2">Parameters</h4>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 6%">
-<col style="width: 17%">
-<col style="width: 66%">
+<col style="width: 3%">
 <col style="width: 9%">
+<col style="width: 82%">
+<col style="width: 4%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -412,6 +412,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>str | Path | None</td>
 <td>If provided, write SVG to file and return None. If None, return SVG as string.</td>
 <td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>fit</td>
+<td>bool</td>
+<td>If True, the SVG fills its container (<code>width="100%"</code>, <code>height="100%"</code>) and keeps its aspect ratio, e.g.&nbsp;inside <code>ui.HTML()</code> or a page. If False, its size is the viewBox’s, in pixels.</td>
+<td><code>False</code></td>
 </tr>
 </tbody>
 </table>

@@ -175,6 +175,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#which-setting-wins" id="toc-which-setting-wins" class="nav-link" data-scroll-target="#which-setting-wins">Which setting wins</a></li>
   <li><a href="#coloring-by-value" id="toc-coloring-by-value" class="nav-link" data-scroll-target="#coloring-by-value">Coloring by value</a></li>
   <li><a href="#where-to-set-aesthetics" id="toc-where-to-set-aesthetics" class="nav-link" data-scroll-target="#where-to-set-aesthetics">Where to set aesthetics</a></li>
+  <li><a href="#static-pictures" id="toc-static-pictures" class="nav-link" data-scroll-target="#static-pictures">Static pictures</a></li>
   </ul>
 </nav>
     </div>
@@ -373,10 +374,33 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>Map(aes=...)</code> returned from <code>@render_map</code> is layered on top of <code>output_map()</code>’s look each time it renders. Properties it does not set are kept.</li>
 <li><code>Wash(shape=..., line=..., text=...)</code> replaces the library defaults for every map made from it (<code>wc.input_map</code>, <code>wc.output_map</code>, <code>wc.render_map</code>).</li>
 </ul>
-<p>The library defaults are themselves a wash, <code>shinymap.default_wash</code>; <code>input_map</code> and friends are its methods. Use it where you need the default look outside an app, for example to save a static picture:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> shinymap <span class="im">import</span> StillLife, default_wash</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>StillLife(default_wash.build(outline, value<span class="op">=</span>{<span class="st">"r7"</span>: <span class="dv">1</span>})).to_svg(<span class="st">"map.svg"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The library defaults are themselves a wash, <code>shinymap.default_wash</code>; <code>input_map</code> and friends are its methods.</p>
+</section>
+<section id="static-pictures" class="level2">
+<h2 class="anchored" data-anchor-id="static-pictures">Static pictures</h2>
+<p><code>StillLife</code> draws a map as a static SVG, for a report, a slide or a thumbnail. Give it the same <code>Map(...)</code> you return from <code>@render_map</code>, with <code>map_id=</code> naming the <code>output_map()</code>: the picture uses that output’s outline, mode, wash and <code>aes</code>, and matches what the browser shows.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> shiny <span class="im">import</span> render, ui</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> shinymap <span class="im">import</span> Map, StillLife, output_map, render_map</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>output_map(<span class="st">"result"</span>, outline, aes<span class="op">=</span>...)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="at">@render_map</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> result():</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Map(fill_color<span class="op">=</span>colors)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="at">@render.ui</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> snapshot():  <span class="co"># the same map, as a static SVG</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ui.HTML(StillLife(Map(fill_color<span class="op">=</span>colors), map_id<span class="op">=</span><span class="st">"result"</span>).to_svg(fit<span class="op">=</span><span class="va">True</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/generated/still-from-map.svg" class="img-fluid figure-img" style="width:50.0%" alt="Hexagon grid in shades of blue with two gray cells"></p>
+<figcaption><code>StillLife(Map(fill_color=colors), map_id="result")</code></figcaption>
+</figure>
+</div>
+<p>The example app <code>examples/app_stilllife.py</code> shows the live map and its <code>StillLife</code> side by side, with a download button.</p>
+<p>Outside an app, pass the outline to <code>Map()</code>. The picture uses <code>default_wash</code>, or the wash you give with <code>wash=</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>StillLife(Map(outline, fill_color<span class="op">=</span>colors)).to_svg(<span class="st">"map.svg"</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>StillLife(Map(outline, value<span class="op">=</span>{<span class="st">"r7"</span>: <span class="dv">1</span>}), wash<span class="op">=</span>wc).to_svg(<span class="st">"selected.svg"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 
 
 </section>
