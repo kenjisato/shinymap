@@ -167,7 +167,7 @@ def result():
 
 @render.ui
 def snapshot():  # the same map, as a static SVG
-    return ui.HTML(StillLife(Map(fill_color=colors), map_id="result").to_svg())
+    return ui.HTML(StillLife(Map(fill_color=colors), map_id="result").to_svg(fit=True))
 ```
 
 ![`StillLife(Map(fill_color=colors), map_id="result")`](../images/generated/still-from-map.svg){fig-alt="Hexagon grid in shades of blue with two gray cells" width="50%"}

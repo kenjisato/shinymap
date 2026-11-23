@@ -981,3 +981,20 @@ class TestStillLifeLineRegionFill:
         svg_str = StillLife(default_wash.build(outline)).to_svg()
         line = re.search(r'<path[^>]*d="M0 20 L30 20"[^>]*>', svg_str).group(0)
         assert 'fill="none"' in line
+
+
+class TestStillLifeToSvgFit:
+    OUTLINE = Outline.from_dict({"a": "M0 0 L40 0 L40 20 Z"})
+
+    @pytest.mark.unit
+    def test_default_size_is_viewbox_units(self):
+        svg_str = StillLife(Map(self.OUTLINE)).to_svg()
+        assert 'width="' in svg_str and 'width="100%"' not in svg_str
+
+    @pytest.mark.unit
+    def test_fit_fills_the_container(self):
+        svg_str = StillLife(Map(self.OUTLINE)).to_svg(fit=True)
+        head = svg_str[: svg_str.index(">")]
+        assert 'width="100%"' in head
+        assert 'height="100%"' in head
+        assert "viewBox=" in head  # aspect ratio comes from the viewBox

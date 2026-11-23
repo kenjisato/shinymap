@@ -32,6 +32,8 @@ Planned as 0.4.0: the breaking changes below follow from fixes, not redesigns.
   that `output_map()`'s outline, mode, wash and `aes`, so a static SVG matches the
   browser. Outside an app, `StillLife(Map(outline, ...))` uses `default_wash` or
   `wash=` (#70).
+- `StillLife.to_svg(fit=True)` makes the SVG fill its container (`width`/`height`
+  100%), for `ui.HTML()` or a page (#70).
 - `shinymap.default_wash`: the library's default look as a `Wash`; `input_map`,
   `output_map` and `render_map` are its methods (#62).
 - `Wash.build(..., mode=...)` and `StillLife` render indexed aesthetics (`Cycle` / `Count` /

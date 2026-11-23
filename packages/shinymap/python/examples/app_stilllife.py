@@ -10,6 +10,7 @@ Run:
     uv run shiny run packages/shinymap/python/examples/app_stilllife.py
 """
 
+import inspect
 from pathlib import Path
 
 from shiny import App, reactive, render, ui
@@ -42,18 +43,8 @@ wc = Wash(
     line=aes.Line(stroke_color="#64748b", stroke_width=2),
 )
 
-CODE = '''
-@wc.render_map
-def live():
-    return Map(fill_color=colors())
 
-@render.ui
-def still():
-    pic = StillLife(Map(fill_color=colors()), map_id="live")
-    return ui.HTML(pic.to_svg())
-'''
-
-app_ui = ui.page_fillable(
+app_ui = ui.page_fluid(
     ui.h3("StillLife: the live map as a static SVG"),
     ui.layout_columns(
         ui.input_radio_buttons(
@@ -79,7 +70,7 @@ app_ui = ui.page_fillable(
         ),
         col_widths=(6, 6),
     ),
-    ui.pre(CODE.strip()),
+    ui.output_ui("code"),
 )
 
 
@@ -92,17 +83,18 @@ def server(input, output, session):
     def live():
         return Map(fill_color=colors())
 
-    def snapshot() -> str:
-        return StillLife(Map(fill_color=colors()), map_id="live").to_svg()
-
     @render.ui
     def still():
-        svg = snapshot().replace("<svg ", '<svg style="width: 100%; height: 100%;" ', 1)
-        return ui.HTML(svg)
+        pic = StillLife(Map(fill_color=colors()), map_id="live")
+        return ui.HTML(pic.to_svg(fit=True))
 
     @render.download(filename="map.svg")
     def download():
-        yield snapshot()
+        yield StillLife(Map(fill_color=colors()), map_id="live").to_svg()
+
+    @render.ui
+    def code():  # this server function, as it runs
+        return ui.pre(inspect.getsource(server))
 
 
 app = App(app_ui, server)

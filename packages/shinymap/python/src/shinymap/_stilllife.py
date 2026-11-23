@@ -439,6 +439,8 @@ class StillLife:
     def to_svg(
         self,
         output: str | Path | None = None,
+        *,
+        fit: bool = False,
     ) -> str | None:
         """Generate static SVG with resolved aesthetics.
 
@@ -449,6 +451,10 @@ class StillLife:
         Args:
             output: If provided, write SVG to file and return None.
                 If None, return SVG as string.
+            fit: If True, the SVG fills its container (``width="100%"``,
+                ``height="100%"``) and keeps its aspect ratio, e.g. inside
+                ``ui.HTML()`` or a page. If False, its size is the viewBox's, in
+                pixels.
 
         Returns:
             SVG string if output is None, otherwise None.
@@ -542,8 +548,8 @@ class StillLife:
 
         # Create SVG
         root = svg.SVG(
-            width=str(vb[2]),  # type: ignore[arg-type]
-            height=str(vb[3]),  # type: ignore[arg-type]
+            width="100%" if fit else str(vb[2]),  # type: ignore[arg-type]
+            height="100%" if fit else str(vb[3]),  # type: ignore[arg-type]
             viewBox=viewbox_str,  # type: ignore[arg-type]
             elements=svg_elements,
         )

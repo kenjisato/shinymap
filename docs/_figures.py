@@ -8,7 +8,6 @@ always match the library's rendering. Output goes to `images/generated/`
 """
 
 import math
-import re
 from pathlib import Path
 
 from shinymap import Map, Outline, StillLife, Wash, aes
@@ -105,10 +104,8 @@ def save(
 
 
 def write(name: str, pic: StillLife) -> None:
-    svg = pic.to_svg()
-    # Drop the fixed width/height (viewBox units) so the page decides the size
-    svg = re.sub(r'^(<svg[^>]*?) width="[^"]*" height="[^"]*"', r"\1", svg, count=1)
-    (OUT / f"{name}.svg").write_text(svg)
+    # fit=True: no fixed size in viewBox units, so the page decides the size
+    pic.to_svg(OUT / f"{name}.svg", fit=True)
 
 
 def fills(colors: dict[str, str]) -> aes.ByGroup:

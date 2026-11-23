@@ -451,6 +451,7 @@ pic.aes_table()                     # All regions' aesthetics
 # Export static SVG
 pic.to_svg()                        # Returns SVG string
 pic.to_svg(output="map.svg")        # Writes to file
+pic.to_svg(fit=True)                # width/height 100%: fills its container
 
 # With hover state
 pic_hovered = StillLife(builder, hovered="region_a")
