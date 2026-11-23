@@ -28,7 +28,7 @@ Planned as 0.4.0: the breaking changes below follow from fixes, not redesigns.
   counts (#63).
 - `Map(fill_color={region_id: color})` and `MapBuilder.with_fill_color()` color regions
   by value, e.g. with a color scale's output, layered over `aes=` (#64).
-- `StillLife(Map(...), output_id="result")` draws the map `@render_map` shows, with
+- `StillLife(Map(...), map_id="result")` draws the map `@render_map` shows, with
   that `output_map()`'s outline, mode, wash and `aes`, so a static SVG matches the
   browser. Outside an app, `StillLife(Map(outline, ...))` uses `default_wash` or
   `wash=` (#70).

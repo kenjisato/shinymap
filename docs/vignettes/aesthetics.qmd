@@ -151,7 +151,7 @@ friends are its methods.
 ## Static pictures
 
 `StillLife` draws a map as a static SVG, for a report, a slide or a thumbnail. Give it
-the same `Map(...)` you return from `@render_map`, with `output_id=` naming the
+the same `Map(...)` you return from `@render_map`, with `map_id=` naming the
 `output_map()`: the picture uses that output's outline, mode, wash and `aes`, and
 matches what the browser shows.
 
@@ -167,7 +167,7 @@ def result():
 
 @render.ui
 def snapshot():  # the same map, as a static SVG
-    return ui.HTML(StillLife(Map(fill_color=colors), output_id="result").to_svg())
+    return ui.HTML(StillLife(Map(fill_color=colors), map_id="result").to_svg())
 ```
 
 Outside an app, pass the outline to `Map()`. The picture uses `default_wash`, or the

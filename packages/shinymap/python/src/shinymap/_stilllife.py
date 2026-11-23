@@ -59,7 +59,7 @@ class StillLife:
         *,
         value: dict[str, int] | None = None,
         hovered: str | None = None,
-        output_id: str | None = None,
+        map_id: str | None = None,
         wash: WashResult | None = None,
     ):
         """Create a still life from a map.
@@ -71,15 +71,15 @@ class StillLife:
             builder: ``Map(...)``, or a MapBuilder from ``WashResult.build()``.
             value: Override value dict. If None, uses builder's value.
             hovered: Region ID to show as hovered.
-            output_id: ID of an ``output_map()``. The picture then uses that
+            map_id: ID of an ``output_map()``. The picture then uses that
                 output's outline, mode, wash and ``aes``, with the map layered over
                 them exactly as ``@render_map`` does, so ``Map()`` needs no outline.
             wash: Wash to draw a ``Map(...)`` with, when there is no
                 ``output_map()`` to follow. Default: ``shinymap.default_wash``.
 
         Raises:
-            ValueError: If both ``output_id`` and ``wash`` are given, if
-                ``output_id`` names no ``output_map()``, if there is no outline,
+            ValueError: If both ``map_id`` and ``wash`` are given, if
+                ``map_id`` names no ``output_map()``, if there is no outline,
                 or if a ``Wash.build()`` builder is combined with either.
 
         Examples:
@@ -90,23 +90,23 @@ class StillLife:
             >>> pic.aes("a")["fill_color"]
             '#ff0000'
             >>> _ = output_map("result", outline)
-            >>> pic = StillLife(Map(fill_color={"a": "#00ff00"}), output_id="result")
+            >>> pic = StillLife(Map(fill_color={"a": "#00ff00"}), map_id="result")
             >>> pic.aes("a")["fill_color"]
             '#00ff00'
 
             ```
         """
-        if output_id is not None and wash is not None:
+        if map_id is not None and wash is not None:
             raise ValueError(
-                "Pass either output_id= (follow an output_map()) or wash=, not both: "
+                "Pass either map_id= (follow an output_map()) or wash=, not both: "
                 "the output already has its wash."
             )
 
         if builder._resolved_aes is not None:
-            if output_id is not None or wash is not None:
+            if map_id is not None or wash is not None:
                 raise ValueError(
                     "This builder comes from Wash.build() and already has its look; "
-                    "pass Map(...) to use output_id= or wash=."
+                    "pass Map(...) to use map_id= or wash=."
                 )
             outline = builder._outline
             resolved_aes = builder._resolved_aes
@@ -115,15 +115,15 @@ class StillLife:
             from .uicore._render_map import _resolve_map_aes
 
             static: Mapping[str, Any]
-            if output_id is not None:
+            if map_id is not None:
                 from shiny.module import resolve_id
 
                 from .uicore._registry import _static_map_params
 
-                key = resolve_id(output_id)
+                key = resolve_id(map_id)
                 if key not in _static_map_params:
                     raise ValueError(
-                        f"No output_map({output_id!r}) found. Call output_map() first, "
+                        f"No output_map({map_id!r}) found. Call output_map() first, "
                         "or pass wash= to draw the map on its own."
                     )
                 static = _static_map_params[key]
@@ -136,7 +136,7 @@ class StillLife:
             if outline is None:
                 raise ValueError(
                     "StillLife needs an outline: pass it to Map(outline, ...), "
-                    "or pass output_id= of an output_map() that has one."
+                    "or pass map_id= of an output_map() that has one."
                 )
             if builder._layers is not None:
                 layers = {k: v for k, v in builder._layers.items() if v is not None}
