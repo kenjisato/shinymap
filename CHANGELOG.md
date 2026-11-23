@@ -61,6 +61,8 @@ Planned as 0.4.0: the breaking changes below follow from fixes, not redesigns.
   annotation regions; before, only main regions were sent, so they disappeared.
   `output_map(layers=...)` and `Map(layers=...)` now both merge key by key into the
   outline, and an outline given to `Map()` takes precedence over `output_map()`'s (#70).
+- `StillLife.to_svg()` draws line regions (`path_as_line`) without fill, as the browser
+  does (#70).
 - A wash's `output_map()` without an outline applies its look when `Map(outline)` sets
   no `aes`; before, the map fell back to the browser's built-in look (#70).
 - Values accept numpy integers and bools (converted to `int`), so values built from a

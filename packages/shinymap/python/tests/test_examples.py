@@ -63,6 +63,14 @@ def test_import_app_output():
 
 
 @pytest.mark.unit
+def test_import_app_stilllife():
+    """Test that app_stilllife.py can be imported."""
+    import app_stilllife
+
+    assert hasattr(app_stilllife, "app")
+
+
+@pytest.mark.unit
 def test_import_app_patterns():
     """Test that app_patterns.py can be imported."""
     import app_patterns

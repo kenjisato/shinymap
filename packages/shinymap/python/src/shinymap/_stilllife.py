@@ -496,8 +496,13 @@ class StillLife:
         # Build element list in layer order
         svg_elements: list[svg.Element] = []
 
+        region_types = self._outline.region_types()
+
         def render(region_id: str, is_hovered: bool = False) -> None:
             aes_dict = self.aes(region_id, is_hovered=is_hovered)
+            if region_types.get(region_id) == "line":
+                # Line regions (path_as_line) are stroke only, as in the browser
+                aes_dict = {**aes_dict, "fill_color": "none"}
             for elem in self._outline.regions.get(region_id, []):
                 svg_elements.append(style_element(elem, aes_dict))  # type: ignore[arg-type]
 

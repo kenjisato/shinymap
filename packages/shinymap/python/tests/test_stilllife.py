@@ -965,3 +965,19 @@ class TestStillLifeGeometryMatchesRenderMap:
         assert sorted(pic._outline.regions) == sorted(payload["regions"])
         assert pic._outline.layers_dict() == payload["layers"]
         assert self._svg_viewbox(pic) == payload["view_box"]
+
+
+class TestStillLifeLineRegionFill:
+    @pytest.mark.unit
+    def test_line_region_has_no_fill_in_svg(self):
+        """path_as_line regions are drawn without fill, as in the browser (see #3)."""
+        import re
+
+        from shinymap import default_wash
+
+        outline = Outline.from_dict(
+            {"a": "M0 0 L10 0 L10 10 Z", "b": "M0 20 L30 20", "_metadata": {"overlay": ["b"]}}
+        ).path_as_line("b")
+        svg_str = StillLife(default_wash.build(outline)).to_svg()
+        line = re.search(r'<path[^>]*d="M0 20 L30 20"[^>]*>', svg_str).group(0)
+        assert 'fill="none"' in line

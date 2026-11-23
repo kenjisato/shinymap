@@ -11,7 +11,7 @@ import math
 import re
 from pathlib import Path
 
-from shinymap import Outline, StillLife, Wash, aes
+from shinymap import Map, Outline, StillLife, Wash, aes
 from shinymap.mode import Count, Cycle
 from shinymap.aes.color import (
     scale_continuous,
@@ -101,7 +101,11 @@ def save(
     name: str, outline: Outline = HEX, wash=WASH, *, hovered=None, **build
 ) -> None:
     builder = wash.build(outline, **build)
-    svg = StillLife(builder, hovered=hovered).to_svg()
+    write(name, StillLife(builder, hovered=hovered))
+
+
+def write(name: str, pic: StillLife) -> None:
+    svg = pic.to_svg()
     # Drop the fixed width/height (viewBox units) so the page decides the size
     svg = re.sub(r'^(<svg[^>]*?) width="[^"]*" height="[^"]*"', r"\1", svg, count=1)
     (OUT / f"{name}.svg").write_text(svg)
@@ -202,6 +206,12 @@ def aesthetics() -> None:
     save("scale-diverging", aes=fills(scale_diverging(values, IDS)))
     cats = {rid: ["A", "B", "C", None][i % 4] for i, rid in enumerate(IDS)}
     save("scale-qualitative", aes=fills(scale_qualitative(cats, IDS)))
+
+    # Static pictures: the same Map(...) as @render_map, following the output_map()
+    WASH.output_map("result", HEX)
+    rates = {rid: 10.0 + (i * 37) % 90 for i, rid in enumerate(IDS) if i % 9 != 4}
+    colors = scale_continuous(rates, IDS, vmin=0, vmax=100)
+    write("still-from-map", StillLife(Map(fill_color=colors), map_id="result"))
 
 
 def layers() -> None:

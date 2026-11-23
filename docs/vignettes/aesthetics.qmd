@@ -170,6 +170,11 @@ def snapshot():  # the same map, as a static SVG
     return ui.HTML(StillLife(Map(fill_color=colors), map_id="result").to_svg())
 ```
 
+![`StillLife(Map(fill_color=colors), map_id="result")`](../images/generated/still-from-map.svg){fig-alt="Hexagon grid in shades of blue with two gray cells" width="50%"}
+
+The example app `examples/app_stilllife.py` shows the live map and its `StillLife`
+side by side, with a download button.
+
 Outside an app, pass the outline to `Map()`. The picture uses `default_wash`, or the
 wash you give with `wash=`:
 
