@@ -1,6 +1,8 @@
 # Data model: demo outline metadata
 
-Each demo file is ordinary outline JSON (as written by `Outline.to_json()`): region ID → path, plus `_metadata`. The keys below are added to `_metadata`; existing keys (`viewBox`, layers) keep their meaning.
+## Entity: DemoMap
+
+Each demo file is ordinary outline JSON (as written by `Outline.to_json()`): region ID → path, plus `_metadata`. The fields below (cited as `DemoMap.<key>`) are keys added to `_metadata`; existing keys (`viewBox`, layers) keep their meaning.
 
 | Key | Type | Content |
 |---|---|---|
